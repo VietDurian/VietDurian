@@ -1,0 +1,53 @@
+@startuml AuthenticationMiddleware
+
+participant ":authMiddleware" as M #lightblue
+entity ":userModel" as Model #lightblue
+database "MongoDB" as DB #yellow
+
+activate M
+M -> M: 1. Receive authentication token (Bearer token in header)
+activate M
+deactivate M
+
+M -> M: 2. Check token existence
+activate M
+deactivate M
+opt Token missing
+    M --> M: 2.1 Return Authentication Error (token is missing)
+end
+
+M -> M: 3. Verify token (signature, expiration)
+activate M
+deactivate M
+opt Invalid token
+    M --> M: 3.1 Return Authentication Error (token is invalid)
+end
+
+M -> Model: 4. Check token in blacklist
+activate Model
+Model -> DB: 5. Query blacklist collection
+activate DB
+DB --> Model: 6. Blacklist result
+deactivate DB
+Model --> M: 7. Return blacklist check result
+deactivate Model
+
+M -> M: 8. checkTokenIsExistInBlacklist()
+activate M
+deactivate M
+opt Token is blacklisted
+    M --> M: 8.1 Return Authentication Error (token is logged out)
+end
+
+M -> M: 9. Check user status (active / banned / suspended)
+activate M
+deactivate M
+opt User banned/suspended
+    M --> M: 9.1 Return Authentication Error (user is banned)
+end
+
+M --> M: 10. Forward request to next handler (Controller / Service)
+deactivate M
+
+
+@enduml
