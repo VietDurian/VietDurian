@@ -1,0 +1,67 @@
+@startuml EditProfile
+
+actor User as "User"
+boundary "Profile Page" as View #lightblue
+participant ":authRoute" as Route #lightblue
+control "authMiddleware" as Auth #orange
+control "authController" as Controller #lightblue
+participant ":authService" as Service #lightblue
+entity "userModel" as Model #lightblue
+database "MongoDB" as MongoDB #yellow
+
+User -> View: 1. Click "Edit"
+activate View
+activate User
+User -> View: 2. Edit avatar, gender, height, weight, dob.
+
+View -> View: 3. Validate input
+activate View
+deactivate View
+
+opt Invalid input
+    View --> User: 3.1. Display "Invalid input information"
+end
+
+View -> Route: 4. POST /api/v1/auth/profile
+activate Route
+Route -> Auth: 5. authenticateUser(req) & authorizeRole()
+activate Auth
+ref over User, View, Route, Auth, Controller, Service, Model, MongoDB : 6.Verify Token & Check Role
+
+Auth --> Route: 7. User authenticated & authorized
+deactivate Auth
+
+Route -> Controller: 8. editProfile(req, res)
+activate Controller
+
+    Controller -> Service: 9. editProfile(userId, profileData)
+    activate Service
+
+    Service -> Model: 10. editUserById(userId, profileData)
+    activate Model
+
+    Model -> MongoDB: 11. ExecuteQuery()
+    activate MongoDB
+    MongoDB --> Model: 12. Return result
+    deactivate MongoDB
+
+    Model --> Service: 13. Return update result
+    deactivate Model
+
+alt Update Failed
+    Service --> Controller: 13.1. Return error
+    Controller --> Route: 13.1.1 Return error info
+    Route --> View: 13.1.2. Show "Update failed"
+    View --> User: 13.1.3. Display error message
+else Update Success
+    Service --> Controller: 13.2. Return updated user
+    deactivate Service
+    Controller --> Route: 13.2.1. Return success
+    deactivate Controller
+    Route --> View: 13.2.2. Show success
+    deactivate Route
+    View --> User: 13.2.3. Display "Updated successfully"
+    deactivate View
+    deactivate User
+end
+@enduml
