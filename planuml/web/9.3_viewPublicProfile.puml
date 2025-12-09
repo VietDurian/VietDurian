@@ -1,0 +1,82 @@
+@startuml 9.3_viewPublicProfile
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor User
+boundary ProfileViewScreen as UI
+control ProfileRoute as Route
+participant ":AuthMiddleware" as AuthMiddleware
+control ProfileController as Controller
+participant ":ProfileService" as ProfileService
+participant ":UserService" as UserService
+participant ":UserModel" as UserModel
+database Database as DB
+
+activate User
+User -> UI : 1. Click view public profile
+activate UI
+UI -> Route : 2. GET /profile/public/:userId (with JWT token)
+activate Route
+Route -> AuthMiddleware : 3. authenticateUser(req) & authorizeRole()
+activate AuthMiddleware
+ref over User, DB: Verify Token & Check Role
+AuthMiddleware --> Route : 4. User authenticated & authorized
+deactivate AuthMiddleware
+Route -> Controller : 5. handleGetPublicProfile(userId)
+activate Controller
+Controller -> ProfileService : 6. getPublicProfile(userId)
+activate ProfileService
+ProfileService -> UserService : 7. findById(userId)
+activate UserService
+UserService -> UserModel : 8. findOne()
+activate UserModel
+UserModel -> DB : 9. findOne()
+activate DB
+DB --> UserModel : 10. Return user document | null | dbError
+deactivate DB
+UserModel --> UserService : 11. Return raw result
+deactivate UserModel
+UserService -> UserService : 12. checkQuerySuccess()
+activate UserService
+deactivate UserService
+opt database error
+    UserService --> ProfileService : 12.1 Return badrequest
+    ProfileService --> Controller : 12.2 Return error response
+    Controller --> Route : 12.3 Return error response
+    Route --> UI : 12.4 Return error response
+    UI -> User : 12.5 Display error message
+end
+UserService -> UserService : 13. checkNotFound()
+activate UserService
+deactivate UserService
+opt user not found (null document)
+    UserService --> ProfileService : 13.1 Return notfound
+    ProfileService --> Controller : 13.2 Return error response
+    Controller --> Route : 13.3 Return error response
+    Route --> UI : 13.4 Return error response
+    UI -> User : 13.5 Display user not found
+end
+UserService --> ProfileService : 14. Return user entity
+deactivate UserService
+ProfileService -> ProfileService : 15. filterPublicData()
+activate ProfileService
+deactivate ProfileService
+ProfileService -> ProfileService : 16. mapToPublicDTO()
+activate ProfileService
+deactivate ProfileService
+ProfileService --> Controller : 17. Return success + public data
+deactivate ProfileService
+Controller --> Route : 18. Return success + public data (200)
+deactivate Controller
+Route --> UI : 19. Return success + public data (200)
+deactivate Route
+UI -> UI : 20. Render public profile
+activate UI
+deactivate UI
+UI --> User : 21. Display public profile
+deactivate UI
+deactivate User
+
+@enduml
