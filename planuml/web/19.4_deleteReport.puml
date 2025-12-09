@@ -1,0 +1,73 @@
+@startuml DeleteReport
+
+actor Admin
+boundary "ReportPage" as View #lightblue
+participant ":reportRoute" as Route #lightblue
+control ":authMiddleware" as Auth #Orange
+control "reportController" as Controller #lightblue
+participant ":reportService" as Service #lightblue
+entity "reportModel" as Model #lightblue
+database "MongoDB" as MongoDB #yellow
+
+Admin -> View: 1. Select a report and click "Delete" icon
+activate Admin
+activate View
+
+View -> View: 2. Show confirmation dialog
+activate View
+deactivate View
+
+opt Cancel Deletion
+    View --> Admin: 2.1. Cancel deletion 
+end
+
+Admin -> View: 3. Click "Confirm" button
+
+View -> Route: 4. DELETE /api/v1/report/{reportId}
+activate Route
+
+Route -> Auth: 5. authenticateUser(req, res, next)
+activate Auth
+ref over Admin, View, Route, Auth, Controller, Service, Model, MongoDB : 6. Middleware verifies access token & admin role
+
+Auth --> Route: 7. authentication success
+deactivate Auth
+    Route -> Controller: 8. deleteReport(req, res)
+    activate Controller
+
+    Controller -> Service: 9. deleteReport(reportId)
+    activate Service
+
+    Service -> Model: 10. deleteReport(reportId)
+    activate Model
+    Model -> MongoDB: 11. Delete report by ID
+    activate MongoDB
+    MongoDB --> Model: 12. Return result
+    deactivate MongoDB
+    Model --> Service: 13. Return success
+    deactivate Model
+
+    alt Report exists
+
+        Service --> Controller: 13.1. Return success
+
+        Controller --> Route: 13.1.1. Return message success
+
+        Route --> View: 13.1.2. Refresh report list
+
+        View --> Admin: 13.1.3. Show "Report deleted successfully"
+    else Report not found
+        Service --> Controller: 13.2. Return error
+        deactivate Service
+
+        Controller --> Route: 13.2.1. Return 404 Not Found
+        deactivate Controller
+
+        Route --> View: 13.2.2. Show error
+        deactivate Route
+
+        View --> Admin: 13.2.3. Display "Report not found or already deleted"
+        deactivate View
+        deactivate Admin
+    end
+@enduml
