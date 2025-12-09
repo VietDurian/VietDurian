@@ -1,0 +1,47 @@
+@startuml 4_logout
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor User
+boundary AuthLogoutScreen as UI
+boundary LocalStorage as Storage
+control AuthRoute as Route
+control AuthController as Controller
+participant ":AuthService" as AuthService
+participant ":BlacklistModel" as BlacklistModel
+database Database as DB
+
+activate User
+User -> UI : 1. Click logout button
+activate UI
+UI -> Route : 2. POST /auth/logout
+activate Route
+Route -> Controller : 3. handleLogout()
+activate Controller
+Controller -> AuthService : 4. logout(token)
+activate AuthService
+AuthService -> BlacklistModel : 5. addTokenToBlacklist(token)
+activate BlacklistModel
+BlacklistModel -> DB : 6. insertOne()
+activate DB
+DB --> BlacklistModel : 7. Return inserted document
+deactivate DB
+BlacklistModel --> AuthService : 8. Confirm token blacklisted
+deactivate BlacklistModel
+AuthService --> Controller : 9. Return {code: 1000, data: {}}
+deactivate AuthService
+Controller --> Route : 10. Return {code: 1000, data: {}}
+deactivate Controller
+Route --> UI : 11. Return {code: 1000, data: {}}
+deactivate Route
+UI -> Storage : 12. Clear local storage
+activate Storage
+
+Storage --> UI : 13. Message cleared
+deactivate Storage
+UI --> User : 14. Redirect to login page
+deactivate UI
+deactivate User
+@enduml

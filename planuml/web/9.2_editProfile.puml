@@ -54,13 +54,13 @@ alt Update Failed
     Route --> View: 13.1.2. Show "Update failed"
     View --> User: 13.1.3. Display error message
 else Update Success
-    Service --> Controller: 13.2. Return updated user
+    Service --> Controller: 13.2. Return success
     deactivate Service
-    Controller --> Route: 13.2.1. Return success
+    Controller --> Route: 14. Return success
     deactivate Controller
-    Route --> View: 13.2.2. Show success
+    Route --> View: 15. Return success
     deactivate Route
-    View --> User: 13.2.3. Display "Updated successfully"
+    View --> User: 16. Display updated profile
     deactivate View
     deactivate User
 end
