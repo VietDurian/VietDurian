@@ -1,0 +1,63 @@
+@startuml View Reaction Comments
+
+actor User as "Users"
+boundary "BlogDetailPage" as View #lightblue
+participant ":reactionRoute" as Route #lightblue
+control "authMiddleware" as Auth #Orange
+control "reactionController" as Controller #lightblue
+participant ":reactionService" as Service #lightblue
+entity "reactionCommentModel" as Model #lightblue
+entity "userModel" as UserModel #lightblue
+database "MongoDB" as MongoDB #yellow
+
+    User -> View: 1. Click a specific dish/icon reactions
+    activate User
+    activate View
+
+    View -> Route: 2. GET /api/v1/reaction { commentId }
+    activate Route
+    Route -> Auth: 3. authenticateUser(req, res, next)
+    activate Auth
+    ref over User, View, Route, Auth, Controller, Service, Model, UserModel, MongoDB : 4. Middleware verifies access token
+
+    Auth --> Route: 5. authentication success
+    deactivate Auth
+    
+    Route -> Controller: 6. getReactionsByCommentId(req, res)
+    activate Controller
+
+    Controller -> Service: 7. getReactionsByCommentId(commentId)
+    activate Service
+
+    Service -> Model: 8. getReactionsByCommentId(commentId)
+    activate Model
+
+    Model -> UserModel: 9. populate reactions with user details
+    activate UserModel
+
+    UserModel -> MongoDB: 10. Query reactions for the comment
+    activate MongoDB
+    MongoDB --> UserModel: 11. Return queried reactions
+    deactivate MongoDB
+
+    UserModel --> Model: 12. Return populated reactions
+    deactivate UserModel
+
+    Model --> Service: 13. Return result
+    deactivate Model
+
+    Service --> Controller: 14. Return reactions data
+    deactivate Service
+
+    Controller --> Route: 15. Send 200 OK + reactions data
+    deactivate Controller
+
+    Route --> View: 16. Render reactions data
+    deactivate Route
+
+    View --> User: 17. Display reactions data
+    deactivate View
+    deactivate User
+
+
+@enduml

@@ -1,0 +1,64 @@
+@startuml UpdateReaction
+
+actor User as "Users"
+boundary "BlogDetailPage" as View #lightblue
+participant ":reactionRoute" as Route #lightblue
+control "authMiddleware" as Auth #Orange
+control "reactionController" as Controller #lightblue
+participant ":reactionService" as Service #lightblue
+entity "reactionCommentModel" as Model #lightblue
+database "MongoDB" as MongoDB #yellow
+
+    User -> View: 1. Hover reaction icon
+    activate User
+    activate View
+
+    View -> View: 2. Show icon list
+    activate View
+    deactivate View
+
+    opt Cancel Update
+        View --> User: 2.1. Move cursor away
+    end
+
+    User -> View: 3. Select a reaction type
+
+    View -> Route: 4. PATCH /api/v1/reaction { reactionId, reactionType }
+    activate Route
+    Route -> Auth: 5. authenticateUser(req, res, next)
+    activate Auth
+    ref over User, View, Route, Auth, Controller, Service, Model, MongoDB : 6. Middleware verifies access token & user role
+    Auth --> Route: 7. authentication success
+    deactivate Auth
+
+    Route -> Controller: 8. updateReaction(req, res)
+    activate Controller
+
+    Controller -> Service: 9. updateReaction(reactionData, userId)
+    activate Service
+
+    Service -> Model: 10. updateReaction(reactionData, userId)
+    activate Model
+
+    Model -> MongoDB: 11. Update existing reaction
+    activate MongoDB
+    MongoDB --> Model: 12. Return updated reaction
+    deactivate MongoDB
+
+    Model --> Service: 13. Return result
+    deactivate Model
+
+    Service --> Controller: 14. Return updated reaction
+    deactivate Service
+
+    Controller --> Route: 15. 200 OK + reaction
+    deactivate Controller
+
+    Route --> View: 16. Render updated reaction
+    deactivate Route
+
+    View --> User: 17. Display updated reaction by the comment
+    deactivate View
+    deactivate User
+
+@enduml
