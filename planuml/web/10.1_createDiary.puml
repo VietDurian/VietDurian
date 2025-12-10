@@ -1,0 +1,79 @@
+@startuml 10.1_createDiary
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor User
+boundary diaryScreen as UI
+control diaryRoute as Route
+participant ":authMiddleware" as Middleware
+control diaryController as Controller
+participant ":diaryService" as Service
+participant ":diaryModel" as Model
+database Database as DB
+
+activate User
+User -> UI : 1. Open diary create form
+activate UI
+User -> UI : 2. Enter diary entry details
+User -> UI : 3. Click submit button
+UI -> UI : 4. Validate input
+activate UI
+deactivate UI
+opt validation error
+    UI -> User : 4.1 Display error message
+end
+UI -> Route : 5. POST /diary/entry 
+activate Route
+Route -> Middleware : 6. authenticateUser(req) & authorizeRole()
+activate Middleware
+ref over User, DB: Verify Token & Check Role
+Middleware --> Route : 7. User authenticated & authorized
+deactivate Middleware
+Route -> Controller : 8. handleCreateDiary(userInfo)
+activate Controller
+Controller -> Controller : 9. Validate input
+activate Controller
+deactivate Controller
+opt validation error
+    Controller --> Route : 9.1 Return error
+    Route --> UI : 9.2 Show error message
+    UI -> User : 9.3 Display error message
+end
+Controller -> Service : 10. createDiary(data, userId)
+activate Service
+Service -> Model : 11. create(diaryData)
+activate Model
+Model -> DB : 12. insertOne({...})
+activate DB
+DB --> Model : 13. Return result
+deactivate DB
+Model --> Service : 14. Return insert result
+deactivate Model
+Service -> Service : 15. checkDatabaseError()
+activate Service
+deactivate Service
+opt database error
+    Service --> Controller : 15.1 Return error
+    Controller --> Route : 15.2 Return error info
+    Route --> UI : 15.3 Show error message
+    UI -> User : 15.4 Display error message
+end
+Service -> Service : 16. mapToDiaryDTO()
+activate Service
+deactivate Service
+Service --> Controller : 17. Return success
+deactivate Service
+Controller --> Route : 18. Return success
+deactivate Controller
+Route --> UI : 19. Return success
+deactivate Route
+UI -> UI : 20. Display success message
+activate UI
+deactivate UI
+UI -> User : 21. Display diary entry created
+deactivate UI
+deactivate User
+
+@enduml

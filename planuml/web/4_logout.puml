@@ -5,12 +5,12 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary AuthLogoutScreen as UI
-boundary LocalStorage as Storage
-control AuthRoute as Route
-control AuthController as Controller
-participant ":AuthService" as AuthService
-participant ":BlacklistModel" as BlacklistModel
+boundary authLogoutScreen as UI
+boundary localStorage as Storage
+control authRoute as Route
+control authController as Controller
+participant ":authService" as AuthService
+participant ":blacklistModel" as BlacklistModel
 database Database as DB
 
 activate User

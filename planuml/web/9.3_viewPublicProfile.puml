@@ -5,13 +5,13 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary ProfileViewScreen as UI
-control ProfileRoute as Route
-participant ":AuthMiddleware" as AuthMiddleware
-control ProfileController as Controller
-participant ":ProfileService" as ProfileService
-participant ":UserService" as UserService
-participant ":UserModel" as UserModel
+boundary profileViewScreen as UI
+control profileRoute as Route
+participant ":authMiddleware" as AuthMiddleware
+control profileController as Controller
+participant ":profileService" as ProfileService
+participant ":userService" as UserService
+participant ":userModel" as UserModel
 database Database as DB
 
 activate User

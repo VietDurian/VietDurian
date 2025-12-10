@@ -5,12 +5,12 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary AuthenticationScreen as UI
-control AuthenticationController as Controller
-participant ":AuthenticationService" as Service
-participant ":GoogleService" as GoogleSvc
-participant ":UserModel" as Model
-participant ":AuthService" as AuthSvc
+boundary authenticationScreen as UI
+control authenticationController as Controller
+participant ":authenticationService" as Service
+participant ":googleService" as GoogleSvc
+participant ":userModel" as Model
+participant ":authService" as AuthSvc
 participant LocalStorage as LS
 participant "Google OAuth" as Google
 database Database as DB

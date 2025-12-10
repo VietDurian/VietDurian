@@ -1,0 +1,78 @@
+@startuml 12.3_filterUser
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor User
+boundary dashboardScreen as UI
+control userManagementRoute as Route
+participant ":authMiddleware" as Middleware
+control userManagementController as Controller
+participant ":userManagementService" as Service
+participant ":userManagementModel" as Model
+database Database as DB
+
+activate User
+User -> UI : 1. Select filter criteria (role, status, etc.)
+activate UI
+User -> UI : 2. Click apply filter button
+UI -> UI : 3. Validate filter input
+activate UI
+deactivate UI
+opt validation error
+    UI -> User : 3.1 Display error message
+end
+UI -> Route : 4. GET /userManagement/filter?role=role&status=status
+activate Route
+Route -> Middleware : 5. authenticateUser(req) & authorizeRole()
+activate Middleware
+ref over User, DB: Verify Token & Check Role
+Middleware --> Route : 6. User authenticated & authorized
+deactivate Middleware
+Route -> Controller : 7. handleFilterUser(userInfo, filters)
+activate Controller
+Controller -> Controller : 8. validateInput()
+activate Controller
+deactivate Controller
+opt validation error
+    Controller --> Route : 8.1 Return error
+    Route --> UI : 8.2 Show error message
+    UI -> User : 8.3 Display error message
+end
+Controller -> Service : 9. filterUser(filters)
+activate Service
+Service -> Model : 10. findByFilters(filters)
+activate Model
+Model -> DB : 11. find({role: role, status: status})
+activate DB
+DB --> Model : 12. Return matching user documents
+deactivate DB
+Model --> Service : 13. Return matching user documents
+deactivate Model
+Service -> Service : 14. checkDatabaseError()
+activate Service
+deactivate Service
+opt database error
+    Service --> Controller : 14.1 Return error
+    Controller --> Route : 14.2 Return error info
+    Route --> UI : 14.3 Show error message
+    UI -> User : 14.4 Display error message
+end
+Service -> Service : 15. mapToUserDTOList()
+activate Service
+deactivate Service
+Service --> Controller : 16. Return success
+deactivate Service
+Controller --> Route : 17. Return success
+deactivate Controller
+Route --> UI : 18. Return success
+deactivate Route
+UI -> UI : 19. Render filtered results
+activate UI
+deactivate UI
+UI -> User : 20. Display filtered users
+deactivate UI
+deactivate User
+
+@enduml
