@@ -1,0 +1,88 @@
+@startuml 8_switchTheme
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor User
+boundary ProfileThemeScreen as UI
+control ProfileRoute as Route
+participant ":AuthMiddleware" as AuthMiddleware
+control ProfileController as Controller
+participant ":ProfileService" as ProfileService
+participant ":UserService" as UserService
+participant ":UserModel" as UserModel
+database Database as DB
+
+activate User
+User -> UI : 1. Click theme toggle
+activate UI
+UI -> Route : 2. POST /profile/switch-theme (with JWT token)
+activate Route
+Route -> AuthMiddleware : 3. authenticateUser(req) & authorizeRole()
+activate AuthMiddleware
+ref over User, DB: Verify Token & Check Role
+AuthMiddleware --> Route : 4. User authenticated & authorized
+deactivate AuthMiddleware
+Route -> Controller : 5. handleSwitchTheme(userId, theme)
+activate Controller
+Controller -> ProfileService : 6. switchTheme(userId, theme)
+activate ProfileService
+ProfileService -> UserService : 7. findById(userId)
+activate UserService
+UserService -> UserModel : 8. findOne()
+activate UserModel
+UserModel -> DB : 9. findOne()
+activate DB
+DB --> UserModel : 10. Return user document (or null)
+deactivate DB
+UserModel --> UserService : 11. Return user entity (or null)
+deactivate UserModel
+UserService --> ProfileService : 12. Return user entity (or null)
+deactivate UserService
+ProfileService -> ProfileService : 13. checkNotFound()
+activate ProfileService
+deactivate ProfileService
+opt user not found
+    ProfileService --> Controller : 13.1 Return notfound
+    Controller --> Route : 13.2 Return error response
+    Route --> UI : 13.3 Return error response
+    UI -> User : 13.4 Display error message
+end
+
+ProfileService -> UserService : 14. updateTheme(userId, theme)
+activate UserService
+UserService -> UserModel : 15. updateOne()
+activate UserModel
+UserModel -> DB : 16. updateOne()
+activate DB
+DB --> UserModel : 17. Return modified count (or 0 if failed)
+deactivate DB
+UserModel -> UserModel : 18. checkUpdateSuccess()
+activate UserModel
+deactivate UserModel
+opt update failed
+    UserModel --> UserService : 18.1 Return badrequest
+    UserService --> ProfileService : 18.2 Return error response
+    ProfileService --> Controller : 18.3 Return error response
+    Controller --> Route : 18.4 Return error response
+    Route --> UI : 18.5 Return error response
+    UI -> User : 18.6 Display error message
+end
+UserModel --> UserService : 19. Confirm theme updated
+deactivate UserModel
+UserService --> ProfileService : 20. Return success
+deactivate UserService
+ProfileService --> Controller : 21. Return success
+deactivate ProfileService
+Controller --> Route : 22. Return success
+deactivate Controller
+Route --> UI : 23. Return success
+deactivate Route
+UI -> UI : 24. Apply theme change
+activate UI
+deactivate UI
+UI --> User : 25. Display updated theme
+deactivate UI
+deactivate User
+@enduml
