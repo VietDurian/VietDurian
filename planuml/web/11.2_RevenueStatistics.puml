@@ -1,0 +1,63 @@
+@startuml 11.2_RevenueStatistics
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor User
+boundary dashboardScreen as UI
+control statisticRoute as Route
+participant ":authMiddleware" as Middleware
+control statisticController as Controller
+participant ":statisticService" as Service
+participant ":statisticModel" as Model
+database Database as DB
+
+activate User
+User -> UI : 1. Open revenue statistics page
+activate UI
+UI -> Route : 2. GET /statistic/revenue?period=selectedPeriod
+activate Route
+Route -> Middleware : 3. authenticateUser(req) & authorizeRole()
+activate Middleware
+ref over User, DB: Verify Token & Check Role
+Middleware --> Route : 4. User authenticated & authorized
+deactivate Middleware
+Route -> Controller : 5. handleGetRevenueStatistics(userInfo, period)
+activate Controller
+Controller -> Service : 6. getRevenueStatistics(userId, period)
+activate Service
+Service -> Model : 7. findRevenueData(userId, period)
+activate Model
+Model -> DB : 8. aggregate([{$match: {userId, period}}, {$group: {...}}])
+activate DB
+DB --> Model : 9. Return revenue data
+deactivate DB
+Model --> Service : 10. Return revenue data
+deactivate Model
+Service -> Service : 11. checkDatabaseError()
+activate Service
+deactivate Service
+opt database error
+    Service --> Controller : 11.1 Return error
+    Controller --> Route : 11.2 Return error info
+    Route --> UI : 11.3 Show error message
+    UI -> User : 11.4 Display error message
+end
+Service -> Service : 12. calculateRevenueSummaries()
+activate Service
+deactivate Service
+Service --> Controller : 13. Return success
+deactivate Service
+Controller --> Route : 14. Return success
+deactivate Controller
+Route --> UI : 15. Return success
+deactivate Route
+UI -> UI : 16. Render revenue statistics & charts
+activate UI
+deactivate UI
+UI -> User : 17. Display revenue statistics
+deactivate UI
+deactivate User
+
+@enduml
