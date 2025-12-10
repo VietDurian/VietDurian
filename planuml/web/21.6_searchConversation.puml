@@ -1,0 +1,72 @@
+@startuml SearchConversation
+
+actor Admin
+boundary "ConversationListPage" as View #lightblue
+participant ":chatRoute" as Route #lightblue
+control "authMiddleware" as Auth #Orange
+control "chatController" as Controller #lightblue
+participant ":chatService" as Service #lightblue
+entity "conversationModel" as Model #lightblue
+database "MongoDB" as MongoDB #yellow
+
+    Admin -> View: 1. Enter search keyword (username)
+    activate Admin
+    activate View
+
+    View -> View: 2. Filter conversations locally
+    activate View
+    deactivate View
+
+        View -> Route: 4. GET /api/v1/chat/conversations
+        activate Route
+
+        Route -> Auth: 5. authenticateAdmin(req, res, next)
+        activate Auth
+        
+        ref over Admin, View, Route, Auth, Controller, Service, Model, MongoDB : 6. Middleware verifies access token & admin role
+
+        Auth --> Route: 7. authentication success
+        deactivate Auth
+
+        Route -> Controller: 8. getAllConversation(req, res)
+        activate Controller
+
+        Controller -> Service: 9. getAllConversation()
+        activate Service
+
+        Service -> Model: 10. getAll()
+        activate Model
+
+        Model -> MongoDB: 11. ExecuteQuery() - Aggregate with user lookup
+        activate MongoDB
+        MongoDB --> Model: 12. return all conversations with user info
+        deactivate MongoDB
+
+        Model --> Service: 13. return conversations list
+        deactivate Model
+
+        alt Conversations found
+
+            Service --> Controller: 13.1. return conversations list
+            
+            Controller --> Route: 13.1.1. return conversations data
+
+            Route --> View: 13.1.2. display conversations list
+
+            View --> Admin: 13.1.3. show filtered conversations
+        else No conversations found
+            Service --> Controller: 13.2. return empty list
+            deactivate Service
+
+            Controller --> Route: 13.2.1. return empty data
+            deactivate Controller
+
+            Route --> View: 13.2.2. display no conversations message
+            deactivate Route
+
+            View --> Admin: 13.2.3. show "No conversations found"
+            deactivate View
+            deactivate Admin
+        end
+
+@enduml
