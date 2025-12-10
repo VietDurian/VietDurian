@@ -1,0 +1,65 @@
+@startuml CreateReaction
+
+actor User as "Users"
+boundary "BlogDetailPage" as View #lightblue
+participant ":reactionRoute" as Route #lightblue
+control "authMiddleware" as Auth #Orange
+control "reactionController" as Controller #lightblue
+participant ":reactionService" as Service #lightblue
+entity "reactionCommentModel" as Model #lightblue
+database "MongoDB" as MongoDB #yellow
+
+    User -> View: 1. Hover/Click "Like" button
+    activate User
+    activate View
+
+    View -> View: 2. Show icon list
+    activate View
+    deactivate View
+
+    opt Cancel Reaction
+        View --> User: 2.1. Move cursor away / Click "Delete" icon
+    end
+
+    User -> View: 3. Click specific reaction icon
+
+    View -> Route: 4. POST /api/v1/reaction { commentId, reactionType }
+    activate Route
+    Route -> Auth: 5. authenticateUser(req, res, next)
+    activate Auth
+    ref over User, View, Route, Auth, Controller, Service, Model, MongoDB : 6. Middleware verifies access token
+
+    Auth --> Route: 7. authentication success
+    deactivate Auth
+
+    Route -> Controller: 8. addReaction(req, res)
+    activate Controller
+
+    Controller -> Service: 9. addReaction(reactionData, userId)
+    activate Service
+
+    Service -> Model: 10. addReaction(reactionData, userId)
+    activate Model
+
+    Model -> MongoDB: 11. Insert new reaction
+    activate MongoDB
+    MongoDB --> Model: 12. Return created reaction
+    deactivate MongoDB
+
+    Model --> Service: 13. Return result
+    deactivate Model
+
+    Service --> Controller: 14. Return created reaction
+    deactivate Service
+
+    Controller --> Route: 15. 201 Created + reaction
+    deactivate Controller
+
+    Route --> View: 16. Render created reaction
+    deactivate Route
+
+    View --> User: 17. Display created reaction by the comment
+    deactivate View
+    deactivate User
+
+@enduml
