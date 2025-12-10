@@ -1,0 +1,92 @@
+@startuml Export Product
+
+actor Admin as "Admin"
+boundary "ProductPage" as View #lightblue
+participant ":productRoute" as Route #lightblue
+control "authMiddleware" as Auth #orange
+control "productController" as Controller #lightblue
+participant ":productService" as Service #lightblue
+entity "productModel" as Model #lightblue
+database "MongoDB" as MongoDB #yellow
+participant ":exportHelper" as Helper #lightgreen
+
+Admin -> View: 1. Click "Export" button
+activate Admin
+activate View
+
+View -> View: 2. Show export modal
+activate View
+deactivate View
+
+opt Cancel Export
+    View --> Admin: 2.1. Cancel export
+end
+
+Admin -> View: 3. Select export type (Excel/CSV)\nand apply filters (optional)
+Admin -> View: 4. Confirm export
+
+View -> Route: 5. GET /api/v1/product/export/{type}\n(params: name)
+activate Route
+
+Route -> Auth: 6. authenticateUser(req, res, next)
+activate Auth
+
+ref over Admin, View, Route, Auth, Controller, Service, Model, MongoDB : 7. Middleware verifies access token
+
+Auth --> Route: 8. authentication success
+deactivate Auth
+
+Route -> Controller: 9. exportExcel(req, res) | exportCSV(req, res)
+activate Controller
+
+Controller -> Service: 10. getAllForExport(filters)
+activate Service
+
+Service -> Model: 11. getAllForExport(combinedFilters, maxLimit)
+activate Model
+
+Model -> MongoDB: 12. ExecuteQuery(find with filters)
+activate MongoDB
+MongoDB --> Model: 13. Return products array
+deactivate MongoDB
+
+Model --> Service: 14. Return products data
+deactivate Model
+
+Service --> Controller: 15. Return products array
+deactivate Service
+
+opt No products found
+    Controller --> Route: 15.1. Show error message
+    Route --> View: 15.2. Show error message
+    View --> Admin: 15.3. Display "No products found to export"
+end
+
+alt Export Type = Excel
+
+    Controller -> Helper: 16.1. generateProductExcelFile(products)
+    activate Helper
+    
+    Helper --> Controller: 16.1.1. Return Excel buffer
+    deactivate Helper
+    
+else Export Type = CSV
+    Controller -> Helper: 16.2. generateProductCSVFile(products)
+    activate Helper
+    
+    Helper --> Controller: 16.2.1. Return CSV string
+    deactivate Helper
+end
+
+Controller --> Route: 17. Return 200 OK + file buffer/string
+deactivate Controller
+
+Route --> View: 18. Return file blob
+deactivate Route
+
+
+View --> Admin: 19. File downloaded successfully
+deactivate Admin
+deactivate View
+
+@enduml

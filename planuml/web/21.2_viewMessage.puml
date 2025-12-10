@@ -1,0 +1,89 @@
+@startuml ViewMessage
+
+actor User as "Users"
+boundary "ConversationDetailPage" as View #lightblue
+participant ":chatRoute" as Route #lightblue
+control "authMiddleware" as Auth #Orange
+control "chatController" as Controller #lightblue
+participant ":chatService" as Service #lightblue
+entity "conversationModel" as ConvModel #lightblue
+entity "messageModel" as MsgModel #lightblue
+database "MongoDB" as MongoDB #yellow
+participant "Socket Server" as Socket #lightgreen
+
+    User -> View: 1. Open conversation (conversationId)
+    activate User
+    activate View
+
+    View -> Route: 2. GET /api/v1/chat/user-conversations
+    activate Route
+
+    Route -> Auth: 3. authenticateUser(req, res, next)
+    activate Auth
+    
+    ref over User, View, Route, Auth, Controller, Service, ConvModel, MsgModel, MongoDB : 4. Middleware verifies access token & user role
+
+    Auth --> Route: 5. authentication success
+    deactivate Auth
+
+    Route -> Controller: 6. getDetailsConversation(req, res)
+    deactivate Route
+    activate Controller
+
+    Controller -> Service: 7. getUserConversation(userId)
+    activate Service
+
+    Service -> ConvModel: 8. getUserConversation(userId, isRead = true)
+    activate ConvModel
+
+    ConvModel -> MongoDB: 9. ExecuteQuery()
+    activate MongoDB
+    MongoDB --> ConvModel: 10. return conversation with messages
+    deactivate MongoDB
+
+    ConvModel --> Service: 11. return conversation details
+    deactivate ConvModel
+
+    Service -> ConvModel: 12. update(conversationId, isRead = true)
+    activate ConvModel
+
+    ConvModel -> MongoDB: 13. ExecuteQuery()
+    activate MongoDB
+    MongoDB --> ConvModel: 14. return updated conversation
+    deactivate MongoDB
+
+    ConvModel --> Service: 15. return updated conversation
+    deactivate ConvModel
+
+    Service -> MsgModel: 16. updateStatusBulk(conversationId, 'seen')
+    activate MsgModel
+
+    MsgModel -> MongoDB: 17. ExecuteQuery()
+    activate MongoDB
+    MongoDB --> MsgModel: 18. Return update result
+    deactivate MongoDB
+
+    MsgModel --> Service: 19. Return update result
+    deactivate MsgModel
+
+    Service --> Controller: 20. Return conversation details
+    deactivate Service
+
+    par Emit to Other User
+        Controller -> Socket: 20.1. Emit 'messages_seen' to other user
+        activate Socket
+        Socket --> View: 20.1.1. Broadcast to other user client
+        deactivate Socket
+    else Emit to Admin
+        Controller -> Socket: 20.2. Emit 'messages_seen' to admin
+        deactivate Controller
+        activate Socket
+        Socket --> View: 20.2.1. Broadcast to admin client
+        deactivate Socket
+    end
+
+    View --> User: 21. Display messages & chat interface
+    deactivate View
+    deactivate User
+
+@enduml

@@ -1,0 +1,113 @@
+@startuml SendMessage
+
+actor User as "Users"
+boundary "ConversationDetailPage" as View #lightblue
+participant ":chatRoute" as Route #lightblue
+control "authMiddleware" as Auth #Orange
+control "chatController" as Controller #lightblue
+participant ":chatService" as Service #lightblue
+entity "messageModel" as MsgModel #lightblue
+entity "conversationModel" as ConvModel #lightblue
+database "MongoDB" as MongoDB #yellow
+participant "Socket Server" as Socket #lightgreen
+
+    User -> View: 1. Type message content
+    activate User
+    activate View
+
+    User -> View: 2. Click send button (or Enter)
+
+    View -> Route: 3. POST /api/v1/chat/message
+    activate Route
+
+    Route -> Auth: 4. authenticateUser(req, res, next)
+    activate Auth
+    
+    ref over User, View, Route, Auth, Controller, Service, ConvModel, MsgModel, MongoDB : 5. Middleware verifies access token & user role
+
+    Auth --> Route: 6. authentication success
+    deactivate Auth
+
+    Route -> Controller: 7. sendMessage(req, res)
+    activate Controller
+
+    Controller -> Service: 8. sendMessage(readerId, senderId, content)
+    activate Service
+
+    Service -> ConvModel: 9. getDetailsByUserId(readerId)
+    activate ConvModel
+
+    ConvModel -> MongoDB: 10. ExecuteQuery()
+    activate MongoDB
+    MongoDB --> ConvModel: 11. Return conversation or null
+    deactivate MongoDB
+
+    ConvModel --> Service: 12. Return conversation
+    deactivate ConvModel
+
+    opt Conversation not found
+        Service -> ConvModel: 13. createNew(conversationData)
+        activate ConvModel
+        ConvModel -> MongoDB: 14. ExecuteQuery()
+        activate MongoDB
+        MongoDB --> ConvModel: 15. Return new conversation
+        deactivate MongoDB
+        ConvModel --> Service: 16. Return conversationId
+        deactivate ConvModel
+    end
+
+    Service -> MsgModel: 17. createNew(messageData)
+    activate MsgModel
+
+    MsgModel -> MongoDB: 18. ExecuteQuery()
+    activate MongoDB
+    MongoDB --> MsgModel: 19. Return new message
+    deactivate MongoDB
+
+    MsgModel --> Service: 20. Return new message
+    deactivate MsgModel
+
+    Service -> ConvModel: 21. updateMessage(conversationId, messageId, readerId)
+    activate ConvModel
+
+    ConvModel -> MongoDB: 22. ExecuteQuery()
+    activate MongoDB
+    MongoDB --> ConvModel: 23. Return updated conversation
+    deactivate MongoDB
+
+    ConvModel --> Service: 24. Return updated conversation
+    deactivate ConvModel
+
+    Service --> Controller: 25. Return message result
+    deactivate Service
+
+    par Emit new message to other user
+        Controller -> Socket: 25.1. emitNewMessage(messageData, receiverId)
+        activate Socket
+        Socket --> View: 25.1.1. Broadcast 'new_message' to other user
+        deactivate Socket
+    else Emit conversation update to admin
+        Controller -> Service: 25.2. getAllConversation()
+        activate Service
+        Service -> ConvModel: 25.2.1. getAll()
+        activate ConvModel
+        ConvModel -> MongoDB: 25.2.2. ExecuteQuery()
+        activate MongoDB
+        MongoDB --> ConvModel: 25.2.3. Return all conversations
+        deactivate MongoDB
+        ConvModel --> Service: 25.2.4. Return conversations
+        deactivate ConvModel
+        Service --> Controller: 25.2.5. Return conversations
+        deactivate Service
+        
+        Controller -> Socket: 25.2.6. emitConversationsUpdate(conversations)
+        activate Socket
+        Socket --> View: 25.2.7. Broadcast to admin
+        deactivate Socket
+    end
+
+    View --> User: 26. Display new message in chat
+    deactivate View
+    deactivate User
+
+@enduml

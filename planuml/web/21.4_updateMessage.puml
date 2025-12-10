@@ -1,0 +1,76 @@
+@startuml UpdateMessage
+
+actor User as "Users"
+boundary "ConversationDetailPage" as View #lightblue
+participant ":chatRoute" as Route #lightblue
+control "authMiddleware" as Auth #Orange
+control "chatController" as Controller #lightblue
+participant ":chatService" as Service #lightblue
+entity "messageModel" as Model #lightblue
+database "MongoDB" as MongoDB #yellow
+participant "Socket Server" as Socket #lightgreen
+
+    User -> View: 1. Click edit specific message
+    activate User
+    activate View
+
+    View -> View: 2. Enter edit mode & show input
+    activate View
+    deactivate View
+
+    opt Cancel Edit
+        View --> User: 2.1. Cancel edit mode
+    end
+
+    User -> View: 3. Modify content & save
+
+    View -> Route: 4. PUT /api/v1/chat/message/{messageId}
+    activate Route
+
+    Route -> Auth: 5. authenticateUser(req, res, next)
+    activate Auth
+    
+    ref over User, View, Route, Auth, Controller, Service, Model, MongoDB : 6. Middleware verifies access token & user role
+
+    Auth --> Route: 7. authentication success
+    deactivate Auth
+
+    Route -> Controller: 8. updateMessage(req, res)
+    deactivate Route
+    activate Controller
+
+    Controller -> Service: 9. updateMessage(messageId, content)
+    activate Service
+
+    Service -> Model: 10. update(messageId, content, isUpdated = true)
+    activate Model
+
+    Model -> MongoDB: 11. ExecuteQuery()
+    activate MongoDB
+    MongoDB --> Model: 12. return updated message
+    deactivate MongoDB
+
+    Model --> Service: 13. return updated message
+    deactivate Model
+
+    Service --> Controller: 14. return updated message
+    deactivate Service
+
+    par Emit to other user
+        Controller -> Socket: 14.1. emit 'message_updated' to other user
+        activate Socket
+        Socket --> View: 14.1.1. broadcast to other user client
+        deactivate Socket
+    else Emit to admin
+        Controller -> Socket: 14.2. emit 'message_updated' to admin
+        deactivate Controller
+        activate Socket
+        Socket --> View: 14.2.1. broadcast to admin client
+        deactivate Socket
+    end
+
+    View --> User: 15. display updated message with (edited) label
+    deactivate View
+    deactivate User
+
+@enduml
