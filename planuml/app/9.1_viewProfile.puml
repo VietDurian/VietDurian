@@ -1,4 +1,4 @@
-@startuml 9.3_viewPublicProfile
+@startuml 9.1_viewProfile
 skinparam monochrome true
 skinparam shadowing false
 skinparam sequenceArrowThickness 1
@@ -15,18 +15,18 @@ participant ":userModel" as UserModel
 database Database as DB
 
 activate User
-User -> UI : 1. Click view public profile
+User -> UI : 1. Click view profile
 activate UI
-UI -> Route : 2. GET /profile/public/:userId 
+UI -> Route : 2. GET /profile/me
 activate Route
 Route -> AuthMiddleware : 3. authenticateUser(req) & authorizeRole()
 activate AuthMiddleware
 ref over User, DB: Verify Token & Check Role
 AuthMiddleware --> Route : 4. User authenticated & authorized
 deactivate AuthMiddleware
-Route -> Controller : 5. handleGetPublicProfile(userId)
+Route -> Controller : 5. handleGetProfile(userId)
 activate Controller
-Controller -> ProfileService : 6. getPublicProfile(userId)
+Controller -> ProfileService : 6. getProfile(userId)
 activate ProfileService
 ProfileService -> UserService : 7. findById(userId)
 activate UserService
@@ -34,7 +34,7 @@ UserService -> UserModel : 8. findOne()
 activate UserModel
 UserModel -> DB : 9. findOne()
 activate DB
-DB --> UserModel : 10. Return user document | null | dbError
+DB --> UserModel : 10. Return user document
 deactivate DB
 UserModel --> UserService : 11. Return raw result
 deactivate UserModel
@@ -50,22 +50,19 @@ opt database error
 end
 UserService --> ProfileService : 13. Return user entity
 deactivate UserService
-ProfileService -> ProfileService : 14. filterPublicData()
+ProfileService -> ProfileService : 14. mapUserToDTO()
 activate ProfileService
 deactivate ProfileService
-ProfileService -> ProfileService : 15. mapToPublicDTO()
-activate ProfileService
+ProfileService --> Controller : 15. Return success + user data
 deactivate ProfileService
-ProfileService --> Controller : 16. Return success + public data
-deactivate ProfileService
-Controller --> Route : 17. Return success + public data (200)
+Controller --> Route : 16. Return success + user data 
 deactivate Controller
-Route --> UI : 18. Return success + public data (200)
+Route --> UI : 17. Return success + user data 
 deactivate Route
-UI --> UI : 19. Render public profile
+UI -> UI : 18. Render profile
 activate UI
 deactivate UI
-UI --> User : 20. Display public profile
+UI --> User : 19. Display profile
 deactivate UI
 deactivate User
 

@@ -1,0 +1,105 @@
+@startuml 12.5_confirmUpgrade
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor User
+boundary dashboardScreen as UI
+control userManagementRoute as Route
+participant ":authMiddleware" as Middleware
+control userManagementController as Controller
+participant ":userManagementService" as Service
+participant ":userManagementModel" as Model
+database Database as DB
+
+activate User
+User -> UI : 1. Review upgrade request
+activate UI
+User -> UI : 2. Select approval or rejection decision
+User -> UI : 3. Click confirm button
+UI -> UI : 4. Validate input
+activate UI
+deactivate UI
+opt validation error
+    UI --> User : 4.1 Display error message
+end
+UI -> Route : 5. PUT /userManagement/confirmUpgrade/:userId
+activate Route
+Route -> Middleware : 6. authenticateUser(req) & authorizeRole()
+activate Middleware
+ref over User, DB: Verify Token & Check Role
+Middleware --> Route : 7. User authenticated & authorized
+deactivate Middleware
+Route -> Controller : 8. handleConfirmUpgrade(userInfo, userId, decision)
+activate Controller
+Controller -> Controller : 9. validateInput()
+activate Controller
+deactivate Controller
+opt validation error
+    Controller --> Route : 9.1 Return error
+    Route --> UI : 9.2 Show error message
+    UI --> User : 9.3 Display error message
+end
+Controller -> Service : 10. confirmUpgrade(userId, decision)
+activate Service
+Service -> Model : 11. findById(userId)
+activate Model
+Model -> DB : 12. findOne({_id: userId})
+activate DB
+DB --> Model : 13. Return user document
+deactivate DB
+Model --> Service : 14. Return user document
+deactivate Model
+Service -> Service : 15. checkDatabaseError()
+activate Service
+deactivate Service
+opt database error
+    Service --> Controller : 15.1 Return error
+    Controller --> Route : 15.2 Return error info
+    Route --> UI : 15.3 Show error message
+    UI --> User : 15.4 Display error message
+end
+Service -> Service : 16. checkNotFound()
+activate Service
+deactivate Service
+opt user not found
+    Service --> Controller : 16.1 Return error
+    Controller --> Route : 16.2 Return error info
+    Route --> UI : 16.3 Show error message
+    UI --> User : 16.4 Display error message
+end
+Service -> Model : 17. updateAccountLevel(userId, decision)
+activate Model
+Model -> DB : 18. updateOne({_id: userId}, {$set: {accountLevel: newLevel}})
+activate DB
+DB --> Model : 19. Return update result
+deactivate DB
+Model --> Service : 20. Return update result
+deactivate Model
+Service -> Service : 21. checkDatabaseError()
+activate Service
+deactivate Service
+opt database error
+    Service --> Controller : 21.1 Return error
+    Controller --> Route : 21.2 Return error info
+    Route --> UI : 21.3 Show error message
+    UI --> User : 21.4 Display error message
+end
+Service -> Service : 22. mapToUserDTO()
+activate Service
+deactivate Service
+Service --> Controller : 23. Return success
+deactivate Service
+Controller --> Route : 24. Return success
+deactivate Controller
+Route --> UI : 25. Return success
+deactivate Route
+UI -> UI : 26. Display success message
+activate UI
+deactivate UI
+UI --> User : 27. Show updated account level
+deactivate UI
+deactivate User
+
+@enduml

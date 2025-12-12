@@ -1,0 +1,104 @@
+@startuml 12.1.2_BlockUnblockUser
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor User
+boundary dashboardScreen as UI
+control userManagementRoute as Route
+participant ":authMiddleware" as Middleware
+control userManagementController as Controller
+participant ":userManagementService" as Service
+participant ":userManagementModel" as Model
+database Database as DB
+
+activate User
+User -> UI : 1. Enter block/unblock status
+activate UI
+User -> UI : 2. Click submit button
+UI -> UI : 3. Validate input
+activate UI
+deactivate UI
+opt validation error
+    UI --> User : 3.1 Display error message
+end
+UI -> Route : 4. PUT /userManagement/blockStatus/:userId
+activate Route
+Route -> Middleware : 5. authenticateUser(req) & authorizeRole()
+activate Middleware
+ref over User, DB: Verify Token & Check Role
+Middleware --> Route : 6. User authenticated & authorized
+deactivate Middleware
+Route -> Controller : 7. handleBlockUnblockUser(userInfo, userId, status)
+activate Controller
+Controller -> Controller : 8. validateInput()
+activate Controller
+deactivate Controller
+opt validation error
+    Controller --> Route : 8.1 Return error
+    Route --> UI : 8.2 Show error message
+    UI --> User : 8.3 Display error message
+end
+Controller -> Service : 9. blockUnblockUser(userId, status)
+activate Service
+Service -> Model : 10. findById(userId)
+activate Model
+Model -> DB : 11. findOne({_id: userId})
+activate DB
+DB --> Model : 12. Return user document
+deactivate DB
+Model --> Service : 13. Return user document
+deactivate Model
+Service -> Service : 14. checkDatabaseError()
+activate Service
+deactivate Service
+opt database error
+    Service --> Controller : 14.1 Return error
+    Controller --> Route : 14.2 Return error info
+    Route --> UI : 14.3 Show error message
+    UI --> User : 14.4 Display error message
+end
+Service -> Service : 15. checkNotFound()
+activate Service
+deactivate Service
+opt user not found
+    Service --> Controller : 15.1 Return error
+    Controller --> Route : 15.2 Return error info
+    Route --> UI : 15.3 Show error message
+    UI --> User : 15.4 Display error message
+end
+Service -> Model : 16. updateBlockStatus(userId, status)
+activate Model
+Model -> DB : 17. updateOne({_id: userId}, {$set: {blocked: status}})
+activate DB
+DB --> Model : 18. Return update result
+deactivate DB
+Model --> Service : 19. Return update result
+deactivate Model
+Service -> Service : 20. checkDatabaseError()
+activate Service
+deactivate Service
+opt database error
+    Service --> Controller : 20.1 Return error
+    Controller --> Route : 20.2 Return error info
+    Route --> UI : 20.3 Show error message
+    UI --> User : 20.4 Display error message
+end
+Service -> Service : 21. mapToUserDTO()
+activate Service
+deactivate Service
+Service --> Controller : 22. Return success
+deactivate Service
+Controller --> Route : 23. Return success
+deactivate Controller
+Route --> UI : 24. Return success
+deactivate Route
+UI -> UI : 25. Display success message
+activate UI
+deactivate UI
+UI --> User : 26. Show updated user status
+deactivate UI
+deactivate User
+
+@enduml

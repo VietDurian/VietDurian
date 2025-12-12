@@ -1,0 +1,99 @@
+@startuml 10.3_updateDiary
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor User
+boundary diaryScreen as UI
+control diaryRoute as Route
+participant ":authMiddleware" as Middleware
+control diaryController as Controller
+participant ":diaryService" as Service
+participant ":diaryModel" as Model
+database Database as DB
+
+activate User
+User -> UI : 1. Click edit diary entry
+activate UI
+User -> UI : 2. Edit diary entry details
+User -> UI : 3. Click submit button
+UI -> Route : 4. PUT /diary/entry/:id 
+activate Route
+Route -> Middleware : 5. authenticateUser(req) & authorizeRole()
+activate Middleware
+ref over User, DB: Verify Token & Check Role
+Middleware --> Route : 6. User authenticated & authorized
+deactivate Middleware
+Route -> Controller : 7. handleUpdateDiary(userInfo, diaryId, data)
+activate Controller
+Controller -> Controller : 8. Validate input
+activate Controller
+deactivate Controller
+opt validation error
+    Controller --> Route : 8.1 Return error
+    Route --> UI : 8.2 Show error message
+    UI --> User : 8.3 Display error message
+end
+Controller -> Service : 9. updateDiary(diaryId, data)
+activate Service
+Service -> Model : 10. findById(diaryId)
+activate Model
+Model -> DB : 11. findOne({_id: diaryId})
+activate DB
+DB --> Model : 12. Return result (document/null/error)
+deactivate DB
+Model --> Service : 13. Return result
+deactivate Model
+Service -> Service : 14. checkDatabaseError()
+activate Service
+deactivate Service
+opt database error
+    Service --> Controller : 14.1 Return error
+    Controller --> Route : 14.2 Return error info
+    Route --> UI : 14.3 Show error message
+    UI --> User : 14.4 Display error message
+end
+Service -> Service : 15. Check if diary result is null
+activate Service
+deactivate Service
+opt diary not found
+    Service --> Controller : 15.1 Return error
+    Controller --> Route : 15.2 Return error info
+    Route --> UI : 15.3 Show error message
+    UI --> User : 15.4 Display error message
+end
+Service -> Model : 16. update(diaryId, updateData)
+activate Model
+Model -> DB : 17. updateOne({_id: diaryId}, {$set: {...}})
+activate DB
+DB --> Model : 18. Return result
+deactivate DB
+Model --> Service : 19. Return update result
+deactivate Model
+Service -> Service : 20. checkDatabaseError()
+activate Service
+deactivate Service
+opt database error
+    Service --> Controller : 20.1 Return error
+    Controller --> Route : 20.2 Return error info
+    Route --> UI : 20.3 Show error message
+    UI --> User : 20.4 Display error message
+end
+Service -> Service : 21. mapToDiaryDTO()
+activate Service
+deactivate Service
+Service --> Controller : 22. Return success
+deactivate Service
+Controller --> Route : 23. Return success
+deactivate Controller
+Route --> UI : 24. Return success
+deactivate Route
+UI -> UI : 25. Display success message
+activate UI
+deactivate UI
+UI --> User : 26. Display updated diary entry
+deactivate UI
+deactivate User
+
+@enduml
