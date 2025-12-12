@@ -4,25 +4,25 @@ skinparam shadowing false
 skinparam sequenceArrowThickness 1
 hide footbox
 
-actor User
-boundary profileViewScreen as UI
-control profileRoute as Route
+actor User as "Users"
+boundary "ProfileViewPage" as UI
+participant ":profileRoute" as Route
 participant ":authMiddleware" as AuthMiddleware
-control profileController as Controller
+control "profileController" as Controller
 participant ":profileService" as ProfileService
 participant ":userService" as UserService
 participant ":userModel" as UserModel
-database Database as DB
+database "MongoDB" as DB
 
 activate User
 User -> UI : 1. Click view profile
 activate UI
 UI -> Route : 2. GET /profile/me
 activate Route
-Route -> AuthMiddleware : 3. authenticateUser(req) & authorizeRole()
+Route -> AuthMiddleware : 3. authenticateUser(req, res, next)
 activate AuthMiddleware
-ref over User, DB: Verify Token & Check Role
-AuthMiddleware --> Route : 4. User authenticated & authorized
+ref over User, DB: Verifies token
+AuthMiddleware --> Route : 4. authentication success
 deactivate AuthMiddleware
 Route -> Controller : 5. handleGetProfile(userId)
 activate Controller
@@ -34,7 +34,7 @@ UserService -> UserModel : 8. findOne()
 activate UserModel
 UserModel -> DB : 9. findOne()
 activate DB
-DB --> UserModel : 10. Return user document
+DB --> UserModel : 10. Return user document | null 
 deactivate DB
 UserModel --> UserService : 11. Return raw result
 deactivate UserModel
@@ -46,23 +46,27 @@ opt database error
     ProfileService --> Controller : 12.2 Return error response
     Controller --> Route : 12.3 Return error response
     Route --> UI : 12.4 Return error response
-    UI --> User : 12.5 Display error message
+    UI -> User : 12.5 Display error message
 end
-UserService --> ProfileService : 13. Return user entity
+UserService -> UserService : 13. checkNotFound()
+activate UserService
 deactivate UserService
-ProfileService -> ProfileService : 14. mapUserToDTO()
-activate ProfileService
-deactivate ProfileService
+opt user not found (null document)
+    UserService --> ProfileService : 13.1 Return notfound
+    ProfileService --> Controller : 13.2 Return error response
+    Controller --> Route : 13.3 Return error response
+    Route --> UI : 13.4 Return error response
+    UI -> User : 13.5 Display user not found
+end
+UserService --> ProfileService : 14. Return user entity
+deactivate UserService
 ProfileService --> Controller : 15. Return success + user data
 deactivate ProfileService
 Controller --> Route : 16. Return success + user data 
 deactivate Controller
 Route --> UI : 17. Return success + user data 
 deactivate Route
-UI -> UI : 18. Render profile
-activate UI
-deactivate UI
-UI --> User : 19. Display profile
+UI --> User : 18. Display profile
 deactivate UI
 deactivate User
 

@@ -3,8 +3,13 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from '@/config/swagger';
 import { API_v1 } from '@/routes/index';
+import connectDB from '@/config/mongoose';
 
 const app = express();
+
+// Connect to MongoDB
+connectDB();
+
 app.use(cors());
 app.use(express.json());
 
