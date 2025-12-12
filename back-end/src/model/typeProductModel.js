@@ -15,6 +15,10 @@ const typeProductSchema = new mongoose.Schema(
 	}
 );
 
-const TypeProduct = mongoose.model('TypeProduct', typeProductSchema);
+const TypeProductModel = mongoose.model(
+	'TypeProduct',
+	typeProductSchema,
+	'TypeProduct'
+);
 
-export default TypeProduct;
+export { TypeProductModel };
