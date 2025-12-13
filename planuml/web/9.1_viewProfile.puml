@@ -7,11 +7,11 @@ hide footbox
 actor User as "Users"
 boundary "ProfileViewPage" as UI
 participant ":profileRoute" as Route
-participant ":authMiddleware" as AuthMiddleware
+control ":authMiddleware" as AuthMiddleware
 control "profileController" as Controller
 participant ":profileService" as ProfileService
 participant ":userService" as UserService
-participant ":userModel" as UserModel
+entity ":userModel" as UserModel
 database "MongoDB" as DB
 
 activate User

@@ -1,14 +1,15 @@
 @startuml RecallMessage
 
 actor User as "Users"
-boundary "ConversationDetailPage" as View #lightblue
-participant ":chatRoute" as Route #lightblue
-control "authMiddleware" as Auth #Orange
-control "chatController" as Controller #lightblue
-participant ":chatService" as Service #lightblue
-entity "messageModel" as Model #lightblue
-database "MongoDB" as MongoDB #yellow
-participant "Socket Server" as Socket #lightgreen
+boundary "ConversationDetailPage" as View 
+participant ":chatRoute" as Route 
+control "authMiddleware" as Auth 
+control "chatController" as Controller 
+participant ":chatService" as Service 
+entity "messageModel" as Model 
+database "MongoDB" as MongoDB 
+participant "Socket Server" as Socket 
+hide footbox
 
     User -> View: 1. Click recall specific message
     activate User
@@ -30,31 +31,35 @@ participant "Socket Server" as Socket #lightgreen
     Route -> Auth: 5. authenticateUser(req, res, next)
     activate Auth
     
-    ref over User, View, Route, Auth, Controller, Service, Model, MongoDB : 6. Middleware verifies access token & user role
+    ref over User, MongoDB : Verifies token
 
-    Auth --> Route: 7. authentication success
+    Auth --> Route: 6. authentication success
     deactivate Auth
 
-    Route -> Controller: 8. deleteMessage(req, res)
+    Route -> Controller: 7. deleteMessage(req, res)
     deactivate Route
     activate Controller
 
-    Controller -> Service: 9. deleteMessage(messageId)
+    Controller -> Service: 8. deleteMessage(messageId)
     activate Service
 
-    Service -> Model: 10. deleteMessage(messageId)
+    Service -> Model: 9. deleteMessage(messageId)
     activate Model
 
-    Model -> MongoDB: 11. ExecuteQuery()
+    Model -> MongoDB: 10. ExecuteQuery()
     activate MongoDB
-    MongoDB --> Model: 12. return updated message
+    MongoDB --> Model: 11. return updated message
     deactivate MongoDB
 
-    Model --> Service: 13. return updated message
+    Model --> Service: 12. return updated message
     deactivate Model
 
-    Service --> Controller: 14. return updated message
+    Service --> Controller: 13. return updated message
     deactivate Service
+
+    Controller -> Controller: 14. checkRecipientRole(updatedMessage)
+    activate Controller
+    deactivate Controller
 
     par Emit to other user
         Controller -> Socket: 14.1. emit 'message_recalled' to other user

@@ -1,15 +1,16 @@
 @startuml SendMessage
 
 actor User as "Users"
-boundary "ConversationDetailPage" as View #lightblue
-participant ":chatRoute" as Route #lightblue
-control "authMiddleware" as Auth #Orange
-control "chatController" as Controller #lightblue
-participant ":chatService" as Service #lightblue
-entity "messageModel" as MsgModel #lightblue
-entity "conversationModel" as ConvModel #lightblue
-database "MongoDB" as MongoDB #yellow
-participant "Socket Server" as Socket #lightgreen
+boundary "ConversationDetailPage" as View
+participant ":chatRoute" as Route 
+control "authMiddleware" as Auth 
+control "chatController" as Controller 
+participant ":chatService" as Service 
+entity "messageModel" as MsgModel 
+entity "conversationModel" as ConvModel 
+database "MongoDB" as MongoDB 
+participant "Socket Server" as Socket 
+hide footbox
 
     User -> View: 1. Type message content
     activate User
@@ -23,7 +24,7 @@ participant "Socket Server" as Socket #lightgreen
     Route -> Auth: 4. authenticateUser(req, res, next)
     activate Auth
     
-    ref over User, View, Route, Auth, Controller, Service, ConvModel, MsgModel, MongoDB : 5. Middleware verifies access token & user role
+    ref over User, MongoDB : 5. Middleware verifies access token & user role
 
     Auth --> Route: 6. authentication success
     deactivate Auth

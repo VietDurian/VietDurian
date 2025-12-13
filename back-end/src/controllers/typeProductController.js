@@ -4,11 +4,18 @@ import { typeProductService } from '@/services/typeProductService.js';
 const getAllTypeProducts = async (req, res, next) => {
 	try {
 		// Search for type products
-		const { name } = req.query;
+		const { name, page, limit } = req.query;
 		const typeProducts = await typeProductService.getAllTypeProducts({
 			searchName: name,
+			page: page || 1,
+			limit: limit || 10
 		});
-		res.status(200).json(typeProducts);
+		res.status(200).json({
+			code: 200,
+			message: 'Type products retrieved successfully',
+			data: typeProducts.data,
+			pagination: typeProducts.pagination
+		});
 	} catch (error) {
 		next(error);
 	}

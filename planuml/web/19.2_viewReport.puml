@@ -1,13 +1,14 @@
 @startuml ViewReportList
 
 actor Admin
-boundary "AdminDashboard" as View #lightblue
-participant ":reportRoute" as Route #lightblue
-control ":authMiddleware" as Auth #Orange
-control "reportController" as Controller #lightblue
-participant ":reportService" as Service #lightblue
-entity "reportModel" as Model #lightblue
-database "MongoDB" as MongoDB #yellow
+boundary "AdminDashboard" as View
+participant ":reportRoute" as Route
+control ":authMiddleware" as Auth
+control "reportController" as Controller 
+participant ":reportService" as Service 
+entity "reportModel" as Model 
+database "MongoDB" as MongoDB 
+hide footbox
 
 Admin -> View: 1. Click "Report Management"
 activate Admin
@@ -18,39 +19,54 @@ activate Route
 
 Route -> Auth: 3. authenticateUser(req, res, next)
 activate Auth
-ref over Admin, View, Route, Auth, Controller, Service, Model, MongoDB : 4. Middleware verifies access token
+ref over Admin, MongoDB : Verifies token
 
-Auth --> Route: 5. authentication success
+Auth --> Route: 4. authentication success
 deactivate Auth
 
-Route -> Controller: 6. getAllReport(req, res)
+Route -> Controller: 5. getAllReport(req, res)
 activate Controller
 
-Controller -> Service: 7. getAllReport()
+Controller -> Service: 6. getAllReport()
 activate Service
 
-Service -> Model: 8. getAllReport()
+Service -> Model: 7. getAllReport()
 activate Model
-Model -> MongoDB: 9. Query all reports
+Model -> MongoDB: 8. Query all reports
 activate MongoDB
-MongoDB --> Model: 10. Return report list
+MongoDB --> Model: 9. Return report list
 deactivate MongoDB
-Model --> Service: 11. Return report list
+Model --> Service: 10. Return report list
 deactivate Model
 
+Service -> Service: 11. checkCreationSuccess()
+activate Service
+deactivate Service
+
+opt database error
+    Service --> Controller: 11.1. Return badrequest
+    Controller --> Route: 11.2. Return error response
+    Route --> View: 11.3. Return error response
+    View -> Admin: 11.4. Display error message
+end
+
+Service --> Service: 12. checkEmptyResult()
+activate Service
+deactivate Service
+
 alt Reports available
-    Service --> Controller: 11.1. Return reports
-    Controller --> Route: 11.1.1. Return 200 OK 
-    Route --> View: 11.1.2. Render report list
-    View --> Admin: 11.1.3. Show reports with user & Blog details
+    Service --> Controller: 12.1. Return reports
+    Controller --> Route: 12.1.1. Return 200 OK 
+    Route --> View: 12.1.2. Render report list
+    View --> Admin: 12.1.3. Show reports with user & Blog details
 else Report list empty
-    Service --> Controller: 11.2. Return empty result
+    Service --> Controller: 12.2. Return empty result
     deactivate Service
-    Controller --> Route: 11.2.1. Return 200 OK 
+    Controller --> Route: 12.2.1. Return 200 OK 
     deactivate Controller
-    Route --> View: 11.2.2. Show "Report list is empty"
+    Route --> View: 12.2.2. Show "Report list is empty"
     deactivate Route
-    View --> Admin: 11.2.3. Display empty list message
+    View --> Admin: 12.2.3. Display empty list message
     deactivate View
     deactivate Admin
 end

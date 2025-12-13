@@ -1,13 +1,14 @@
 @startuml CreateReport
 
 actor User as "Users"
-boundary "BlogPage" as View #lightblue
-participant ":reportRoute" as Route #lightblue
-control "authMiddleware" as Auth #Orange
-control "reportController" as Controller #lightblue
-participant ":reportService" as Service #lightblue
-entity "reportModel" as Model #lightblue
-database "MongoDB" as MongoDB #yellow
+boundary "BlogPage" as View 
+participant ":reportRoute" as Route 
+control "authMiddleware" as Auth 
+control "reportController" as Controller 
+participant ":reportService" as Service 
+entity "reportModel" as Model 
+database "MongoDB" as MongoDB 
+hide footbox
 
     User -> View: 1. Click "Report" icon 
     activate User
@@ -21,18 +22,18 @@ database "MongoDB" as MongoDB #yellow
     end
 
     User -> View: 3. Enter report reason and Submit
-    View -> View: 3. Validate input
+    View -> View: 4. Validate input
     activate View
     deactivate View
     opt Invalid Input
-        View --> User: 3.1. Display "Reason is required shortest 10 characters."
+        View --> User: 4.1. Display "Reason is required shortest 10 characters."
     end
 
-    View -> Route: 4. POST /api/v1/report { blogId, userId, reason }
+    View -> Route: 5. POST /api/v1/report { blogId, userId, reason }
     activate Route
-    Route -> Auth: 5. authenticateUser(req, res, next)
+    Route -> Auth: 6. authenticateUser(req, res, next)
     activate Auth
-    ref over User, View, Route, Auth, Controller, Service, Model, MongoDB : 6. Middleware verifies access token
+    ref over User, MongoDB : Verifies token
 
 
     Auth --> Route: 7. authentication success
@@ -55,16 +56,27 @@ database "MongoDB" as MongoDB #yellow
     Model --> Service: 13. Return result
     deactivate Model
 
-    Service --> Controller: 14. Return created report
+    Service -> Service: 14. checkCreationSuccess()
+    activate Service
     deactivate Service
 
-    Controller --> Route: 15. 201 Created + report
+    opt database error
+        Service --> Controller: 14.1. Return badrequest
+        Controller --> Route: 14.2. Return error response
+        Route --> View: 14.3. Return error response
+        View -> User: 14.4. Display error message
+    end
+
+    Service --> Controller: 15. Return created report
+    deactivate Service
+
+    Controller --> Route: 16. 201 Created + report
     deactivate Controller
 
-    Route --> View: 16. Render created report
+    Route --> View: 17. Render created report
     deactivate Route
 
-    View --> User: 17. Display created report
+    View --> User: 18. Display created report
     deactivate View
     deactivate User
 

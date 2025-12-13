@@ -1,13 +1,14 @@
 @startuml SortReport
 
 actor Admin
-boundary "ReportPage" as View #lightblue
-participant ":reportRoute" as Route #lightblue
-control ":authMiddleware" as Auth #Orange
-control "reportController" as Controller #lightblue
-participant ":reportService" as Service #lightblue
-entity "reportModel" as Model #lightblue
-database "MongoDB" as MongoDB #yellow
+boundary "ReportPage" as View 
+participant ":reportRoute" as Route 
+control ":authMiddleware" as Auth 
+control "reportController" as Controller 
+participant ":reportService" as Service 
+entity "reportModel" as Model 
+database "MongoDB" as MongoDB 
+hide footbox
 
 Admin -> View: 1. Select sort criteria (Date)
 activate Admin
@@ -18,39 +19,39 @@ activate Route
 
 Route -> Auth: 3. authenticateUser(req, res, next)
 activate Auth
-ref over Admin, View, Route, Auth, Controller, Service, Model, MongoDB : 4. Middleware verifies access token & admin role
+ref over Admin, MongoDB : Verifies token
 
-Auth --> Route: 5. authentication success
+Auth --> Route: 4. authentication success
 deactivate Auth
 
-Route -> Controller: 6. getAllReport(req, res)
+Route -> Controller: 5. getAllReport(req, res)
 activate Controller
 
-Controller -> Service: 7. getAllReport(query)
+Controller -> Service: 6. getAllReport(query)
 activate Service
 
-Service -> Model: 8. find().sort(criteria)
+Service -> Model: 7. find().sort(criteria)
 activate Model
 
-Model -> MongoDB: 9. Query sorted reports
+Model -> MongoDB: 8. Query sorted reports
 activate MongoDB
 
-MongoDB --> Model: 10. Return sorted list
+MongoDB --> Model: 9. Return sorted list
 deactivate MongoDB
 
-Model --> Service: 11. Return sorted list
+Model --> Service: 10. Return sorted list
 deactivate Model
 
-Service --> Controller: 12. Return sorted list
+Service --> Controller: 11. Return sorted list
 deactivate Service
 
-Controller --> Route: 13. Return 200 OK + data
+Controller --> Route: 12. Return 200 OK + data
 deactivate Controller
 
-Route --> View: 14. Update report list
+Route --> View: 13. Update report list
 deactivate Route
 
-View --> Admin: 15. Display sorted reports
+View --> Admin: 14. Display sorted reports
 deactivate View
 deactivate Admin
 

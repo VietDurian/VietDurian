@@ -1,13 +1,14 @@
 @startuml EditProfile
 
-actor User as "User"
-boundary "Profile Page" as View #lightblue
-participant ":authRoute" as Route #lightblue
-control "authMiddleware" as Auth #orange
-control "authController" as Controller #lightblue
-participant ":authService" as Service #lightblue
-entity "userModel" as Model #lightblue
-database "MongoDB" as MongoDB #yellow
+actor User as "Users"
+boundary "Profile Page" as View 
+participant ":authRoute" as Route 
+control "authMiddleware" as Auth 
+control "authController" as Controller 
+participant ":authService" as Service 
+entity "userModel" as Model 
+database "MongoDB" as MongoDB
+hide footbox
 
 User -> View: 1. Click "Edit"
 activate View
@@ -24,29 +25,33 @@ end
 
 View -> Route: 4. POST /api/v1/auth/profile
 activate Route
-Route -> Auth: 5. authenticateUser(req) & authorizeRole()
+Route -> Auth: 5. authenticateUser(req, res, next)
 activate Auth
-ref over User, View, Route, Auth, Controller, Service, Model, MongoDB : 6.Verify Token & Check Role
+ref over User, MongoDB : Verifies token
 
-Auth --> Route: 7. User authenticated & authorized
+Auth --> Route: 6. authentication success
 deactivate Auth
 
-Route -> Controller: 8. editProfile(req, res)
+Route -> Controller: 7. editProfile(req, res)
 activate Controller
 
-    Controller -> Service: 9. editProfile(userId, profileData)
+    Controller -> Service: 8. editProfile(userId, profileData)
     activate Service
 
-    Service -> Model: 10. editUserById(userId, profileData)
+    Service -> Model: 9. editUserById(userId, profileData)
     activate Model
 
-    Model -> MongoDB: 11. ExecuteQuery()
+    Model -> MongoDB: 10. ExecuteQuery()
     activate MongoDB
-    MongoDB --> Model: 12. Return result
+    MongoDB --> Model: 11. Return result
     deactivate MongoDB
 
-    Model --> Service: 13. Return update result
+    Model --> Service: 12. Return update result
     deactivate Model
+
+    Service -> Service: 13. checkUpdateProfile()
+    activate Service
+    deactivate Service
 
 alt Update Failed
     Service --> Controller: 13.1. Return error
@@ -56,11 +61,11 @@ alt Update Failed
 else Update Success
     Service --> Controller: 13.2. Return success
     deactivate Service
-    Controller --> Route: 14. Return success
+    Controller --> Route: 13.2.1. Return success
     deactivate Controller
-    Route --> View: 15. Return success
+    Route --> View: 13.2.2. Return success
     deactivate Route
-    View --> User: 16. Display updated profile
+    View --> User: 13.2.3. Display updated profile
     deactivate View
     deactivate User
 end
