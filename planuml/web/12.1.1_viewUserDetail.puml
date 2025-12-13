@@ -5,7 +5,7 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary dashboardScreen as UI
+boundary dashboardPage as UI
 control userManagementRoute as Route
 participant ":authMiddleware" as Middleware
 control userManagementController as Controller
@@ -20,7 +20,7 @@ UI -> Route : 2. GET /userManagement/detail/:userId
 activate Route
 Route -> Middleware : 3. authenticateUser(req) & authorizeRole()
 activate Middleware
-ref over User, DB: Verify Token & Check Role
+ref over User, DB: Verify Token
 Middleware --> Route : 4. User authenticated & authorized
 deactivate Middleware
 Route -> Controller : 5. handleGetUserDetail(userInfo, userId)
@@ -42,7 +42,7 @@ opt database error
     Service --> Controller : 11.1 Return error
     Controller --> Route : 11.2 Return error info
     Route --> UI : 11.3 Show error message
-    UI -> User : 11.4 Display error message
+    UI --> User : 11.4 Display error message
 end
 Service -> Service : 12. checkNotFound()
 activate Service
@@ -51,7 +51,7 @@ opt user not found
     Service --> Controller : 12.1 Return error
     Controller --> Route : 12.2 Return error info
     Route --> UI : 12.3 Show error message
-    UI -> User : 12.4 Display error message
+    UI --> User : 12.4 Display error message
 end
 Service -> Service : 13. mapToUserDetailDTO()
 activate Service
@@ -62,10 +62,8 @@ Controller --> Route : 15. Return success
 deactivate Controller
 Route --> UI : 16. Return success
 deactivate Route
-UI -> UI : 17. Render user detail profile
-activate UI
-deactivate UI
-UI -> User : 18. Display user detailed information
+
+UI --> User : 17. Display user detailed information
 deactivate UI
 deactivate User
 

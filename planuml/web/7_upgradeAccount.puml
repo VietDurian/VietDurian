@@ -5,7 +5,7 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary authScreen as UI
+boundary authPage as UI
 control authRoute as Route
 participant ":authMiddleware" as Middleware
 control authController as Controller
@@ -28,7 +28,7 @@ UI -> Route : 5. POST /auth/upgrade
 activate Route
 Route -> Middleware : 6. authenticateUser(req) & authorizeRole()
 activate Middleware
-ref over User, DB: Verify Token & Check Role
+ref over User, DB: Verify Token 
 Middleware --> Route : 7. User authenticated & authorized
 deactivate Middleware
 Route -> Controller : 8. handleUpgradeAccount(userInfo, upgradeData)

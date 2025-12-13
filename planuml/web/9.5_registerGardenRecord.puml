@@ -5,7 +5,7 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary gardenRecordScreen as UI
+boundary gardenRecordPage as UI
 control gardenRoute as Route
 participant ":authMiddleware" as Middleware
 control gardenController as Controller
@@ -28,7 +28,7 @@ UI -> Route : 5. POST /garden/record
 activate Route
 Route -> Middleware : 6. authenticateUser(req) & authorizeRole()
 activate Middleware
-ref over User, DB: Verify Token & Check Role
+ref over User, DB: Verify Token
 Middleware --> Route : 7. User authenticated & authorized
 deactivate Middleware
 Route -> Controller : 8. handleRegisterGardenRecord(userInfo)
@@ -86,10 +86,7 @@ Controller --> Route : 23. Return success
 deactivate Controller
 Route --> UI : 24. Return success
 deactivate Route
-UI -> UI : 25. Display success message
-activate UI
-deactivate UI
-UI --> User : 26. Display garden record created
+UI --> User : 25. Display garden record created
 deactivate UI
 deactivate User
 
