@@ -1,14 +1,15 @@
 @startuml Export Product
 
 actor Admin as "Admin"
-boundary "ProductPage" as View #lightblue
-participant ":productRoute" as Route #lightblue
-control "authMiddleware" as Auth #orange
-control "productController" as Controller #lightblue
-participant ":productService" as Service #lightblue
-entity "productModel" as Model #lightblue
-database "MongoDB" as MongoDB #yellow
-participant ":exportHelper" as Helper #lightgreen
+boundary "ProductPage" as View 
+participant ":productRoute" as Route 
+control "authMiddleware" as Auth 
+control "productController" as Controller 
+participant ":productService" as Service 
+entity "productModel" as Model 
+database "MongoDB" as MongoDB 
+participant ":exportHelper" as Helper 
+hide footbox
 
 Admin -> View: 1. Click "Export" button
 activate Admin
@@ -31,36 +32,45 @@ activate Route
 Route -> Auth: 6. authenticateUser(req, res, next)
 activate Auth
 
-ref over Admin, View, Route, Auth, Controller, Service, Model, MongoDB : 7. Middleware verifies access token
+ref over Admin, MongoDB : Verifies token
 
-Auth --> Route: 8. authentication success
+Auth --> Route: 7. authentication success
 deactivate Auth
 
-Route -> Controller: 9. exportExcel(req, res) | exportCSV(req, res)
+Route -> Controller: 8. exportExcel(req, res) | exportCSV(req, res)
 activate Controller
 
-Controller -> Service: 10. getAllForExport(filters)
+Controller -> Service: 9. getAllForExport(filters)
 activate Service
 
-Service -> Model: 11. getAllForExport(combinedFilters, maxLimit)
+Service -> Model: 10. getAllForExport(combinedFilters, maxLimit)
 activate Model
 
-Model -> MongoDB: 12. ExecuteQuery(find with filters)
+Model -> MongoDB: 11. ExecuteQuery(find with filters)
 activate MongoDB
-MongoDB --> Model: 13. Return products array
+MongoDB --> Model: 12. Return products array
 deactivate MongoDB
 
-Model --> Service: 14. Return products data
+Model --> Service: 13. Return products data
 deactivate Model
 
-Service --> Controller: 15. Return products array
+Service --> Controller: 14. Return products array
 deactivate Service
 
+Controller -> Controller: 15. Check if products array is empty
+activate Controller
+deactivate Controller
+
 opt No products found
+
     Controller --> Route: 15.1. Show error message
     Route --> View: 15.2. Show error message
     View --> Admin: 15.3. Display "No products found to export"
 end
+
+Controller -> Controller: 16. Generate file based on export type
+activate Controller
+deactivate Controller
 
 alt Export Type = Excel
 

@@ -16,6 +16,18 @@ const Router = express.Router();
  *         schema:
  *           type: string
  *         description: Filter by type product name
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Items per page
  *     responses:
  *       200:
  *         description: A list of type products

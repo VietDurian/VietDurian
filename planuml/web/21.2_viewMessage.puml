@@ -1,15 +1,16 @@
 @startuml ViewMessage
 
 actor User as "Users"
-boundary "ConversationDetailPage" as View #lightblue
-participant ":chatRoute" as Route #lightblue
-control "authMiddleware" as Auth #Orange
-control "chatController" as Controller #lightblue
-participant ":chatService" as Service #lightblue
-entity "conversationModel" as ConvModel #lightblue
-entity "messageModel" as MsgModel #lightblue
-database "MongoDB" as MongoDB #yellow
-participant "Socket Server" as Socket #lightgreen
+boundary "ConversationDetailPage" as View 
+participant ":chatRoute" as Route 
+control "authMiddleware" as Auth 
+control "chatController" as Controller
+participant ":chatService" as Service 
+entity "conversationModel" as ConvModel 
+entity "messageModel" as MsgModel 
+database "MongoDB" as MongoDB 
+participant "Socket Server" as Socket 
+hide footbox
 
     User -> View: 1. Open conversation (conversationId)
     activate User
@@ -21,53 +22,56 @@ participant "Socket Server" as Socket #lightgreen
     Route -> Auth: 3. authenticateUser(req, res, next)
     activate Auth
     
-    ref over User, View, Route, Auth, Controller, Service, ConvModel, MsgModel, MongoDB : 4. Middleware verifies access token & user role
-
-    Auth --> Route: 5. authentication success
+    ref over User, MongoDB : Verifies token
+    Auth --> Route: 4. authentication success
     deactivate Auth
 
-    Route -> Controller: 6. getDetailsConversation(req, res)
+    Route -> Controller: 5. getDetailsConversation(req, res)
     deactivate Route
     activate Controller
 
-    Controller -> Service: 7. getUserConversation(userId)
+    Controller -> Service: 6. getUserConversation(userId)
     activate Service
 
-    Service -> ConvModel: 8. getUserConversation(userId, isRead = true)
+    Service -> ConvModel: 7. getUserConversation(userId, isRead = true)
     activate ConvModel
 
-    ConvModel -> MongoDB: 9. ExecuteQuery()
+    ConvModel -> MongoDB: 8. ExecuteQuery()
     activate MongoDB
-    MongoDB --> ConvModel: 10. return conversation with messages
+    MongoDB --> ConvModel: 9. return conversation with messages
     deactivate MongoDB
 
-    ConvModel --> Service: 11. return conversation details
+    ConvModel --> Service: 10. return conversation details
     deactivate ConvModel
 
-    Service -> ConvModel: 12. update(conversationId, isRead = true)
+    Service -> ConvModel: 11. update(conversationId, isRead = true)
     activate ConvModel
 
-    ConvModel -> MongoDB: 13. ExecuteQuery()
+    ConvModel -> MongoDB: 12. ExecuteQuery()
     activate MongoDB
-    MongoDB --> ConvModel: 14. return updated conversation
+    MongoDB --> ConvModel: 13. return updated conversation
     deactivate MongoDB
 
-    ConvModel --> Service: 15. return updated conversation
+    ConvModel --> Service: 14. return updated conversation
     deactivate ConvModel
 
-    Service -> MsgModel: 16. updateStatusBulk(conversationId, 'seen')
+    Service -> MsgModel: 15. updateStatusBulk(conversationId, 'seen')
     activate MsgModel
 
-    MsgModel -> MongoDB: 17. ExecuteQuery()
+    MsgModel -> MongoDB: 16. ExecuteQuery()
     activate MongoDB
-    MongoDB --> MsgModel: 18. Return update result
+    MongoDB --> MsgModel: 17. Return update result
     deactivate MongoDB
 
-    MsgModel --> Service: 19. Return update result
+    MsgModel --> Service: 18. Return update result
     deactivate MsgModel
 
-    Service --> Controller: 20. Return conversation details
+    Service --> Controller: 19. Return conversation details
     deactivate Service
+
+    Controller -> Controller: 20. checkMessagesExistence()
+    activate Controller
+    deactivate Controller
 
     par Emit to Other User
         Controller -> Socket: 20.1. Emit 'messages_seen' to other user

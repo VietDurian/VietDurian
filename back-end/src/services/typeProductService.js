@@ -1,16 +1,39 @@
 import { TypeProductModel } from '@/model/typeProductModel';
 
 // Get all type products
-const getAllTypeProducts = async ({ searchName }) => {
+const getAllTypeProducts = async ({ searchName, page = 1, limit = 10 }) => {
 	try {
-        // Search functionality
+        // 1. Xây dựng filter (bộ lọc)
+        let filter = {};
         if (searchName) {
-            const regex = new RegExp(searchName, 'i'); // Case-insensitive search
-            const filteredTypeProducts = await TypeProductModel.find({ name: { $regex: regex } });
-            return filteredTypeProducts;
+            const regex = new RegExp(searchName, 'i');
+            filter = { name: { $regex: regex } };
         }
-		const typeProducts = await TypeProductModel.find();
-		return typeProducts;
+
+        // 2. Tính toán phân trang
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
+        const skip = (pageNumber - 1) * limitNumber;
+
+        // 3. Thực hiện query song song (lấy data và đếm tổng)
+        const [typeProducts, total] = await Promise.all([
+            TypeProductModel.find(filter)
+                .skip(skip)
+                .limit(limitNumber)
+                .sort({ created_at: -1 }), // Sắp xếp mới nhất lên đầu (tùy chọn)
+            TypeProductModel.countDocuments(filter)
+        ]);
+
+        // 4. Trả về kết quả kèm thông tin phân trang
+        return {
+            data: typeProducts,
+            pagination: {
+                totalItems: total,
+                totalPages: Math.ceil(total / limitNumber),
+                currentPage: pageNumber,
+                itemsPerPage: limitNumber
+            }
+        };
 	} catch (error) {
 		throw error;
 	}

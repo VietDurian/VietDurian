@@ -1,13 +1,14 @@
 @startuml Delete
 
 actor User as "Users"
-boundary "BlogDetailPage" as View #lightblue
-participant ":reactionRoute" as Route #lightblue
-control "authMiddleware" as Auth #Orange
-control "reactionController" as Controller #lightblue
-participant ":reactionService" as Service #lightblue
-entity "reactionCommentModel" as Model #lightblue
-database "MongoDB" as MongoDB #yellow
+boundary "BlogDetailPage" as View 
+participant ":reactionRoute" as Route
+control "authMiddleware" as Auth 
+control "reactionController" as Controller 
+participant ":reactionService" as Service 
+entity "reactionCommentModel" as Model 
+database "MongoDB" as MongoDB 
+hide footbox
 
     User -> View: 1. Click reaction icon of yourself
     activate User
@@ -18,38 +19,38 @@ database "MongoDB" as MongoDB #yellow
     activate Route
     Route -> Auth: 3. authenticateUser(req, res, next)
     activate Auth
-    ref over User, View, Route, Auth, Controller, Service, Model, MongoDB : 4. Middleware verifies access token
+    ref over User, MongoDB : Verifies token
 
-    Auth --> Route: 5. authentication success
+    Auth --> Route: 4. authentication success
     deactivate Auth
 
-    Route -> Controller: 6. deleteReaction(req, res)
+    Route -> Controller: 5. deleteReaction(req, res)
     activate Controller
 
-    Controller -> Service: 7. deleteReaction(reactionId)
+    Controller -> Service: 6. deleteReaction(reactionId)
     activate Service
 
-    Service -> Model: 9. deleteReaction(reactionId)
+    Service -> Model: 7. deleteReaction(reactionId)
     activate Model
 
-    Model -> MongoDB: 10. Delete existing reaction
+    Model -> MongoDB: 8. Delete existing reaction
     activate MongoDB
-    MongoDB --> Model: 11. Return deleted reaction
+    MongoDB --> Model: 9. Return deleted reaction
     deactivate MongoDB
 
-    Model --> Service: 12. Return result
+    Model --> Service: 10. Return result
     deactivate Model
 
-    Service --> Controller: 13. Return deleted reaction
+    Service --> Controller: 11. Return deleted reaction
     deactivate Service
 
-    Controller --> Route: 14. 200 OK + reaction
+    Controller --> Route: 12. 200 OK + reaction
     deactivate Controller
 
-    Route --> View: 15. Render deleted reaction
+    Route --> View: 13. Render deleted reaction
     deactivate Route
 
-    View --> User: 16. Update the interface
+    View --> User: 14. Update the interface
     deactivate View
     deactivate User
 

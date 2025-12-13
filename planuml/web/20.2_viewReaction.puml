@@ -1,14 +1,15 @@
 @startuml View Reaction Comments
 
 actor User as "Users"
-boundary "BlogDetailPage" as View #lightblue
-participant ":reactionRoute" as Route #lightblue
-control "authMiddleware" as Auth #Orange
-control "reactionController" as Controller #lightblue
-participant ":reactionService" as Service #lightblue
-entity "reactionCommentModel" as Model #lightblue
-entity "userModel" as UserModel #lightblue
-database "MongoDB" as MongoDB #yellow
+boundary "BlogDetailPage" as View 
+participant ":reactionRoute" as Route 
+control "authMiddleware" as Auth 
+control "reactionController" as Controller 
+participant ":reactionService" as Service 
+entity "reactionCommentModel" as Model 
+entity "userModel" as UserModel 
+database "MongoDB" as MongoDB
+hide footbox
 
     User -> View: 1. Click a specific dish/icon reactions
     activate User
@@ -18,33 +19,44 @@ database "MongoDB" as MongoDB #yellow
     activate Route
     Route -> Auth: 3. authenticateUser(req, res, next)
     activate Auth
-    ref over User, View, Route, Auth, Controller, Service, Model, UserModel, MongoDB : 4. Middleware verifies access token
+    ref over User, MongoDB : Verifies token
 
-    Auth --> Route: 5. authentication success
+    Auth --> Route: 4. authentication success
     deactivate Auth
     
-    Route -> Controller: 6. getReactionsByCommentId(req, res)
+    Route -> Controller: 5. getReactionsByCommentId(req, res)
     activate Controller
 
-    Controller -> Service: 7. getReactionsByCommentId(commentId)
+    Controller -> Service: 6. getReactionsByCommentId(commentId)
     activate Service
 
-    Service -> Model: 8. getReactionsByCommentId(commentId)
+    Service -> Model: 7. getReactionsByCommentId(commentId)
     activate Model
 
-    Model -> UserModel: 9. populate reactions with user details
+    Model -> UserModel: 8. populate reactions with user details
     activate UserModel
 
-    UserModel -> MongoDB: 10. Query reactions for the comment
+    UserModel -> MongoDB: 9. Query reactions for the comment
     activate MongoDB
-    MongoDB --> UserModel: 11. Return queried reactions
+    MongoDB --> UserModel: 10. Return queried reactions
     deactivate MongoDB
 
-    UserModel --> Model: 12. Return populated reactions
+    UserModel --> Model: 11. Return populated reactions
     deactivate UserModel
 
-    Model --> Service: 13. Return result
+    Model --> Service: 12. Return result
     deactivate Model
+
+    Service -> Service: 13. checkCreationReactionsData(reactions)
+    activate Service
+    deactivate Service
+
+    opt database error
+        Service --> Controller: 13.1. Return badrequest
+        Controller --> Route: 13.2. Return error response
+        Route --> View: 13.3. Return error response
+        View -> User: 13.4. Display error message
+    end
 
     Service --> Controller: 14. Return reactions data
     deactivate Service

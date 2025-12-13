@@ -1,13 +1,14 @@
 @startuml SearchReportByDish
 
 actor Admin
-boundary "ReportPage" as View #lightblue
-participant ":reportRoute" as Route #lightblue
-control ":authMiddleware" as Auth #Orange
-control "reportController" as Controller #lightblue
-participant ":reportService" as Service #lightblue
-entity "reportModel" as Model #lightblue
-database "MongoDB" as MongoDB #yellow
+boundary "ReportPage" as View 
+participant ":reportRoute" as Route 
+control ":authMiddleware" as Auth 
+control "reportController" as Controller 
+participant ":reportService" as Service 
+entity "reportModel" as Model 
+database "MongoDB" as MongoDB
+hide footbox
 
 Admin -> View: 1. Enter blog title and click "Search"
 activate Admin
@@ -18,16 +19,20 @@ activate Route
 
 Route -> Auth: 3. authenticateUser(req, res, next)
 activate Auth
-ref over Admin, View, Route, Auth, Controller, Service, Model, MongoDB : 4. Middleware verifies access token
+ref over Admin, MongoDB : Verifies token
 
-Auth --> Route: 5. authentication success
+Auth --> Route: 4. authentication success
 deactivate Auth
 
-Route -> Controller: 6. getAllReports(req, res)
+Route -> Controller: 5. getAllReports(req, res)
 activate Controller
 
-Controller -> Service: 7. getAllReports(keyword)
+Controller -> Service: 6. getAllReports(keyword)
 activate Service
+
+Service -> Service: 7. check keyword
+activate Service
+deactivate Service
 
 alt Empty search field
     Service -> Model: 7.1. getAllReports(keyword)
@@ -49,19 +54,34 @@ else Keyword entered
     deactivate Model
 end
 
+Service -> Service: 8. checkCreationSuccess()
+activate Service
+deactivate Service
+
+opt database error
+    Service --> Controller: 8.1. Return badrequest
+    Controller --> Route: 8.2. Return error response
+    Route --> View: 8.3. Return error response
+    View -> Admin: 8.4. Display error message
+end
+
+Service -> Service: 9. check search results
+activate Service
+deactivate Service
+
 alt No matching reports
-    Service --> Controller: 8.1. Return empty result
-    Controller --> Route: 8.1.1 Return success
-    Route --> View: 8.1.2 Display empty result 
-    View --> Admin: 8.1.3 Show "No reports found for this blog title"
+    Service --> Controller: 9.1. Return empty result
+    Controller --> Route: 9.1.1 Return success
+    Route --> View: 9.1.2 Display empty result 
+    View --> Admin: 9.1.3 Show "No reports found for this blog title"
 else Reports found
-    Service --> Controller: 8.2. Return reports
+    Service --> Controller: 9.2. Return reports
     deactivate Service
-    Controller --> Route: 8.2.1 Return success 
+    Controller --> Route: 9.2.1 Return success 
     deactivate Controller
-    Route --> View: 8.2.2 Render report list
+    Route --> View: 9.2.2 Render report list
     deactivate Route
-    View --> Admin: 8.2.3 Show reports list
+    View --> Admin: 9.2.3 Show reports list
     deactivate View
     deactivate Admin
 end

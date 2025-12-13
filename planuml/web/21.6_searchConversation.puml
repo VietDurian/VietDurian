@@ -1,70 +1,71 @@
 @startuml SearchConversation
 
 actor Admin
-boundary "ConversationListPage" as View #lightblue
-participant ":chatRoute" as Route #lightblue
-control "authMiddleware" as Auth #Orange
-control "chatController" as Controller #lightblue
-participant ":chatService" as Service #lightblue
-entity "conversationModel" as Model #lightblue
-database "MongoDB" as MongoDB #yellow
+boundary "ConversationListPage" as View 
+participant ":chatRoute" as Route 
+control "authMiddleware" as Auth 
+control "chatController" as Controller 
+participant ":chatService" as Service 
+entity "conversationModel" as Model
+database "MongoDB" as MongoDB 
+hide footbox
 
     Admin -> View: 1. Enter search keyword (username)
     activate Admin
     activate View
 
-    View -> View: 2. Filter conversations locally
-    activate View
-    deactivate View
-
-        View -> Route: 4. GET /api/v1/chat/conversations
+        View -> Route: 2. GET /api/v1/chat/conversations{searchKeyword}
         activate Route
 
-        Route -> Auth: 5. authenticateAdmin(req, res, next)
+        Route -> Auth: 3. authenticateAdmin(req, res, next)
         activate Auth
         
-        ref over Admin, View, Route, Auth, Controller, Service, Model, MongoDB : 6. Middleware verifies access token & admin role
+        ref over Admin, MongoDB : Verify token
 
-        Auth --> Route: 7. authentication success
+        Auth --> Route: 4. authentication success
         deactivate Auth
 
-        Route -> Controller: 8. getAllConversation(req, res)
+        Route -> Controller: 5. getAllConversation(req, res)
         activate Controller
 
-        Controller -> Service: 9. getAllConversation()
+        Controller -> Service: 6. getAllConversation()
         activate Service
 
-        Service -> Model: 10. getAll()
+        Service -> Model: 7. getAll()
         activate Model
 
-        Model -> MongoDB: 11. ExecuteQuery() - Aggregate with user lookup
+        Model -> MongoDB: 8. ExecuteQuery() - Aggregate with user lookup
         activate MongoDB
-        MongoDB --> Model: 12. return all conversations with user info
+        MongoDB --> Model: 9. return all conversations with user info
         deactivate MongoDB
 
-        Model --> Service: 13. return conversations list
+        Model --> Service: 10. return conversations list
         deactivate Model
+
+        Service -> Service: 11. check keyword & filter conversations
+        activate Service
+        deactivate Service
 
         alt Conversations found
 
-            Service --> Controller: 13.1. return conversations list
+            Service --> Controller: 11.1. return conversations list
             
-            Controller --> Route: 13.1.1. return conversations data
+            Controller --> Route: 11.1.1. return conversations data
 
-            Route --> View: 13.1.2. display conversations list
+            Route --> View: 11.1.2. display conversations list
 
-            View --> Admin: 13.1.3. show filtered conversations
+            View --> Admin: 11.1.3. show filtered conversations
         else No conversations found
-            Service --> Controller: 13.2. return empty list
+            Service --> Controller: 11.2. return empty list
             deactivate Service
 
-            Controller --> Route: 13.2.1. return empty data
+            Controller --> Route: 11.2.1. return empty data
             deactivate Controller
 
-            Route --> View: 13.2.2. display no conversations message
+            Route --> View: 11.2.2. display no conversations message
             deactivate Route
 
-            View --> Admin: 13.2.3. show "No conversations found"
+            View --> Admin: 11.2.3. show "No conversations found"
             deactivate View
             deactivate Admin
         end

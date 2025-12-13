@@ -1,4 +1,4 @@
-@startuml CreateReaction
+@startuml UpdateReaction
 
 actor User as "Users"
 boundary "BlogDetailPage" as View 
@@ -10,7 +10,7 @@ entity "reactionCommentModel" as Model
 database "MongoDB" as MongoDB 
 hide footbox
 
-    User -> View: 1. Hover/Click "Like" button
+    User -> View: 1. Hover reaction icon
     activate User
     activate View
 
@@ -18,48 +18,47 @@ hide footbox
     activate View
     deactivate View
 
-    opt Cancel Reaction
-        View --> User: 2.1. Move cursor away / Click "Delete" icon
+    opt Cancel Update
+        View --> User: 2.1. Move cursor away
     end
 
-    User -> View: 3. Click specific reaction icon
+    User -> View: 3. Select a reaction type
 
-    View -> Route: 4. POST /api/v1/reaction { commentId, reactionType }
+    View -> Route: 4. PATCH /api/v1/reaction { reactionId, reactionType }
     activate Route
     Route -> Auth: 5. authenticateUser(req, res, next)
     activate Auth
     ref over User, MongoDB : Verifies token
-
     Auth --> Route: 6. authentication success
     deactivate Auth
 
-    Route -> Controller: 7. addReaction(req, res)
+    Route -> Controller: 7. updateReaction(req, res)
     activate Controller
 
-    Controller -> Service: 8. addReaction(reactionData, userId)
+    Controller -> Service: 8. updateReaction(reactionData, userId)
     activate Service
 
-    Service -> Model: 9. addReaction(reactionData, userId)
+    Service -> Model: 9. updateReaction(reactionData, userId)
     activate Model
 
-    Model -> MongoDB: 10. Insert new reaction
+    Model -> MongoDB: 10. Update existing reaction
     activate MongoDB
-    MongoDB --> Model: 11. Return created reaction
+    MongoDB --> Model: 11. Return updated reaction
     deactivate MongoDB
 
     Model --> Service: 12. Return result
     deactivate Model
 
-    Service --> Controller: 13. Return created reaction
+    Service --> Controller: 13. Return updated reaction
     deactivate Service
 
-    Controller --> Route: 14. 201 Created + reaction
+    Controller --> Route: 14. 200 OK + reaction
     deactivate Controller
 
-    Route --> View: 15. Render created reaction
+    Route --> View: 15. Render updated reaction
     deactivate Route
 
-    View --> User: 16. Display created reaction by the comment
+    View --> User: 16. Display updated reaction by the comment
     deactivate View
     deactivate User
 

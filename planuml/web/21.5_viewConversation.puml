@@ -1,13 +1,14 @@
 @startuml ViewConversation
 
 actor Admin
-boundary "AdminDashboard" as View #lightblue
-participant ":chatRoute" as Route #lightblue
-control "authMiddleware" as Auth #Orange
-control "chatController" as Controller #lightblue
-participant ":chatService" as Service #lightblue
-entity "conversationModel" as Model #lightblue
-database "MongoDB" as MongoDB #yellow
+boundary "AdminDashboard" as View 
+participant ":chatRoute" as Route 
+control "authMiddleware" as Auth 
+control "chatController" as Controller 
+participant ":chatService" as Service 
+entity "conversationModel" as Model 
+database "MongoDB" as MongoDB 
+hide footbox
 
     Admin -> View: 1. Access conversation page
     activate Admin
@@ -19,27 +20,42 @@ database "MongoDB" as MongoDB #yellow
     Route -> Auth: 3. authenticateAdmin(req, res, next)
     activate Auth
     
-    ref over Admin, View, Route, Auth, Controller, Service, Model, MongoDB : 4. Middleware verifies access token & admin role
+    ref over Admin, MongoDB : Verifies token
 
-    Auth --> Route: 5. Authentication success
+    Auth --> Route: 4. Authentication success
     deactivate Auth
 
-    Route -> Controller: 6. getAllConversation(req, res)
+    Route -> Controller: 5. getAllConversation(req, res)
     activate Controller
 
-    Controller -> Service: 7. getAllConversation()
+    Controller -> Service: 6. getAllConversation()
     activate Service
 
-    Service -> Model: 8. getAll()
+    Service -> Model: 7. getAll()
     activate Model
 
-    Model -> MongoDB: 9. ExecuteQuery()
+    Model -> MongoDB: 8. ExecuteQuery()
     activate MongoDB
-    MongoDB --> Model: 10. return conversations list
+    MongoDB --> Model: 9. return conversations list
     deactivate MongoDB
 
-    Model --> Service: 11. return conversations
+    Model --> Service: 10. return conversations
     deactivate Model
+
+    Service -> Service: 11. checkCreatedConversations()
+    activate Service    
+    deactivate Service
+
+    opt database error
+        Service --> Controller: 11. Return badrequest
+        Controller --> Route: 11.2. Return error response
+        Route --> View: 11.3. Return error response
+        View -> Admin: 11.4. Display error message
+    end
+
+    Service -> Service: 12. checkConversationsExistence()
+    activate Service
+    deactivate Service
 
    alt Conversations exist
 
