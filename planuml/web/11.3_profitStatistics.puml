@@ -5,7 +5,7 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary dashboardScreen as UI
+boundary dashboardPage as UI
 control statisticRoute as Route
 participant ":authMiddleware" as Middleware
 control statisticController as Controller
@@ -20,7 +20,7 @@ UI -> Route : 2. GET /statistic/profit?period=selectedPeriod
 activate Route
 Route -> Middleware : 3. authenticateUser(req) & authorizeRole()
 activate Middleware
-ref over User, DB: Verify Token & Check Role
+ref over User, DB: Verify Token
 Middleware --> Route : 4. User authenticated & authorized
 deactivate Middleware
 Route -> Controller : 5. handleGetProfitStatistics(userInfo, period)
@@ -53,10 +53,7 @@ Controller --> Route : 14. Return success
 deactivate Controller
 Route --> UI : 15. Return success
 deactivate Route
-UI -> UI : 16. Render profit statistics & charts
-activate UI
-deactivate UI
-UI --> User : 17. Display profit statistics
+UI --> User : 16. Display profit statistics
 deactivate UI
 deactivate User
 

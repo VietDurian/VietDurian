@@ -5,7 +5,7 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary mapViewScreen as UI
+boundary mapViewPage as UI
 control profileRoute as Route
 participant ":authMiddleware" as AuthMiddleware
 control profileController as Controller
@@ -21,7 +21,7 @@ UI -> Route : 2. GET /profile/map
 activate Route
 Route -> AuthMiddleware : 3. authenticateUser(req) & authorizeRole()
 activate AuthMiddleware
-ref over User, DB: Verify Token & Check Role
+ref over User, DB: Verify Token
 AuthMiddleware --> Route : 4. User authenticated & authorized
 deactivate AuthMiddleware
 Route -> Controller : 5. handleGetMap(userId)
@@ -65,13 +65,8 @@ Controller --> Route : 18. Return success + map data
 deactivate Controller
 Route --> UI : 19. Return success + map data 
 deactivate Route
-UI --> UI : 20. Render map
-activate UI
-deactivate UI
-UI --> UI : 21. Display markers
-activate UI
-deactivate UI
-UI --> User : 22. Display map with markers
+
+UI --> User : 20. Display map with markers
 deactivate UI
 deactivate User
 

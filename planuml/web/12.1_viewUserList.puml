@@ -5,7 +5,7 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary dashboardScreen as UI
+boundary dashboardPage as UI
 control userManagementRoute as Route
 participant ":authMiddleware" as Middleware
 control userManagementController as Controller
@@ -20,7 +20,7 @@ UI -> Route : 2. GET /user/list
 activate Route
 Route -> Middleware : 3. authenticateUser(req) & authorizeRole()
 activate Middleware
-ref over User, DB: Verify Token & Check Role
+ref over User, DB: Verify Token
 Middleware --> Route : 4. User authenticated & authorized
 deactivate Middleware
 Route -> Controller : 5. handleGetUserList(userInfo)
@@ -53,10 +53,8 @@ Controller --> Route : 14. Return success
 deactivate Controller
 Route --> UI : 15. Return success
 deactivate Route
-UI -> UI : 16. Render user list
-activate UI
-deactivate UI
-UI --> User : 17. Display user list
+
+UI --> User : 16. Display user list
 deactivate UI
 deactivate User
 

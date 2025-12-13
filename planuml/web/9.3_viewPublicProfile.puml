@@ -5,7 +5,7 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary profileViewScreen as UI
+boundary profileViewPage as UI
 control profileRoute as Route
 participant ":authMiddleware" as AuthMiddleware
 control profileController as Controller
@@ -21,7 +21,7 @@ UI -> Route : 2. GET /profile/public/:userId
 activate Route
 Route -> AuthMiddleware : 3. authenticateUser(req) & authorizeRole()
 activate AuthMiddleware
-ref over User, DB: Verify Token & Check Role
+ref over User, DB: Verify Token
 AuthMiddleware --> Route : 4. User authenticated & authorized
 deactivate AuthMiddleware
 Route -> Controller : 5. handleGetPublicProfile(userId)

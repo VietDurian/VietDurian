@@ -4,6 +4,7 @@ skinparam shadowing false
 skinparam sequenceArrowThickness 1
 hide footbox
 
+
 actor User as "Users"
 boundary "ProfileViewPage" as UI
 participant ":profileRoute" as Route
@@ -21,6 +22,7 @@ UI -> Route : 2. GET /profile/me
 activate Route
 Route -> AuthMiddleware : 3. authenticateUser(req, res, next)
 activate AuthMiddleware
+
 ref over User, DB: Verifies token
 AuthMiddleware --> Route : 4. authentication success
 deactivate AuthMiddleware

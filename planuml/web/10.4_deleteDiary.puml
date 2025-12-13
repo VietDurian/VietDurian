@@ -5,7 +5,7 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary diaryScreen as UI
+boundary diaryPage as UI
 control diaryRoute as Route
 participant ":authMiddleware" as Middleware
 control diaryController as Controller
@@ -20,7 +20,7 @@ UI -> Route : 2. DELETE /diary/entry/:id
 activate Route
 Route -> Middleware : 3. authenticateUser(req) & authorizeRole()
 activate Middleware
-ref over User, DB: Verify Token & Check Role
+ref over User, DB: Verify Token
 Middleware --> Route : 4. User authenticated & authorized
 deactivate Middleware
 Route -> Controller : 5. handleDeleteDiary(userInfo, diaryId)
@@ -79,10 +79,8 @@ Controller --> Route : 20. Return success
 deactivate Controller
 Route --> UI : 21. Return success
 deactivate Route
-UI -> UI : 22. Display success message
-activate UI
-deactivate UI
-UI --> User : 23. Display diary deleted confirmation
+
+UI --> User : 22. Display diary deleted confirmation
 deactivate UI
 deactivate User
 

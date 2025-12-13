@@ -5,7 +5,7 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary diaryScreen as UI
+boundary diaryPage as UI
 control diaryRoute as Route
 participant ":authMiddleware" as Middleware
 control diaryController as Controller
@@ -28,7 +28,7 @@ UI -> Route : 5. POST /diary/entry
 activate Route
 Route -> Middleware : 6. authenticateUser(req) & authorizeRole()
 activate Middleware
-ref over User, DB: Verify Token & Check Role
+ref over User, DB: Verify Token
 Middleware --> Route : 7. User authenticated & authorized
 deactivate Middleware
 Route -> Controller : 8. handleCreateDiary(userInfo)
@@ -69,10 +69,8 @@ Controller --> Route : 18. Return success
 deactivate Controller
 Route --> UI : 19. Return success
 deactivate Route
-UI -> UI : 20. Display success message
-activate UI
-deactivate UI
-UI --> User : 21. Display diary entry created
+
+UI --> User : 20. Display diary entry created
 deactivate UI
 deactivate User
 
