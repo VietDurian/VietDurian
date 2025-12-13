@@ -6,7 +6,6 @@ entity ":userModel" as Model
 database "MongoDB" as DB 
 hide footbox
 
-activate User
 activate M
 M -> M: 1. Receive authentication token (Bearer token in header)
 activate M
@@ -16,6 +15,8 @@ M -> M: 2. Check token existence
 activate M
 deactivate M
 opt Token missing
+activate User
+
     M --> User: 2.1 Return Authentication Error (token is missing)
 end
 
@@ -52,18 +53,21 @@ end
 M -> M: 10. Check user role & permission
 activate M
 deactivate M
-alt Request has required role
+alt User has required role
     M -> M: 10.1 Continue to next handler
     activate M
 deactivate M
-else Request does not have required role
+else User does not have required role
     M --> User: 10.2 Return Authorization Error (insufficient permissions)
+    deactivate User
+
 end
 
 M -> M: 11. Forward request to next handler (Controller / Service)
 activate M
 deactivate M
-deactivate User
+deactivate M
+
 
 
 @enduml

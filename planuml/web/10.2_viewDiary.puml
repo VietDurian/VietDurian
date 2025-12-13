@@ -23,7 +23,7 @@ Controller -> Service : 4. getDiary(diaryId)
 activate Service
 Service -> Model : 5. findById(diaryId)
 activate Model
-Model -> DB : 6. findOne({_id: diaryId})
+Model -> DB : 6. execute query findOne
 activate DB
 DB --> Model : 7. Return result 
 deactivate DB

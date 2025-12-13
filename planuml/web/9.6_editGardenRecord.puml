@@ -29,65 +29,64 @@ activate Route
 Route -> Middleware : 6. authenticateUser(req) & authorizeRole()
 activate Middleware
 ref over User, DB: Verify Token 
-Middleware --> Route : 7. User authenticated & authorized
+Middleware -> Controller : 7. handleEditGardenRecord(userInfo, gardenId)
 deactivate Middleware
-Route -> Controller : 8. handleEditGardenRecord(userInfo, gardenId)
 activate Controller
-Controller -> Controller : 9. Validate input
+Controller -> Controller : 8. Validate input
 activate Controller
 deactivate Controller
 opt validation error
-    Controller --> Route : 9.1 Return error
-    Route --> UI : 9.2 Show error message
-    UI --> User : 9.3 Display error message
+    Controller --> Route : 8.1 Return error
+    Route --> UI : 8.2 Show error message
+    UI --> User : 8.3 Display error message
 end
-Controller -> Service : 10. editGardenRecord(gardenId, data)
+Controller -> Service : 9. editGardenRecord(gardenId, data)
 activate Service
-Service -> Model : 11. findById(gardenId)
+Service -> Model : 10. findById(gardenId)
 activate Model
-Model -> DB : 12. findOne({_id: gardenId})
+Model -> DB : 11. execute query findOne
 activate DB
-DB --> Model : 13. Return result
+DB --> Model : 12. Return result
 deactivate DB
-Model --> Service : 14. Return garden entity
+Model --> Service : 13. Return garden entity
 deactivate Model
-Service -> Service : 15. checkNotFound()
+Service -> Service : 14. checkNotFound()
 activate Service
 deactivate Service
 opt garden record not found
-    Service --> Controller : 15.1 Return error
-    Controller --> Route : 15.2 Return error info
-    Route --> UI : 15.3 Show error message
-    UI --> User : 15.4 Display error message
+    Service --> Controller : 14.1 Return error
+    Controller --> Route : 14.2 Return error info
+    Route --> UI : 14.3 Show error message
+    UI --> User : 14.4 Display error message
 end
-Service -> Model : 16. update(gardenId, updateData)
+Service -> Model : 15. update(gardenId, updateData)
 activate Model
-Model -> DB : 17. updateOne({_id: gardenId}, {$set: {...}})
+Model -> DB : 16. execute query updateOne
 activate DB
-DB --> Model : 18. Return result
+DB --> Model : 17. Return result
 deactivate DB
-Model --> Service : 19. Return update result
+Model --> Service : 18. Return update result
 deactivate Model
-Service -> Service : 20. checkDatabaseError()
+Service -> Service : 19. checkDatabaseError()
 activate Service
 deactivate Service
 opt database error
-    Service --> Controller : 20.1 Return error
-    Controller --> Route : 20.2 Return error info
-    Route --> UI : 20.3 Show error message
-    UI --> User : 20.4 Display error message
+    Service --> Controller : 19.1 Return error
+    Controller --> Route : 19.2 Return error info
+    Route --> UI : 19.3 Show error message
+    UI --> User : 19.4 Display error message
 end
-Service -> Service : 21. mapToGardenDTO()
+Service -> Service : 20. mapToGardenDTO()
 activate Service
 deactivate Service
-Service --> Controller : 22. Return success
+Service --> Controller : 21. Return success
 deactivate Service
-Controller --> Route : 23. Return success
+Controller --> Route : 22. Return success
 deactivate Controller
-Route --> UI : 24. Return success
+Route --> UI : 23. Return success
 deactivate Route
 
-UI --> User : 25. Display updated garden record
+UI --> User : 24. Display updated garden record
 deactivate UI
 deactivate User
 
