@@ -21,49 +21,48 @@ activate Route
 Route -> Middleware : 3. authenticateUser(req) & authorizeRole()
 activate Middleware
 ref over User, DB: Verify Token
-Middleware --> Route : 4. User authenticated & authorized
+Middleware -> Controller : 4. handleGetUserDetail(userInfo, userId)
 deactivate Middleware
-Route -> Controller : 5. handleGetUserDetail(userInfo, userId)
 activate Controller
-Controller -> Service : 6. getUserDetail(userId)
+Controller -> Service : 5. getUserDetail(userId)
 activate Service
-Service -> Model : 7. findById(userId)
+Service -> Model : 6. findById(userId)
 activate Model
-Model -> DB : 8. findOne({_id: userId})
+Model -> DB : 7. execute query findOne({_id: userId})
 activate DB
-DB --> Model : 9. Return user document
+DB --> Model : 8. Return user document
 deactivate DB
-Model --> Service : 10. Return user document
+Model --> Service : 9. Return user document
 deactivate Model
-Service -> Service : 11. checkDatabaseError()
+Service -> Service : 10. checkDatabaseError()
 activate Service
 deactivate Service
 opt database error
+    Service --> Controller : 10.1 Return error
+    Controller --> Route : 10.2 Return error info
+    Route --> UI : 10.3 Show error message
+    UI --> User : 10.4 Display error message
+end
+Service -> Service : 11. checkNotFound()
+activate Service
+deactivate Service
+opt user not found
     Service --> Controller : 11.1 Return error
     Controller --> Route : 11.2 Return error info
     Route --> UI : 11.3 Show error message
     UI --> User : 11.4 Display error message
 end
-Service -> Service : 12. checkNotFound()
+Service -> Service : 12. mapToUserDetailDTO()
 activate Service
 deactivate Service
-opt user not found
-    Service --> Controller : 12.1 Return error
-    Controller --> Route : 12.2 Return error info
-    Route --> UI : 12.3 Show error message
-    UI --> User : 12.4 Display error message
-end
-Service -> Service : 13. mapToUserDetailDTO()
-activate Service
+Service --> Controller : 13. Return success
 deactivate Service
-Service --> Controller : 14. Return success
-deactivate Service
-Controller --> Route : 15. Return success
+Controller --> Route : 14. Return success
 deactivate Controller
-Route --> UI : 16. Return success
+Route --> UI : 15. Return success
 deactivate Route
 
-UI --> User : 17. Display user detailed information
+UI --> User : 16. Display user detailed information
 deactivate UI
 deactivate User
 

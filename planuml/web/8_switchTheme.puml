@@ -22,47 +22,46 @@ activate Route
 Route -> AuthMiddleware : 3. authenticateUser(req) & authorizeRole()
 activate AuthMiddleware
 ref over User, DB: Verify Token
-AuthMiddleware --> Route : 4. User authenticated & authorized
+AuthMiddleware -> Controller : 4. handleSwitchTheme(userId, theme)
 deactivate AuthMiddleware
-Route -> Controller : 5. handleSwitchTheme(userId, theme)
 activate Controller
-Controller -> ProfileService : 6. switchTheme(userId, theme)
+Controller -> ProfileService : 5. switchTheme(userId, theme)
 activate ProfileService
 
 deactivate UserService
-ProfileService -> UserService : 7. updateTheme(userId, theme)
+ProfileService -> UserService : 6. updateTheme(userId, theme)
 activate UserService
-UserService -> UserModel : 8. updateOne()
+UserService -> UserModel : 7. updateOne()
 activate UserModel
-UserModel -> DB : 9. updateOne()
+UserModel -> DB : 8. execute query updateOne()
 activate DB
-DB --> UserModel : 10. Return modified count (or 0 if failed)
+DB --> UserModel : 9. Return modified count (or 0 if failed)
 deactivate DB
-UserModel -> UserModel : 11. checkUpdateSuccess()
+UserModel -> UserModel : 10. checkUpdateSuccess()
 activate UserModel
 deactivate UserModel
 opt database error
-    UserModel --> UserService : 11.1 Return badrequest
-    UserService --> ProfileService : 11.2 Return error response
-    ProfileService --> Controller : 11.3 Return error response
-    Controller --> Route : 11.4 Return error response
-    Route --> UI : 11.5 Return error response
-    UI --> User : 11.6 Display error message
+    UserModel --> UserService : 10.1 Return badrequest
+    UserService --> ProfileService : 10.2 Return error response
+    ProfileService --> Controller : 10.3 Return error response
+    Controller --> Route : 10.4 Return error response
+    Route --> UI : 10.5 Return error response
+    UI --> User : 10.6 Display error message
 end
-UserModel --> UserService : 12. Confirm theme updated
+UserModel --> UserService : 11. Confirm theme updated
 deactivate UserModel
-UserService --> ProfileService : 13. Return success
+UserService --> ProfileService : 12. Return success
 deactivate UserService
-ProfileService --> Controller : 14. Return success
+ProfileService --> Controller : 13. Return success
 deactivate ProfileService
-Controller --> Route : 15. Return success
+Controller --> Route : 14. Return success
 deactivate Controller
-Route --> UI : 16. Return success
+Route --> UI : 15. Return success
 deactivate Route
-UI -> UI : 17. Apply theme change
+UI -> UI : 16. Apply theme change
 activate UI
 deactivate UI
-UI --> User : 18. Display updated theme
+UI --> User : 17. Display updated theme
 deactivate UI
 deactivate User
 @enduml

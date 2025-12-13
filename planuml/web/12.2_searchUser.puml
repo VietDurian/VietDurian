@@ -28,47 +28,46 @@ activate Route
 Route -> Middleware : 5. authenticateUser(req) & authorizeRole()
 activate Middleware
 ref over User, DB: Verify Token
-Middleware --> Route : 6. User authenticated & authorized
+Middleware -> Controller : 6. handleSearchUser(userInfo, keyword)
 deactivate Middleware
-Route -> Controller : 7. handleSearchUser(userInfo, keyword)
 activate Controller
-Controller -> Controller : 8. validateInput()
+Controller -> Controller : 7. validateInput()
 activate Controller
 deactivate Controller
 opt validation error
-    Controller --> Route : 8.1 Return error
-    Route --> UI : 8.2 Show error message
-    UI --> User : 8.3 Display error message
+    Controller --> Route : 7.1 Return error
+    Route --> UI : 7.2 Show error message
+    UI --> User : 7.3 Display error message
 end
-Controller -> Service : 9. searchUser(keyword)
+Controller -> Service : 8. searchUser(keyword)
 activate Service
-Service -> Model : 10. findByKeyword(keyword)
+Service -> Model : 9. findByKeyword(keyword)
 activate Model
-Model -> DB : 11. find({$or: [{name: {$regex: keyword}}, {email: {$regex: keyword}}]})
+Model -> DB : 10. execute query find
 activate DB
-DB --> Model : 12. Return matching user documents
+DB --> Model : 11. Return matching user documents
 deactivate DB
-Model --> Service : 13. Return matching user documents
+Model --> Service : 12. Return matching user documents
 deactivate Model
-Service -> Service : 14. checkDatabaseError()
+Service -> Service : 13. checkDatabaseError()
 activate Service
 deactivate Service
 opt database error
-    Service --> Controller : 14.1 Return error
-    Controller --> Route : 14.2 Return error info
-    Route --> UI : 14.3 Show error message
-    UI --> User : 14.4 Display error message
+    Service --> Controller : 13.1 Return error
+    Controller --> Route : 13.2 Return error info
+    Route --> UI : 13.3 Show error message
+    UI --> User : 13.4 Display error message
 end
-Service -> Service : 15. mapToUserDTOList()
+Service -> Service : 14. mapToUserDTOList()
 activate Service
 deactivate Service
-Service --> Controller : 16. Return success
+Service --> Controller : 15. Return success
 deactivate Service
-Controller --> Route : 17. Return success
+Controller --> Route : 16. Return success
 deactivate Controller
-Route --> UI : 18. Return success
+Route --> UI : 17. Return success
 deactivate Route
-UI --> User : 19. Display matching users
+UI --> User : 18. Display matching users
 deactivate UI
 deactivate User
 
