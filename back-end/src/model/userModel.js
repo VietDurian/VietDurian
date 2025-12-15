@@ -1,0 +1,69 @@
+// Vo Lam Thuy Vi
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+
+const userSchema = new mongoose.Schema(
+  {
+    full_name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      minlength: 6,
+      required: true,
+    },
+    phone: {
+      type: String,
+      default: "",
+    },
+    avatar: {
+      type: String,
+      default: "",
+    },
+    role: {
+      type: String,
+      enum: ["trader", "admin", "serviceProvider", "contentExpert", "farmer"],
+      default: "trader",
+    },
+    is_banned: {
+      type: Boolean,
+      default: false,
+    },
+    isVerify: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: {
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+    },
+  }
+);
+
+// 🔑 Hash password before saving
+userSchema.pre("save", async function (next) {
+  // Only hash if password is modified
+  if (!this.isModified("password")) {
+    return next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+// 🔑 Compare password function
+userSchema.methods.comparePassword = async function (userPassword) {
+  return await bcrypt.compare(userPassword, this.password);
+};
+
+const User = mongoose.model("User", userSchema);
+
+module.exports = User;

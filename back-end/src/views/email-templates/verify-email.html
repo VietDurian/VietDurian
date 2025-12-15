@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Your Email</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+      .email-container {
+        max-width: 600px;
+        margin: 20px auto;
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .header h2 {
+        color: #333;
+        margin: 0;
+      }
+      .content {
+        color: #555;
+        line-height: 1.6;
+      }
+      .otp-code {
+        background-color: #f9f9f9;
+        border: 2px solid #4caf50;
+        padding: 15px;
+        text-align: center;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .otp-code strong {
+        font-size: 24px;
+        color: #4caf50;
+        letter-spacing: 2px;
+      }
+      .verify-button {
+        display: inline-block;
+        background-color: #4caf50;
+        color: white;
+        padding: 12px 30px;
+        text-decoration: none;
+        border-radius: 4px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      .footer {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+        color: #888;
+        font-size: 12px;
+        text-align: center;
+      }
+      .warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <div class="header">
+        <h2>Email Verification</h2>
+      </div>
+
+      <div class="content">
+        <p>Hello <strong>{{name}}</strong>,</p>
+
+        <p>
+          Thank you for registering with us! To complete your registration and
+          verify your email address, please use the OTP code below:
+        </p>
+
+        <div class="otp-code">
+          <strong>{{otpCode}}</strong>
+        </div>
+
+        <p>This OTP code will expire in <strong>10 minutes</strong>.</p>
+
+        <p>
+          If you did not create this account, please ignore this email. Your
+          email will not be verified unless you use the OTP code above.
+        </p>
+
+        <div class="warning">
+          <strong>Security Note:</strong> Never share this OTP code with anyone.
+          Our support team will never ask for your OTP code.
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>&copy; 2025 VietDurian. All rights reserved.</p>
+        <p>If you have any questions, please contact our support team.</p>
+      </div>
+    </div>
+  </body>
+</html>
