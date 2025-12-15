@@ -24,90 +24,88 @@ hide footbox
     Route -> Auth: 4. authenticateUser(req, res, next)
     activate Auth
     
-    ref over User, MongoDB : 5. Middleware verifies access token & user role
+    ref over User, MongoDB : Verifies token
 
-    Auth --> Route: 6. authentication success
+    Auth -> Controller: 5. next(req)
     deactivate Auth
-
-    Route -> Controller: 7. sendMessage(req, res)
     activate Controller
 
-    Controller -> Service: 8. sendMessage(readerId, senderId, content)
+    Controller -> Service: 6. sendMessage(readerId, senderId, content)
     activate Service
 
-    Service -> ConvModel: 9. getDetailsByUserId(readerId)
+    Service -> ConvModel: 7. findById(readerId)
     activate ConvModel
 
-    ConvModel -> MongoDB: 10. ExecuteQuery()
+    ConvModel -> MongoDB: 8. ExecuteQuery()
     activate MongoDB
-    MongoDB --> ConvModel: 11. Return conversation or null
+    MongoDB --> ConvModel: 9. Return conversation or null
     deactivate MongoDB
 
-    ConvModel --> Service: 12. Return conversation
+    ConvModel --> Service: 10. Return conversation
     deactivate ConvModel
 
     opt Conversation not found
-        Service -> ConvModel: 13. createNew(conversationData)
+        Service -> ConvModel: 11. insertOne(conversationData)
         activate ConvModel
-        ConvModel -> MongoDB: 14. ExecuteQuery()
+        ConvModel -> MongoDB: 11.1. ExecuteQuery()
         activate MongoDB
-        MongoDB --> ConvModel: 15. Return new conversation
+        MongoDB --> ConvModel: 11.2. Return new conversation
         deactivate MongoDB
-        ConvModel --> Service: 16. Return conversationId
+        ConvModel --> Service: 11.3. Return conversationId
         deactivate ConvModel
     end
 
-    Service -> MsgModel: 17. createNew(messageData)
+    Service -> MsgModel: 12. insertOne(messageData)
     activate MsgModel
 
-    MsgModel -> MongoDB: 18. ExecuteQuery()
+    MsgModel -> MongoDB: 13. ExecuteQuery()
     activate MongoDB
-    MongoDB --> MsgModel: 19. Return new message
+    MongoDB --> MsgModel: 14. Return new message
     deactivate MongoDB
 
-    MsgModel --> Service: 20. Return new message
+    MsgModel --> Service: 15. Return new message
     deactivate MsgModel
 
-    Service -> ConvModel: 21. updateMessage(conversationId, messageId, readerId)
+    Service -> ConvModel: 16. findByIdAndUpdate(conversationId, messageId, readerId)
     activate ConvModel
 
-    ConvModel -> MongoDB: 22. ExecuteQuery()
+    ConvModel -> MongoDB: 17. ExecuteQuery()
     activate MongoDB
-    MongoDB --> ConvModel: 23. Return updated conversation
+    MongoDB --> ConvModel: 18. Return updated conversation
     deactivate MongoDB
 
-    ConvModel --> Service: 24. Return updated conversation
+    ConvModel --> Service: 19. Return updated conversation
     deactivate ConvModel
 
-    Service --> Controller: 25. Return message result
+    Service --> Controller: 20. Return message result
     deactivate Service
 
     par Emit new message to other user
-        Controller -> Socket: 25.1. emitNewMessage(messageData, receiverId)
+        Controller -> Socket: 20.1. emitNewMessage(messageData, receiverId)
         activate Socket
-        Socket --> View: 25.1.1. Broadcast 'new_message' to other user
+        Socket --> View: 20.1.1. Broadcast 'new_message' to other user
         deactivate Socket
     else Emit conversation update to admin
-        Controller -> Service: 25.2. getAllConversation()
+        Controller -> Service: 20.2. getAllConversation()
         activate Service
-        Service -> ConvModel: 25.2.1. getAll()
+        Service -> ConvModel: 20.2.1. find()
         activate ConvModel
-        ConvModel -> MongoDB: 25.2.2. ExecuteQuery()
+        ConvModel -> MongoDB: 20.2.2. ExecuteQuery()
         activate MongoDB
-        MongoDB --> ConvModel: 25.2.3. Return all conversations
+        MongoDB --> ConvModel: 20.2.3. Return all conversations
         deactivate MongoDB
-        ConvModel --> Service: 25.2.4. Return conversations
+        ConvModel --> Service: 20.2.4. Return conversations
         deactivate ConvModel
-        Service --> Controller: 25.2.5. Return conversations
+        Service --> Controller: 20.2.5. Return conversations
         deactivate Service
         
-        Controller -> Socket: 25.2.6. emitConversationsUpdate(conversations)
+        Controller -> Socket: 20.2.6. emitConversationsUpdate(conversations)
         activate Socket
-        Socket --> View: 25.2.7. Broadcast to admin
+        Socket --> View: 20.2.7. Broadcast to admin
         deactivate Socket
     end
 
-    View --> User: 26. Display new message in chat
+    View --> User: 21. Display new message in chat
     deactivate View
     deactivate User
 

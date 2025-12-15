@@ -24,7 +24,7 @@ Route -> AuthMiddleware : 3. authenticateUser(req, res, next)
 activate AuthMiddleware
 
 ref over User, DB: Verifies token
-AuthMiddleware -> Controller : 4. handleGetProfile(userId)
+AuthMiddleware -> Controller : 4. next(req)
 deactivate AuthMiddleware
 activate Controller
 Controller -> ProfileService : 5. getProfile(userId)

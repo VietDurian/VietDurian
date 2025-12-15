@@ -29,43 +29,41 @@ Route -> Auth: 5. authenticateUser(req, res, next)
 activate Auth
 ref over User, MongoDB : Verifies token
 
-Auth --> Route: 6. authentication success
+Auth -> Controller: 6. next(req)
 deactivate Auth
-
-Route -> Controller: 7. editProfile(req, res)
 activate Controller
 
-    Controller -> Service: 8. editProfile(userId, profileData)
+    Controller -> Service: 7. findByIdAndUpdate(userId, profileData)
     activate Service
 
-    Service -> Model: 9. editUserById(userId, profileData)
+    Service -> Model: 8. editUserById(userId, profileData)
     activate Model
 
-    Model -> MongoDB: 10. ExecuteQuery()
+    Model -> MongoDB: 9. ExecuteQuery()
     activate MongoDB
-    MongoDB --> Model: 11. Return result
+    MongoDB --> Model: 10. Return result
     deactivate MongoDB
 
-    Model --> Service: 12. Return update result
+    Model --> Service: 11. Return update result
     deactivate Model
 
-    Service -> Service: 13. checkUpdateProfile()
+    Service -> Service: 12. checkUpdateProfile()
     activate Service
     deactivate Service
 
 alt Update Failed
-    Service --> Controller: 13.1. Return error
-    Controller --> Route: 13.1.1 Return error info
-    Route --> View: 13.1.2. Show "Update failed"
-    View --> User: 13.1.3. Display error message
+    Service --> Controller: 12.1. Return error
+    Controller --> Route: 12.1.1 Return error info
+    Route --> View: 12.1.2. Show "Update failed"
+    View --> User: 12.1.3. Display error message
 else Update Success
-    Service --> Controller: 13.2. Return success
+    Service --> Controller: 12.2. Return success
     deactivate Service
-    Controller --> Route: 13.2.1. Return success
+    Controller --> Route: 12.2.1. Return success
     deactivate Controller
-    Route --> View: 13.2.2. Return success
+    Route --> View: 12.2.2. Return success
     deactivate Route
-    View --> User: 13.2.3. Display updated profile
+    View --> User: 12.2.3. Display updated profile
     deactivate View
     deactivate User
 end

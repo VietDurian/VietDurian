@@ -23,70 +23,69 @@ hide footbox
     activate Auth
     
     ref over User, MongoDB : Verifies token
-    Auth --> Route: 4. authentication success
-    deactivate Auth
 
-    Route -> Controller: 5. getDetailsConversation(req, res)
+    Auth -> Controller: 4. next(req)
+    deactivate Auth
     deactivate Route
     activate Controller
 
-    Controller -> Service: 6. getUserConversation(userId)
+    Controller -> Service: 5. getUserConversation(userId)
     activate Service
 
-    Service -> ConvModel: 7. getUserConversation(userId, isRead = true)
+    Service -> ConvModel: 6. findById(userId, isRead = true)
     activate ConvModel
 
     ConvModel -> MongoDB: 8. ExecuteQuery()
     activate MongoDB
-    MongoDB --> ConvModel: 9. return conversation with messages
+    MongoDB --> ConvModel: 7. return conversation with messages
     deactivate MongoDB
 
-    ConvModel --> Service: 10. return conversation details
+    ConvModel --> Service: 8. return conversation details
     deactivate ConvModel
 
-    Service -> ConvModel: 11. update(conversationId, isRead = true)
+    Service -> ConvModel: 9. updateOne(conversationId, isRead = true)
     activate ConvModel
 
-    ConvModel -> MongoDB: 12. ExecuteQuery()
+    ConvModel -> MongoDB: 10. ExecuteQuery()
     activate MongoDB
-    MongoDB --> ConvModel: 13. return updated conversation
+    MongoDB --> ConvModel: 11. return updated conversation
     deactivate MongoDB
 
-    ConvModel --> Service: 14. return updated conversation
+    ConvModel --> Service: 12. return updated conversation
     deactivate ConvModel
 
-    Service -> MsgModel: 15. updateStatusBulk(conversationId, 'seen')
+    Service -> MsgModel: 13. updateStatusBulk(conversationId, 'seen')
     activate MsgModel
 
-    MsgModel -> MongoDB: 16. ExecuteQuery()
+    MsgModel -> MongoDB: 14. ExecuteQuery()
     activate MongoDB
-    MongoDB --> MsgModel: 17. Return update result
+    MongoDB --> MsgModel: 15. Return update result
     deactivate MongoDB
 
-    MsgModel --> Service: 18. Return update result
+    MsgModel --> Service: 16. Return update result
     deactivate MsgModel
 
-    Service --> Controller: 19. Return conversation details
+    Service --> Controller: 17. Return conversation details
     deactivate Service
 
-    Controller -> Controller: 20. checkMessagesExistence()
+    Controller -> Controller: 18. checkMessagesExistence()
     activate Controller
     deactivate Controller
 
     par Emit to Other User
-        Controller -> Socket: 20.1. Emit 'messages_seen' to other user
+        Controller -> Socket: 19.1. Emit 'messages_seen' to other user
         activate Socket
-        Socket --> View: 20.1.1. Broadcast to other user client
+        Socket --> View: 19.1.1. Broadcast to other user client
         deactivate Socket
     else Emit to Admin
-        Controller -> Socket: 20.2. Emit 'messages_seen' to admin
+        Controller -> Socket: 19.2. Emit 'messages_seen' to admin
         deactivate Controller
         activate Socket
-        Socket --> View: 20.2.1. Broadcast to admin client
+        Socket --> View: 19.2.1. Broadcast to admin client
         deactivate Socket
     end
 
-    View --> User: 21. Display messages & chat interface
+    View --> User: 20. Display messages & chat interface
     deactivate View
     deactivate User
 
