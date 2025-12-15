@@ -27,51 +27,47 @@ UI -> Route : 4. GET /userManagement/sort?field=sortField&order=asc
 activate Route
 Route -> Middleware : 5. authenticateUser(req) & authorizeRole()
 activate Middleware
-ref over User, DB: Verify Token & Check Role
-Middleware --> Route : 6. User authenticated & authorized
+ref over User, DB: Verify Token
+Middleware -> Controller : 6. handleSortUser(userInfo, field, order)
 deactivate Middleware
-Route -> Controller : 7. handleSortUser(userInfo, field, order)
 activate Controller
-Controller -> Controller : 8. validateInput()
+Controller -> Controller : 7. validateInput()
 activate Controller
 deactivate Controller
 opt validation error
-    Controller --> Route : 8.1 Return error
-    Route --> UI : 8.2 Show error message
-    UI --> User : 8.3 Display error message
+    Controller --> Route : 7.1 Return error
+    Route --> UI : 7.2 Show error message
+    UI --> User : 7.3 Display error message
 end
-Controller -> Service : 9. sortUser(field, order)
+Controller -> Service : 8. sortUser(field, order)
 activate Service
-Service -> Model : 10. findWithSort(field, order)
+Service -> Model : 9. findWithSort(field, order)
 activate Model
-Model -> DB : 11. find().sort({field: order})
+Model -> DB : 10. execute query with sort({field: order})
 activate DB
-DB --> Model : 12. Return sorted user documents
+DB --> Model : 11. Return sorted user documents
 deactivate DB
-Model --> Service : 13. Return sorted user documents
+Model --> Service : 12. Return sorted user documents
 deactivate Model
-Service -> Service : 14. checkDatabaseError()
+Service -> Service : 13. checkDatabaseError()
 activate Service
 deactivate Service
 opt database error
-    Service --> Controller : 14.1 Return error
-    Controller --> Route : 14.2 Return error info
-    Route --> UI : 14.3 Show error message
-    UI --> User : 14.4 Display error message
+    Service --> Controller : 13.1 Return error
+    Controller --> Route : 13.2 Return error info
+    Route --> UI : 13.3 Show error message
+    UI --> User : 13.4 Display error message
 end
-Service -> Service : 15. mapToUserDTOList()
+Service -> Service : 14. mapToUserDTOList()
 activate Service
 deactivate Service
-Service --> Controller : 16. Return success
+Service --> Controller : 15. Return success
 deactivate Service
-Controller --> Route : 17. Return success
+Controller --> Route : 16. Return success
 deactivate Controller
-Route --> UI : 18. Return success
+Route --> UI : 17. Return success
 deactivate Route
-UI -> UI : 19. Render sorted user list
-activate UI
-deactivate UI
-UI --> User : 20. Display sorted users
+UI --> User : 18. Display sorted users
 deactivate UI
 deactivate User
 

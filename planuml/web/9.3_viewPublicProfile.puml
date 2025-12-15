@@ -5,7 +5,7 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary profileViewScreen as UI
+boundary profileViewPage as UI
 control profileRoute as Route
 participant ":authMiddleware" as AuthMiddleware
 control profileController as Controller
@@ -21,51 +21,50 @@ UI -> Route : 2. GET /profile/public/:userId
 activate Route
 Route -> AuthMiddleware : 3. authenticateUser(req) & authorizeRole()
 activate AuthMiddleware
-ref over User, DB: Verify Token & Check Role
-AuthMiddleware --> Route : 4. User authenticated & authorized
+ref over User, DB: Verify Token
+AuthMiddleware -> Controller : 4. handleGetPublicProfile(userId)
 deactivate AuthMiddleware
-Route -> Controller : 5. handleGetPublicProfile(userId)
 activate Controller
-Controller -> ProfileService : 6. getPublicProfile(userId)
+Controller -> ProfileService : 5. getPublicProfile(userId)
 activate ProfileService
-ProfileService -> UserService : 7. findById(userId)
+ProfileService -> UserService : 6. findById(userId)
 activate UserService
-UserService -> UserModel : 8. findOne()
+UserService -> UserModel : 7. findOne()
 activate UserModel
-UserModel -> DB : 9. findOne()
+UserModel -> DB : 8. execute query findOne
 activate DB
-DB --> UserModel : 10. Return user document | null | dbError
+DB --> UserModel : 9. Return user document
 deactivate DB
-UserModel --> UserService : 11. Return raw result
+UserModel --> UserService : 10. Return raw result
 deactivate UserModel
-UserService -> UserService : 12. checkQuerySuccess()
+UserService -> UserService : 11. checkQuerySuccess()
 activate UserService
 deactivate UserService
 opt database error
-    UserService --> ProfileService : 12.1 Return badrequest
-    ProfileService --> Controller : 12.2 Return error response
-    Controller --> Route : 12.3 Return error response
-    Route --> UI : 12.4 Return error response
-    UI --> User : 12.5 Display error message
+    UserService --> ProfileService : 11.1 Return badrequest
+    ProfileService --> Controller : 11.2 Return error response
+    Controller --> Route : 11.3 Return error response
+    Route --> UI : 11.4 Return error response
+    UI --> User : 11.5 Display error message
 end
-UserService --> ProfileService : 13. Return user entity
+UserService --> ProfileService : 12. Return user entity
 deactivate UserService
-ProfileService -> ProfileService : 14. filterPublicData()
+ProfileService -> ProfileService : 13. filterPublicData()
 activate ProfileService
 deactivate ProfileService
-ProfileService -> ProfileService : 15. mapToPublicDTO()
+ProfileService -> ProfileService : 14. mapToPublicDTO()
 activate ProfileService
 deactivate ProfileService
-ProfileService --> Controller : 16. Return success + public data
+ProfileService --> Controller : 15. Return success + public data
 deactivate ProfileService
-Controller --> Route : 17. Return success + public data (200)
+Controller --> Route : 16. Return success + public data (200)
 deactivate Controller
-Route --> UI : 18. Return success + public data (200)
+Route --> UI : 17. Return success + public data (200)
 deactivate Route
-UI --> UI : 19. Render public profile
+UI --> UI : 18. Render public profile
 activate UI
 deactivate UI
-UI --> User : 20. Display public profile
+UI --> User : 19. Display public profile
 deactivate UI
 deactivate User
 

@@ -4,6 +4,7 @@ skinparam shadowing false
 skinparam sequenceArrowThickness 1
 hide footbox
 
+
 actor User as "Users"
 boundary "ProfileViewPage" as UI
 participant ":profileRoute" as Route
@@ -21,22 +22,22 @@ UI -> Route : 2. GET /profile/me
 activate Route
 Route -> AuthMiddleware : 3. authenticateUser(req, res, next)
 activate AuthMiddleware
+
 ref over User, DB: Verifies token
-AuthMiddleware --> Route : 4. authentication success
+AuthMiddleware -> Controller : 4. handleGetProfile(userId)
 deactivate AuthMiddleware
-Route -> Controller : 5. handleGetProfile(userId)
 activate Controller
-Controller -> ProfileService : 6. getProfile(userId)
+Controller -> ProfileService : 5. getProfile(userId)
 activate ProfileService
-ProfileService -> UserService : 7. findById(userId)
+ProfileService -> UserService : 6. findById(userId)
 activate UserService
-UserService -> UserModel : 8. findOne()
+UserService -> UserModel : 7. findOne()
 activate UserModel
-UserModel -> DB : 9. findOne()
+UserModel -> DB : 8. execute query findOne
 activate DB
-DB --> UserModel : 10. Return user document | null 
+DB --> UserModel : 9. Return user document
 deactivate DB
-UserModel --> UserService : 11. Return raw result
+UserModel --> UserService : 10. Return raw result
 deactivate UserModel
 UserService -> UserService : 12. checkNotFound()
 activate UserService

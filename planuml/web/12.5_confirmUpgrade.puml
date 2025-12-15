@@ -5,7 +5,7 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary dashboardScreen as UI
+boundary dashboardPage as UI
 control userManagementRoute as Route
 participant ":authMiddleware" as Middleware
 control userManagementController as Controller
@@ -28,77 +28,74 @@ UI -> Route : 5. PUT /userManagement/confirmUpgrade/:userId
 activate Route
 Route -> Middleware : 6. authenticateUser(req) & authorizeRole()
 activate Middleware
-ref over User, DB: Verify Token & Check Role
-Middleware --> Route : 7. User authenticated & authorized
+ref over User, DB: Verify Token
+Middleware -> Controller : 7. handleConfirmUpgrade(userInfo, userId, decision)
 deactivate Middleware
-Route -> Controller : 8. handleConfirmUpgrade(userInfo, userId, decision)
 activate Controller
-Controller -> Controller : 9. validateInput()
+Controller -> Controller : 8. validateInput()
 activate Controller
 deactivate Controller
 opt validation error
-    Controller --> Route : 9.1 Return error
-    Route --> UI : 9.2 Show error message
-    UI --> User : 9.3 Display error message
+    Controller --> Route : 8.1 Return error
+    Route --> UI : 8.2 Show error message
+    UI --> User : 8.3 Display error message
 end
-Controller -> Service : 10. confirmUpgrade(userId, decision)
+Controller -> Service : 9. confirmUpgrade(userId, decision)
 activate Service
-Service -> Model : 11. findById(userId)
+Service -> Model : 10. findById(userId)
 activate Model
-Model -> DB : 12. findOne({_id: userId})
+Model -> DB : 11. execute query findOne
 activate DB
-DB --> Model : 13. Return user document
+DB --> Model : 12. Return user document
 deactivate DB
-Model --> Service : 14. Return user document
+Model --> Service : 13. Return user document
 deactivate Model
-Service -> Service : 15. checkDatabaseError()
+Service -> Service : 14. checkDatabaseError()
 activate Service
 deactivate Service
 opt database error
+    Service --> Controller : 14.1 Return error
+    Controller --> Route : 14.2 Return error info
+    Route --> UI : 14.3 Show error message
+    UI --> User : 14.4 Display error message
+end
+Service -> Service : 15. checkNotFound()
+activate Service
+deactivate Service
+opt user not found
     Service --> Controller : 15.1 Return error
     Controller --> Route : 15.2 Return error info
     Route --> UI : 15.3 Show error message
     UI --> User : 15.4 Display error message
 end
-Service -> Service : 16. checkNotFound()
-activate Service
-deactivate Service
-opt user not found
-    Service --> Controller : 16.1 Return error
-    Controller --> Route : 16.2 Return error info
-    Route --> UI : 16.3 Show error message
-    UI --> User : 16.4 Display error message
-end
-Service -> Model : 17. updateAccountLevel(userId, decision)
+Service -> Model : 16. updateAccountLevel(userId, decision)
 activate Model
-Model -> DB : 18. updateOne({_id: userId}, {$set: {accountLevel: newLevel}})
+Model -> DB : 17. execute query updateOne
 activate DB
-DB --> Model : 19. Return update result
+DB --> Model : 18. Return update result
 deactivate DB
-Model --> Service : 20. Return update result
+Model --> Service : 19. Return update result
 deactivate Model
-Service -> Service : 21. checkDatabaseError()
+Service -> Service : 20. checkDatabaseError()
 activate Service
 deactivate Service
 opt database error
-    Service --> Controller : 21.1 Return error
-    Controller --> Route : 21.2 Return error info
-    Route --> UI : 21.3 Show error message
-    UI --> User : 21.4 Display error message
+    Service --> Controller : 20.1 Return error
+    Controller --> Route : 20.2 Return error info
+    Route --> UI : 20.3 Show error message
+    UI --> User : 20.4 Display error message
 end
-Service -> Service : 22. mapToUserDTO()
+Service -> Service : 21. mapToUserDTO()
 activate Service
 deactivate Service
-Service --> Controller : 23. Return success
+Service --> Controller : 22. Return success
 deactivate Service
-Controller --> Route : 24. Return success
+Controller --> Route : 23. Return success
 deactivate Controller
-Route --> UI : 25. Return success
+Route --> UI : 24. Return success
 deactivate Route
-UI -> UI : 26. Display success message
-activate UI
-deactivate UI
-UI --> User : 27. Show updated account level
+
+UI --> User : 25. Show updated account level
 deactivate UI
 deactivate User
 

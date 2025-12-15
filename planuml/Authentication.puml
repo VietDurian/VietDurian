@@ -1,8 +1,10 @@
 @startuml AuthenticationMiddleware
 
-participant ":authMiddleware" as M #lightblue
-entity ":userModel" as Model #lightblue
-database "MongoDB" as DB #yellow
+actor User 
+participant ":authMiddleware" as M 
+entity ":userModel" as Model 
+database "MongoDB" as DB 
+hide footbox
 
 activate M
 M -> M: 1. Receive authentication token (Bearer token in header)
@@ -13,14 +15,16 @@ M -> M: 2. Check token existence
 activate M
 deactivate M
 opt Token missing
-    M --> M: 2.1 Return Authentication Error (token is missing)
+activate User
+
+    M --> User: 2.1 Return Authentication Error (token is missing)
 end
 
 M -> M: 3. Verify token (signature, expiration)
 activate M
 deactivate M
 opt Invalid token
-    M --> M: 3.1 Return Authentication Error (token is invalid)
+    M --> User: 3.1 Return Authentication Error (token is invalid)
 end
 
 M -> Model: 4. Check token in blacklist
@@ -36,18 +40,34 @@ M -> M: 8. checkTokenIsExistInBlacklist()
 activate M
 deactivate M
 opt Token is blacklisted
-    M --> M: 8.1 Return Authentication Error (token is logged out)
+    M --> User: 8.1 Return Authentication Error (token is logged out)
 end
 
-M -> M: 9. Check user status (active / banned / suspended)
+M -> M: 9. Check user status (active / banned )
 activate M
 deactivate M
 opt User banned/suspended
-    M --> M: 9.1 Return Authentication Error (user is banned)
+    M --> User: 9.1 Return Authentication Error (user is banned)
 end
 
-M --> M: 10. Forward request to next handler (Controller / Service)
+M -> M: 10. Check user role & permission
+activate M
 deactivate M
+alt User has required role
+    M -> M: 10.1 Continue to next handler
+    activate M
+deactivate M
+else User does not have required role
+    M --> User: 10.2 Return Authorization Error (insufficient permissions)
+    deactivate User
+
+end
+
+M -> M: 11. Forward request to next handler (Controller / Service)
+activate M
+deactivate M
+deactivate M
+
 
 
 @enduml

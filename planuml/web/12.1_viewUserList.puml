@@ -5,7 +5,7 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary dashboardScreen as UI
+boundary dashboardPage as UI
 control userManagementRoute as Route
 participant ":authMiddleware" as Middleware
 control userManagementController as Controller
@@ -20,43 +20,40 @@ UI -> Route : 2. GET /user/list
 activate Route
 Route -> Middleware : 3. authenticateUser(req) & authorizeRole()
 activate Middleware
-ref over User, DB: Verify Token & Check Role
-Middleware --> Route : 4. User authenticated & authorized
+ref over User, DB: Verify Token
+Middleware -> Controller : 4. handleGetUserList(userInfo)
 deactivate Middleware
-Route -> Controller : 5. handleGetUserList(userInfo)
 activate Controller
-Controller -> Service : 6. getUserList()
+Controller -> Service : 5. getUserList()
 activate Service
-Service -> Model : 7. findAllUsers()
+Service -> Model : 6. findAllUsers()
 activate Model
-Model -> DB : 8. find()
+Model -> DB : 7. execute query find
 activate DB
-DB --> Model : 9. Return user documents
+DB --> Model : 8. Return user documents
 deactivate DB
-Model --> Service : 10. Return user documents
+Model --> Service : 9. Return user documents
 deactivate Model
-Service -> Service : 11. checkDatabaseError()
+Service -> Service : 10. checkDatabaseError()
 activate Service
 deactivate Service
 opt database error
-    Service --> Controller : 11.1 Return error
-    Controller --> Route : 11.2 Return error info
-    Route --> UI : 11.3 Show error message
-    UI --> User : 11.4 Display error message
+    Service --> Controller : 10.1 Return error
+    Controller --> Route : 10.2 Return error info
+    Route --> UI : 10.3 Show error message
+    UI --> User : 10.4 Display error message
 end
-Service -> Service : 12. mapToUserDTO()
+Service -> Service : 11. mapToUserDTO()
 activate Service
 deactivate Service
-Service --> Controller : 13. Return success
+Service --> Controller : 12. Return success
 deactivate Service
-Controller --> Route : 14. Return success
+Controller --> Route : 13. Return success
 deactivate Controller
-Route --> UI : 15. Return success
+Route --> UI : 14. Return success
 deactivate Route
-UI -> UI : 16. Render user list
-activate UI
-deactivate UI
-UI --> User : 17. Display user list
+
+UI --> User : 15. Display user list
 deactivate UI
 deactivate User
 
