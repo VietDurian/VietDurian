@@ -34,68 +34,66 @@ activate Auth
 
 ref over Admin, MongoDB : Verifies token
 
-Auth --> Route: 7. authentication success
+Auth -> Controller: 7. exportExcel(req, res) | exportCSV(req, res)
 deactivate Auth
-
-Route -> Controller: 8. exportExcel(req, res) | exportCSV(req, res)
 activate Controller
 
-Controller -> Service: 9. getAllForExport(filters)
+Controller -> Service: 8. getAllForExport(filters)
 activate Service
 
-Service -> Model: 10. getAllForExport(combinedFilters, maxLimit)
+Service -> Model: 9. getAllForExport(combinedFilters, maxLimit)
 activate Model
 
-Model -> MongoDB: 11. ExecuteQuery(find with filters)
+Model -> MongoDB: 10. ExecuteQuery(find with filters)
 activate MongoDB
-MongoDB --> Model: 12. Return products array
+MongoDB --> Model: 11. Return products array
 deactivate MongoDB
 
-Model --> Service: 13. Return products data
+Model --> Service: 12. Return products data
 deactivate Model
 
-Service --> Controller: 14. Return products array
+Service --> Controller: 13. Return products array
 deactivate Service
 
-Controller -> Controller: 15. Check if products array is empty
+Controller -> Controller: 14. Check if products array is empty
 activate Controller
 deactivate Controller
 
 opt No products found
 
-    Controller --> Route: 15.1. Show error message
-    Route --> View: 15.2. Show error message
-    View --> Admin: 15.3. Display "No products found to export"
+    Controller --> Route: 14.1. Show error message
+    Route --> View: 14.2. Show error message
+    View --> Admin: 14.3. Display "No products found to export"
 end
 
-Controller -> Controller: 16. Generate file based on export type
+Controller -> Controller: 15. Generate file based on export type
 activate Controller
 deactivate Controller
 
 alt Export Type = Excel
 
-    Controller -> Helper: 16.1. generateProductExcelFile(products)
+    Controller -> Helper: 15.1. generateProductExcelFile(products)
     activate Helper
     
-    Helper --> Controller: 16.1.1. Return Excel buffer
+    Helper --> Controller: 15.1.1. Return Excel buffer
     deactivate Helper
     
 else Export Type = CSV
-    Controller -> Helper: 16.2. generateProductCSVFile(products)
+    Controller -> Helper: 15.2. generateProductCSVFile(products)
     activate Helper
     
-    Helper --> Controller: 16.2.1. Return CSV string
+    Helper --> Controller: 15.2.1. Return CSV string
     deactivate Helper
 end
 
-Controller --> Route: 17. Return 200 OK + file buffer/string
+Controller --> Route: 16. Return 200 OK + file buffer/string
 deactivate Controller
 
-Route --> View: 18. Return file blob
+Route --> View: 17. Return file blob
 deactivate Route
 
 
-View --> Admin: 19. File downloaded successfully
+View --> Admin: 18. File downloaded successfully
 deactivate Admin
 deactivate View
 

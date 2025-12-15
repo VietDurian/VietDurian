@@ -21,37 +21,35 @@ Route -> Auth: 3. authenticateUser(req, res, next)
 activate Auth
 ref over Admin, MongoDB : Verifies token
 
-Auth --> Route: 4. authentication success
+Auth -> Controller: 4. next(req)    
 deactivate Auth
-
-Route -> Controller: 5. getAllReport(req, res)
 activate Controller
 
-Controller -> Service: 6. getAllReport(query)
+Controller -> Service: 5. handleGetProfile(userId)
 activate Service
 
-Service -> Model: 7. find().sort(criteria)
+Service -> Model: 6. find().sort(criteria)
 activate Model
 
-Model -> MongoDB: 8. Query sorted reports
+Model -> MongoDB: 7. Query sorted reports
 activate MongoDB
 
-MongoDB --> Model: 9. Return sorted list
+MongoDB --> Model: 8. Return sorted list
 deactivate MongoDB
 
-Model --> Service: 10. Return sorted list
+Model --> Service: 9. Return sorted list
 deactivate Model
 
-Service --> Controller: 11. Return sorted list
+Service --> Controller: 10. Return sorted list
 deactivate Service
 
-Controller --> Route: 12. Return 200 OK + data
+Controller --> Route: 11. Return 200 OK + data
 deactivate Controller
 
-Route --> View: 13. Update report list
+Route --> View: 12. Update report list
 deactivate Route
 
-View --> Admin: 14. Display sorted reports
+View --> Admin: 13. Display sorted reports
 deactivate View
 deactivate Admin
 

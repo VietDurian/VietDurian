@@ -29,52 +29,51 @@ hide footbox
     activate Route
 
     Route -> Auth: 5. authenticateUser(req, res, next)
+    deactivate Route
     activate Auth
-    
     ref over User, MongoDB : Verifies token
 
-    Auth --> Route: 6. authentication success
-    deactivate Auth
 
-    Route -> Controller: 7. deleteMessage(req, res)
+    Auth -> Controller: 6. next(req)
+    deactivate Auth
     deactivate Route
     activate Controller
 
-    Controller -> Service: 8. deleteMessage(messageId)
+    Controller -> Service: 7. deleteMessage(messageId)
     activate Service
 
-    Service -> Model: 9. deleteMessage(messageId)
+    Service -> Model: 8. deleteMessage(messageId)
     activate Model
 
-    Model -> MongoDB: 10. ExecuteQuery()
+    Model -> MongoDB: 9. ExecuteQuery()
     activate MongoDB
-    MongoDB --> Model: 11. return updated message
+    MongoDB --> Model: 10. return updated message
     deactivate MongoDB
 
-    Model --> Service: 12. return updated message
+    Model --> Service: 11. return updated message
     deactivate Model
 
-    Service --> Controller: 13. return updated message
+    Service --> Controller: 12. return updated message
     deactivate Service
 
-    Controller -> Controller: 14. checkRecipientRole(updatedMessage)
+    Controller -> Controller: 13. checkRecipientRole(updatedMessage)
     activate Controller
     deactivate Controller
 
     par Emit to other user
-        Controller -> Socket: 14.1. emit 'message_recalled' to other user
+        Controller -> Socket: 13.1. emit 'message_recalled' to other user
         activate Socket
-        Socket --> View: 14.1.1. broadcast to other user client
+        Socket --> View: 13.1.1. broadcast to other user client
         deactivate Socket
     else Emit to admin
-        Controller -> Socket: 14.2. emit 'message_recalled' to admin
+        Controller -> Socket: 13.2. emit 'message_recalled' to admin
         deactivate Controller
         activate Socket
-        Socket --> View: 14.2.1. broadcast to admin client
+        Socket --> View: 13.2.1. broadcast to admin client
         deactivate Socket
     end
 
-    View --> User: 15. display updated message with (recalled) label
+    View --> User: 14. display updated message with (recalled) label
     deactivate View
     deactivate User
 
