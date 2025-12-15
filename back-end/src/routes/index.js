@@ -3,6 +3,7 @@ import express from 'express';
 import { authRoute } from '@/routes/authRoute';
 import { userRoute } from '@/routes/userRoute';
 import { typeProductRoute } from '@/routes/typeProductRoute';
+import { stepRoute } from '@/routes/stepRoute';
 
 const Router = express.Router();
 
@@ -34,5 +35,6 @@ Router.get('/status', (req, res) => {
 // Router.use('/auth', authRoute);
 // Router.use('/user', userRoute);
 Router.use('/type-product', typeProductRoute);
+Router.use('/step', stepRoute);
 
 export const API_v1 = Router;
