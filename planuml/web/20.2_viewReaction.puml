@@ -47,27 +47,16 @@ hide footbox
     Model --> Service: 12. Return result
     deactivate Model
 
-    Service -> Service: 13. checkCreationReactionsData(reactions)
-    activate Service
+    Service --> Controller: 13. Return reactions data
     deactivate Service
 
-    opt database error
-        Service --> Controller: 13.1. Return badrequest
-        Controller --> Route: 13.2. Return error response
-        Route --> View: 13.3. Return error response
-        View -> User: 13.4. Display error message
-    end
-
-    Service --> Controller: 14. Return reactions data
-    deactivate Service
-
-    Controller --> Route: 15. Send 200 OK + reactions data
+    Controller --> Route: 14. Send 200 OK + reactions data
     deactivate Controller
 
-    Route --> View: 16. Render reactions data
+    Route --> View: 15. Render reactions data
     deactivate Route
 
-    View --> User: 17. Display reactions data
+    View --> User: 16. Display reactions data
     deactivate View
     deactivate User
 

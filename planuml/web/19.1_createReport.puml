@@ -56,27 +56,16 @@ hide footbox
     Model --> Service: 13. Return result
     deactivate Model
 
-    Service -> Service: 14. checkCreationSuccess()
-    activate Service
+    Service --> Controller: 14. Return created report
     deactivate Service
 
-    opt database error
-        Service --> Controller: 14.1. Return badrequest
-        Controller --> Route: 14.2. Return error response
-        Route --> View: 14.3. Return error response
-        View -> User: 14.4. Display error message
-    end
-
-    Service --> Controller: 15. Return created report
-    deactivate Service
-
-    Controller --> Route: 16. 201 Created + report
+    Controller --> Route: 15. 201 Created + report
     deactivate Controller
 
-    Route --> View: 17. Render created report
+    Route --> View: 16. Render created report
     deactivate Route
 
-    View --> User: 18. Display created report
+    View --> User: 17. Display created report
     deactivate View
     deactivate User
 
