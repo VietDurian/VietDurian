@@ -1,0 +1,56 @@
+@startuml 14.7_sortType
+hide footbox
+title Sort Type
+
+actor User
+boundary TypePage as View
+control TypeRoute as Route
+participant ":AuthMiddleware" as Middleware
+control "TypeController" as Controller
+participant ":TypeService" as Service
+participant ":TypeModel" as Model
+database Database as Database
+
+User -> View : 1. Choose sort option
+activate View
+
+    View -> Route : 2. GET /types?sort=&page=&size=
+    activate Route
+
+    Route -> Middleware : 3. AuthenticateUser(req, res, next)
+    activate Middleware
+    Middleware --> Route : 4. Authentication success
+    Middleware -> Controller : 5. Forward SortTypeRequest
+    deactivate Middleware
+    activate Controller
+
+    Controller -> Service : 6. Process type sorting
+    activate Service
+
+    Service -> Model : 7. Build sort criteria
+    activate Model
+
+    Model -> Database : 8. Retrieve types ordered by criteria
+    activate Database
+    Database --> Model : 9. Result set
+    deactivate Database
+
+    Model --> Service : 10. Return sorted list + paging info
+    deactivate Model
+
+alt No types available
+    Service --> Controller : 11.1. Return empty result
+    Controller --> Route : 11.1.1. Return 200 OK + empty list/message
+    Route --> View : 11.1.2. Show "No types available"
+else Types available
+    Service --> Controller : 11.2. Return SortTypeResponse
+    deactivate Service
+    Controller --> Route : 11.2.1. Return 200 OK + sorted types data
+    deactivate Controller
+    Route --> View : 11.2.2. Render sorted list + keep sort option selected
+    deactivate Route
+end
+
+View --> User : 12. Display sorted result
+deactivate View
+@enduml

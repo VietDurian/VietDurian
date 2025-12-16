@@ -1,0 +1,56 @@
+@startuml 13.5_filterProduct
+hide footbox
+title Filter Product
+
+actor User
+boundary ProductPage as View
+control ProductRoute as Route
+participant ":AuthMiddleware" as Middleware
+control "ProductController" as Controller
+participant ":ProductService" as Service
+participant ":ProductModel" as Model
+database Database as Database
+
+User -> View : 1. Select filter options\n(keyword, category, price)
+activate View
+
+    View -> Route : 3. GET /products/filter?keyword=&categoryId=&price=
+    activate Route
+
+    Route -> Middleware : 4. AuthenticateUser(req, res, next)
+    activate Middleware
+    Middleware --> Route : 5. Authentication success
+    Middleware -> Controller : 6. Forward FilterProductRequest(params)
+    deactivate Middleware
+    activate Controller
+
+    Controller -> Service : 7. Process product filtering
+    activate Service
+
+    Service -> Model : 7.1. Build filter criteria
+    activate Model
+
+    Model -> Database : 7.1.1. Retrieve filtered product data
+    activate Database
+    Database --> Model : 7.1.2. Result set
+    deactivate Database
+
+    Model --> Service : 7.1.3. Return filtered list + paging info
+    deactivate Model
+
+alt No products match
+    Service --> Controller : 7.2. Return empty result
+    Controller --> Route : 7.3. Return 200 OK + empty list/message
+    Route --> View : 7.4. Show "No products found" + keep filters
+else Products match
+    Service --> Controller : 7.2. Return FilterProductResponse
+    deactivate Service
+    Controller --> Route : 7.3. Return 200 OK + filtered products data
+    deactivate Controller
+    Route --> View : 7.4. Render filtered list + pagination
+    deactivate Route
+end
+
+View --> User : 8. Display filter result
+deactivate View
+@enduml
