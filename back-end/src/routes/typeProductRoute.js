@@ -7,7 +7,7 @@ const Router = express.Router();
  * @swagger
  * /type-product:
  *   get:
- *     tags: [TypeProduct]
+ *     tags: [type-product]
  *     summary: Get all type products
  *     description: Retrieve a list of all type products
  *     parameters:
@@ -62,7 +62,7 @@ const Router = express.Router();
  *                         format: date-time
  *                         example: "2024-06-01T12:00:00Z"
  *   post:
- *     tags: [TypeProduct]
+ *     tags: [type-product]
  *     summary: Create a new type product
  *     description: Create a new type product with the provided name
  *     requestBody:
@@ -107,7 +107,7 @@ const Router = express.Router();
  *                       format: date-time
  *                       example: "2024-06-01T12:00:00Z"
  *   patch:
- *     tags: [TypeProduct]
+ *     tags: [type-product]
  *     summary: Update a type product
  *     description: Update the name of an existing type product
  *     requestBody:
@@ -155,7 +155,7 @@ const Router = express.Router();
  *                       format: date-time
  *                       example: "2024-06-01T12:00:00Z"
  *   delete:
- *     tags: [TypeProduct]
+ *     tags: [type-product]
  *     summary: Delete a type product
  *     description: Delete a type product by ID
  *     requestBody:

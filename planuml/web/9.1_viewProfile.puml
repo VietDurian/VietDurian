@@ -24,7 +24,7 @@ Route -> AuthMiddleware : 3. authenticateUser(req, res, next)
 activate AuthMiddleware
 
 ref over User, DB: Verifies token
-AuthMiddleware -> Controller : 4. handleGetProfile(userId)
+AuthMiddleware -> Controller : 4. next(req)
 deactivate AuthMiddleware
 activate Controller
 Controller -> ProfileService : 5. getProfile(userId)
@@ -39,36 +39,26 @@ DB --> UserModel : 9. Return user document
 deactivate DB
 UserModel --> UserService : 10. Return raw result
 deactivate UserModel
-UserService -> UserService : 11. checkQuerySuccess()
-activate UserService
-deactivate UserService
-opt database error
-    UserService --> ProfileService : 11.1 Return badrequest
-    ProfileService --> Controller : 11.2 Return error response
-    Controller --> Route : 11.3 Return error response
-    Route --> UI : 11.4 Return error response
-    UI -> User : 11.5 Display error message
-end
 UserService -> UserService : 12. checkNotFound()
 activate UserService
 deactivate UserService
-opt user not found (null document)
-    UserService --> ProfileService : 12.1 Return notfound
-    ProfileService --> Controller : 12.2 Return error response
-    Controller --> Route : 12.3 Return error response
-    Route --> UI : 12.4 Return error response
-    UI -> User : 12.5 Display user not found
+alt user not found (null document)
+    UserService --> ProfileService : 13.1 Return notfound
+    ProfileService --> Controller : 13.1.1 Return error response
+    Controller --> Route : 13.1.2 Return error response
+    Route --> UI : 13.1.3 Return error response
+    UI -> User : 13.1.4 Display user not found
+else
+    UserService --> ProfileService : 13.2 Return user entity
+    deactivate UserService
+    ProfileService --> Controller : 13.2.1 Return success + user data
+    deactivate ProfileService
+    Controller --> Route : 13.2.2 Return success + user data 
+    deactivate Controller
+    Route --> UI : 13.2.3 Return success + user data 
+    deactivate Route
+    UI --> User : 13.2.4 Display profile
+    deactivate UI
+    deactivate User
 end
-UserService --> ProfileService : 13. Return user entity
-deactivate UserService
-ProfileService --> Controller : 14. Return success + user data
-deactivate ProfileService
-Controller --> Route : 15. Return success + user data 
-deactivate Controller
-Route --> UI : 16. Return success + user data 
-deactivate Route
-UI --> User : 17. Display profile
-deactivate UI
-deactivate User
-
 @enduml

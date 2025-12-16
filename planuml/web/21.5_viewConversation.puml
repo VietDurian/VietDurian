@@ -22,62 +22,48 @@ hide footbox
     
     ref over Admin, MongoDB : Verifies token
 
-    Auth --> Route: 4. Authentication success
+    Auth -> Controller: 4. next(req)
     deactivate Auth
-
-    Route -> Controller: 5. getAllConversation(req, res)
     activate Controller
 
-    Controller -> Service: 6. getAllConversation()
+    Controller -> Service: 5. getAllConversation()
     activate Service
 
-    Service -> Model: 7. getAll()
+    Service -> Model: 6. find()
     activate Model
 
-    Model -> MongoDB: 8. ExecuteQuery()
+    Model -> MongoDB: 7. ExecuteQuery()
     activate MongoDB
-    MongoDB --> Model: 9. return conversations list
+    MongoDB --> Model: 8. return conversations list
     deactivate MongoDB
 
-    Model --> Service: 10. return conversations
+    Model --> Service: 9. return conversations
     deactivate Model
 
-    Service -> Service: 11. checkCreatedConversations()
-    activate Service    
-    deactivate Service
-
-    opt database error
-        Service --> Controller: 11. Return badrequest
-        Controller --> Route: 11.2. Return error response
-        Route --> View: 11.3. Return error response
-        View -> Admin: 11.4. Display error message
-    end
-
-    Service -> Service: 12. checkConversationsExistence()
+    Service -> Service: 10. checkConversationsExistence()
     activate Service
     deactivate Service
 
    alt Conversations exist
 
-        Service --> Controller: 12.1. return conversations
+        Service --> Controller: 10.1. return conversations
 
-        Controller --> Route: 12.1.1. return conversations data
+        Controller --> Route: 10.1.1. return conversations data
 
-        Route --> View: 12.1.2. display conversations list
-
-        View --> Admin: 12.1.3. show conversations
+        Route --> View: 10.1.2. display conversations list
+        View --> Admin: 10.1.3. show conversations
     else Conversations Empty
 
-        Service --> Controller: 12.2. return empty list
+        Service --> Controller: 10.2. return empty list
         deactivate Service
 
-        Controller --> Route: 12.2.1. return empty data
+        Controller --> Route: 10.2.1. return empty data
         deactivate Controller
 
-        Route --> View: 12.2.2. display "No conversations found"
+        Route --> View: 10.2.2. display "No conversations found"
         deactivate Route
 
-        View --> Admin: 12.2.3. show message
+        View --> Admin: 10.2.3. show message
         deactivate View
         deactivate Admin
     end

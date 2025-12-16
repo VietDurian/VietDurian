@@ -20,54 +20,41 @@ hide footbox
     Route -> Auth: 3. authenticateUser(req, res, next)
     activate Auth
     ref over User, MongoDB : Verifies token
-
-    Auth --> Route: 4. authentication success
-    deactivate Auth
     
-    Route -> Controller: 5. getReactionsByCommentId(req, res)
+    Auth -> Controller: 4. next(req)
+    deactivate Auth
     activate Controller
 
-    Controller -> Service: 6. getReactionsByCommentId(commentId)
+    Controller -> Service: 5. getReactionsByCommentId(commentId)
     activate Service
 
-    Service -> Model: 7. getReactionsByCommentId(commentId)
+    Service -> Model: 6. getReactionsByCommentId(commentId)
     activate Model
 
-    Model -> UserModel: 8. populate reactions with user details
+    Model -> UserModel: 7. populate reactions with user details
     activate UserModel
 
-    UserModel -> MongoDB: 9. Query reactions for the comment
+    UserModel -> MongoDB: 8. Query reactions for the comment
     activate MongoDB
-    MongoDB --> UserModel: 10. Return queried reactions
+    MongoDB --> UserModel: 9. Return queried reactions
     deactivate MongoDB
 
-    UserModel --> Model: 11. Return populated reactions
+    UserModel --> Model: 10. Return populated reactions
     deactivate UserModel
 
-    Model --> Service: 12. Return result
+    Model --> Service: 11. Return result
     deactivate Model
 
-    Service -> Service: 13. checkCreationReactionsData(reactions)
-    activate Service
+    Service --> Controller: 12. Return reactions data
     deactivate Service
 
-    opt database error
-        Service --> Controller: 13.1. Return badrequest
-        Controller --> Route: 13.2. Return error response
-        Route --> View: 13.3. Return error response
-        View -> User: 13.4. Display error message
-    end
-
-    Service --> Controller: 14. Return reactions data
-    deactivate Service
-
-    Controller --> Route: 15. Send 200 OK + reactions data
+    Controller --> Route: 13. Send 200 OK + reactions data
     deactivate Controller
 
-    Route --> View: 16. Render reactions data
+    Route --> View: 14. Render reactions data
     deactivate Route
 
-    View --> User: 17. Display reactions data
+    View --> User: 15. Display reactions data
     deactivate View
     deactivate User
 

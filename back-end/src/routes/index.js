@@ -1,8 +1,8 @@
-import express from 'express';
+import express from "express";
 
-import { authRoute } from '@/routes/authRoute';
-import { userRoute } from '@/routes/userRoute';
-import { typeProductRoute } from '@/routes/typeProductRoute';
+import { authRoute } from "@/routes/authRoute";
+import { typeProductRoute } from "@/routes/typeProductRoute";
+import { stepRoute } from "@/routes/stepRoute";
 
 const Router = express.Router();
 
@@ -27,12 +27,13 @@ const Router = express.Router();
  *                   type: string
  *                   example: Server is running
  */
-Router.get('/status', (req, res) => {
-	res.status(200).json({ status: 'OK', message: 'Server is running' });
+Router.get("/status", (req, res) => {
+  res.status(200).json({ status: "OK", message: "Server is running" });
 });
 
-// Router.use('/auth', authRoute);
+Router.use("/auth", authRoute);
 // Router.use('/user', userRoute);
-Router.use('/type-product', typeProductRoute);
+Router.use("/type-product", typeProductRoute);
+Router.use("/step", stepRoute);
 
 export const API_v1 = Router;

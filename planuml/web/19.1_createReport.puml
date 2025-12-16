@@ -35,48 +35,34 @@ hide footbox
     activate Auth
     ref over User, MongoDB : Verifies token
 
-
-    Auth --> Route: 7. authentication success
+    Auth -> Controller: 7. next(req)
     deactivate Auth
-
-    Route -> Controller: 8. createReport(req.body, req.user)
     activate Controller
 
-    Controller -> Service: 9. createReport(reportData)
+    Controller -> Service: 8. createReport(reportData)
     activate Service
 
-    Service -> Model: 10. createReport(reportData)
+    Service -> Model: 9. insertOne(reportData)
     activate Model
 
-    Model -> MongoDB: 11. Insert new report
+    Model -> MongoDB: 10. Insert new report
     activate MongoDB
-    MongoDB --> Model: 12. Return created report
+    MongoDB --> Model: 11. Return created report
     deactivate MongoDB
 
-    Model --> Service: 13. Return result
+    Model --> Service: 12. Return result
     deactivate Model
 
-    Service -> Service: 14. checkCreationSuccess()
-    activate Service
+    Service --> Controller: 13. Return created report
     deactivate Service
 
-    opt database error
-        Service --> Controller: 14.1. Return badrequest
-        Controller --> Route: 14.2. Return error response
-        Route --> View: 14.3. Return error response
-        View -> User: 14.4. Display error message
-    end
-
-    Service --> Controller: 15. Return created report
-    deactivate Service
-
-    Controller --> Route: 16. 201 Created + report
+    Controller --> Route: 14. 201 Created + report
     deactivate Controller
 
-    Route --> View: 17. Render created report
+    Route --> View: 15. Render created report
     deactivate Route
 
-    View --> User: 18. Display created report
+    View --> User: 16. Display created report
     deactivate View
     deactivate User
 
