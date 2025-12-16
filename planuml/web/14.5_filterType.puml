@@ -1,0 +1,56 @@
+@startuml 14.5_filterType
+hide footbox
+title Filter Type
+
+actor User
+boundary TypePage as View
+control TypeRoute as Route
+participant ":AuthMiddleware" as Middleware
+control "TypeController" as Controller
+participant ":TypeService" as Service
+participant ":TypeModel" as Model
+database Database as Database
+
+User -> View : 1. Select filter options\n(keyword, status)
+activate View
+
+    View -> Route : 3. GET /types/filter?keyword=&status=
+    activate Route
+
+    Route -> Middleware : 4. AuthenticateUser(req, res, next)
+    activate Middleware
+    Middleware --> Route : 5. Authentication success
+    Middleware -> Controller : 6. Forward FilterTypeRequest(params)
+    deactivate Middleware
+    activate Controller
+
+    Controller -> Service : 7. Process type filtering
+    activate Service
+
+    Service -> Model : 7.1. Build filter criteria
+    activate Model
+
+    Model -> Database : 7.1.1. Retrieve filtered type data
+    activate Database
+    Database --> Model : 7.1.2. Result set
+    deactivate Database
+
+    Model --> Service : 7.1.3. Return filtered list + paging info
+    deactivate Model
+
+alt No types match
+    Service --> Controller : 7.2. Return empty result
+    Controller --> Route : 7.3. Return 200 OK + empty list/message
+    Route --> View : 7.4. Show "No types found" + keep filters
+else Types match
+    Service --> Controller : 7.2. Return FilterTypeResponse
+    deactivate Service
+    Controller --> Route : 7.3. Return 200 OK + filtered types data
+    deactivate Controller
+    Route --> View : 7.4. Render filtered list + pagination
+    deactivate Route
+end
+
+View --> User : 8. Display filter result
+deactivate View
+@enduml

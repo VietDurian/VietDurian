@@ -1,0 +1,67 @@
+@startuml 13.2_viewProductList
+hide footbox
+title View Product List
+
+actor User
+boundary ProductPage as View
+control ProductRoute as Route
+participant ":AuthMiddleware" as Middleware
+control "ProductController" as Controller
+participant ":ProductService" as Service
+participant ":ProductModel" as Model
+database Database as Database
+
+User -> View : 1. Open products list page
+activate View
+
+    View -> Route : 2. GET /products
+    activate Route
+
+    Route -> Middleware : 4. AuthenticateUser(req, res, next)
+    activate Middleware
+    Middleware --> Route : 5. Authentication success
+    Middleware -> Controller : 6. Forward ViewProductListRequest
+    deactivate Middleware
+    activate Controller
+
+    Controller -> Service : 7. Process product list retrieval
+    activate Service
+
+alt Products not found / empty
+    Service -> Model : 8.1. Fetch products
+    activate Model
+
+    Model -> Database : 8.1.1. SELECT products (with filters/paging)
+    activate Database
+    Database --> Model : 8.1.2. Result set (empty)
+    deactivate Database
+
+    Model --> Service : 8.1.3. Return list (empty)
+    deactivate Model
+
+        Service --> Controller : 8.1.4. Return empty result
+        Controller --> Route : 8.1.5. Return 200 OK + empty list/message
+        Route --> View : 8.1.6. Show "No products available"
+else Products found
+        Service -> Model : 8.2. Fetch products
+        activate Model
+
+        Model -> Database : 8.2.1. SELECT products
+        activate Database
+        Database --> Model : 8.2.2. Result set (list)
+        deactivate Database
+
+        Model --> Service : 8.2.3. Return products list
+        deactivate Model
+
+        Service --> Controller : 8.2.4. Return ProductListResponse
+        deactivate Service
+        Controller --> Route : 8.2.5. Return 200 OK + products data
+        deactivate Controller
+        Route --> View : 8.2.6. Render products list
+        deactivate Route
+end
+
+View --> User : 9. Display page content (list or empty state)
+deactivate View
+@enduml

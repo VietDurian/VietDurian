@@ -1,0 +1,73 @@
+@startuml 15.1_createStep
+hide footbox
+title Create Step
+
+actor User
+boundary StepPage as View
+control StepRoute as Route
+participant ":AuthMiddleware" as Middleware
+control "StepController" as Controller
+participant ":StepService" as Service
+participant ":StepModel" as Model
+database Database as Database
+
+
+User -> View : 1. Input step fields
+activate View
+View -> View : 2. Validate input
+
+opt Check validation
+    View --> User : 2.1. Show validation error
+end
+
+    View -> Route : 3. POST /steps/add
+    activate Route
+
+    Route -> Middleware : 4. AuthenticateUser(req, res, next)
+    activate Middleware
+    Middleware --> Route : 5. Authentication success
+    Middleware -> Controller : 6. Forward CreateStepRequest
+    deactivate Middleware
+    activate Controller
+
+    Controller -> Service : 7. Process step creation
+    activate Service
+
+alt Step exists
+    Service -> Model : 7.1. Check conflicts
+    activate Model
+
+    Model -> Database : 7.1.1. Check existing step
+    activate Database
+    Database --> Model : 7.1.2. Conflict result\n(true / false)
+    deactivate Database
+
+    Model --> Service : 7.1.3. Return conflict state
+    deactivate Model
+
+        Service --> Controller : 7.1.4. Return step already exists
+        Controller --> Route : 7.1.5. Return error response
+        Route --> View : 7.1.6. Show error
+else Step is valid
+        Service -> Model : 7.2. Save new step
+        activate Model
+
+        Model -> Database : 7.2.1. Persist step data
+        activate Database
+        Database --> Model : 7.2.2. Created
+        deactivate Database
+
+        Model --> Service : 7.2.3. Return created entity
+        deactivate Model
+
+        Service --> Controller : 7.2.4. Return StepResponse
+        deactivate Service
+        Controller --> Route : 7.2.5. Return 200 OK + step data
+        deactivate Controller
+        Route --> View : 7.2.6. Show success
+        deactivate Route
+end
+
+View --> User : 8. Display form result (success or error)
+deactivate View
+@enduml
