@@ -1,17 +1,11 @@
 /** Vo Lam Thuy Vi */
-const jwt = require("jsonwebtoken");
-const { verifyToken } = require("../config/jwt");
-const User = require("../model/userModel");
-const LogoutToken = require("../model/logoutTokenModel");
-const createError = require("http-errors");
+import jwt from "jsonwebtoken";
+import { verifyToken } from "../config/jwt.js";
+import User from "../model/userModel.js";
+import LogoutToken from "../model/logoutTokenModel.js";
+import createError from "http-errors";
 
-/**
- * @desc   Middleware to protect routes that require authentication
- * @param  {Object} req - Request object
- * @param  {Object} res - Response object
- * @param  {Function} next - Next middleware function
- */
-exports.protect = async (req, res, next) => {
+const protect = async (req, res, next) => {
   try {
     let token;
 
@@ -78,13 +72,7 @@ exports.protect = async (req, res, next) => {
   }
 };
 
-/**
- * @desc   Middleware to verify reset token from email link
- * @param  {Object} req - Request object
- * @param  {Object} res - Response object
- * @param  {Function} next - Next middleware function
- */
-exports.verifyResetToken = async (req, res, next) => {
+const verifyResetToken = async (req, res, next) => {
   try {
     const token = req.params.token || req.headers.authorization?.split(" ")[1];
 
@@ -109,3 +97,12 @@ exports.verifyResetToken = async (req, res, next) => {
     next(createError(400, "Invalid reset token"));
   }
 };
+
+export const authMiddleware = {
+  protect,
+  verifyResetToken,
+};
+
+module.exports = { authMiddleware };
+module.exports.protect = protect;
+module.exports.verifyResetToken = verifyResetToken;

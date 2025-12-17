@@ -1,12 +1,8 @@
 /** Vo Lam Thuy Vi */
-const createError = require("http-errors");
+import createError from "http-errors";
 
-/**
- * @desc   Middleware to restrict access to certain roles
- * @param  {...string} roles - Allowed roles
- * @return {Function} Middleware function
- */
-exports.restrictTo = (...roles) => {
+// Hoặc cho phép nhiều role: admin và moderator/staff
+const restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return next(
@@ -17,25 +13,16 @@ exports.restrictTo = (...roles) => {
   };
 };
 
-/**
- * @desc   Middleware to check if user is admin
- * @param  {Object} req - Request object
- * @param  {Object} res - Response object
- * @param  {Function} next - Next middleware function
- */
-exports.isAdmin = (req, res, next) => {
+// Chỉ admin mới được xem danh sách user
+const isAdmin = (req, res, next) => {
   if (req.user.role !== "admin") {
     return next(createError(403, "Only admins can perform this action"));
   }
   next();
 };
 
-/**
- * @desc   Middleware to check if user has specific role
- * @param  {string} requiredRole - Required role
- * @return {Function} Middleware function
- */
-exports.hasRole = (requiredRole) => {
+// Yêu cầu đúng một role cụ thể
+const hasRole = (requiredRole) => {
   return (req, res, next) => {
     if (req.user.role !== requiredRole) {
       return next(
@@ -49,13 +36,8 @@ exports.hasRole = (requiredRole) => {
   };
 };
 
-/**
- * @desc   Middleware to check if user owns the resource
- * @param  {Object} req - Request object
- * @param  {Object} res - Response object
- * @param  {Function} next - Next middleware function
- */
-exports.checkOwner = (req, res, next) => {
+// Chỉ owner hoặc admin mới được xem chi tiết user
+const checkOwner = (req, res, next) => {
   const userId = req.user._id.toString();
   const resourceUserId = req.params.userId || req.body.userId;
 
@@ -66,3 +48,16 @@ exports.checkOwner = (req, res, next) => {
   }
   next();
 };
+
+export const authorizationMiddleware = {
+  restrictTo,
+  isAdmin,
+  hasRole,
+  checkOwner,
+};
+
+module.exports = { authorizationMiddleware };
+module.exports.restrictTo = restrictTo;
+module.exports.isAdmin = isAdmin;
+module.exports.hasRole = hasRole;
+module.exports.checkOwner = checkOwner;
