@@ -8,6 +8,12 @@ const typeProductSchema = new mongoose.Schema(
 		},
 	},
 	{
+		description: {
+			type: String,
+			required: true,
+		}
+	},
+	{
 		timestamps: {
 			createdAt: 'created_at',
 			updatedAt: 'updated_at',
@@ -17,8 +23,7 @@ const typeProductSchema = new mongoose.Schema(
 
 const TypeProductModel = mongoose.model(
 	'TypeProduct',
-	typeProductSchema,
-	'TypeProduct'
+	typeProductSchema
 );
 
 export { TypeProductModel };
