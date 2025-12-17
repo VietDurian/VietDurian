@@ -1,22 +1,22 @@
 /** Vo Lam Thuy Vi */
-const User = require("../model/userModel");
-const OTP = require("../model/optModel");
-const LogoutToken = require("../model/logoutTokenModel");
-const { generateToken, JWT_EXPIRES_IN } = require("../config/jwt");
-const createError = require("http-errors");
-const crypto = require("crypto");
-const nodemailer = require("nodemailer");
-const jwt = require("jsonwebtoken");
-const fs = require("fs");
-const path = require("path");
-const { OAuth2Client } = require("google-auth-library");
+import User from "../model/userModel.js";
+import OTP from "../model/optModel.js";
+import LogoutToken from "../model/logoutTokenModel.js";
+import { generateToken, JWT_EXPIRES_IN } from "../config/jwt.js";
+import createError from "http-errors";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
+import jwt from "jsonwebtoken";
+import fs from "fs";
+import path from "path";
+import { OAuth2Client } from "google-auth-library";
 
 // Google OAuth client - replace with your actual client ID
 const GOOGLE_CLIENT_ID =
   "141368667605-uuh35jb8su9oui61geubhuvg9h47cns8.apps.googleusercontent.com";
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-exports.register = async (userData) => {
+const register = async (userData) => {
   try {
     const existingUser = await User.findOne({ email: userData.email });
     if (existingUser) {
@@ -61,7 +61,7 @@ exports.register = async (userData) => {
   }
 };
 
-exports.verifyEmail = async (email, otp) => {
+const verifyEmail = async (email, otp) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
@@ -177,43 +177,43 @@ const sendVerificationEmail = async (
   }
 };
 
-// exports.login = async (email, password) => {
-//   try {
-//     if (!email || !password) {
-//       throw createError(400, "Please provide email and password");
-//     }
+const login = async (email, password) => {
+  try {
+    if (!email || !password) {
+      throw createError(400, "Please provide email and password");
+    }
 
-//     const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("+password");
 
-//     if (!user || !(await user.comparePassword(password))) {
-//       throw createError(401, "Incorrect email or password");
-//     }
+    if (!user || !(await user.comparePassword(password))) {
+      throw createError(401, "Incorrect email or password");
+    }
 
-//     if (user.is_banned) {
-//       throw createError(
-//         403,
-//         "Your account has been banned. Please contact support."
-//       );
-//     }
+    if (user.is_banned) {
+      throw createError(
+        403,
+        "Your account has been banned. Please contact support."
+      );
+    }
 
-//     if (!user.isVerify) {
-//       throw createError(
-//         403,
-//         "Please verify your email address before logging in"
-//       );
-//     }
+    if (!user.isVerify) {
+      throw createError(
+        403,
+        "Please verify your email address before logging in"
+      );
+    }
 
-//     const token = generateToken(user._id);
+    const token = generateToken(user._id);
 
-//     user.password = undefined;
+    user.password = undefined;
 
-//     return { user, token };
-//   } catch (error) {
-//     throw error;
-//   }
-// };
+    return { user, token };
+  } catch (error) {
+    throw error;
+  }
+};
 
-// exports.logout = async (userId, token) => {
+// const logout = async (userId, token) => {
 //   try {
 //     let expiryTime;
 //     if (JWT_EXPIRES_IN.endsWith("d")) {
@@ -224,3 +224,10 @@ const sendVerificationEmail = async (
 //       const hours = parseInt(JWT_EXPIRES_IN);
 //       expiryTime = new Date(Date.now() + hours * 60 * 60 * 1000);
 //
+
+export const authService = {
+  register,
+  verifyEmail,
+  login,
+};
+module.exports = { authService };

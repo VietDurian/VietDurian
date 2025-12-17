@@ -1,8 +1,8 @@
 /** Vo Lam Thuy Vi */
-const authService = require("../services/authService");
+const { authService } = require("../services/authService");
 const createError = require("http-errors");
 
-exports.register = async (req, res, next) => {
+const register = async (req, res, next) => {
   try {
     const { full_name, email, password, phone, avatar, role } = req.body;
 
@@ -25,7 +25,6 @@ exports.register = async (req, res, next) => {
       message: "User registered successfully. Please verify your email.",
       data: {
         user: result.user,
-        token: result.token,
         otp: result.otp,
       },
     });
@@ -34,7 +33,7 @@ exports.register = async (req, res, next) => {
   }
 };
 
-exports.verifyEmail = async (req, res, next) => {
+const verifyEmail = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
 
@@ -56,39 +55,50 @@ exports.verifyEmail = async (req, res, next) => {
   }
 };
 
-// exports.login = async (req, res, next) => {
-//   try {
-//     const { email, password } = req.body;
+const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
 
-//     if (!email || !password) {
-//       throw createError(400, "Please provide email and password");
-//     }
+    if (!email || !password) {
+      throw createError(400, "Please provide email and password");
+    }
 
-//     const result = await authService.login(email, password);
+    const result = await authService.login(email, password);
 
-//     // Set token in httpOnly cookie
-//     res.cookie("token", result.token, {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === "production",
-//       sameSite: "strict",
-//       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-//     });
+    // Set token in httpOnly cookie
+    res.cookie("token", result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
 
-//     res.status(200).json({
-//       success: true,
-//       message: "Logged in successfully",
-//       data: {
-//         user: result.user,
-//         token: result.token,
-//       },
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+    res.status(200).json({
+      success: true,
+      message: "Logged in successfully",
+      data: {
+        user: result.user,
+        token: result.token,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-// exports.logout = async (req, res, next) => {
-//   try {
+export const authController = {
+  register,
+  verifyEmail,
+  login,
+};
+
+module.exports = { authController };
+
+module.exports.register = register;
+module.exports.verifyEmail = verifyEmail;
+module.exports.login = login;
+
+// const logout = async (req, res, next) => {
 //     const userId = req.user._id;
 //     const token = req.token;
 
@@ -105,7 +115,7 @@ exports.verifyEmail = async (req, res, next) => {
 //   }
 // };
 
-// exports.forgotPassword = async (req, res, next) => {
+// const forgotPassword = async (req, res, next) => {
 //   try {
 //     const { email } = req.body;
 
@@ -127,7 +137,7 @@ exports.verifyEmail = async (req, res, next) => {
 //   }
 // };
 
-// exports.resetPassword = async (req, res, next) => {
+// const resetPassword = async (req, res, next) => {
 //   try {
 //     const { newPassword, confirmPassword } = req.body;
 //     const user = req.user; // From reset token middleware
@@ -151,7 +161,7 @@ exports.verifyEmail = async (req, res, next) => {
 //   }
 // };
 
-// exports.getCurrentUser = async (req, res, next) => {
+// const getCurrentUser = async (req, res, next) => {
 //   try {
 //     const userId = req.user._id;
 
@@ -169,7 +179,7 @@ exports.verifyEmail = async (req, res, next) => {
 //   }
 // };
 
-// exports.changePassword = async (req, res, next) => {
+// const changePassword = async (req, res, next) => {
 //   try {
 //     const userId = req.user._id;
 //     const { currentPassword, newPassword, confirmPassword } = req.body;
@@ -196,7 +206,7 @@ exports.verifyEmail = async (req, res, next) => {
 //   }
 // };
 
-// exports.googleLogin = async (req, res, next) => {
+// const googleLogin = async (req, res, next) => {
 //   try {
 //     const { token } = req.body;
 
