@@ -75,6 +75,9 @@ const Router = express.Router();
  *               name:
  *                 type: string
  *                 example: "Durian"
+ *               description:
+ *                 type: string
+ *                 example: "A tropical fruit known for its strong odor."
  *     responses:
  *       201:
  *         description: Type product created successfully
@@ -123,6 +126,9 @@ const Router = express.Router();
  *               name:
  *                 type: string
  *                 example: "Updated Durian"
+ *               description:
+ *                 type: string
+ *                 example: "A tropical fruit known for its strong odor."
  *     responses:
  *       200:
  *         description: Type product updated successfully

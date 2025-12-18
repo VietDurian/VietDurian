@@ -24,16 +24,16 @@ const getAllTypeProducts = async (req, res, next) => {
 // Create a new type product
 const createTypeProduct = async (req, res, next) => {
 	try {
-		const { name } = req.body;
+		const { name, description } = req.body;
 
 		// check if name is provided
-		if (!name || name.empty || typeof name !== 'string') {
+		if (!name || name.empty || typeof name !== 'string' || !description || typeof description !== 'string') {
 			return res.status(400).json({
 				code: 400,
-				message: 'Invalid type product name',
+				message: 'Invalid type product name or description',
 			});
 		}
-		const newTypeProduct = await typeProductService.createTypeProduct({ name });
+		const newTypeProduct = await typeProductService.createTypeProduct({ name, description });
 		res.status(201).json({
 			code: 201,
 			message: 'Type product created successfully',
@@ -47,7 +47,8 @@ const createTypeProduct = async (req, res, next) => {
 // Update a type product
 const updateTypeProduct = async (req, res, next) => {
 	try {
-		const { id, name } = req.body;
+		const { id } = req.params;
+		const { name } = req.body;
 
 		// Validate input
 		if (!id || typeof id !== 'string' || !name || typeof name !== 'string') {
@@ -73,7 +74,7 @@ const updateTypeProduct = async (req, res, next) => {
 // Delete a type product
 const deleteTypeProduct = async (req, res, next) => {
 	try {
-		const { id } = req.body;
+		const { id } = req.params;
 		// Validate input
 		if (!id || typeof id !== 'string') {
 			return res.status(400).json({

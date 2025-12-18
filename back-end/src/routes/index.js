@@ -1,8 +1,12 @@
-import express from "express";
+import express from 'express';
 
-import { authRoute } from "@/routes/authRoute";
-import { typeProductRoute } from "@/routes/typeProductRoute";
-import { stepRoute } from "@/routes/stepRoute";
+import { authRoute } from '@/routes/authRoute';
+import { typeProductRoute } from '@/routes/typeProductRoute';
+import { stepRoute } from '@/routes/stepRoute';
+import { blogRoute } from '@/routes/blogRoute';
+import { reportBlogRoute } from '@/routes/reportBlogRoute';
+import { commentBlogRoute } from '@/routes/commentBlogRoute';
+import { reactionCommentRoute } from '@/routes/reactionCommentRoute';
 
 const Router = express.Router();
 
@@ -27,13 +31,16 @@ const Router = express.Router();
  *                   type: string
  *                   example: Server is running
  */
-Router.get("/status", (req, res) => {
-  res.status(200).json({ status: "OK", message: "Server is running" });
+Router.get('/status', (req, res) => {
+	res.status(200).json({ status: 'OK', message: 'Server is running' });
 });
 
-Router.use("/auth", authRoute);
+Router.use('/auth', authRoute);
 // Router.use('/user', userRoute);
-Router.use("/type-product", typeProductRoute);
-Router.use("/step", stepRoute);
-
+Router.use('/type-product', typeProductRoute);
+Router.use('/step', stepRoute);
+Router.use('/blog', blogRoute);
+// Router.use('/report-blog', reportBlogRoute);
+Router.use('/comment', commentBlogRoute);
+Router.use('/reaction', reactionCommentRoute);
 export const API_v1 = Router;

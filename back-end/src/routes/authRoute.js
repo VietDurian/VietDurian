@@ -6,7 +6,7 @@ const Router = express.Router();
 
 /**
  * @swagger
- * /api/auth/register:
+ * /auth/register:
  *   post:
  *     summary: Register new account
  *     description: Create new user account and send OTP verification via email
@@ -80,7 +80,7 @@ const Router = express.Router();
 
 /**
  * @swagger
- * /api/auth/verify-email:
+ * /auth/verify-email:
  *   post:
  *     summary: Verify email
  *     description: Verify account with OTP sent to email
@@ -125,7 +125,7 @@ const Router = express.Router();
 
 /**
  * @swagger
- * /api/auth/login:
+ * /auth/login:
  *   post:
  *     summary: Login
  *     description: Login with email and password

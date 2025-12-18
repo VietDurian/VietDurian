@@ -40,10 +40,10 @@ const getAllTypeProducts = async ({ searchName, page = 1, limit = 10 }) => {
 };
 
 // Create a new type product
-const createTypeProduct = async ({ name }) => {
+const createTypeProduct = async ({ name, description }) => {
 	try {
         // Create a new TypeProduct instance
-		const newTypeProduct = new TypeProductModel({ name });
+		const newTypeProduct = new TypeProductModel({ name, description });
 
         // Save to database
 		const savedTypeProduct = await newTypeProduct.save();
@@ -58,7 +58,7 @@ const updateTypeProduct = async ({ id, name }) => {
     try {
         const updatedTypeProduct = await TypeProductModel.findByIdAndUpdate(
             id,
-            { name },
+            { name, description },
             { new: true } // Return the updated document
         );
         return updatedTypeProduct;

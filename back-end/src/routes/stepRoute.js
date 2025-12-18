@@ -1,5 +1,7 @@
 import express from 'express';
 import { stepController } from '@/controllers/stepController';
+import { authMiddleware } from '@/middlewares/authentication';
+import { authorizationMiddleware } from '@/middlewares/authorization';
 
 const Router = express.Router();
 
@@ -8,6 +10,8 @@ const Router = express.Router();
  * /step:
  *   get:
  *     tags: [step]
+ *     security:
+ *       - bearerAuth: []
  *     summary: Get all steps
  *     description: Retrieve a list of all steps
  *     responses:
@@ -283,8 +287,8 @@ const Router = express.Router();
  *                       format: date-time
  */
 
-Router.get('/', stepController.getAllSteps);
-Router.post('/', stepController.createStep);
+Router.get('/', authMiddleware.protect, stepController.getAllSteps);
+Router.post('/', authMiddleware.protect, authorizationMiddleware.isAdmin, stepController.createStep);
 Router.get('/:id', stepController.getStepById);
 Router.patch('/:id', stepController.updateStep);
 Router.delete('/:id', stepController.deleteStep);

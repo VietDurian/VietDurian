@@ -22,8 +22,8 @@ app.use("/api/v1", API_v1);
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
   console.log(
-    `📚 Swagger UI is available at http://localhost:${PORT}/api-docs`
+    `Swagger UI is available at http://localhost:${PORT}/api-docs`
   );
 });
