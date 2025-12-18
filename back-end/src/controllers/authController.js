@@ -86,10 +86,77 @@ const login = async (req, res, next) => {
   }
 };
 
+const logout = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const token = req.token;
+
+    await authService.logout(userId, token);
+
+    res.clearCookie("token");
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      throw createError(400, "Please provide email");
+    }
+
+    const result = await authService.forgotPassword(email);
+
+    res.status(200).json({
+      success: true,
+      message: "Reset link sent to your email",
+      data: {
+        email: result.email,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const { newPassword, confirmPassword } = req.body;
+    const user = req.user; // From reset token middleware
+
+    if (!newPassword || !confirmPassword) {
+      throw createError(400, "Please provide newPassword and confirmPassword");
+    }
+
+    if (newPassword !== confirmPassword) {
+      throw createError(400, "Passwords do not match");
+    }
+
+    const result = await authService.resetPassword(user, newPassword);
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const authController = {
   register,
   verifyEmail,
   login,
+  logout,
+  forgotPassword,
+  resetPassword,
 };
 
 module.exports = { authController };
@@ -97,69 +164,7 @@ module.exports = { authController };
 module.exports.register = register;
 module.exports.verifyEmail = verifyEmail;
 module.exports.login = login;
-
-// const logout = async (req, res, next) => {
-//     const userId = req.user._id;
-//     const token = req.token;
-
-//     await authService.logout(userId, token);
-
-//     res.clearCookie("token");
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Logged out successfully",
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// const forgotPassword = async (req, res, next) => {
-//   try {
-//     const { email } = req.body;
-
-//     if (!email) {
-//       throw createError(400, "Please provide email");
-//     }
-
-//     const result = await authService.forgotPassword(email);
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Reset link sent to your email",
-//       data: {
-//         email: result.email,
-//       },
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// const resetPassword = async (req, res, next) => {
-//   try {
-//     const { newPassword, confirmPassword } = req.body;
-//     const user = req.user; // From reset token middleware
-
-//     if (!newPassword || !confirmPassword) {
-//       throw createError(400, "Please provide newPassword and confirmPassword");
-//     }
-
-//     if (newPassword !== confirmPassword) {
-//       throw createError(400, "Passwords do not match");
-//     }
-
-//     const result = await authService.resetPassword(user, newPassword);
-
-//     res.status(200).json({
-//       success: true,
-//       message: result.message,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+module.exports.logout = logout;
 
 // const getCurrentUser = async (req, res, next) => {
 //   try {

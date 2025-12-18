@@ -213,21 +213,61 @@ const login = async (email, password) => {
   }
 };
 
-// const logout = async (userId, token) => {
-//   try {
-//     let expiryTime;
-//     if (JWT_EXPIRES_IN.endsWith("d")) {
-//       //1d = 1 day
-//       const days = parseInt(JWT_EXPIRES_IN);
-//       expiryTime = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-//     } else if (JWT_EXPIRES_IN.endsWith("h")) {
-//       const hours = parseInt(JWT_EXPIRES_IN);
-//       expiryTime = new Date(Date.now() + hours * 60 * 60 * 1000);
-//
+const logout = async (userId, token) => {
+  try {
+    let expiryTime;
+    if (JWT_EXPIRES_IN.endsWith("d")) {
+      //1d = 1 day
+      const days = parseInt(JWT_EXPIRES_IN);
+      expiryTime = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    } else if (JWT_EXPIRES_IN.endsWith("h")) {
+      const hours = parseInt(JWT_EXPIRES_IN);
+      expiryTime = new Date(Date.now() + hours * 60 * 60 * 1000);
+    } else {
+      // Default to 1 day if format is unrecognized
+      expiryTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    }
+    await LogoutToken.create({
+      user_id: userId,
+      token: token,
+      expires_at: expiryTime,
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+const forgotPassword = async (email) => {
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw createError(404, "No user found with that email");
+    }
+    const token = generateToken(user._id);
+    const link = `http://localhost:9999/reset-password?token=${token}`; // Update with your front-end URL
+    await sendVerificationEmail(user.name, email, link, true);
+    return { email };
+  } catch (error) {
+    throw error;
+  }
+};
+
+const resetPassword = async (user, newPassword) => {
+  try {
+    user.password = newPassword;
+    await user.save();
+    return { message: "Password reset successfully" };
+  } catch (error) {
+    throw createError(400, "Invalid or expired reset token");
+  }
+};
 
 export const authService = {
   register,
   verifyEmail,
   login,
+  logout,
+  forgotPassword,
+  resetPassword,
 };
 module.exports = { authService };
