@@ -42,5 +42,5 @@ Router.use('/step', stepRoute);
 Router.use('/blog', blogRoute);
 // Router.use('/report-blog', reportBlogRoute);
 Router.use('/comment', commentBlogRoute);
-// Router.use('/reaction', reactionCommentRoute);
+Router.use('/reaction', reactionCommentRoute);
 export const API_v1 = Router;
