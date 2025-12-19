@@ -4,9 +4,9 @@ import { authRoute } from '@/routes/authRoute';
 import { typeProductRoute } from '@/routes/typeProductRoute';
 import { stepRoute } from '@/routes/stepRoute';
 import { blogRoute } from '@/routes/blogRoute';
-import { reportBlogRoute } from '@/routes/reportBlogRoute';
 import { commentBlogRoute } from '@/routes/commentBlogRoute';
 import { reactionCommentRoute } from '@/routes/reactionCommentRoute';
+import { reportBlogRoute } from '@/routes/reportBlogRoute';
 
 const Router = express.Router();
 
@@ -40,7 +40,7 @@ Router.use('/auth', authRoute);
 Router.use('/type-product', typeProductRoute);
 Router.use('/step', stepRoute);
 Router.use('/blog', blogRoute);
-// Router.use('/report-blog', reportBlogRoute);
+Router.use('/report-blog', reportBlogRoute);
 Router.use('/comment', commentBlogRoute);
 Router.use('/reaction', reactionCommentRoute);
 export const API_v1 = Router;
