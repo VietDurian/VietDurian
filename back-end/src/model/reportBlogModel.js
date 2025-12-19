@@ -22,8 +22,8 @@ const reportBlogSchema = new mongoose.Schema(
         },
 		status: {
 			type: String,
-			enum: ['pending', 'resolved'],
-			default: 'pending',
+			enum: ['Pending', 'Resolved'],
+			default: 'Pending',
 		},
 	},
 	{

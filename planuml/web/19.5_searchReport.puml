@@ -2,11 +2,11 @@
 
 actor Admin
 boundary "ReportPage" as View 
-participant ":reportRoute" as Route 
+participant ":reportBlogRoute" as Route 
 control ":authMiddleware" as Auth 
 control "reportController" as Controller 
-participant ":reportService" as Service 
-entity "reportModel" as Model 
+participant ":reportBlogService" as Service 
+entity "reportBlogModel" as Model 
 database "MongoDB" as MongoDB
 hide footbox
 

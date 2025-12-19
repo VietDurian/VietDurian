@@ -2,11 +2,11 @@
 
 actor Admin as "Admin"
 boundary "ReportPage" as View
-participant ":reportRoute" as Route
+participant ":reportBlogRoute" as Route
 control "authMiddleware" as Auth
-control "reportController" as Controller
-participant ":reportService" as Service
-entity "reportModel" as Model
+control "reportBlogController" as Controller
+participant ":reportBlogService" as Service
+entity "reportBlogModel" as Model
 database "MongoDB" as MongoDB
 hide footbox
 
@@ -21,7 +21,7 @@ hide footbox
     activate Auth
     ref over Admin, MongoDB : Verifies token
 
-    Auth -> Controller: 4. handleGetProfile(userId)
+    Auth -> Controller: 4. next(req)
     deactivate Auth
     activate Controller
 
