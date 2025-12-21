@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const blogSchema = new mongoose.Schema(
+const KnowledgeBlogSchema = new mongoose.Schema(
 	{
 		title: {
 			type: String,
@@ -8,20 +8,16 @@ const blogSchema = new mongoose.Schema(
 		},
 		content: {
 			type: String,
-			required: true,
 		},
 		author_id: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'users',
 			required: true,
 		},
-		image: {
-			type: String,
-			default: '',
-		},
 		status: {
 			type: String,
-			default: 'active',
+			enum: ['progressing', 'active', 'inactive'],
+			default: 'progressing',
 		},
 	},
 	{
@@ -32,6 +28,6 @@ const blogSchema = new mongoose.Schema(
 	}
 );
 
-const BlogModel = mongoose.model('Blog', blogSchema);
+const KnowledgeBlogModel = mongoose.model('KnowledgeBlog', KnowledgeBlogSchema);
 
-export { BlogModel };
+export { KnowledgeBlogModel };

@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 
-const commentBlogSchema = new mongoose.Schema(
+const commentPostSchema = new mongoose.Schema(
 	{
-		blog_id: {
+		post_id: {
 			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Blog',
+			ref: 'GeneralPost',
 			required: true,
 		},
 		author_id: {
@@ -14,7 +14,7 @@ const commentBlogSchema = new mongoose.Schema(
 		},
 		parent_id: {
 			type: mongoose.Schema.Types.ObjectId,
-			ref: 'CommentBlog',
+			ref: 'CommentPost',
 			default: null,
 		},
 		content: {
@@ -30,6 +30,6 @@ const commentBlogSchema = new mongoose.Schema(
 	}
 );
 
-const CommentBlogModel = mongoose.model('CommentBlog', commentBlogSchema);
+const CommentPostModel = mongoose.model('CommentPost', commentPostSchema);
 
-export { CommentBlogModel };
+export { CommentPostModel };

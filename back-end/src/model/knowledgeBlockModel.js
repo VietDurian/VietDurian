@@ -1,30 +1,24 @@
 import mongoose from 'mongoose';
 
-const reportBlogSchema = new mongoose.Schema(
+const knowledgeBlockSchema = new mongoose.Schema(
 	{
 		blog_id: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'Blog',
 			required: true,
 		},
-		user_id: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'User',
+		title: {
+			type: String,
 			required: true,
 		},
-		reason: {
+		content: {
 			type: String,
 			required: true,
 		},
         image: {
             type: String,
             default: '',
-        },
-		status: {
-			type: String,
-			enum: ['Pending', 'Resolved'],
-			default: 'Pending',
-		},
+        }
 	},
 	{
 		timestamps: {
@@ -34,9 +28,9 @@ const reportBlogSchema = new mongoose.Schema(
 	}
 );
 
-const ReportBlogModel = mongoose.model(
-	'ReportBlog',
-	reportBlogSchema
+const KnowledgeBlockModel = mongoose.model(
+	'KnowledgeBlock',
+	knowledgeBlockSchema
 );
 
-export { ReportBlogModel };
+export { KnowledgeBlockModel };
