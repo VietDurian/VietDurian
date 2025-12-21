@@ -1,4 +1,4 @@
-import { ReportBlogModel as reportBlogModel } from '@/model/reportBlogModel.js';
+import { ReportPostModel } from '@/model/reportPostModel.js';
 import { cloudinary } from '@/config/cloudinary.js';
 
 // Get all reports
@@ -8,25 +8,25 @@ export const getAllReport = async (search, page = 1, limit = 10) => {
 	let total = 0;
 
 	if (search) {
-		let query = reportBlogModel
+		let query = ReportPostModel
 			.find()
-			.populate('user_id', 'full_name')
-			.populate('blog_id', 'title');
+			.populate('user_id', 'full_name') 
+			.populate('post_id', 'content');
 
 		const allReports = await query.lean();
 
 		const filteredReports = allReports.filter((report) =>
-			report.blog_id?.title?.toLowerCase().includes(search.toLowerCase())
+			report.post_id?.content?.toLowerCase().includes(search.toLowerCase())
 		);
 
 		total = filteredReports.length;
 		reports = filteredReports.slice(skip, skip + limit);
 	} else {
-		total = await reportBlogModel.countDocuments();
-		reports = await reportBlogModel
+		total = await ReportPostModel.countDocuments();
+		reports = await ReportPostModel
 			.find()
 			.populate('user_id', 'full_name')
-			.populate('blog_id', 'title')
+			.populate('post_id', 'content')
 			.skip(skip)
 			.limit(limit)
 			.lean();
@@ -41,7 +41,7 @@ export const getAllReport = async (search, page = 1, limit = 10) => {
 };
 
 // Create a new report
-export const createReport = async (blog_id, reason, image, user_id) => {
+export const createReport = async (post_id, reason, image, user_id) => {
 	let imageUrl = '';
 	if (image) {
 		try {
@@ -54,8 +54,8 @@ export const createReport = async (blog_id, reason, image, user_id) => {
 		}
 	}
 
-	const newReport = new reportBlogModel({
-		blog_id,
+	const newReport = new ReportPostModel({
+		post_id,
 		user_id,
 		reason,
 		image: imageUrl,
@@ -66,7 +66,7 @@ export const createReport = async (blog_id, reason, image, user_id) => {
 
 // Update a report
 export const updateReport = async (id) => {
-	const report = await reportBlogModel.findByIdAndUpdate(
+	const report = await ReportPostModel.findByIdAndUpdate(
 		id,
 		{ status: 'Resolved' },
 		{ new: true }
@@ -76,11 +76,11 @@ export const updateReport = async (id) => {
 
 // Delete a report
 export const deleteReport = async (id) => {
-	const report = await reportBlogModel.findByIdAndDelete(id);
+	const report = await ReportPostModel.findByIdAndDelete(id);
 	return report;
 };
 
-export const reportBlogService = {
+export const reportPostService = {
 	getAllReport,
 	createReport,
 	updateReport,

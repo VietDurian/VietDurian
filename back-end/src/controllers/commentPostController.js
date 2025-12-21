@@ -1,4 +1,4 @@
-import { commentBlogService as commentService } from '../services/commentBlogService.js';
+import { commentPostService as commentService } from '@/services/commentPostService';
 
 // Get all comments
 const getAllComments = async (req, res, next) => {
@@ -25,13 +25,13 @@ const createComment = async (req, res, next) => {
 	}
 };
 
-// Get comments by Blog ID
-const getCommentsByBlogId = async (req, res, next) => {
+// Get comments by Post ID
+const getCommentsByPostId = async (req, res, next) => {
 	try {
-		const { blogId } = req.params;
+		const { postId } = req.params;
 		const { sort } = req.query;
-		const { comments, total } = await commentService.getCommentsByBlogId({
-			blogId,
+		const { comments, total } = await commentService.getCommentsByPostId({
+			postId,
 			sort,
 		});
 		res.status(200).json({
@@ -83,10 +83,10 @@ const deleteComment = async (req, res, next) => {
 	}
 };
 
-export const commentBlogController = {
+export const commentPostController = {
 	getAllComments,
 	createComment,
-	getCommentsByBlogId,
+	getCommentsByPostId,
 	updateComment,
 	deleteComment,
 };
