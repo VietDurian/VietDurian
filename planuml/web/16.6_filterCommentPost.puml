@@ -1,20 +1,20 @@
 @startuml 16.6_filterCommentBlog
 hide footbox
-title Filter Comment Blog
+title Filter Comment Post
 
 actor User
-boundary CommentBlogPage as View
-control CommentBlogRoute as Route
+boundary CommentPostPage as View
+control CommentPostRoute as Route
 participant ":AuthMiddleware" as Middleware
-control "CommentBlogController" as Controller
-participant ":CommentBlogService" as Service
-participant ":CommentBlogModel" as Model
+control "CommentPostController" as Controller
+participant ":CommentPostService" as Service
+participant ":CommentPostModel" as Model
 database Database as Database
 
 User -> View : 1. Select filter options\n(keyword, status)
 activate View
 
-    View -> Route : 3. GET /blogs/{blogId}/comments/filter?keyword=&status=
+    View -> Route : 3. GET /api/v1/comment?keyword=&status=&page=&size=
     activate Route
 
     Route -> Middleware : 4. AuthenticateUser(req, res, next)

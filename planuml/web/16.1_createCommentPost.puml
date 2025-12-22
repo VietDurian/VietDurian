@@ -1,14 +1,14 @@
 @startuml 16.1_createCommentBlog
 hide footbox
-title Create Comment Blog
+title Create Comment Post
 
 actor User
-boundary CommentBlogPage as View
-control CommentBlogRoute as Route
+boundary CommentPostPage as View
+control CommentPostRoute as Route
 participant ":AuthMiddleware" as Middleware
-control "CommentBlogController" as Controller
-participant ":CommentBlogService" as Service
-participant ":CommentBlogModel" as Model
+control "CommentPostController" as Controller
+participant ":CommentPostService" as Service
+participant ":CommentPostModel" as Model
 database Database as Database
 
 
@@ -20,7 +20,7 @@ opt Check validation
     View --> User : 2.1. Show validation error
 end
 
-    View -> Route : 3. POST /blogs/{blogId}/comments
+    View -> Route : 3. POST /api/v1/comment
     activate Route
 
     Route -> Middleware : 4. AuthenticateUser(req, res, next)

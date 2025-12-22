@@ -21,7 +21,7 @@ opt Check validation
     View --> User : 3.1. Show validation error
 end
 
-    View -> Route : 4. PUT /blogs/{blogId}/comments/{commentId}
+    View -> Route : 4. PUT /api/v1/comment/{commentId}
     activate Route
 
     Route -> Middleware : 5. AuthenticateUser(req, res, next)

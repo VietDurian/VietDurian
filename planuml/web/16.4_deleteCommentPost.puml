@@ -1,14 +1,14 @@
 @startuml 16.4_deleteCommentBlog
 hide footbox
-title Delete Comment Blog
+title Delete Comment Post
 
 actor User
-boundary CommentBlogPage as View
-control CommentBlogRoute as Route
+boundary CommentPostPage as View
+control CommentPostRoute as Route
 participant ":AuthMiddleware" as Middleware
-control "CommentBlogController" as Controller
-participant ":CommentBlogService" as Service
-participant ":CommentBlogModel" as Model
+control "CommentPostController" as Controller
+participant ":CommentPostService" as Service
+participant ":CommentPostModel" as Model
 database Database as Database
 
 User -> View : 1. Click "Delete" on a comment
@@ -16,7 +16,7 @@ activate View
 View --> User : 2. Show confirmation dialog
 User -> View : 3. Confirm delete
 
-    View -> Route : 4. DELETE /blogs/{blogId}/comments/{commentId}
+    View -> Route : 4. DELETE /api/v1/comment/{commentId}
     activate Route
 
     Route -> Middleware : 5. AuthenticateUser(req, res, next)
