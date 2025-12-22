@@ -12,8 +12,7 @@ import path from "path";
 import { OAuth2Client } from "google-auth-library";
 
 // Google OAuth client - replace with your actual client ID
-const GOOGLE_CLIENT_ID =
-  "141368667605-uuh35jb8su9oui61geubhuvg9h47cns8.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = process.env.YOUR_GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 const register = async (userData) => {
@@ -262,6 +261,54 @@ const resetPassword = async (user, newPassword) => {
   }
 };
 
+const googleLogin = async (token) => {
+  try {
+    // Verify Google token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.YOUR_GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    // Check if user exists
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user if not exists
+      user = await User.create({
+        email,
+        name,
+        password: crypto.randomBytes(20).toString("hex"), // Generate random password
+        avatar: picture,
+        isVerify: true, // Google account is already verified
+        role: "user",
+        gender: "other",
+        dob: new Date(), // Default date, user can update later
+      });
+    }
+
+    // Generate JWT token
+    const jwtToken = generateToken(user._id);
+
+    return { user, token: jwtToken };
+  } catch (error) {
+    throw createError(401, "Invalid Google token");
+  }
+};
+
+const changePassword = async (userId, currentPassword, newPassword) => {
+  const user = await User.findById(userId).select("+password");
+  if (!user) throw createError(404, "User not found");
+
+  const isMatch = await user.comparePassword(currentPassword);
+  if (!isMatch) throw createError(401, "Invalid current password");
+
+  user.password = newPassword;
+  await user.save();
+};
+
 export const authService = {
   register,
   verifyEmail,
@@ -269,5 +316,7 @@ export const authService = {
   logout,
   forgotPassword,
   resetPassword,
+  googleLogin,
+  changePassword,
 };
 module.exports = { authService };
