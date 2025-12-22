@@ -150,6 +150,47 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+const googleLogin = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Google token is required",
+      });
+    }
+
+    const result = await authService.googleLogin(token);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user: result.user,
+        token: result.token,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const changePassword = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { currentPassword, newPassword } = req.body;
+
+    await authService.changePassword(userId, currentPassword, newPassword);
+
+    res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const authController = {
   register,
   verifyEmail,
@@ -157,6 +198,8 @@ export const authController = {
   logout,
   forgotPassword,
   resetPassword,
+  googleLogin,
+  changePassword,
 };
 
 module.exports = { authController };
@@ -165,6 +208,10 @@ module.exports.register = register;
 module.exports.verifyEmail = verifyEmail;
 module.exports.login = login;
 module.exports.logout = logout;
+module.exports.forgotPassword = forgotPassword;
+module.exports.resetPassword = resetPassword;
+module.exports.googleLogin = googleLogin;
+module.exports.changePassword = changePassword;
 
 // const getCurrentUser = async (req, res, next) => {
 //   try {
