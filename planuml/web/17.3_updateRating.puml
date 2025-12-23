@@ -2,17 +2,18 @@
 hide footbox
 title Update Rating
 
-actor User
+actor User as "Users"
 boundary EditRatingPage as View
-control RatingRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":RatingRoute" as Route
+control "AuthMiddleware" as Middleware
 control "RatingController" as Controller
 participant ":RatingService" as Service
-participant ":RatingModel" as Model
+entity "RatingModel" as Model
 database Database as Database
 
 User -> View : 1. Open rating edit form
 activate View
+activate User
 
 User -> View : 2. Edit rating fields and submit
 View -> View : 3. Validate form input
@@ -26,49 +27,50 @@ end
 
     Route -> Middleware : 5. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 6. Authentication success
-    Middleware -> Controller : 7. Forward UpdateRatingRequest(id, payload)
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 6. Forward UpdateRatingRequest
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 8. Process rating update
+    Controller -> Service : 7. Process rating update
     activate Service
 
 alt Rating not found
-    Service -> Model : 9.1. Find rating by ID
+    Service -> Model : 8.1. Find rating by ID
     activate Model
 
-    Model -> Database : 9.1.1. Retrieve rating data by ID
+    Model -> Database : 8.1.1. Retrieve rating data by ID
     activate Database
-    Database --> Model : 9.1.2. Result (null)
+    Database --> Model : 8.1.2. Result (null)
     deactivate Database
 
-    Model --> Service : 9.1.3. Return not found
+    Model --> Service : 8.1.3. Return not found
     deactivate Model
 
-        Service --> Controller : 9.1.4. Return not found result
-        Controller --> Route : 9.1.5. Return 404 Not Found + message
-        Route --> View : 9.1.6. Show error: "Rating not found"
+        Service --> Controller : 8.1.4. Return not found result
+        Controller --> Route : 8.1.5. Return 404 Not Found + message
+        Route --> View : 8.1.6. Show error: "Rating not found"
 else Rating exists
-        Service -> Model : 9.2. Update rating fields
+        Service -> Model : 8.2. Update rating fields
         activate Model
 
-        Model -> Database : 9.2.1. Persist updated rating data
+        Model -> Database : 8.2.1. Persist updated rating data
         activate Database
-        Database --> Model : 9.2.2. Update success
+        Database --> Model : 8.2.2. Update success
         deactivate Database
 
-        Model --> Service : 9.2.3. Return updated entity
+        Model --> Service : 8.2.3. Return updated entity
         deactivate Model
 
-        Service --> Controller : 9.2.4. Return UpdateRatingResponse
+        Service --> Controller : 8.2.4. Return UpdateRatingResponse
         deactivate Service
-        Controller --> Route : 9.2.5. Return 200 OK + updated rating data
+        Controller --> Route : 8.2.5. Return 200 OK + updated rating data
         deactivate Controller
-        Route --> View : 9.2.6. Show success message
+        Route --> View : 8.2.6. Show success message
         deactivate Route
 end
 
-View --> User : 10. Display result (success or error)
+View --> User : 9. Display result (success or error)
 deactivate View
+deactivate User
 @enduml

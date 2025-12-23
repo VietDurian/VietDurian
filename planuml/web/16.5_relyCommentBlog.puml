@@ -2,17 +2,18 @@
 hide footbox
 title Reply Comment Blog
 
-actor User
+actor User as "Users"
 boundary CommentBlogPage as View
-control CommentBlogRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":CommentBlogRoute" as Route
+control "AuthMiddleware" as Middleware
 control "CommentBlogController" as Controller
 participant ":CommentBlogService" as Service
-participant ":CommentBlogModel" as Model
+entity "CommentBlogModel" as Model
 database Database as Database
 
 User -> View : 1. Click "Reply" on a comment
 activate View
+activate User
 View -> View : 2. Open reply box\n(input reply content)
 
 User -> View : 3. Enter reply content and submit
@@ -27,12 +28,12 @@ end
 
     Route -> Middleware : 6. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 7. Authentication success
-    Middleware -> Controller : 8. Forward ReplyCommentBlogRequest\n(blogId, commentId, content)
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 7. Forward ReplyCommentBlogRequest
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 9. Process reply comment
+    Controller -> Service : 8. Process reply comment
     activate Service
 
 alt Parent comment not found
@@ -72,4 +73,5 @@ end
 
 View --> User : 10. Display result (reply posted or error)
 deactivate View
+deactivate User
 @enduml

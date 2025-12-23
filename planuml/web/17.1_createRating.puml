@@ -2,18 +2,19 @@
 hide footbox
 title Create Rating
 
-actor User
+actor User as "Users"
 boundary RatingPage as View
-control RatingRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":RatingRoute" as Route
+control "AuthMiddleware" as Middleware
 control "RatingController" as Controller
 participant ":RatingService" as Service
-participant ":RatingModel" as Model
+entity "RatingModel" as Model
 database Database as Database
 
 
 User -> View : 1. Input rating fields
 activate View
+activate User
 View -> View : 2. Validate input
 
 opt Check validation
@@ -25,12 +26,12 @@ end
 
     Route -> Middleware : 4. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 5. Authentication success
-    Middleware -> Controller : 6. Forward CreateRatingRequest
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 5. Forward CreateRatingRequest
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 7. Process rating creation
+    Controller -> Service : 6. Process rating creation
     activate Service
 
 alt Rating exists
@@ -70,4 +71,5 @@ end
 
 View --> User : 8. Display form result (success or error)
 deactivate View
+deactivate User
 @enduml

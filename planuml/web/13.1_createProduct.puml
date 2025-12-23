@@ -1,0 +1,76 @@
+@startuml 13.1_createProduct
+hide footbox
+title Create Product
+
+actor User as "Users"
+boundary "ProductPage" as View
+participant ":ProductRoute" as Route
+control "AuthMiddleware" as Middleware
+control "ProductController" as Controller
+participant ":ProductService" as Service
+entity "ProductModel" as Model
+database Database as Database
+
+
+User -> View : 1. Input product fields\n(name, price, etc.)
+activate User
+activate View
+View -> View : 2. Validate input
+
+opt Check validation
+View --> User : 2.1. Show validation error
+end
+
+    View -> Route : 3. POST /products/add
+    activate Route
+
+    Route -> Middleware : 4. AuthenticateUser(req, res, next)
+    activate Middleware
+    ref over User, Database : Verifies token
+
+    Middleware -> Controller : 5. Forward CreateProductRequest
+    deactivate Middleware
+    activate Controller
+
+    Controller -> Service : 6. Process product creation
+    activate Service
+
+alt Product exists
+    Service -> Model : 7.1. Check conflicts
+    activate Model
+
+    Model -> Database : 7.1.1. SELECT conflicts
+    activate Database
+    Database --> Model : 7.1.2. Conflict result\n(true / false)
+    deactivate Database
+
+    Model --> Service : 7.1.3. Return conflict state
+    deactivate Model
+
+        Service --> Controller : 7.1.4. Return product already exists
+        Controller --> Route : 7.1.5. Return error response
+        Route --> View : 7.1.6. Show error
+    else Product is valid
+        Service -> Model : 7.2. Save new product
+        activate Model
+
+        Model -> Database : 7.2.1. INSERT products
+        activate Database
+        Database --> Model : 7.2.2. Created
+        deactivate Database
+
+        Model --> Service : 7.2.3. Return created entity
+        deactivate Model
+
+        Service --> Controller : 7.2.4. Return ProductResponse
+        deactivate Service
+        Controller --> Route : 7.2.5. Return 200 OK + product data
+        deactivate Controller
+        Route --> View : 7.2.6. Show success
+        deactivate Route
+    end
+
+View --> User : 8. Display form result (success or error)
+deactivate View
+deactivate User
+@enduml

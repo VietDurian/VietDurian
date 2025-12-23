@@ -2,55 +2,57 @@
 hide footbox
 title Sort Type
 
-actor User
+actor User as "Users"
 boundary TypePage as View
-control TypeRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":TypeRoute" as Route
+control "AuthMiddleware" as Middleware
 control "TypeController" as Controller
 participant ":TypeService" as Service
-participant ":TypeModel" as Model
+entity "TypeModel" as Model
 database Database as Database
 
 User -> View : 1. Choose sort option
 activate View
+activate User
 
     View -> Route : 2. GET /types?sort=&page=&size=
     activate Route
 
     Route -> Middleware : 3. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 4. Authentication success
-    Middleware -> Controller : 5. Forward SortTypeRequest
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 4. Forward SortTypeRequest
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 6. Process type sorting
+    Controller -> Service : 5. Process type sorting
     activate Service
 
-    Service -> Model : 7. Build sort criteria
+    Service -> Model : 6. Build sort criteria
     activate Model
 
-    Model -> Database : 8. Retrieve types ordered by criteria
+    Model -> Database : 7. Retrieve types ordered by criteria
     activate Database
-    Database --> Model : 9. Result set
+    Database --> Model : 8. Result set
     deactivate Database
 
-    Model --> Service : 10. Return sorted list + paging info
+    Model --> Service : 9. Return sorted list + paging info
     deactivate Model
 
 alt No types available
-    Service --> Controller : 11.1. Return empty result
-    Controller --> Route : 11.1.1. Return 200 OK + empty list/message
-    Route --> View : 11.1.2. Show "No types available"
+    Service --> Controller : 10.1. Return empty result
+    Controller --> Route : 10.1.1. Return 200 OK + empty list/message
+    Route --> View : 10.1.2. Show "No types available"
 else Types available
-    Service --> Controller : 11.2. Return SortTypeResponse
+    Service --> Controller : 10.2. Return SortTypeResponse
     deactivate Service
-    Controller --> Route : 11.2.1. Return 200 OK + sorted types data
+    Controller --> Route : 10.2.1. Return 200 OK + sorted types data
     deactivate Controller
-    Route --> View : 11.2.2. Render sorted list + keep sort option selected
+    Route --> View : 10.2.2. Render sorted list + keep sort option selected
     deactivate Route
 end
 
-View --> User : 12. Display sorted result
+View --> User : 11. Display sorted result
 deactivate View
+deactivate User
 @enduml

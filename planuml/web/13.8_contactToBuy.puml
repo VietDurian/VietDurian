@@ -2,17 +2,18 @@
 hide footbox
 title Contact To Buy
 
-actor User
+actor User as "Users"
 boundary ProductDetailPage as View
-control ProductRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":ProductRoute" as Route
+control "AuthMiddleware" as Middleware
 control "ContactController" as Controller
 participant ":ContactService" as Service
-participant ":ContactModel" as Model
+entity "ContactModel" as Model
 database Database as Database
 
 User -> View : 1. Click "Contact to buy"
 activate View
+activate User
 View -> View : 2. Open contact modal\n(name, phone, message, quantity)
 
 User -> View : 3. Fill contact info and submit
@@ -27,12 +28,12 @@ end
 
     Route -> Middleware : 6. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 7. Authentication success
-    Middleware -> Controller : 8. Forward ContactToBuyRequest
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 7. Forward ContactToBuyRequest
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 9. Process contact to buy request
+    Controller -> Service : 8. Process contact to buy request
     activate Service
 
 alt Product not found / unavailable
@@ -49,7 +50,7 @@ alt Product not found / unavailable
 
         Service --> Controller : 9.1.4. Return error result
         Controller --> Route : 9.1.5. Return 400/404 + message
-        Route --> View : 9.1.6. Show error (cannot contact for this product)
+        Route --> View : 9.1.6. Show error
 else Product valid
         Service -> Model : 9.2. Create contact request record
         activate Model
@@ -66,10 +67,11 @@ else Product valid
         deactivate Service
         Controller --> Route : 9.2.5. Return 200 OK + success message
         deactivate Controller
-        Route --> View : 9.2.6. Show success\n"We received your request"
+        Route --> View : 9.2.6. Show success
         deactivate Route
 end
 
 View --> User : 10. Display result (success or error)
 deactivate View
+deactivate User
 @enduml

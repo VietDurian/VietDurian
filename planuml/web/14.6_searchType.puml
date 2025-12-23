@@ -2,40 +2,41 @@
 hide footbox
 title Search Type
 
-actor User
+actor User as "Users"
 boundary TypePage as View
-control TypeRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":TypeRoute" as Route
+control "AuthMiddleware" as Middleware
 control "TypeController" as Controller
 participant ":TypeService" as Service
-participant ":TypeModel" as Model
+entity "TypeModel" as Model
 database Database as Database
 
 User -> View : 1. Enter search keyword and submit
 activate View
+activate User
 
     View -> Route : 2. GET /types/search?keyword=&page=&size=&sort=
     activate Route
 
     Route -> Middleware : 3. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 4. Authentication success
-    Middleware -> Controller : 5. Forward SearchTypeRequest
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 4. Forward SearchTypeRequest
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 6. Process type search
+    Controller -> Service : 5. Process type search
     activate Service
 
-    Service -> Model : 7. Normalize keyword
+    Service -> Model : 6. Normalize keyword
     activate Model
 
-    Model -> Database : 8. Retrieve matched types by keyword
+    Model -> Database : 7. Retrieve matched types by keyword
     activate Database
-    Database --> Model : 9. Result set
+    Database --> Model : 8. Result set
     deactivate Database
 
-    Model --> Service : 10. Return search results + paging info
+    Model --> Service : 9. Return search results + paging info
     deactivate Model
 
 alt No types match
@@ -53,4 +54,5 @@ end
 
 View --> User : 11. Display search result
 deactivate View
+deactivate User
 @enduml
