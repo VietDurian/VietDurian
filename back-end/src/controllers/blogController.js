@@ -3,11 +3,33 @@ import { blogService } from '@/services/blogService';
 // Get blogs knownledge
 const getKnowledgeBlogs = async (req, res, next) => {
 	try {
-		const blogs = await blogService.getKnowledgeBlogs();
+		const { search, sort } = req.query;
+		const blogs = await blogService.getKnowledgeBlogs({ search, sort });
 		res.status(200).json({
 			code: 200,
 			message: 'Knowledge blogs retrieved successfully',
 			data: blogs,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
+// Get knowledge blog details
+const getKnowledgeBlogDetails = async (req, res, next) => {
+	try {
+		const { blog_id } = req.params;
+		const blog = await blogService.getKnowledgeBlogDetails(blog_id);
+		if (!blog) {
+			return res.status(404).json({
+				code: 404,
+				message: 'Knowledge blog not found',
+			});
+		}
+		res.status(200).json({
+			code: 200,
+			message: 'Knowledge blog details retrieved successfully',
+			data: blog,
 		});
 	} catch (error) {
 		next(error);
@@ -185,4 +207,5 @@ export const blogController = {
 	deleteKnowledgeBlog,
 	updateKnowledgeBlock,
 	deleteKnowledgeBlock,
+	getKnowledgeBlogDetails,
 };

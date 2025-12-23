@@ -46,9 +46,21 @@ const createKnowledgeBlock = async ({ blog_id, title, content, image }) => {
 };
 
 // Get knowledge blogs
-const getKnowledgeBlogs = async () => {
+const getKnowledgeBlogs = async ({ search, sort }) => {
 	try {
-		const blogs = await KnowledgeBlogModel.find().lean();
+		const query = {};
+		if (search) {
+			query.title = { $regex: search, $options: 'i' };
+		}
+
+		let sortOption = {};
+		if (sort === 'oldest') {
+			sortOption = { created_at: 1 };
+		} else {
+			sortOption = { created_at: -1 };
+		}
+
+		const blogs = await KnowledgeBlogModel.find(query).sort(sortOption).lean();
 		const knowledgeBlogs = await Promise.all(
 			blogs.map(async (blog) => {
 				const blocks = await KnowledgeBlockModel.find({
@@ -58,6 +70,22 @@ const getKnowledgeBlogs = async () => {
 			})
 		);
 		return knowledgeBlogs;
+	} catch (error) {
+		throw error;
+	}
+};
+
+// Get knowledge blog details
+const getKnowledgeBlogDetails = async (blog_id) => {
+	try {
+		const blog = await KnowledgeBlogModel.findById(blog_id).lean();
+		if (!blog) {
+			return null;
+		}
+		const blocks = await KnowledgeBlockModel.find({
+			blog_id: blog._id,
+		}).lean();
+		return { ...blog, knowledgeBlocks: blocks };
 	} catch (error) {
 		throw error;
 	}
@@ -146,4 +174,5 @@ export const blogService = {
 	deleteKnowledgeBlog,
 	updateKnowledgeBlock,
 	deleteKnowledgeBlock,
+	getKnowledgeBlogDetails,
 };

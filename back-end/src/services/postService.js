@@ -84,10 +84,21 @@ const approveGeneralPost = async (post_id) => {
     }
 }
 
+// Get general post details
+const getGeneralPostDetails = async (post_id) => {
+    try {
+        const post = await GeneralPostModel.findById(post_id).lean();
+        return post;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const postService = {
 	createGeneralPost,
 	getGeneralPost,
 	updateGeneralPost,
 	deleteGeneralPost,
-    approveGeneralPost
+    approveGeneralPost,
+    getGeneralPostDetails
 };

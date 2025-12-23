@@ -142,6 +142,70 @@ const Router = express.Router();
  *                       type: string
  *                       example: "active"
  *
+ * /post/general/{post_id}:
+ *   get:
+ *     tags: [post]
+ *     summary: Get general blog details
+ *     description: Retrieve details of a specific general blog
+ *     parameters:
+ *       - in: path
+ *         name: post_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The post id
+ *     responses:
+ *       200:
+ *         description: General blog details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "General blog details retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "60d0fe4f5311236168a109ca"
+ *                     category:
+ *                       type: string
+ *                       example: "Dịch vụ"
+ *                     content:
+ *                       type: string
+ *                       example: "General blog content"
+ *                     image:
+ *                       type: string
+ *                       example: "https://example.com/img.jpg"
+ *                     contact:
+ *                       type: string
+ *                       example: "contact@example.com"
+ *                     author_id:
+ *                       type: string
+ *                       example: "60d0fe4f5311236168a109cb"
+ *                     status:
+ *                       type: string
+ *                       example: "active"
+ *       404:
+ *         description: General blog not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: "General blog not found"
+ *
  * /post/{post_id}/general:
  *   patch:
  *     tags: [post]
@@ -280,6 +344,7 @@ const Router = express.Router();
  */
 
 Router.get('/general', authMiddleware.protect, postController.getGeneralPost);
+Router.get('/general/:post_id', postController.getGeneralPostDetails);
 Router.post(
 	'/general',
 	authMiddleware.protect,

@@ -15,6 +15,18 @@ const Router = express.Router();
  *     security:
  *       - bearerAuth: []
  *     description: Retrieve a list of knowledge blogs with their blocks
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by title
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [newest, oldest]
+ *         description: Sort by creation time
  *     responses:
  *       200:
  *         description: A list of knowledge blogs
@@ -98,7 +110,7 @@ const Router = express.Router();
  *                       example: "Content of chapter 1"
  *                     image:
  *                       type: string
- *                       example: "https://example.com/chapter1.jpg"
+ *                       example: ""
  *     responses:
  *       201:
  *         description: Knowledge blog created successfully
@@ -146,41 +158,23 @@ const Router = express.Router();
  *                             type: string
  *                             example: "https://example.com/chapter1.jpg"
  *
- * /blog/knowledge/{blog_id}/block:
- *   post:
+ * /blog/knowledge/{blog_id}:
+ *   get:
  *     tags: [blog]
- *     summary: Create a new knowledge block
+ *     summary: Get knowledge blog details
  *     security:
  *       - bearerAuth: []
+ *     description: Retrieve details of a specific knowledge blog
  *     parameters:
  *       - in: path
  *         name: blog_id
- *         required: true
  *         schema:
  *           type: string
- *         description: The blog ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - title
- *               - content
- *             properties:
- *               title:
- *                 type: string
- *                 example: "2. Block Title"
- *               content:
- *                 type: string
- *                 example: "Block Content"
- *               image:
- *                 type: string
- *                 example: "base64 string or url"
+ *         required: true
+ *         description: The blog id
  *     responses:
- *       201:
- *         description: Knowledge block created successfully
+ *       200:
+ *         description: Knowledge blog details retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -188,14 +182,58 @@ const Router = express.Router();
  *               properties:
  *                 code:
  *                   type: integer
- *                   example: 201
+ *                   example: 200
  *                 message:
  *                   type: string
- *                   example: "Knowledge block created successfully"
+ *                   example: "Knowledge blog details retrieved successfully"
  *                 data:
  *                   type: object
- *
- * /blog/knowledge/{blog_id}:
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "60d0fe4f5311236168a109ca"
+ *                     title:
+ *                       type: string
+ *                       example: "Knowledge Blog Title"
+ *                     content:
+ *                       type: string
+ *                       example: "Introduction content"
+ *                     author_id:
+ *                       type: string
+ *                       example: "60d0fe4f5311236168a109cb"
+ *                     status:
+ *                       type: string
+ *                       example: "active"
+ *                     knowledgeBlocks:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: "60d0fe4f5311236168a109cc"
+ *                           title:
+ *                             type: string
+ *                             example: "Block Title"
+ *                           content:
+ *                             type: string
+ *                             example: "Block Content"
+ *                           image:
+ *                             type: string
+ *                             example: "https://example.com/image.jpg"
+ *       404:
+ *         description: Knowledge blog not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: "Knowledge blog not found"
  *   delete:
  *     tags: [blog]
  *     summary: Delete a knowledge blog
@@ -264,6 +302,55 @@ const Router = express.Router();
  *                 message:
  *                   type: string
  *                   example: "Knowledge blog updated successfully"
+ *
+ * /blog/knowledge/{blog_id}/block:
+ *   post:
+ *     tags: [blog]
+ *     summary: Create a new knowledge block
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: blog_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The blog ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - content
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "2. Block Title"
+ *               content:
+ *                 type: string
+ *                 example: "Block Content"
+ *               image:
+ *                 type: string
+ *                 example: ""
+ *     responses:
+ *       201:
+ *         description: Knowledge block created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 201
+ *                 message:
+ *                   type: string
+ *                   example: "Knowledge block created successfully"
+ *                 data:
+ *                   type: object
  *
  * /blog/knowledge/block/{block_id}:
  *   delete:
@@ -340,6 +427,11 @@ Router.get(
 	'/knowledge',
 	authMiddleware.protect,
 	blogController.getKnowledgeBlogs
+);
+Router.get(
+	'/knowledge/:blog_id',
+	authMiddleware.protect,
+	blogController.getKnowledgeBlogDetails
 );
 Router.post(
 	'/knowledge',
