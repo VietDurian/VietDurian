@@ -2,18 +2,19 @@
 hide footbox
 title Create Step
 
-actor User
+actor User as "Users"
 boundary StepPage as View
-control StepRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":StepRoute" as Route
+control "AuthMiddleware" as Middleware
 control "StepController" as Controller
 participant ":StepService" as Service
-participant ":StepModel" as Model
+entity "StepModel" as Model
 database Database as Database
 
 
 User -> View : 1. Input step fields
 activate View
+activate User
 View -> View : 2. Validate input
 
 opt Check validation
@@ -25,12 +26,12 @@ end
 
     Route -> Middleware : 4. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 5. Authentication success
-    Middleware -> Controller : 6. Forward CreateStepRequest
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 5. Forward CreateStepRequest
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 7. Process step creation
+    Controller -> Service : 6. Process step creation
     activate Service
 
 alt Step exists
@@ -70,4 +71,5 @@ end
 
 View --> User : 8. Display form result (success or error)
 deactivate View
+deactivate User
 @enduml

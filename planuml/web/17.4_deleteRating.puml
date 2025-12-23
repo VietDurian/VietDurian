@@ -2,17 +2,18 @@
 hide footbox
 title Delete Rating
 
-actor User
+actor User as "Users"
 boundary RatingPage as View
-control RatingRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":RatingRoute" as Route
+control "AuthMiddleware" as Middleware
 control "RatingController" as Controller
 participant ":RatingService" as Service
-participant ":RatingModel" as Model
+entity "RatingModel" as Model
 database Database as Database
 
 User -> View : 1. Click "Delete" on a rating
 activate View
+activate User
 View --> User : 2. Show confirmation dialog
 User -> View : 3. Confirm delete
 
@@ -21,49 +22,50 @@ User -> View : 3. Confirm delete
 
     Route -> Middleware : 5. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 6. Authentication success
-    Middleware -> Controller : 7. Forward DeleteRatingRequest(ratingId)
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 6. Forward DeleteRatingRequest
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 8. Process rating deletion
+    Controller -> Service : 7. Process rating deletion
     activate Service
 
 alt Rating not found
-    Service -> Model : 9.1. Find rating by ID
+    Service -> Model : 8.1. Find rating by ID
     activate Model
 
-    Model -> Database : 9.1.1. Retrieve rating data by ID
+    Model -> Database : 8.1.1. Retrieve rating data by ID
     activate Database
-    Database --> Model : 9.1.2. Result (null)
+    Database --> Model : 8.1.2. Result (null)
     deactivate Database
 
-    Model --> Service : 9.1.3. Return not found
+    Model --> Service : 8.1.3. Return not found
     deactivate Model
 
-        Service --> Controller : 9.1.4. Return not found result
-        Controller --> Route : 9.1.5. Return 404 Not Found + message
-        Route --> View : 9.1.6. Show error: "Rating not found"
+        Service --> Controller : 8.1.4. Return not found result
+        Controller --> Route : 8.1.5. Return 404 Not Found + message
+        Route --> View : 8.1.6. Show error: "Rating not found"
 else Rating exists
-        Service -> Model : 9.2. Delete rating by ID
+        Service -> Model : 8.2. Delete rating by ID
         activate Model
 
-        Model -> Database : 9.2.1. Persist deletion
+        Model -> Database : 8.2.1. Persist deletion
         activate Database
-        Database --> Model : 9.2.2. Delete success
+        Database --> Model : 8.2.2. Delete success
         deactivate Database
 
-        Model --> Service : 9.2.3. Return deletion result
+        Model --> Service : 8.2.3. Return deletion result
         deactivate Model
 
-        Service --> Controller : 9.2.4. Return DeleteRatingResponse
+        Service --> Controller : 8.2.4. Return DeleteRatingResponse
         deactivate Service
-        Controller --> Route : 9.2.5. Return 200 OK + success message
+        Controller --> Route : 8.2.5. Return 200 OK + success message
         deactivate Controller
-        Route --> View : 9.2.6. Show delete success
+        Route --> View : 8.2.6. Show delete success
         deactivate Route
 end
 
-View --> User : 10. Display result (success or error)
+View --> User : 9. Display result (success or error)
 deactivate View
+deactivate User
 @enduml

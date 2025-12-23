@@ -2,18 +2,19 @@
 hide footbox
 title Create Comment Blog
 
-actor User
+actor User as "Users"
 boundary CommentBlogPage as View
-control CommentBlogRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":CommentBlogRoute" as Route
+control "AuthMiddleware" as Middleware
 control "CommentBlogController" as Controller
 participant ":CommentBlogService" as Service
-participant ":CommentBlogModel" as Model
+entity "CommentBlogModel" as Model
 database Database as Database
 
 
 User -> View : 1. Input comment content
 activate View
+activate User
 View -> View : 2. Validate input
 
 opt Check validation
@@ -25,12 +26,12 @@ end
 
     Route -> Middleware : 4. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 5. Authentication success
-    Middleware -> Controller : 6. Forward CreateCommentBlogRequest
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 5. Forward CreateCommentBlogRequest
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 7. Process comment creation
+    Controller -> Service : 6. Process comment creation
     activate Service
 
 alt Comment already exists / duplicated
@@ -70,4 +71,5 @@ end
 
 View --> User : 8. Display form result (success or error)
 deactivate View
+deactivate User
 @enduml

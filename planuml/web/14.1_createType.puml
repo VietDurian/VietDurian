@@ -2,18 +2,19 @@
 hide footbox
 title Create Type
 
-actor User
+actor User as "Users"
 boundary TypePage as View
-control TypeRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":TypeRoute" as Route
+control "AuthMiddleware" as Middleware
 control "TypeController" as Controller
 participant ":TypeService" as Service
-participant ":TypeModel" as Model
+entity "TypeModel" as Model
 database Database as Database
 
 
 User -> View : 1. Input type fields
 activate View
+activate User
 View -> View : 2. Validate input
 
 opt Check validation
@@ -25,21 +26,21 @@ end
 
     Route -> Middleware : 4. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 5. Authentication success
-    Middleware -> Controller : 6. Forward CreateTypeRequest
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 5. Forward CreateTypeRequest
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 7. Process type creation
+    Controller -> Service : 6. Process type creation
     activate Service
 
 alt Type exists
-    Service -> Model : 7.1. Check conflicts
+    Service -> Model : 6.1. Check conflicts
     activate Model
 
-    Model -> Database : 7.1.1. Check existing type
+    Model -> Database : 6.1.1. Check existing type
     activate Database
-    Database --> Model : 7.1.2. Conflict result\n(true / false)
+    Database --> Model : 6.1.2. Conflict result\n(true / false)
     deactivate Database
 
     Model --> Service : 7.1.3. Return conflict state
@@ -70,4 +71,5 @@ end
 
 View --> User : 8. Display form result (success or error)
 deactivate View
+deactivate User
 @enduml
