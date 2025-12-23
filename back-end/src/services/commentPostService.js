@@ -1,10 +1,10 @@
-import { CommentBlogModel } from '@/model/commentBlogModel';
+import { CommentPostModel } from '@/model/commentPostModel';
 import UserModel from '@/model/userModel';
 
 // Get all comments
 const getAllComments = async () => {
 	try {
-		const comments = await CommentBlogModel.find().lean();
+		const comments = await CommentPostModel.find().lean();
 		return comments;
 	} catch (error) {
 		throw error;
@@ -14,7 +14,12 @@ const getAllComments = async () => {
 // Create a new comment
 const createComment = async (payload) => {
 	try {
-		const { blog_id, userId, parent_id, content } = payload;
+		const { userId, parent_id, content } = payload;
+		const post_id = payload.post_id || payload.postId || payload.blog_id;
+
+		if (!post_id) {
+			throw new Error('post_id is required');
+		}
 
 		// Validate user existence
 		const user = await UserModel.findById(userId);
@@ -24,9 +29,9 @@ const createComment = async (payload) => {
 
 		// Validate parent comment existence if parent_id is provided
 
-		// Create a new CommentBlog instance
-		const newComment = new CommentBlogModel({
-			blog_id,
+		// Create a new CommentPost instance
+		const newComment = new CommentPostModel({
+			post_id,
 			author_id: userId,
 			parent_id:
 				!parent_id || parent_id === 'null' || parent_id === ''
@@ -42,14 +47,14 @@ const createComment = async (payload) => {
 	}
 };
 
-// Get comment by Blog ID
-const getCommentsByBlogId = async ({ blogId, sort }) => {
+// Get comment by Post ID
+const getCommentsByPostId = async ({ postId, sort }) => {
 	try {
 		// sort: 'newest' -> created_at: -1 (Newest first)
 		// sort: 'all' (default) -> created_at: 1 (Oldest first - Chronological)
 		const sortOption =
 			sort === 'newest' ? { created_at: -1 } : { created_at: 1 };
-		const comments = await CommentBlogModel.find({ blog_id: blogId })
+		const comments = await CommentPostModel.find({ post_id: postId })
 			.populate('author_id', 'full_name avatar')
 			.sort(sortOption)
 			.lean();
@@ -83,7 +88,7 @@ const getCommentsByBlogId = async ({ blogId, sort }) => {
 // Update a comment
 const updateComment = async ({ id, content }) => {
 	try {
-		const updatedComment = await CommentBlogModel.findByIdAndUpdate(
+		const updatedComment = await CommentPostModel.findByIdAndUpdate(
 			id,
 			{ content },
 			{ new: true }
@@ -98,7 +103,7 @@ const updateComment = async ({ id, content }) => {
 const deleteComment = async ({ id }) => {
 	try {
 		// Find all direct children
-		const children = await CommentBlogModel.find({ parent_id: id });
+		const children = await CommentPostModel.find({ parent_id: id });
 
 		// Recursively delete all children
 		for (const child of children) {
@@ -106,17 +111,17 @@ const deleteComment = async ({ id }) => {
 		}
 
 		// Delete the comment itself
-		const result = await CommentBlogModel.findByIdAndDelete(id);
+		const result = await CommentPostModel.findByIdAndDelete(id);
 		return result;
 	} catch (error) {
 		throw error;
 	}
 };
 
-export const commentBlogService = {
+export const commentPostService = {
 	getAllComments,
 	createComment,
-	getCommentsByBlogId,
+	getCommentsByPostId,
 	updateComment,
 	deleteComment,
 };

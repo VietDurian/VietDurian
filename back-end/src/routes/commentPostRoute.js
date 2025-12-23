@@ -1,5 +1,5 @@
 import express from 'express';
-import { commentBlogController } from '@/controllers/commentBlogController';
+import { commentPostController } from '@/controllers/commentPostController';
 import { authMiddleware } from '@/middlewares/authentication';
 import { authorizationMiddleware } from '@/middlewares/authorization';
 
@@ -25,9 +25,9 @@ const Router = express.Router();
  *                 properties:
  *                   _id:
  *                     type: string
- *                   blog_id:
+ *                   post_id:
  *                     type: string
- *                   user_id:
+ *                   author_id:
  *                     type: string
  *                   parent_id:
  *                     type: string
@@ -51,10 +51,10 @@ const Router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - blog_id
+ *               - post_id
  *               - content
  *             properties:
- *               blog_id:
+ *               post_id:
  *                 type: string
  *                 example: "64a7f0c2e1b2c3d4e5f67890"
  *               parent_id:
@@ -67,19 +67,19 @@ const Router = express.Router();
  *       201:
  *         description: Comment created successfully
  *
- * /comment/{blogId}/blog:
+ * /comment/{postId}/post:
  *   get:
- *     summary: Get comments by Blog ID
+ *     summary: Get comments by Post ID
  *     tags: [comment]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: blogId
+ *         name: postId
  *         schema:
  *           type: string
  *         required: true
- *         description: The blog ID
+ *         description: The post ID
  *       - in: query
  *         name: sort
  *         schema:
@@ -89,7 +89,7 @@ const Router = express.Router();
  *         description: Sort order of comments (all = oldest first, newest = newest first)
  *     responses:
  *       200:
- *         description: List of comments for the blog
+ *         description: List of comments for the post
  *         content:
  *           application/json:
  *             schema:
@@ -112,10 +112,10 @@ const Router = express.Router();
  *                       _id:
  *                         type: string
  *                         example: "60d0fe4f5311236168a109ca"
- *                       blog_id:
+ *                       post_id:
  *                         type: string
  *                         example: "60d0fe4f5311236168a109cb"
- *                       user_id:
+ *                       author_id:
  *                         type: string
  *                         example: "60d0fe4f5311236168a109cc"
  *                       parent_id:
@@ -184,22 +184,22 @@ const Router = express.Router();
  *         description: Comment deleted successfully
  */
 
-Router.get('/', authMiddleware.protect, commentBlogController.getAllComments);
-Router.post('/', authMiddleware.protect, commentBlogController.createComment);
+Router.get('/', authMiddleware.protect, commentPostController.getAllComments);
+Router.post('/', authMiddleware.protect, commentPostController.createComment);
 Router.get(
-	'/:blogId/blog',
+	'/:postId/post',
 	authMiddleware.protect,
-	commentBlogController.getCommentsByBlogId
+	commentPostController.getCommentsByPostId
 );
 Router.patch(
 	'/:id',
 	authMiddleware.protect,
-	commentBlogController.updateComment
+	commentPostController.updateComment
 );
 Router.delete(
 	'/:id',
 	authMiddleware.protect,
-	commentBlogController.deleteComment
+	commentPostController.deleteComment
 );
 
-export { Router as commentBlogRoute };
+export { Router as commentPostRoute };

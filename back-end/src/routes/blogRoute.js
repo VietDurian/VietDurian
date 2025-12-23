@@ -7,16 +7,17 @@ const Router = express.Router();
 
 /**
  * @swagger
- * /blog:
+ *
+ * /blog/knowledge:
  *   get:
  *     tags: [blog]
- *     summary: Get all blogs
- *     security: 
+ *     summary: Get knowledge blogs
+ *     security:
  *       - bearerAuth: []
- *     description: Retrieve a list of all blogs
+ *     description: Retrieve a list of knowledge blogs with their blocks
  *     responses:
  *       200:
- *         description: A list of blogs
+ *         description: A list of knowledge blogs
  *         content:
  *           application/json:
  *             schema:
@@ -27,7 +28,7 @@ const Router = express.Router();
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: "Blogs retrieved successfully"
+ *                   example: "Knowledge blogs retrieved successfully"
  *                 data:
  *                   type: array
  *                   items:
@@ -38,31 +39,36 @@ const Router = express.Router();
  *                         example: "60d0fe4f5311236168a109ca"
  *                       title:
  *                         type: string
- *                         example: "My First Blog Post"
+ *                         example: "Knowledge Blog Title"
  *                       content:
  *                         type: string
- *                         example: "This is the content of the blog post."
+ *                         example: "Introduction content"
  *                       author_id:
  *                         type: string
  *                         example: "60d0fe4f5311236168a109cb"
- *                       image:
- *                         type: string
- *                         example: "https://example.com/image.jpg"
  *                       status:
  *                         type: string
  *                         example: "active"
- *                       created_at:
- *                         type: string
- *                         format: date-time
- *                       updated_at:
- *                         type: string
- *                         format: date-time
+ *                       knowledgeBlocks:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             title:
+ *                               type: string
+ *                               example: "Chapter 1"
+ *                             content:
+ *                               type: string
+ *                               example: "Content of chapter 1"
+ *                             image:
+ *                               type: string
+ *                               example: "https://example.com/img.jpg"
  *   post:
  *     tags: [blog]
  *     security:
  *       - bearerAuth: []
- *     summary: Create a new blog
- *     description: Create a new blog post
+ *     summary: Create a new knowledge blog
+ *     description: Create a new knowledge blog post with blocks
  *     requestBody:
  *       required: true
  *       content:
@@ -72,20 +78,30 @@ const Router = express.Router();
  *             required:
  *               - title
  *               - content
- *               - author_id
  *             properties:
  *               title:
  *                 type: string
- *                 example: "My New Blog Post"
+ *                 example: "My New Knowledge Blog"
  *               content:
  *                 type: string
- *                 example: "Content of the new blog post"
- *               image:
- *                 type: string
- *                 example: "https://example.com/new-image.jpg"
+ *                 example: "Introduction to the topic"
+ *               knowledgeBlocks:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     title:
+ *                       type: string
+ *                       example: "Chapter 1"
+ *                     content:
+ *                       type: string
+ *                       example: "Content of chapter 1"
+ *                     image:
+ *                       type: string
+ *                       example: "https://example.com/chapter1.jpg"
  *     responses:
  *       201:
- *         description: Blog created successfully
+ *         description: Knowledge blog created successfully
  *         content:
  *           application/json:
  *             schema:
@@ -96,7 +112,7 @@ const Router = express.Router();
  *                   example: 201
  *                 message:
  *                   type: string
- *                   example: "Blog created successfully"
+ *                   example: "Knowledge blog created successfully"
  *                 data:
  *                   type: object
  *                   properties:
@@ -105,28 +121,41 @@ const Router = express.Router();
  *                       example: "60d0fe4f5311236168a109ca"
  *                     title:
  *                       type: string
- *                       example: "My New Blog Post"
+ *                       example: "My New Knowledge Blog"
  *                     content:
  *                       type: string
- *                       example: "Content of the new blog post"
+ *                       example: "Introduction to the topic"
  *                     author_id:
  *                       type: string
  *                       example: "60d0fe4f5311236168a109cb"
- *                     image:
- *                       type: string
- *                       example: "https://example.com/new-image.jpg"
  *                     status:
  *                       type: string
  *                       example: "active"
- *                     created_at:
- *                       type: string
- *                       format: date-time
- *                     updated_at:
- *                       type: string
- *                       format: date-time
+ *                     knowledgeBlocks:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           title:
+ *                             type: string
+ *                             example: "Chapter 1"
+ *                           content:
+ *                             type: string
+ *                             example: "Content of chapter 1"
+ *                           image:
+ *                             type: string
+ *                             example: "https://example.com/chapter1.jpg"
  */
 
-Router.get('/', authMiddleware.protect, blogController.getAllBlogs);
-Router.post('/', authMiddleware.protect, blogController.createBlog);
+Router.get(
+	'/knowledge',
+	authMiddleware.protect,
+	blogController.getKnowledgeBlogs
+);
+Router.post(
+	'/knowledge',
+	authMiddleware.protect,
+	blogController.createKnowledgeBlog
+);
 
 export { Router as blogRoute };
