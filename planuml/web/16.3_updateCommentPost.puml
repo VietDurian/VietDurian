@@ -2,17 +2,18 @@
 hide footbox
 title Update Comment Blog
 
-actor User
+actor User as "Users"
 boundary EditCommentBlogPage as View
-control CommentBlogRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":CommentBlogRoute" as Route
+control "AuthMiddleware" as Middleware
 control "CommentBlogController" as Controller
 participant ":CommentBlogService" as Service
-participant ":CommentBlogModel" as Model
+entity "CommentBlogModel" as Model
 database Database as Database
 
 User -> View : 1. Open comment edit form
 activate View
+activate User
 
 User -> View : 2. Edit comment content and submit
 View -> View : 3. Validate form input
@@ -26,49 +27,50 @@ end
 
     Route -> Middleware : 5. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 6. Authentication success
-    Middleware -> Controller : 7. Forward UpdateCommentBlogRequest(commentId, payload)
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 6. Forward UpdateCommentBlogRequest
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 8. Process comment update
+    Controller -> Service : 7. Process comment update
     activate Service
 
 alt Comment not found
-    Service -> Model : 9.1. Find comment by ID
+    Service -> Model : 8.1. Find comment by ID
     activate Model
 
-    Model -> Database : 9.1.1. Retrieve comment data by ID
+    Model -> Database : 8.1.1. Retrieve comment data by ID
     activate Database
-    Database --> Model : 9.1.2. Result (null)
+    Database --> Model : 8.1.2. Result (null)
     deactivate Database
 
-    Model --> Service : 9.1.3. Return not found
+    Model --> Service : 8.1.3. Return not found
     deactivate Model
 
-        Service --> Controller : 9.1.4. Return not found result
-        Controller --> Route : 9.1.5. Return 404 Not Found + message
-        Route --> View : 9.1.6. Show error: "Comment not found"
+        Service --> Controller : 8.1.4. Return not found result
+        Controller --> Route : 8.1.5. Return 404 Not Found + message
+        Route --> View : 8.1.6. Show error: "Comment not found"
 else Comment exists
-        Service -> Model : 9.2. Update comment content
+        Service -> Model : 8.2. Update comment content
         activate Model
 
-        Model -> Database : 9.2.1. Persist updated comment data
+        Model -> Database : 8.2.1. Persist updated comment data
         activate Database
-        Database --> Model : 9.2.2. Update success
+        Database --> Model : 8.2.2. Update success
         deactivate Database
 
-        Model --> Service : 9.2.3. Return updated entity
+        Model --> Service : 8.2.3. Return updated entity
         deactivate Model
 
-        Service --> Controller : 9.2.4. Return UpdateCommentBlogResponse
+        Service --> Controller : 8.2.4. Return UpdateCommentBlogResponse
         deactivate Service
-        Controller --> Route : 9.2.5. Return 200 OK + updated comment data
+        Controller --> Route : 8.2.5. Return 200 OK + updated comment data
         deactivate Controller
-        Route --> View : 9.2.6. Show success message
+        Route --> View : 8.2.6. Show success message
         deactivate Route
 end
 
-View --> User : 10. Display result (success or error)
+View --> User : 9. Display result (success or error)
 deactivate View
+deactivate User
 @enduml

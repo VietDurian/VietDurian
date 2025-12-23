@@ -1,0 +1,69 @@
+@startuml 15.2_viewStep
+hide footbox
+title View Step
+
+actor User as "Users"
+boundary StepPage as View
+participant StepRoute as Route
+control ":AuthMiddleware" as Middleware
+control "StepController" as Controller
+participant ":StepService" as Service
+entity ":StepModel" as Model
+database Database as Database
+
+User -> View : 1. Open step page
+activate View
+activate User
+
+    View -> Route : 2. GET /steps/{id}
+    activate Route
+
+    Route -> Middleware : 3. AuthenticateUser(req, res, next)
+    activate Middleware
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 4. Forward ViewStepRequest(stepId)
+    deactivate Middleware
+    activate Controller
+
+    Controller -> Service : 5. Process step retrieval
+    activate Service
+
+alt Step not found
+    Service -> Model : 6.1. Find step by ID
+    activate Model
+
+    Model -> Database : 6.1.1. Retrieve step data by ID
+    activate Database
+    Database --> Model : 6.1.2. Result (null)
+    deactivate Database
+
+    Model --> Service : 6.1.3. Return not found
+    deactivate Model
+
+        Service --> Controller : 6.1.4. Return not found result
+        Controller --> Route : 6.1.5. Return 404 Not Found + message
+        Route --> View : 6.1.6. Show "Step not found"
+else Step found
+        Service -> Model : 6.2. Find step by ID
+        activate Model
+
+        Model -> Database : 6.2.1. Retrieve step data by ID
+        activate Database
+        Database --> Model : 6.2.2. Step data
+        deactivate Database
+
+        Model --> Service : 6.2.3. Return step entity
+        deactivate Model
+
+        Service --> Controller : 6.2.4. Return StepResponse
+        deactivate Service
+        Controller --> Route : 6.2.5. Return 200 OK + step data
+        deactivate Controller
+        Route --> View : 6.2.6. Render step detail
+        deactivate Route
+end
+
+View --> User : 7. Display step page content
+deactivate View
+deactivate User
+@enduml

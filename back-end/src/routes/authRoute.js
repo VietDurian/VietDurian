@@ -321,10 +321,132 @@ const Router = express.Router();
  *         description: Server error
  */
 
+/**
+ * @swagger
+ * /auth/google-login:
+ *   post:
+ *     summary: Login with Google
+ *     description: Login user using Google OAuth token
+ *     tags:
+ *       - Authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjE4YTJjNzcxNjYwNzI5ZmE1Yzc4N2Y5Y2Y3YTc2NjI4MmM1ZDY3ZDEiLCJ0eXAiOiJKV1QifQ..."
+ *                 description: Google OAuth ID token from Google Sign-In
+ *     responses:
+ *       200:
+ *         description: Google login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         avatar:
+ *                           type: string
+ *                         role:
+ *                           type: string
+ *                           example: "user"
+ *                         isVerify:
+ *                           type: boolean
+ *                           example: true
+ *                     token:
+ *                       type: string
+ *                       description: JWT authentication token
+ *       400:
+ *         description: Google token is required
+ *       401:
+ *         description: Invalid Google token
+ */
+
+/**
+ * @swagger
+ * /auth/change-password:
+ *   post:
+ *     summary: Change Password
+ *     description: Change user password with authentication required
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 format: password
+ *                 example: "OldPassword123!"
+ *                 description: User's current password
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 example: "NewPassword123!"
+ *                 description: New password to set
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Password changed successfully"
+ *       400:
+ *         description: Invalid input data
+ *       401:
+ *         description: Unauthorized - Token not provided, invalid token, or incorrect current password
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+
 Router.post("/register", authController.register);
 Router.post("/verify-email", authController.verifyEmail);
 Router.post("/login", authController.login);
 Router.post("/logout", authMiddleware.protect, authController.logout);
 Router.post("/forgot-password", authController.forgotPassword);
 Router.post("/reset-password/:token", authController.resetPassword);
+Router.post("/google-login", authController.googleLogin);
+Router.post(
+  "/change-password",
+  authMiddleware.protect,
+  authController.changePassword
+);
+
 export const authRoute = Router;

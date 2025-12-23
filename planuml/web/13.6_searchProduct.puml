@@ -2,40 +2,42 @@
 hide footbox
 title Search Product
 
-actor User
+actor User as "Users"
 boundary ProductPage as View
-control ProductRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":ProductRoute" as Route
+control "AuthMiddleware" as Middleware
 control "ProductController" as Controller
 participant ":ProductService" as Service
-participant ":ProductModel" as Model
+entity "ProductModel" as Model
 database Database as Database
 
 User -> View : 1. Enter search keyword and submit
 activate View
+activate User
+
 
     View -> Route : 2. GET /products/search?keyword=&page=&size=&sort=
     activate Route
 
     Route -> Middleware : 3. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 4. Authentication success
-    Middleware -> Controller : 5. Forward SearchProductRequest
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 4. Forward SearchProductRequest
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 6. Process product search
+    Controller -> Service : 5. Process product search
     activate Service
 
-    Service -> Model : 7. Normalize keyword
+    Service -> Model : 6. Normalize keyword
     activate Model
 
-    Model -> Database : 8. Retrieve matched products by keyword
+    Model -> Database : 7. Retrieve matched products by keyword
     activate Database
-    Database --> Model : 9. Result set
+    Database --> Model : 8. Result set
     deactivate Database
 
-    Model --> Service : 10. Return search results + paging info
+    Model --> Service : 9. Return search results + paging info
     deactivate Model
 
 alt No products match
@@ -53,4 +55,5 @@ end
 
 View --> User : 11. Display search result
 deactivate View
+deactivate User
 @enduml

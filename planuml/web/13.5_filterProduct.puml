@@ -2,55 +2,57 @@
 hide footbox
 title Filter Product
 
-actor User
+actor User as "Users"
 boundary ProductPage as View
-control ProductRoute as Route
-participant ":AuthMiddleware" as Middleware
+participant ":ProductRoute" as Route
+control "AuthMiddleware" as Middleware
 control "ProductController" as Controller
 participant ":ProductService" as Service
-participant ":ProductModel" as Model
+entity "ProductModel" as Model
 database Database as Database
 
 User -> View : 1. Select filter options\n(keyword, category, price)
 activate View
+activate User
 
-    View -> Route : 3. GET /products/filter?keyword=&categoryId=&price=
+    View -> Route : 2. GET /products/filter?keyword=&categoryId=&price=
     activate Route
 
-    Route -> Middleware : 4. AuthenticateUser(req, res, next)
+    Route -> Middleware : 3. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 5. Authentication success
-    Middleware -> Controller : 6. Forward FilterProductRequest(params)
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 4. Forward FilterProductRequest(params)
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 7. Process product filtering
+    Controller -> Service : 5. Process product filtering
     activate Service
 
-    Service -> Model : 7.1. Build filter criteria
+    Service -> Model : 6. Build filter criteria
     activate Model
 
-    Model -> Database : 7.1.1. Retrieve filtered product data
+    Model -> Database : 7. Retrieve filtered product data
     activate Database
-    Database --> Model : 7.1.2. Result set
+    Database --> Model : 8. Result set
     deactivate Database
 
-    Model --> Service : 7.1.3. Return filtered list + paging info
+    Model --> Service : 9. Return filtered list + paging info
     deactivate Model
 
 alt No products match
-    Service --> Controller : 7.2. Return empty result
-    Controller --> Route : 7.3. Return 200 OK + empty list/message
-    Route --> View : 7.4. Show "No products found" + keep filters
+    Service --> Controller : 10.1. Return empty result
+    Controller --> Route : 10.1.1. Return 200 OK + empty list/message
+    Route --> View : 10.1.2. Show "No products found" + keep filters
 else Products match
-    Service --> Controller : 7.2. Return FilterProductResponse
+    Service --> Controller : 10.2. Return FilterProductResponse
     deactivate Service
-    Controller --> Route : 7.3. Return 200 OK + filtered products data
+    Controller --> Route : 10.2.1. Return 200 OK + filtered products data
     deactivate Controller
-    Route --> View : 7.4. Render filtered list + pagination
+    Route --> View : 10.2.2. Render filtered list + pagination
     deactivate Route
 end
 
-View --> User : 8. Display filter result
+View --> User : 11. Display filter result
 deactivate View
+deactivate User
 @enduml

@@ -2,7 +2,7 @@
 hide footbox
 title Filter Comment Post
 
-actor User
+actor User as "Users"
 boundary CommentPostPage as View
 control CommentPostRoute as Route
 participant ":AuthMiddleware" as Middleware
@@ -13,44 +13,46 @@ database Database as Database
 
 User -> View : 1. Select filter options\n(keyword, status)
 activate View
+activate User
 
     View -> Route : 3. GET /api/v1/comment?keyword=&status=&page=&size=
     activate Route
 
     Route -> Middleware : 4. AuthenticateUser(req, res, next)
     activate Middleware
-    Middleware --> Route : 5. Authentication success
-    Middleware -> Controller : 6. Forward FilterCommentBlogRequest(params)
+    ref over User, Database : Verifies token
+    Middleware -> Controller : 5. Forward FilterCommentBlogRequest(params)
     deactivate Middleware
     activate Controller
 
-    Controller -> Service : 7. Process comment filtering
+    Controller -> Service : 6. Process comment filtering
     activate Service
 
-    Service -> Model : 7.1. Build filter criteria
+    Service -> Model : 7. Build filter criteria
     activate Model
 
-    Model -> Database : 7.1.1. Retrieve filtered comment data
+    Model -> Database : 8. Retrieve filtered comment data
     activate Database
-    Database --> Model : 7.1.2. Result set
+    Database --> Model : 9. Result set
     deactivate Database
 
-    Model --> Service : 7.1.3. Return filtered list + paging info
+    Model --> Service : 10. Return filtered list + paging info
     deactivate Model
 
 alt No comments match
-    Service --> Controller : 7.2. Return empty result
-    Controller --> Route : 7.3. Return 200 OK + empty list/message
-    Route --> View : 7.4. Show "No comments found" + keep filters
+    Service --> Controller : 11.1. Return empty result
+    Controller --> Route : 11.1.1. Return 200 OK + empty list/message
+    Route --> View : 11.1.2. Show "No comments found" + keep filters
 else Comments match
-    Service --> Controller : 7.2. Return FilterCommentBlogResponse
+    Service --> Controller : 11.2. Return FilterCommentBlogResponse
     deactivate Service
-    Controller --> Route : 7.3. Return 200 OK + filtered comments data
+    Controller --> Route : 11.2.1. Return 200 OK + filtered comments data
     deactivate Controller
-    Route --> View : 7.4. Render filtered list + pagination
+    Route --> View : 11.2.2. Render filtered list + pagination
     deactivate Route
 end
 
-View --> User : 8. Display filter result
+View --> User : 12. Display filter result
 deactivate View
+deactivate User
 @enduml
