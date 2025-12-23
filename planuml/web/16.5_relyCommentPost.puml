@@ -1,14 +1,14 @@
 @startuml 16.5_replyCommentBlog
 hide footbox
-title Reply Comment Blog
+title Reply Comment Post
 
 actor User as "Users"
-boundary CommentBlogPage as View
-participant ":CommentBlogRoute" as Route
-control "AuthMiddleware" as Middleware
-control "CommentBlogController" as Controller
-participant ":CommentBlogService" as Service
-entity "CommentBlogModel" as Model
+boundary CommentPostPage as View
+control CommentPostRoute as Route
+participant ":AuthMiddleware" as Middleware
+control "CommentPostController" as Controller
+participant ":CommentPostService" as Service
+participant ":CommentPostModel" as Model
 database Database as Database
 
 User -> View : 1. Click "Reply" on a comment
@@ -23,7 +23,7 @@ opt Check validation
     View --> User : 4.1. Show validation error
 end
 
-    View -> Route : 5. POST /blogs/{blogId}/comments/{commentId}/replies
+    View -> Route : 5. POST /api/v1/comment/{commentId}
     activate Route
 
     Route -> Middleware : 6. AuthenticateUser(req, res, next)

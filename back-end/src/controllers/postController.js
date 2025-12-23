@@ -85,23 +85,45 @@ const deleteGeneralPost = async (req, res, next) => {
 
 // Approve a general post
 const approveGeneralPost = async (req, res, next) => {
-    try {
-        const { post_id } = req.params;
-        const updatedPost = await postService.approveGeneralPost(post_id);
-        res.status(200).json({
-            code: 200,
-            message: 'General blog approved successfully',
-            data: updatedPost,
-        });
-    } catch (error) {
-        next(error);
-    }
-}
+	try {
+		const { post_id } = req.params;
+		const updatedPost = await postService.approveGeneralPost(post_id);
+		res.status(200).json({
+			code: 200,
+			message: 'General blog approved successfully',
+			data: updatedPost,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
+// Get general post details
+const getGeneralPostDetails = async (req, res, next) => {
+	try {
+		const { post_id } = req.params;
+		const post = await postService.getGeneralPostDetails(post_id);
+		if (!post) {
+			return res.status(404).json({
+				code: 404,
+				message: 'General blog not found',
+			});
+		}
+		res.status(200).json({
+			code: 200,
+			message: 'General blog details retrieved successfully',
+			data: post,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
 
 export const postController = {
 	getGeneralPost,
 	createGeneralPost,
 	updateGeneralPost,
 	deleteGeneralPost,
-    approveGeneralPost
+	approveGeneralPost,
+	getGeneralPostDetails,
 };

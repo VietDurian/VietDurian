@@ -1,21 +1,20 @@
 @startuml 16.2_viewCommentBlog
 hide footbox
-title View Comment Blog
+title View Comment Post
 
 actor User as "Users"
-boundary CommentBlogPage as View
-participant ":CommentBlogRoute" as Route
-control "AuthMiddleware" as Middleware
-control "CommentBlogController" as Controller
-participant ":CommentBlogService" as Service
-entity "CommentBlogModel" as Model
-database Database as Database
+boundary CommentPostPage as View
+control CommentPostRoute as Route
+participant ":AuthMiddleware" as Middleware
+control "CommentPostController" as Controller
+participant ":CommentPostService" as Service
+participant ":CommentPostModel" as Model
 
 User -> View : 1. Open comment page
 activate View
 activate User
 
-    View -> Route : 2. GET /blogs/{blogId}/comments/{commentId}
+    View -> Route : 2. GET /api/v1/comment
     activate Route
 
     Route -> Middleware : 3. AuthenticateUser(req, res, next)

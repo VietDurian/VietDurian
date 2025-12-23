@@ -17,7 +17,7 @@ const KnowledgeBlogSchema = new mongoose.Schema(
 		status: {
 			type: String,
 			enum: ['progressing', 'active', 'inactive'],
-			default: 'progressing',
+			default: 'active',
 		},
 	},
 	{

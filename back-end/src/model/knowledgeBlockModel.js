@@ -4,7 +4,7 @@ const knowledgeBlockSchema = new mongoose.Schema(
 	{
 		blog_id: {
 			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Blog',
+			ref: 'KnowledgeBlog',
 			required: true,
 		},
 		title: {
