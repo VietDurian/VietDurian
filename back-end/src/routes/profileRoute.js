@@ -1,5 +1,5 @@
 import express from "express";
-const { profileController } = require("../controllers/profileController");
+import { profileController } from "../controllers/profileController.js";
 import { authMiddleware } from "../middlewares/authentication";
 const Router = express.Router();
 
@@ -170,8 +170,8 @@ const Router = express.Router();
  *       404:
  *         description: User not found
  */
-Router.get("/me", authMiddleware, profileController.getProfile);
-Router.put("/update", authMiddleware, profileController.updateProfile);
+Router.get("/me", authMiddleware.protect, profileController.getProfile);
+Router.put("/update", authMiddleware.protect, profileController.updateProfile);
 Router.get("/public/:userId", profileController.getPublicProfile);
 
 export const profileRoute = Router;
