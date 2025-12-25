@@ -87,8 +87,3 @@ export const profileController = {
   updateProfile,
   getPublicProfile,
 };
-
-module.exports = { profileController };
-module.exports.getProfile = getProfile;
-module.exports.updateProfile = updateProfile;
-module.exports.getPublicProfile = getPublicProfile;

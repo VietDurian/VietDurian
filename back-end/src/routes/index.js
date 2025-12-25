@@ -1,7 +1,9 @@
 import express from "express";
 
 import { authRoute } from "@/routes/authRoute";
-// import { profileRoute } from "@/routes/profileRoute";
+import { profileRoute } from "@/routes/profileRoute";
+import { productRoute } from "@/routes/productRoute";
+import { ratingRoute } from "@/routes/ratingRoute";
 import { typeProductRoute } from "@/routes/typeProductRoute";
 import { stepRoute } from "@/routes/stepRoute";
 import { blogRoute } from "@/routes/blogRoute";
@@ -39,7 +41,9 @@ Router.get("/status", (req, res) => {
 
 Router.use("/auth", authRoute);
 // Router.use('/user', userRoute);
-// Router.use("/profile", profileRoute);
+Router.use("/profile", profileRoute);
+Router.use("/products", productRoute);
+Router.use("/ratings", ratingRoute);
 Router.use("/type-product", typeProductRoute);
 Router.use("/step", stepRoute);
 Router.use("/blog", blogRoute);
