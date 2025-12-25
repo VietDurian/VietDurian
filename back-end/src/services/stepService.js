@@ -3,26 +3,11 @@ import { StepModel } from '@/model/stepModel';
 // Get all steps
 const getAllSteps = async () => {
 	try {
-		const steps = await StepModel.find().lean();
-
-		const stepMap = {};
-		const tree = [];
-
-		// Initialize map
-		steps.forEach((step) => {
-			stepMap[step._id] = { ...step, children: [] };
+		// chi lay nhung thang ko co parent_id (la step cha) null hoac ""
+		const steps = await StepModel.find({
+			$or: [{ parent_id: null }, { parent_id: '' }],
 		});
-
-		// Build tree
-		steps.forEach((step) => {
-			if (step.parent_id && stepMap[step.parent_id]) {
-				stepMap[step.parent_id].children.push(stepMap[step._id]);
-			} else {
-				tree.push(stepMap[step._id]);
-			}
-		});
-
-		return tree;
+		return steps;
 	} catch (error) {
 		throw error;
 	}

@@ -7,27 +7,34 @@ const DiarySchema = new mongoose.Schema(
 			ref: 'User',
 			required: true,
 		},
-		garden_id: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Garden',
-			required: true,
-		},
-		step_id: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Step',
-		},
 		title: {
 			type: String,
 			required: true,
 		},
-		content: {
+		description: {
 			type: String,
 		},
-		cost: {
+		crop_type: {
+			type: String,
+			required: true,
+		},
+		status: {
+			type: String,
+			enum: ['In progressing', 'Completed'],
+			default: 'In progressing',
+		},
+		start_date: {
+			type: Date,
+			default: Date.now,
+		},
+		end_date: {
+			type: Date,
+		},
+		quatity_durian: {
 			type: Number,
 			default: 0,
 		},
-		revenue: {
+		price: {
 			type: Number,
 			default: 0,
 		},
