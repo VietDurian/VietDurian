@@ -75,7 +75,7 @@ const Router = express.Router();
  *             properties:
  *               parent_id:
  *                 type: string
- *                 example: "60d0fe4f5311236168a109ca"
+ *                 example: null
  *                 nullable: true
  *               title:
  *                 type: string

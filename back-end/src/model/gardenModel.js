@@ -11,6 +11,10 @@ const GardenSchema = new mongoose.Schema(
 			type: String,
 			required: true,
 		},
+		crop_type: {
+			type: String,
+			required: true,
+		},
 		area: {
 			type: Number,
 			required: true,
