@@ -3,10 +3,8 @@ import { StepModel } from '@/model/stepModel';
 // Get all steps
 const getAllSteps = async () => {
 	try {
-		// chi lay nhung thang ko co parent_id (la step cha) null hoac ""
-		const steps = await StepModel.find({
-			$or: [{ parent_id: null }, { parent_id: '' }],
-		});
+		// chi lay nhung thang ko co parent_id (la step cha)
+		const steps = await StepModel.find({ parent_id: null });
 		return steps;
 	} catch (error) {
 		throw error;

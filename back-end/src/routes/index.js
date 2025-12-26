@@ -12,33 +12,9 @@ import { commentPostRoute } from '@/routes/commentPostRoute';
 import { reactionCommentRoute } from '@/routes/reactionCommentRoute';
 import { reportPostRoute } from '@/routes/reportPostRoute';
 import { diaryRoute } from '@/routes/diaryRoute';
+import { favoriteRoute } from '@/routes/favoriteRoute';
 
 const Router = express.Router();
-
-/**
- * @swagger
- * /status:
- *   get:
- *     summary: Health check API
- *     description: Check if the server is running
- *     responses:
- *       200:
- *         description: Server is up and running
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: OK
- *                 message:
- *                   type: string
- *                   example: Server is running
- */
-Router.get('/status', (req, res) => {
-	res.status(200).json({ status: 'OK', message: 'Server is running' });
-});
 
 Router.use('/auth', authRoute);
 // Router.use('/user', userRoute);
@@ -53,4 +29,6 @@ Router.use('/report', reportPostRoute);
 Router.use('/comment', commentPostRoute);
 Router.use('/reaction', reactionCommentRoute);
 Router.use('/diary', diaryRoute);
+Router.use('/favorite', favoriteRoute);
+
 export const API_v1 = Router;
