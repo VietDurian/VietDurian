@@ -110,7 +110,7 @@ const Router = express.Router();
  *                       example: "Content of chapter 1"
  *                     image:
  *                       type: string
- *                       example: ""
+ *                       example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *     responses:
  *       201:
  *         description: Knowledge blog created successfully
@@ -156,7 +156,7 @@ const Router = express.Router();
  *                             example: "Content of chapter 1"
  *                           image:
  *                             type: string
- *                             example: "https://example.com/chapter1.jpg"
+ *                             example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *
  * /blog/knowledge/{blog_id}:
  *   get:
@@ -220,20 +220,8 @@ const Router = express.Router();
  *                             example: "Block Content"
  *                           image:
  *                             type: string
- *                             example: "https://example.com/image.jpg"
- *       404:
- *         description: Knowledge blog not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: integer
- *                   example: 404
- *                 message:
- *                   type: string
- *                   example: "Knowledge blog not found"
+ *                             example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
+ * 
  *   delete:
  *     tags: [blog]
  *     summary: Delete a knowledge blog
@@ -334,7 +322,7 @@ const Router = express.Router();
  *                 example: "Block Content"
  *               image:
  *                 type: string
- *                 example: ""
+ *                 example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *     responses:
  *       201:
  *         description: Knowledge block created successfully
@@ -406,7 +394,7 @@ const Router = express.Router();
  *                 example: "Updated Block Content"
  *               image:
  *                 type: string
- *                 example: "base64 string or url"
+ *                 example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *     responses:
  *       200:
  *         description: Knowledge block updated successfully

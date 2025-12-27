@@ -1,4 +1,5 @@
 import { GeneralPostModel } from '@/model/generalPostModel';
+import { cloudinary } from '@/config/cloudinary';
 
 // Create a new general post
 const createGeneralPost = async ({
@@ -9,11 +10,23 @@ const createGeneralPost = async ({
 	contact,
 }) => {
 	try {
+		let imageUrl = '';
+		if (image) {
+			try {
+				const result = await cloudinary.uploader.upload(image, {
+					folder: 'vietdurian',
+				});
+				imageUrl = result.secure_url;
+			} catch (error) {
+				throw new Error('Image upload failed');
+			}
+		}
+
 		const newPost = new GeneralPostModel({
 			author_id,
 			category,
 			content,
-			image,
+			image: imageUrl,
 			contact,
 		});
 		const savedPost = await newPost.save();
@@ -50,6 +63,17 @@ const getGeneralPost = async ({ status, category, search }) => {
 // Update a general post
 const updateGeneralPost = async (post_id, data) => {
 	try {
+		if (data.image) {
+			try {
+				const result = await cloudinary.uploader.upload(data.image, {
+					folder: 'vietdurian',
+				});
+				data.image = result.secure_url;
+			} catch (error) {
+				throw new Error('Image upload failed');
+			}
+		}
+
 		const updatedPost = await GeneralPostModel.findByIdAndUpdate(
 			post_id,
 			data,

@@ -62,7 +62,7 @@ const Router = express.Router();
  *                         example: "General blog content"
  *                       image:
  *                         type: string
- *                         example: "https://example.com/img.jpg"
+ *                         example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *                       contact:
  *                         type: string
  *                         example: "contact@example.com"
@@ -99,7 +99,7 @@ const Router = express.Router();
  *                 example: "Content of the general blog"
  *               image:
  *                 type: string
- *                 example: "https://example.com/image.jpg"
+ *                 example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *               contact:
  *                 type: string
  *                 example: "contact@example.com"
@@ -131,7 +131,7 @@ const Router = express.Router();
  *                       example: "Content of the general blog"
  *                     image:
  *                       type: string
- *                       example: "https://example.com/image.jpg"
+ *                       example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *                     contact:
  *                       type: string
  *                       example: "contact@example.com"
@@ -182,7 +182,7 @@ const Router = express.Router();
  *                       example: "General blog content"
  *                     image:
  *                       type: string
- *                       example: "https://example.com/img.jpg"
+ *                       example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *                     contact:
  *                       type: string
  *                       example: "contact@example.com"
@@ -237,7 +237,7 @@ const Router = express.Router();
  *                 example: "Updated content of the general blog"
  *               image:
  *                 type: string
- *                 example: "https://example.com/updated-image.jpg"
+ *                 example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *               contact:
  *                 type: string
  *                 example: "updated-contact@example.com"
@@ -269,7 +269,7 @@ const Router = express.Router();
  *                       example: "Updated content"
  *                     image:
  *                       type: string
- *                       example: "https://example.com/updated-image.jpg"
+ *                       example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *                     contact:
  *                       type: string
  *                       example: "updated-contact@example.com"
