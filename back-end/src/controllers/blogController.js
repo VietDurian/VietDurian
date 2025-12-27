@@ -3,8 +3,12 @@ import { blogService } from '@/services/blogService';
 // Get blogs knownledge
 const getKnowledgeBlogs = async (req, res, next) => {
 	try {
-		const { search, sort } = req.query;
-		const blogs = await blogService.getKnowledgeBlogs({ search, sort });
+		const { search, sort, author_id } = req.query;
+		const blogs = await blogService.getKnowledgeBlogs({
+			search,
+			sort,
+			author_id,
+		});
 		res.status(200).json({
 			code: 200,
 			message: 'Knowledge blogs retrieved successfully',

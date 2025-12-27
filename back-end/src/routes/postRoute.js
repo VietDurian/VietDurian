@@ -31,6 +31,11 @@ const Router = express.Router();
  *         schema:
  *           type: string
  *         description: Search by content
+ *       - in: query
+ *         name: author_id
+ *         schema:
+ *           type: string
+ *         description: Filter by author ID
  *     responses:
  *       200:
  *         description: A list of general blogs

@@ -37,7 +37,7 @@ const createGeneralPost = async ({
 };
 
 // Get general posts
-const getGeneralPost = async ({ status, category, search }) => {
+const getGeneralPost = async ({ status, category, search, author_id }) => {
 	try {
 		const query = {};
 
@@ -51,6 +51,10 @@ const getGeneralPost = async ({ status, category, search }) => {
 
 		if (search) {
 			query.content = { $regex: search, $options: 'i' };
+		}
+
+		if (author_id) {
+			query.author_id = author_id;
 		}
 
 		const posts = await GeneralPostModel.find(query).lean();
@@ -96,26 +100,26 @@ const deleteGeneralPost = async (post_id) => {
 
 // Approve a general post
 const approveGeneralPost = async (post_id) => {
-    try {
-        const updatedPost = await GeneralPostModel.findByIdAndUpdate(
-            post_id,
-            { status: 'active' },
-            { new: true }
-        );
-        return updatedPost;
-    } catch (error) {
-        throw error;
-    }
-}
+	try {
+		const updatedPost = await GeneralPostModel.findByIdAndUpdate(
+			post_id,
+			{ status: 'active' },
+			{ new: true }
+		);
+		return updatedPost;
+	} catch (error) {
+		throw error;
+	}
+};
 
 // Get general post details
 const getGeneralPostDetails = async (post_id) => {
-    try {
-        const post = await GeneralPostModel.findById(post_id).lean();
-        return post;
-    } catch (error) {
-        throw error;
-    }
+	try {
+		const post = await GeneralPostModel.findById(post_id).lean();
+		return post;
+	} catch (error) {
+		throw error;
+	}
 };
 
 export const postService = {
@@ -123,6 +127,6 @@ export const postService = {
 	getGeneralPost,
 	updateGeneralPost,
 	deleteGeneralPost,
-    approveGeneralPost,
-    getGeneralPostDetails
+	approveGeneralPost,
+	getGeneralPostDetails,
 };
