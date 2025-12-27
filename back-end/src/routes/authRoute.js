@@ -189,7 +189,7 @@ const Router = express.Router();
 
 /**
  * @swagger
- * /api/auth/logout:
+ * /auth/logout:
  *   post:
  *     summary: Logout
  *     description: Logout user and blacklist current token
@@ -219,7 +219,7 @@ const Router = express.Router();
 
 /**
  * @swagger
- * /api/auth/forgot-password:
+ * /auth/forgot-password:
  *   post:
  *     summary: Forgot Password
  *     description: Send password reset link to user email
@@ -268,7 +268,7 @@ const Router = express.Router();
 
 /**
  * @swagger
- * /api/auth/reset-password/{token}:
+ * /auth/reset-password/{token}:
  *   post:
  *     summary: Reset Password
  *     description: Reset user password with valid reset token
