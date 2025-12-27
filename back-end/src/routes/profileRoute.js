@@ -116,15 +116,15 @@ const Router = express.Router();
 
 /**
  * @swagger
- * /profile/public/{userId}:
+ * /profile/public:
  *   get:
  *     summary: Get public profile of a user
- *     description: Retrieve the public profile information of another user (accessible without authentication)
+ *     description: Retrieve the public profile information of another user
  *     tags:
  *       - Profile
  *     parameters:
- *       - in: path
- *         name: userId
+ *       - in: query
+ *         name: user_id
  *         required: true
  *         schema:
  *           type: string
@@ -133,38 +133,6 @@ const Router = express.Router();
  *     responses:
  *       200:
  *         description: Public profile retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 200
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Public profile retrieved successfully"
- *                 data:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     full_name:
- *                       type: string
- *                     avatar:
- *                       type: string
- *                     phone:
- *                       type: string
- *                     email:
- *                       type: string
- *                     role:
- *                       type: string
- *                     created_at:
- *                       type: string
- *                       format: date-time
  *       400:
  *         description: User ID is required
  *       404:
@@ -172,6 +140,5 @@ const Router = express.Router();
  */
 Router.get("/me", authMiddleware.protect, profileController.getProfile);
 Router.put("/update", authMiddleware.protect, profileController.updateProfile);
-Router.get("/public/:userId", profileController.getPublicProfile);
-
+Router.get("/public", profileController.getPublicProfile);
 export const profileRoute = Router;
