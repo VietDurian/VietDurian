@@ -46,11 +46,14 @@ const createKnowledgeBlock = async ({ blog_id, title, content, image }) => {
 };
 
 // Get knowledge blogs
-const getKnowledgeBlogs = async ({ search, sort }) => {
+const getKnowledgeBlogs = async ({ search, sort, author_id }) => {
 	try {
 		const query = {};
 		if (search) {
 			query.title = { $regex: search, $options: 'i' };
+		}
+		if (author_id) {
+			query.author_id = author_id;
 		}
 
 		let sortOption = {};

@@ -27,6 +27,11 @@ const Router = express.Router();
  *           type: string
  *           enum: [newest, oldest]
  *         description: Sort by creation time
+ *       - in: query
+ *         name: author_id
+ *         schema:
+ *           type: string
+ *         description: Filter by author ID
  *     responses:
  *       200:
  *         description: A list of knowledge blogs
