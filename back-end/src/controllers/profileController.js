@@ -63,13 +63,13 @@ const updateProfile = async (req, res, next) => {
 
 const getPublicProfile = async (req, res, next) => {
   try {
-    const { userId } = req.params;
+    const { user_id } = req.query;
 
-    if (!userId) {
+    if (!user_id) {
       throw createError(400, "User ID is required");
     }
 
-    const publicProfile = await profileService.getPublicProfile(userId);
+    const publicProfile = await profileService.getPublicProfile(user_id);
 
     res.status(200).json({
       code: 200,
