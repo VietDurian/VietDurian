@@ -717,13 +717,13 @@ export default function GuidePage() {
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/90 via-emerald-800/70 to-transparent"></div>
                 </div>
 
-                <div className="relative max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
+                <div className="relative max-w-7xl mx-auto px-4 h-full flex flex-col justify-center items-center text-center">
                     <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4 leading-tight max-w-2xl">
                         Quy Trình Kỹ Thuật <br />
                         <span className="text-lime-400">Trồng Sầu Riêng VietGAP</span>
                     </h1>
-                    <p className="text-emerald-100 text-lg max-w-xl">
-                        Hướng dẫn chi tiết từ khâu chọn đất, con giống đến thu hoạch và truy xuất nguồn gốc theo tiêu chuẩn TCVN 11892-1:2017.
+                    <p className="text-emerald-100 text-lg max-w-3xl">
+                        Hướng dẫn chi tiết từ khâu chọn đất, con giống đến thu hoạch và truy xuất nguồn gốc.
                     </p>
                 </div>
             </div>
