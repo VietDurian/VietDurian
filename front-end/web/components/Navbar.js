@@ -59,11 +59,10 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
-        isScrolled
-          ? "bg-white/80 backdrop-blur-md shadow-sm py-3"
-          : "bg-white py-4"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${isScrolled
+        ? "bg-white/80 backdrop-blur-md shadow-sm py-3"
+        : "bg-white py-4"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-full">
@@ -84,11 +83,10 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`px-3 py-2 rounded-md text-sm transition-colors duration-200 ${
-                    pathname === link.href
-                      ? "text-emerald-700 font-bold"
-                      : "text-gray-600 hover:text-emerald-600"
-                  }`}
+                  className={`px-3 py-2 rounded-md text-sm transition-colors duration-200 ${pathname === link.href
+                    ? "text-emerald-700 font-bold"
+                    : "text-gray-600 hover:text-emerald-600"
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -194,9 +192,8 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       <div
-        className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${
-          isOpen ? " opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? " opacity-100" : "max-h-0 opacity-0"
+          }`}
         id="mobile-menu"
       >
         <div className="px-4 pt-4 pb-2 bg-white border-t border-gray-100">
@@ -206,11 +203,10 @@ export default function Navbar() {
                 key={link.label}
                 href={link.href}
                 onClick={closeMenu}
-                className={` hover:bg-gray-50 block px-3 py-2.5 rounded-md text-base  transition-all ${
-                  pathname === link.href
-                    ? "text-emerald-700 font-bold"
-                    : "text-gray-600 hover:text-emerald-600"
-                }`}
+                className={` hover:bg-gray-50 block px-3 py-2.5 rounded-md text-base  transition-all ${pathname === link.href
+                  ? "text-emerald-700 font-bold"
+                  : "text-gray-600 hover:text-emerald-600"
+                  }`}
               >
                 {link.label}
               </Link>
