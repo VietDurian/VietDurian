@@ -3,8 +3,6 @@ import React, { useState, useEffect } from "react";
 import {
   Menu,
   X,
-  Rocket,
-  Search,
   ShoppingBag,
   ChevronDown,
   ChevronUp,
@@ -18,7 +16,6 @@ import Image from "next/image";
 
 export default function Navbar() {
   const pathname = usePathname();
-
   const NAV_LINKS = [
     { label: "Trang Chủ", href: "/" },
     { label: "Hướng Dẫn", href: "/guide" },
@@ -30,6 +27,18 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
+  const [authToken, setAuthToken] = useState(null);
+
+  // Fetch local storage
+  useEffect(() => {
+    try {
+      const storedToken = localStorage.getItem("auth_token");
+      const storedUser = localStorage.getItem("auth_user");
+      if (storedToken) setAuthToken(storedToken);
+      if (storedUser) setAuthUser(JSON.parse(storedUser));
+    } catch (error) {}
+  }, []);
 
   // Handle scroll effect for glassmorphism
   useEffect(() => {
@@ -45,24 +54,36 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Open menu when on mobile
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
+  // Close menu when on mobile
   const closeMenu = () => {
     setIsOpen(false);
   };
 
+  // Open profile dropdown
   const toggleOpenProfile = () => {
     setOpenProfile(!openProfile);
   };
 
+  // Handle Logout
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_user");
+    setAuthUser(null);
+    setAuthToken(null);
+  };
+
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${isScrolled
-        ? "bg-white/80 backdrop-blur-md shadow-sm py-3"
-        : "bg-white py-4"
-        }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
+        isScrolled
+          ? "bg-white/80 backdrop-blur-md shadow-sm py-3"
+          : "bg-white py-4"
+      }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-full">
@@ -83,10 +104,11 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`px-3 py-2 rounded-md text-sm transition-colors duration-200 ${pathname === link.href
-                    ? "text-emerald-700 font-bold"
-                    : "text-gray-600 hover:text-emerald-600"
-                    }`}
+                  className={`px-3 py-2 rounded-md text-sm transition-colors duration-200 ${
+                    pathname === link.href
+                      ? "text-emerald-700 font-bold"
+                      : "text-gray-600 hover:text-emerald-600"
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -96,34 +118,12 @@ export default function Navbar() {
           {/* Right Side */}
           <div className="relative hidden md:flex items-center gap-5">
             <ShoppingBag className="hover:text-emerald-600" />
-            <button
-              onClick={toggleOpenProfile}
-              className="flex items-center gap-1 bg-gray-200 hover:bg-gray-300 transition px-1 py-1 rounded-full cursor-pointer"
-            >
-              {/* Avatar */}
-              <div className="relative w-10 h-10 rounded-full overflow-hidden">
-                <Image
-                  src="/images/avatar.jpg"
-                  alt="Profile"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-
-              {/* Chevron */}
-              {openProfile ? (
-                <ChevronUp className="w-5 h-5 text-gray-700" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-700" />
-              )}
-            </button>
-
-            {/* Profile Dropdown */}
-            {openProfile && (
-              <div className="absolute right-0 top-15 w-auto bg-white rounded-2xl border-2 border-gray-200 shadow-xs p-2">
-                <div className="flex items-center gap-2">
-                  {/* Profile Image */}
+            {authToken ? (
+              <>
+                <button
+                  onClick={toggleOpenProfile}
+                  className="flex items-center gap-1 bg-gray-200 hover:bg-gray-300 transition px-1 py-1 rounded-full cursor-pointer"
+                >
                   <div className="relative w-10 h-10 rounded-full overflow-hidden">
                     <Image
                       src="/images/avatar.jpg"
@@ -133,39 +133,74 @@ export default function Navbar() {
                       priority
                     />
                   </div>
-                  {/* Fullname & Email */}
-                  <div>
-                    <p className="font-bold">Nguyen Trong Quy</p>
-                    <p className="text-sm">trongquy131204@gmail.com</p>
-                  </div>
-                  {/* Role */}
-                  <div className="ml-10 bg-emerald-700 px-2 py-1 rounded-full ">
-                    <p className="text-sm text-white">Farmer</p>
-                  </div>
-                </div>
-                {/* Divider */}
-                <div className="my-3 border border-gray-200" />
-                {/* Menu items */}
-                <div className="space-y-1">
-                  <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-900 cursor-pointer">
-                    <User className="w-5 h-5" />
-                    Profile
-                  </button>
+                  {openProfile ? (
+                    <ChevronUp className="w-5 h-5 text-gray-700" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-700" />
+                  )}
+                </button>
 
-                  <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700 cursor-pointer">
-                    <Settings className="w-5 h-5" />
-                    Settings
-                  </button>
-                </div>
-                {/* Divider */}
-                <div className="my-3 border border-gray-200" />
-                {/* Logout */}
-                <div className="space-y-1">
-                  <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-red-50 text-red-500 cursor-pointer">
-                    <LogOutIcon className="w-5 h-5" />
-                    Logout
-                  </button>
-                </div>
+                {openProfile && (
+                  <div className="absolute right-0 top-15 w-auto bg-white rounded-2xl border-2 border-gray-200 shadow-xs p-2">
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                        <Image
+                          src="/images/avatar.jpg"
+                          alt="Profile"
+                          fill
+                          className="object-cover"
+                          priority
+                        />
+                      </div>
+                      <div>
+                        <p className="font-bold text-nowrap">
+                          {authUser.full_name}
+                        </p>
+                        <p className="text-sm text-nowrap">{authUser.email}</p>
+                      </div>
+                      <div className="ml-10 bg-emerald-700 px-2 py-1 rounded-full ">
+                        <p className="text-sm text-white">{authUser.role}</p>
+                      </div>
+                    </div>
+                    <div className="my-3 border border-gray-200" />
+                    <div className="space-y-1">
+                      <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-900 cursor-pointer">
+                        <User className="w-5 h-5" />
+                        Profile
+                      </button>
+
+                      <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700 cursor-pointer">
+                        <Settings className="w-5 h-5" />
+                        Settings
+                      </button>
+                    </div>
+                    <div className="my-3 border border-gray-200" />
+                    <div className="space-y-1">
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-red-50 text-red-500 cursor-pointer"
+                      >
+                        <LogOutIcon className="w-5 h-5" />
+                        Đăng xuất
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/register"
+                  className="px-4 py-2 rounded-full border border-emerald-700 text-emerald-700 font-semibold hover:bg-emerald-50 transition"
+                >
+                  Đăng Ký
+                </Link>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 rounded-full bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition"
+                >
+                  Đăng Nhập
+                </Link>
               </div>
             )}
           </div>
@@ -192,8 +227,9 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       <div
-        className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? " opacity-100" : "max-h-0 opacity-0"
-          }`}
+        className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${
+          isOpen ? " opacity-100" : "max-h-0 opacity-0"
+        }`}
         id="mobile-menu"
       >
         <div className="px-4 pt-4 pb-2 bg-white border-t border-gray-100">
@@ -203,59 +239,75 @@ export default function Navbar() {
                 key={link.label}
                 href={link.href}
                 onClick={closeMenu}
-                className={` hover:bg-gray-50 block px-3 py-2.5 rounded-md text-base  transition-all ${pathname === link.href
-                  ? "text-emerald-700 font-bold"
-                  : "text-gray-600 hover:text-emerald-600"
-                  }`}
+                className={` hover:bg-gray-50 block px-3 py-2.5 rounded-md text-base  transition-all ${
+                  pathname === link.href
+                    ? "text-emerald-700 font-bold"
+                    : "text-gray-600 hover:text-emerald-600"
+                }`}
               >
                 {link.label}
               </Link>
             ))}
 
-            {/* Mobile Profile Section */}
-            <div className="mb-4 rounded-xl border border-gray-200 p-3 overflow-auto">
-              <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
-                  <Image
-                    src="/images/avatar.jpg"
-                    alt="Profile"
-                    fill
-                    className="object-cover"
-                  />
+            {authToken ? (
+              <div className="mb-4 rounded-xl border border-gray-200 p-3 overflow-auto">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
+                    <Image
+                      src="/images/avatar.jpg"
+                      alt="Profile"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">
+                      {authUser.full_name}
+                    </p>
+                    <p className="text-sm text-gray-500">{authUser.email}</p>
+                  </div>
+
+                  <span className="bg-emerald-700 text-white text-xs px-2 py-1 rounded-full">
+                    {authUser.role}
+                  </span>
                 </div>
 
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-900">
-                    Nguyen Trong Quy
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    trongquy131204@gmail.com
-                  </p>
+                <div className="mt-3 space-y-1">
+                  <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-800">
+                    <User className="w-5 h-5" />
+                    Profile
+                  </button>
+
+                  <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-800">
+                    <Settings className="w-5 h-5" />
+                    Settings
+                  </button>
+
+                  <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-red-50 text-red-500">
+                    <LogOutIcon className="w-5 h-5" />
+                    Logout
+                  </button>
                 </div>
-
-                <span className="bg-emerald-700 text-white text-xs px-2 py-1 rounded-full">
-                  Farmer
-                </span>
               </div>
-
-              {/* Actions */}
-              <div className="mt-3 space-y-1">
-                <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-800">
-                  <User className="w-5 h-5" />
-                  Profile
-                </button>
-
-                <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-800">
-                  <Settings className="w-5 h-5" />
-                  Settings
-                </button>
-
-                <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-red-50 text-red-500">
-                  <LogOutIcon className="w-5 h-5" />
-                  Logout
-                </button>
+            ) : (
+              <div className="mt-4 flex gap-3">
+                <Link
+                  href="/register"
+                  onClick={closeMenu}
+                  className="flex-1 text-center px-4 py-2 rounded-full border border-emerald-700 text-emerald-700 font-semibold hover:bg-emerald-50 transition"
+                >
+                  Đăng Ký
+                </Link>
+                <Link
+                  href="/login"
+                  onClick={closeMenu}
+                  className="flex-1 text-center px-4 py-2 rounded-full bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition"
+                >
+                  Đăng Nhập
+                </Link>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
