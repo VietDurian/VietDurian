@@ -1,0 +1,317 @@
+"use client";
+import React, { useState } from "react";
+import {
+  Mail,
+  Lock,
+  EyeOff,
+  Eye,
+  User,
+  Phone,
+  Briefcase,
+  Leaf,
+  Wrench,
+  PenSquare,
+  ChevronLeft,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Notification from "@/components/Notification";
+
+export default function RegisterPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
+  const [step, setStep] = useState(1); // 1: info entry, 2: role selection
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
+
+  const ROLES = [
+    { key: "trader", label: "Trader", icon: Briefcase },
+    { key: "farmer", label: "Farmer", icon: Leaf },
+    { key: "service_provider", label: "Service Provider", icon: Wrench },
+    { key: "content_expert", label: "Content Expert", icon: PenSquare },
+  ];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+    if (step === 1) {
+      setStep(2);
+      return;
+    }
+
+    if (!selectedRole) {
+      setError("Vui lòng chọn vai trò.");
+      return;
+    }
+
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: fullName,
+          email,
+          password,
+          phone,
+          role: selectedRole,
+        }),
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+      const isJson = contentType.includes("application/json");
+      const data = isJson ? await res.json() : null;
+      const fallbackText = !isJson ? await res.text() : "";
+
+      if (!res.ok || !data?.success) {
+        if (!isJson) {
+          throw new Error(
+            "Máy chủ trả về phản hồi không hợp lệ. Kiểm tra lại API và thử lại."
+          );
+        }
+        throw new Error(data?.message || "Đăng ký thất bại");
+      }
+
+      const token = data?.data?.token;
+      const user = data?.data?.user;
+
+      if (token) {
+        localStorage.setItem("auth_token", token);
+      }
+      if (user) {
+        localStorage.setItem("auth_user", JSON.stringify(user));
+      }
+
+      router.push("/");
+    } catch (err) {
+      setError(err?.message || "Có lỗi xảy ra, vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen font-sans bg-white">
+      {/* Logo */}
+      <Link
+        href={"/"}
+        className="absolute top-5 left-5 items-center gap-2 mb-16"
+      >
+        <Image
+          src={"/images/VietDurian-logo.png"}
+          width={100}
+          height={50}
+          alt="logo"
+        />
+      </Link>
+      {/* LEFT SECTION: Login Form */}
+      <div className="w-full lg:w-[45%] flex flex-col mt-10 lg:mt-0 p-8 md:p-8 lg:pt-20 items-center lg:pb-0">
+        <div className="max-w-md w-full mx-auto lg:mx-0">
+          <h1 className="text-3xl font-semibold text-gray-900 mb-3">Đăng Ký</h1>
+          <p className="text-gray-500 text-sm mb-10 leading-relaxed">
+            Hệ thống sầu riêng uy tín, chất lượng Việt Nam
+          </p>
+
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            {step === 1 && (
+              <>
+                {/* Fullname */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Họ Tên
+                  </label>
+                  <div className="relative">
+                    <User
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-700"
+                      size={18}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Nhập họ và tên"
+                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Email
+                  </label>
+                  <div className="relative">
+                    <Mail
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-700"
+                      size={18}
+                    />
+                    <input
+                      type="email"
+                      placeholder="Nhập email"
+                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                {/* Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Mật Khẩu
+                  </label>
+                  <div className="relative">
+                    <Lock
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-700"
+                      size={18}
+                    />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Nhập mật khẩu"
+                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      aria-label={
+                        showPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"
+                      }
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                    </button>
+                  </div>
+                </div>
+                {/* Phone Number */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Số điện thoại
+                  </label>
+                  <div className="relative">
+                    <Phone
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-700"
+                      size={18}
+                    />
+                    <input
+                      type="tel"
+                      placeholder="Nhập số điện thoại"
+                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-semibold text-gray-900">
+                    Chọn vai trò
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="flex items-center text-sm text-teal-800 font-medium hover:underline cursor-pointer"
+                  >
+                    <ChevronLeft size={24} />
+                    Trở lại
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {ROLES.map((role) => {
+                    const Icon = role.icon;
+                    const active = selectedRole === role.key;
+                    return (
+                      <button
+                        key={role.key}
+                        type="button"
+                        onClick={() => setSelectedRole(role.key)}
+                        className={`flex flex-col items-center gap-2 border rounded-xl p-4 text-sm font-semibold transition-all shadow-sm hover:-translate-y-[2px] cursor-pointer ${
+                          active
+                            ? "border-emerald-700 bg-emerald-50 text-emerald-800"
+                            : "border-gray-200 bg-white text-gray-800"
+                        }`}
+                      >
+                        <div
+                          className={`h-12 w-12 rounded-xl flex items-center justify-center ${
+                            active ? "bg-emerald-100" : "bg-gray-100"
+                          }`}
+                        >
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        <span>{role.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <Notification
+                type="error"
+                title="Đăng ký thất bại"
+                message={error}
+                onClose={() => setError("")}
+              />
+            )}
+
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={loading || (step === 2 && !selectedRole)}
+                className={`flex-1 bg-[#04543D] text-white py-3.5 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+              >
+                {loading ? (
+                  <>
+                    <span className="inline-block h-5 w-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                    <span>Đang đăng ký...</span>
+                  </>
+                ) : step === 1 ? (
+                  "Tiếp tục"
+                ) : (
+                  "Đăng Ký"
+                )}
+              </button>
+            </div>
+          </form>
+
+          <p className="mt-8 text-center text-sm text-gray-600">
+            Đã có tài khoản?{" "}
+            <Link
+              href={"/login"}
+              className="text-teal-800 font-bold hover:underline"
+            >
+              Đăng nhập
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      {/* RIGHT SECTION: Branding & Testimonial */}
+      <div className="hidden m-5 rounded-2xl lg:flex w-[55%] bg-[#04543D] relative overflow-hidden flex-col justify-center px-16 xl:px-24">
+        <Image
+          src={"/images/Durian-login.jpg"}
+          fill
+          alt="Login page image"
+          className="object-cover"
+        />
+      </div>
+    </div>
+  );
+}
