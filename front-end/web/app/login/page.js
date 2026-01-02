@@ -3,9 +3,54 @@ import React, { useState } from "react";
 import { Mail, Lock, EyeOff, Eye } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Notification from "@/components/Notification";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.message || "Đăng nhập thất bại");
+      }
+
+      const token = data?.data?.token;
+      const user = data?.data?.user;
+
+      if (token) {
+        localStorage.setItem("auth_token", token);
+      }
+      if (user) {
+        localStorage.setItem("auth_user", JSON.stringify(user));
+      }
+
+      router.push("/");
+    } catch (err) {
+      setError(err?.message || "Có lỗi xảy ra, vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen font-sans bg-white">
@@ -31,7 +76,7 @@ export default function LoginPage() {
             Hệ thống sầu riêng uy tín, chất lượng Việt Nam
           </p>
 
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Email
@@ -45,6 +90,9 @@ export default function LoginPage() {
                   type="email"
                   placeholder="Nhập email"
                   className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -62,6 +110,9 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Nhập mật khẩu"
                   className="w-full border border-gray-200 rounded-lg pl-10 pr-10 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
                 <button
                   type="button"
@@ -85,8 +136,28 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            <button className="w-full bg-[#04543D] text-white py-3.5 rounded-lg transition-colors shadow-sm cursor-pointer">
-              Đăng Nhập
+            {error && (
+              <Notification
+                type="error"
+                title="Đăng nhập thất bại"
+                message={error}
+                onClose={() => setError("")}
+              />
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#04543D] text-white py-3.5 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <span className="inline-block h-5 w-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                  <span>Đang đăng nhập...</span>
+                </>
+              ) : (
+                "Đăng Nhập"
+              )}
             </button>
           </form>
 
@@ -128,12 +199,12 @@ export default function LoginPage() {
       </div>
 
       {/* RIGHT SECTION: Branding & Testimonial */}
-      <div className="hidden m-5 rounded-2xl lg:flex w-[55%] bg-[#04543D] relative overflow-hidden flex-col justify-center px-16 xl:px-24">
+      <div className="z-1 hidden m-5 rounded-2xl lg:flex w-[55%] bg-[#04543D] relative overflow-hidden flex-col justify-center px-16 xl:px-24">
         <Image
-          src={"/images/Durian-login.jpg"}
+          src={"/images/1767343747.png"}
           fill
           alt="Login page image"
-          className="object-cover"
+          className="object-cover z-0"
         />
       </div>
     </div>
