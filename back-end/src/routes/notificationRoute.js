@@ -105,46 +105,6 @@ Router.get(
 /**
  * @swagger
  * /notification/{id}:
- *   get:
- *     summary: Get notification details
- *     tags: [notifications]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: string
- *         required: true
- *         description: Notification ID
- *     responses:
- *       200:
- *         description: Notification details
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: integer
- *                 message:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/notification'
- *       404:
- *         description: Notification not found
- *       500:
- *         description: Internal server error
- */
-Router.get(
-	'/:id',
-	authMiddleware.protect,
-	notificationController.getNotification
-);
-
-/**
- * @swagger
- * /notification/{id}:
  *   delete:
  *     summary: Delete a notification
  *     tags: [notifications]

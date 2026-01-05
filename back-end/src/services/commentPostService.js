@@ -50,14 +50,19 @@ const createComment = async (payload) => {
 
 			// 1. Notify Post Owner
 			const post = await GeneralPostModel.findById(post_id);
-			if (post && post.author_id.toString() !== userId.toString()) {
-				await notificationService.createNotification({
-					receiver_id: post.author_id,
-					sender_id: userId,
-					entity_type: 'comment',
-					post_id: post_id,
-					message: `${senderName} commented on your post.`,
-				});
+
+			if (post) {
+				if (post.author_id.toString() !== userId.toString()) {
+					await notificationService.createNotification({
+						receiver_id: post.author_id,
+						sender_id: userId,
+						entity_type: 'comment',
+						post_id: post_id,
+						message: `${senderName} commented on your post.`,
+					});
+				} else {
+					console.log('Sender is the post owner. No notification.');
+				}
 			}
 
 			// 2. Notify Parent Comment Owner (if reply)
