@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import axios from "axios";
 import {
   Mail,
   Lock,
@@ -27,7 +28,9 @@ export default function RegisterPage() {
   const [selectedRole, setSelectedRole] = useState("");
   const [step, setStep] = useState(1); // 1: info entry, 2: role selection
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [notificationSuccessMessage, setNotificationSuccessMessage] =
+    useState("");
+  const [notificationErrorMessage, setNotificationErrorMessage] = useState("");
   const router = useRouter();
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
@@ -48,52 +51,29 @@ export default function RegisterPage() {
     }
 
     if (!selectedRole) {
-      setError("Vui lòng chọn vai trò.");
+      setNotificationSuccessMessage("Vui lòng chọn vai trò.");
       return;
     }
 
-    setError("");
+    setNotificationSuccessMessage("");
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          full_name: fullName,
-          email,
-          password,
-          phone,
-          role: selectedRole,
-        }),
+      const res = await axios.post(`${API_BASE}/auth/register`, {
+        full_name: fullName,
+        email,
+        password,
+        phone,
+        role: selectedRole,
       });
 
-      const contentType = res.headers.get("content-type") || "";
-      const isJson = contentType.includes("application/json");
-      const data = isJson ? await res.json() : null;
-      const fallbackText = !isJson ? await res.text() : "";
-
-      if (!res.ok || !data?.success) {
-        if (!isJson) {
-          throw new Error(
-            "Máy chủ trả về phản hồi không hợp lệ. Kiểm tra lại API và thử lại."
-          );
-        }
-        throw new Error(data?.message || "Đăng ký thất bại");
-      }
-
-      const token = data?.data?.token;
-      const user = data?.data?.user;
-
-      if (token) {
-        localStorage.setItem("auth_token", token);
-      }
-      if (user) {
-        localStorage.setItem("auth_user", JSON.stringify(user));
-      }
-
-      router.push("/");
+      setNotificationSuccessMessage(
+        "Đăng ký thành công, kiểm tra mail cho mã OTP"
+      );
+      router.push("/verify-email");
     } catch (err) {
-      setError(err?.message || "Có lỗi xảy ra, vui lòng thử lại.");
+      setNotificationErrorMessage(
+        err?.message || "Có lỗi xảy ra, vui lòng thử lại."
+      );
     } finally {
       setLoading(false);
     }
@@ -262,12 +242,21 @@ export default function RegisterPage() {
               </div>
             )}
 
-            {error && (
+            {notificationSuccessMessage && (
+              <Notification
+                type="success"
+                title="Đăng ký thành công"
+                message={notificationSuccessMessage}
+                onClose={() => setNotificationSuccessMessage("")}
+              />
+            )}
+
+            {notificationErrorMessage && (
               <Notification
                 type="error"
-                title="Đăng ký thất bại"
-                message={error}
-                onClose={() => setError("")}
+                title={"Đăng ký thất bại"}
+                message={notificationErrorMessage}
+                onClose={() => setNotifictionErrorMessage("")}
               />
             )}
 
