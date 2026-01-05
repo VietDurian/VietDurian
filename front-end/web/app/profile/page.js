@@ -47,7 +47,7 @@ const ProfileCard = () => {
 const Tabs = () => {
   const [activeTab, setActiveTab] = useState("Posts");
 
-  const TABS = ["Posts", "About", "Friends"];
+  const TABS = ["Posts", "Blogs", "Friends"];
   return (
     <div className="w-full bg-white border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-6">
@@ -293,7 +293,6 @@ export default function ProfilePage() {
       shares: 7,
     },
   ];
-
   return (
     <div>
       <Navbar />

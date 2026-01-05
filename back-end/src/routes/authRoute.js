@@ -222,7 +222,7 @@ const Router = express.Router();
  * /auth/forgot-password:
  *   post:
  *     summary: Forgot Password
- *     description: Send password reset link to user email
+ *     description: Send OTP to user's email for password reset
  *     tags:
  *       - Authentication
  *     requestBody:
@@ -240,7 +240,7 @@ const Router = express.Router();
  *                 example: "user@example.com"
  *     responses:
  *       200:
- *         description: Reset link sent to email
+ *         description: OTP sent to email (if the email exists)
  *         content:
  *           application/json:
  *             schema:
@@ -251,13 +251,7 @@ const Router = express.Router();
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Reset link sent to your email"
- *                 data:
- *                   type: object
- *                   properties:
- *                     email:
- *                       type: string
- *                       example: "user@example.com"
+ *                   example: "OTP sent to your email if it exists"
  *       400:
  *         description: Email is required
  *       404:
@@ -265,7 +259,49 @@ const Router = express.Router();
  *       500:
  *         description: Server error
  */
-
+/**
+ * @swagger
+ * /auth/verify-reset-otp:
+ *   post:
+ *     summary: Verify reset OTP
+ *     description: Verify OTP sent to email for password reset and return a short-lived reset token
+ *     tags:
+ *       - Authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "user@example.com"
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: OTP verified; reset token issued
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 resetToken:
+ *                   type: string
+ *       400:
+ *         description: Invalid or expired OTP
+ *       404:
+ *         description: Email not found
+ */
 /**
  * @swagger
  * /auth/reset-password/{token}:
@@ -436,13 +472,19 @@ const Router = express.Router();
  *         description: Server error
  */
 
+// Register new user
 Router.post("/register", authController.register);
 Router.post("/verify-email", authController.verifyEmail);
+// Login
 Router.post("/login", authController.login);
 Router.post("/logout", authMiddleware.protect, authController.logout);
+// Forgot password and reset password
 Router.post("/forgot-password", authController.forgotPassword);
+Router.post("/verify-reset-otp", authController.verifyResetOtp);
 Router.post("/reset-password/:token", authController.resetPassword);
+// Google login
 Router.post("/google-login", authController.googleLogin);
+//change password
 Router.post(
   "/change-password",
   authMiddleware.protect,

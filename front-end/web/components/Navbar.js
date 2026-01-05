@@ -86,7 +86,7 @@ export default function Navbar() {
       }`}
     >
       <div className="mx-auto px-4 sm:px-6 lg:px-5">
-        <div className="flex items-center justify-between h-full">
+        <div className="flex items-center h-full">
           {/* Logo Section */}
           <Link href={"/"}>
             <Image
@@ -98,7 +98,7 @@ export default function Navbar() {
             />
           </Link>
           {/* Desktop Navigation Links & Search */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-8 flex-1 justify-center">
             <div className="flex items-baseline space-x-6">
               {NAV_LINKS.map((link) => (
                 <Link
@@ -307,7 +307,7 @@ export default function Navbar() {
               <Link
                 href="/register"
                 onClick={closeMenu}
-                className="flex-1 text-center px-4 py-2 rounded-full border border-emerald-700 text-emerald-700 font-semibold hover:bg-emerald-50 transition"
+                className="flex-1 text-center rounded-full border border-emerald-700 text-emerald-700 font-semibold hover:bg-emerald-50 transition"
               >
                 Đăng Ký
               </Link>

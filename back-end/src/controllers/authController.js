@@ -25,7 +25,6 @@ const register = async (req, res, next) => {
       message: "User registered successfully. Please verify your email.",
       data: {
         user: result.user,
-        otp: result.otp,
       },
     });
   } catch (error) {
@@ -112,14 +111,27 @@ const forgotPassword = async (req, res, next) => {
       throw createError(400, "Please provide email");
     }
 
-    const result = await authService.forgotPassword(email);
+    await authService.forgotPassword(email);
 
     res.status(200).json({
       success: true,
-      message: "Reset link sent to your email",
-      data: {
-        email: result.email,
-      },
+      message: "OTP sent to your email if it exists",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const verifyResetOtp = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) throw createError(400, "Please provide email and otp");
+
+    const { resetToken } = await authService.verifyResetOtp(email, otp);
+
+    res.status(200).json({
+      success: true,
+      resetToken,
     });
   } catch (error) {
     next(error);
@@ -129,17 +141,19 @@ const forgotPassword = async (req, res, next) => {
 const resetPassword = async (req, res, next) => {
   try {
     const { newPassword, confirmPassword } = req.body;
-    const user = req.user; // From reset token middleware
+    const token = req.params.token || req.body.token;
 
+    if (!token) {
+      throw createError(400, "Missing reset token");
+    }
     if (!newPassword || !confirmPassword) {
       throw createError(400, "Please provide newPassword and confirmPassword");
     }
-
     if (newPassword !== confirmPassword) {
       throw createError(400, "Passwords do not match");
     }
 
-    const result = await authService.resetPassword(user, newPassword);
+    const result = await authService.resetPasswordWithToken(token, newPassword);
 
     res.status(200).json({
       success: true,
@@ -197,6 +211,7 @@ export const authController = {
   login,
   logout,
   forgotPassword,
+  verifyResetOtp,
   resetPassword,
   googleLogin,
   changePassword,
@@ -209,82 +224,7 @@ module.exports.verifyEmail = verifyEmail;
 module.exports.login = login;
 module.exports.logout = logout;
 module.exports.forgotPassword = forgotPassword;
+module.exports.verifyResetOtp = verifyResetOtp;
 module.exports.resetPassword = resetPassword;
 module.exports.googleLogin = googleLogin;
 module.exports.changePassword = changePassword;
-
-// const getCurrentUser = async (req, res, next) => {
-//   try {
-//     const userId = req.user._id;
-
-//     const user = await authService.getCurrentUser(userId);
-
-//     res.status(200).json({
-//       success: true,
-//       message: "User retrieved successfully",
-//       data: {
-//         user,
-//       },
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// const changePassword = async (req, res, next) => {
-//   try {
-//     const userId = req.user._id;
-//     const { currentPassword, newPassword, confirmPassword } = req.body;
-
-//     if (!currentPassword || !newPassword || !confirmPassword) {
-//       throw createError(
-//         400,
-//         "Please provide currentPassword, newPassword and confirmPassword"
-//       );
-//     }
-
-//     if (newPassword !== confirmPassword) {
-//       throw createError(400, "Passwords do not match");
-//     }
-
-//     await authService.changePassword(userId, currentPassword, newPassword);
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Password changed successfully",
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// const googleLogin = async (req, res, next) => {
-//   try {
-//     const { token } = req.body;
-
-//     if (!token) {
-//       throw createError(400, "Please provide Google token");
-//     }
-
-//     const result = await authService.googleLogin(token);
-
-//     // Set token in httpOnly cookie
-//     res.cookie("token", result.token, {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === "production",
-//       sameSite: "strict",
-//       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-//     });
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Google login successful",
-//       data: {
-//         user: result.user,
-//         token: result.token,
-//       },
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };

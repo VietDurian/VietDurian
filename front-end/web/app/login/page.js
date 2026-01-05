@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import axios from "axios";
 import { Mail, Lock, EyeOff, Eye } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -22,20 +23,19 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const res = await axios.post(`${API_BASE}/auth/login`, {
+        email,
+        password,
       });
 
-      const data = await res.json();
+      const data = await res;
 
-      if (!res.ok || !data?.success) {
+      if (!data) {
         throw new Error(data?.message || "Đăng nhập thất bại");
       }
 
-      const token = data?.data?.token;
-      const user = data?.data?.user;
+      const token = data?.data?.data?.token;
+      const user = data?.data?.data?.user;
 
       if (token) {
         localStorage.setItem("auth_token", token);
