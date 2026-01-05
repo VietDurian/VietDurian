@@ -45,7 +45,7 @@ const register = async (userData) => {
 
     // Send OTP via email
     if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
-      await sendVerificationEmail(user.full_name, user.email, otp);
+      await sendVerificationEmail(user.full_name, user.email, otp, "verify");
     } else {
       console.warn("⚠️ Email credentials not configured. OTP: " + otp);
     }
@@ -96,76 +96,69 @@ const verifyEmail = async (email, otp) => {
 const sendVerificationEmail = async (
   name,
   email,
-  otpOrLink,
-  isSendForgot = false
+  otpCode,
+  purpose = "verify", // "verify" | "reset"
+  subjectOverride
 ) => {
   try {
-    // Check if email credentials are configured
     if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
-      console.warn(
-        `⚠️ Email not sent (missing credentials). ${
-          isSendForgot ? "Reset link" : "OTP"
-        }: ${otpOrLink}`
-      );
-      return true; // Don't throw error, just skip email sending
+      console.warn(`⚠️ Email not sent (missing credentials). OTP: ${otpCode}`);
+      return true;
     }
-
-    console.log(
-      `Sending ${isSendForgot ? "reset link" : "OTP"} to email: ${email}`
-    );
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
-      },
+      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS },
     });
 
+    // Try to use template; fallback to inline OTP HTML
+    const templateFile =
+      purpose === "reset" ? "reset-otp.html" : "verify-email.html";
     const templatePath = path.join(
       __dirname,
       "..",
       "views",
       "email-templates",
-      isSendForgot ? "reset-password.html" : "verify-email.html"
+      templateFile
     );
 
     let htmlContent;
     try {
       htmlContent = fs.readFileSync(templatePath, "utf8");
-    } catch (error) {
-      // Fallback HTML if template file is missing
-      htmlContent = isSendForgot
-        ? `
-          <html>
-            <body style="font-family: Arial, sans-serif;">
-              <h2>Password Reset Request</h2>
-              <p>Hello ${name},</p>
-              <p>Please click the link below to reset your password:</p>
-              <p><a href="${otpOrLink}">${otpOrLink}</a></p>
-              <p>This link will expire in 24 hours.</p>
-            </body>
-          </html>
-        `
-        : `
-          <html>
-            <body style="font-family: Arial, sans-serif;">
-              <h2>Email Verification</h2>
-              <p>Hello ${name},</p>
-              <p>Your OTP code is: <strong>${otpOrLink}</strong></p>
-              <p>This code will expire in 10 minutes.</p>
-            </body>
-          </html>
-        `;
+    } catch {
+      htmlContent =
+        purpose === "reset"
+          ? `
+            <html>
+              <body style="font-family: Arial, sans-serif;">
+                <h2>Password Reset OTP</h2>
+                <p>Hello ${name},</p>
+                <p>Your OTP to reset password is: <strong>${otpCode}</strong></p>
+                <p>This code will expire in 10 minutes.</p>
+              </body>
+            </html>
+          `
+          : `
+            <html>
+              <body style="font-family: Arial, sans-serif;">
+                <h2>Email Verification</h2>
+                <p>Hello ${name},</p>
+                <p>Your OTP code is: <strong>${otpCode}</strong></p>
+                <p>This code will expire in 10 minutes.</p>
+              </body>
+            </html>
+          `;
     }
 
     htmlContent = htmlContent.replace(/{{name}}/g, name);
-    htmlContent = htmlContent.replace(/{{otpCode}}/g, otpOrLink);
+    htmlContent = htmlContent.replace(/{{otpCode}}/g, otpCode);
 
     await transporter.sendMail({
       from: process.env.GMAIL_USER || "noreply@vietdurian.com",
       to: email,
-      subject: isSendForgot ? "Reset Your Password" : "Verify Your Email",
+      subject:
+        subjectOverride ??
+        (purpose === "reset" ? "Your Password Reset OTP" : "Verify Your Email"),
       html: htmlContent,
     });
 
@@ -242,22 +235,75 @@ const forgotPassword = async (email) => {
     if (!user) {
       throw createError(404, "No user found with that email");
     }
-    const token = generateToken(user._id);
-    const link = `http://localhost:9999/reset-password?token=${token}`; // Update with your front-end URL
-    await sendVerificationEmail(user.name, email, link, true);
-    return { email };
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiryTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    await OTP.create({
+      user_id: user._id,
+      code: otp,
+      purpose: "forgot_password",
+      expires_at: expiryTime,
+    });
+    await sendVerificationEmail(user.full_name || "User", email, otp, "reset");
+    return { message: "OTP sent to email" };
   } catch (error) {
     throw error;
   }
 };
 
-const resetPassword = async (user, newPassword) => {
+const verifyResetOtp = async (email, otp) => {
   try {
+    const user = await User.findOne({ email });
+    if (!user) throw createError(404, "No user found with that email");
+
+    const otpRecord = await OTP.findOne({
+      user_id: user._id,
+      code: otp,
+      purpose: "forgot_password", // was "reset_password"
+      is_used: false,
+      expires_at: { $gt: new Date() },
+    });
+    if (!otpRecord) throw createError(400, "Invalid or expired OTP");
+
+    otpRecord.is_used = true;
+    await otpRecord.save();
+
+    if (!process.env.JWT_SECRET) {
+      throw createError(500, "Missing JWT_SECRET");
+    }
+    const resetToken = jwt.sign(
+      { uid: user._id.toString(), action: "reset_password" },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    return { resetToken };
+  } catch (error) {
+    throw error;
+  }
+};
+
+const resetPasswordWithToken = async (token, newPassword) => {
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    if (!payload?.uid || payload.action !== "reset_password") {
+      throw createError(400, "Invalid or expired reset token");
+    }
+
+    const user = await User.findById(payload.uid).select("+password");
+    if (!user) {
+      throw createError(404, "User not found");
+    }
     user.password = newPassword;
     await user.save();
     return { message: "Password reset successfully" };
   } catch (error) {
-    throw createError(400, "Invalid or expired reset token");
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError"
+    ) {
+      throw createError(400, "Invalid or expired reset token");
+    }
+    throw error;
   }
 };
 
@@ -315,7 +361,8 @@ export const authService = {
   login,
   logout,
   forgotPassword,
-  resetPassword,
+  resetPasswordWithToken,
+  verifyResetOtp,
   googleLogin,
   changePassword,
 };
