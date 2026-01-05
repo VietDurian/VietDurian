@@ -3,12 +3,25 @@ import { KnowledgeBlockModel } from '@/model/knowledgeBlockModel';
 import { cloudinary } from '@/config/cloudinary.js';
 
 // Create a new knowledge blog
-const createKnowledgeBlog = async ({ author_id, title, content }) => {
+const createKnowledgeBlog = async ({ author_id, title, content, image }) => {
 	try {
+		let imageUrl = '';
+		if (image) {
+			try {
+				const result = await cloudinary.uploader.upload(image, {
+					folder: 'vietdurian',
+				});
+				imageUrl = result.secure_url;
+			} catch (error) {
+				throw new Error('Image upload failed');
+			}
+		}
+
 		const newBlog = new KnowledgeBlogModel({
 			author_id,
 			title,
 			content,
+			image: imageUrl,
 		});
 		const savedBlog = await newBlog.save();
 		return savedBlog;

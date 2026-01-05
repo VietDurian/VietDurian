@@ -49,11 +49,22 @@ const checkOwner = (req, res, next) => {
   next();
 };
 
+// Các role khác ngoại trừ admin nhu trader, serviceProvider, contentExpert, farmer
+const isUser = (req, res, next) => {
+  const nonUserRoles = ["admin"];
+  if (nonUserRoles.includes(req.user.role)) {
+    return next(
+      createError(403, "This action is not allowed for your role")
+    );
+  }
+  next();
+}
 export const authorizationMiddleware = {
   restrictTo,
   isAdmin,
   hasRole,
   checkOwner,
+  isUser,
 };
 
 module.exports = { authorizationMiddleware };
@@ -61,3 +72,4 @@ module.exports.restrictTo = restrictTo;
 module.exports.isAdmin = isAdmin;
 module.exports.hasRole = hasRole;
 module.exports.checkOwner = checkOwner;
+module.exports.isUser = isUser;

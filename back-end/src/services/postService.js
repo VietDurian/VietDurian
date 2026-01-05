@@ -1,5 +1,6 @@
 import { GeneralPostModel } from '@/model/generalPostModel';
 import { cloudinary } from '@/config/cloudinary';
+import { notificationService } from '@/services/notificationService';
 
 // Create a new general post
 const createGeneralPost = async ({
@@ -99,13 +100,32 @@ const deleteGeneralPost = async (post_id) => {
 };
 
 // Approve a general post
-const approveGeneralPost = async (post_id) => {
+const approveGeneralPost = async (post_id, adminId) => {
 	try {
 		const updatedPost = await GeneralPostModel.findByIdAndUpdate(
 			post_id,
 			{ status: 'active' },
 			{ new: true }
 		);
+
+		// Notification Logic
+		if (updatedPost) {
+			try {
+				const receiver_id = updatedPost.author_id;
+				if (receiver_id && receiver_id.toString() !== adminId.toString()) {
+					await notificationService.createNotification({
+						receiver_id: receiver_id,
+						sender_id: adminId,
+						entity_type: 'post_approval',
+						post_id: post_id,
+						message: `Your post has been approved by admin.`,
+					});
+				}
+			} catch (error) {
+				console.error('Notification error:', error);
+			}
+		}
+
 		return updatedPost;
 	} catch (error) {
 		throw error;

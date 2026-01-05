@@ -14,6 +14,8 @@ import { reportPostRoute } from "@/routes/reportPostRoute";
 import { diaryRoute } from "@/routes/diaryRoute";
 import { favoriteRoute } from "@/routes/favoriteRoute";
 import gardenRoute from "@/routes/gardenRoute";
+import { chatRoute } from "@/routes/chatRoute";
+import { notificationRouter } from "@/routes/notificationRoute";
 
 const Router = express.Router();
 
@@ -32,5 +34,7 @@ Router.use("/reaction", reactionCommentRoute);
 Router.use("/diary", diaryRoute);
 Router.use("/favorite", favoriteRoute);
 Router.use("/garden", gardenRoute);
+Router.use("/chat", chatRoute);
+Router.use("/notification", notificationRouter);
 
 export const API_v1 = Router;
