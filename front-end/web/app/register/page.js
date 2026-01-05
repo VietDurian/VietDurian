@@ -51,7 +51,7 @@ export default function RegisterPage() {
     }
 
     if (!selectedRole) {
-      setNotificationSuccessMessage("Vui lòng chọn vai trò.");
+      setNotificationSuccessMessage("Vui lòng chọn vai trò");
       return;
     }
 
