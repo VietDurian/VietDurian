@@ -88,7 +88,9 @@ const deleteGeneralPost = async (req, res, next) => {
 const approveGeneralPost = async (req, res, next) => {
 	try {
 		const { post_id } = req.params;
-		const updatedPost = await postService.approveGeneralPost(post_id);
+		const adminId = req.user._id;
+		const updatedPost = await postService.approveGeneralPost(post_id, adminId);
+
 		res.status(200).json({
 			code: 200,
 			message: 'General blog approved successfully',

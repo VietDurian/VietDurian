@@ -63,6 +63,9 @@ const Router = express.Router();
  *                       author_id:
  *                         type: string
  *                         example: "60d0fe4f5311236168a109cb"
+ *                       image:
+ *                         type: string
+ *                         example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *                       status:
  *                         type: string
  *                         example: "active"
@@ -79,7 +82,7 @@ const Router = express.Router();
  *                               example: "Content of chapter 1"
  *                             image:
  *                               type: string
- *                               example: "https://example.com/img.jpg"
+ *                               example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *   post:
  *     tags: [blog]
  *     security:
@@ -102,6 +105,9 @@ const Router = express.Router();
  *               content:
  *                 type: string
  *                 example: "Introduction to the topic"
+ *               image:
+ *                 type: string
+ *                 example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *               knowledgeBlocks:
  *                 type: array
  *                 items:
@@ -145,6 +151,9 @@ const Router = express.Router();
  *                     author_id:
  *                       type: string
  *                       example: "60d0fe4f5311236168a109cb"
+ *                     image:
+ *                       type: string
+ *                       example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *                     status:
  *                       type: string
  *                       example: "active"
@@ -206,6 +215,9 @@ const Router = express.Router();
  *                     author_id:
  *                       type: string
  *                       example: "60d0fe4f5311236168a109cb"
+ *                     image:
+ *                       type: string
+ *                       example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *                     status:
  *                       type: string
  *                       example: "active"
@@ -226,7 +238,7 @@ const Router = express.Router();
  *                           image:
  *                             type: string
  *                             example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
- * 
+ *
  *   delete:
  *     tags: [blog]
  *     summary: Delete a knowledge blog
@@ -278,6 +290,9 @@ const Router = express.Router();
  *               content:
  *                 type: string
  *                 example: "Updated Blog Content"
+ *               image:
+ *                 type: string
+ *                 example: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg"
  *               status:
  *                 type: string
  *                 example: "active"

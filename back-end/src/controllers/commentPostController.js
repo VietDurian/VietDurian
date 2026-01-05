@@ -15,6 +15,7 @@ const createComment = async (req, res, next) => {
 	try {
 		const payload = { ...req.body, userId: req.user._id };
 		const newComment = await commentService.createComment(payload);
+
 		res.json({
 			code: 201,
 			message: 'Comment created successfully',

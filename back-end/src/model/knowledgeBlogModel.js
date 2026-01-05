@@ -14,6 +14,10 @@ const KnowledgeBlogSchema = new mongoose.Schema(
 			ref: 'users',
 			required: true,
 		},
+		image: {
+			type: String,
+			required: true,
+		},
 		status: {
 			type: String,
 			enum: ['progressing', 'active', 'inactive'],

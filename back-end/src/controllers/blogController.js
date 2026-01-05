@@ -43,13 +43,13 @@ const getKnowledgeBlogDetails = async (req, res, next) => {
 // Create a new knowledge blog
 const createKnowledgeBlog = async (req, res, next) => {
 	try {
-		const { title, content, knowledgeBlocks } = req.body;
+		const { title, content, image, knowledgeBlocks } = req.body;
 
 		// Validate input
-		if (!title || !content) {
+		if (!title || !content || !image) {
 			return res.status(400).json({
 				code: 400,
-				message: 'Title and content are required',
+				message: 'Title, content, and image are required',
 			});
 		}
 
@@ -78,6 +78,7 @@ const createKnowledgeBlog = async (req, res, next) => {
 			author_id,
 			title,
 			content,
+			image,
 		});
 
 		// 2. Create blocks if exist

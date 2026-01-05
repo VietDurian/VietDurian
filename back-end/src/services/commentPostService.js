@@ -1,5 +1,7 @@
 import { CommentPostModel } from '@/model/commentPostModel';
 import UserModel from '@/model/userModel';
+import { GeneralPostModel } from '@/model/generalPostModel';
+import { notificationService } from '@/services/notificationService';
 
 // Get all comments
 const getAllComments = async () => {
@@ -41,6 +43,43 @@ const createComment = async (payload) => {
 		});
 		// Save to database
 		const savedComment = await newComment.save();
+
+		// Notification Logic
+		try {
+			const senderName = user.full_name || 'Someone';
+
+			// 1. Notify Post Owner
+			const post = await GeneralPostModel.findById(post_id);
+			if (post && post.author_id.toString() !== userId.toString()) {
+				await notificationService.createNotification({
+					receiver_id: post.author_id,
+					sender_id: userId,
+					entity_type: 'comment',
+					post_id: post_id,
+					message: `${senderName} commented on your post.`,
+				});
+			}
+
+			// 2. Notify Parent Comment Owner (if reply)
+			if (parent_id) {
+				const parentComment = await CommentPostModel.findById(parent_id);
+				if (
+					parentComment &&
+					parentComment.author_id.toString() !== userId.toString()
+				) {
+					await notificationService.createNotification({
+						receiver_id: parentComment.author_id,
+						sender_id: userId,
+						entity_type: 'reply',
+						post_id: post_id,
+						message: `${senderName} replied to your comment.`,
+					});
+				}
+			}
+		} catch (error) {
+			console.error('Notification error:', error);
+		}
+
 		return savedComment;
 	} catch (error) {
 		throw error;
