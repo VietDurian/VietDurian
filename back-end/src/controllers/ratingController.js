@@ -1,5 +1,4 @@
 import { ratingService } from "@/services/ratingService.js";
-import createError from "http-errors";
 
 // Create a new rating
 const createRating = async (req, res, next) => {
@@ -9,16 +8,25 @@ const createRating = async (req, res, next) => {
 
     // Validate required fields
     if (!productId || !stars) {
-      throw createError(400, "Product ID and stars are required");
+      return res.status(400).json({
+        code: 400,
+        message: "Product ID and stars are required",
+      });
     }
 
     if (!userId) {
-      throw createError(401, "User not authenticated");
+      return res.status(401).json({
+        code: 401,
+        message: "User not authenticated",
+      });
     }
 
     // Validate stars range
     if (stars < 1 || stars > 5 || !Number.isInteger(stars)) {
-      throw createError(400, "Stars must be an integer between 1 and 5");
+      return res.status(400).json({
+        code: 400,
+        message: "Stars must be an integer between 1 and 5",
+      });
     }
 
     const newRating = await ratingService.createRating({
@@ -46,7 +54,10 @@ const getProductRatings = async (req, res, next) => {
     const { page, limit } = req.query;
 
     if (!productId) {
-      throw createError(400, "Product ID is required");
+      return res.status(400).json({
+        code: 400,
+        message: "Product ID is required",
+      });
     }
 
     const result = await ratingService.getProductRatings({
@@ -75,11 +86,17 @@ const getUserProductRating = async (req, res, next) => {
     const userId = req.user?.id || req.user?._id;
 
     if (!productId) {
-      throw createError(400, "Product ID is required");
+      return res.status(400).json({
+        code: 400,
+        message: "Product ID is required",
+      });
     }
 
     if (!userId) {
-      throw createError(401, "User not authenticated");
+      return res.status(401).json({
+        code: 401,
+        message: "User not authenticated",
+      });
     }
 
     const rating = await ratingService.getUserProductRating({
@@ -106,16 +123,25 @@ const updateRating = async (req, res, next) => {
     const userId = req.user?.id || req.user?._id;
 
     if (!ratingId) {
-      throw createError(400, "Rating ID is required");
+      return res.status(400).json({
+        code: 400,
+        message: "Rating ID is required",
+      });
     }
 
     if (!userId) {
-      throw createError(401, "User not authenticated");
+      return res.status(401).json({
+        code: 401,
+        message: "User not authenticated",
+      });
     }
 
     // Validate stars if provided
     if (stars && (stars < 1 || stars > 5 || !Number.isInteger(stars))) {
-      throw createError(400, "Stars must be an integer between 1 and 5");
+      return res.status(400).json({
+        code: 400,
+        message: "Stars must be an integer between 1 and 5",
+      });
     }
 
     const updatedRating = await ratingService.updateRating({
@@ -143,11 +169,17 @@ const deleteRating = async (req, res, next) => {
     const userId = req.user?.id || req.user?._id;
 
     if (!ratingId) {
-      throw createError(400, "Rating ID is required");
+      return res.status(400).json({
+        code: 400,
+        message: "Rating ID is required",
+      });
     }
 
     if (!userId) {
-      throw createError(401, "User not authenticated");
+      return res.status(401).json({
+        code: 401,
+        message: "User not authenticated",
+      });
     }
 
     await ratingService.deleteRating({
@@ -172,7 +204,10 @@ const getUserRatings = async (req, res, next) => {
     const { page, limit } = req.query;
 
     if (!userId) {
-      throw createError(401, "User not authenticated");
+      return res.status(401).json({
+        code: 401,
+        message: "User not authenticated",
+      });
     }
 
     const result = await ratingService.getUserRatings({

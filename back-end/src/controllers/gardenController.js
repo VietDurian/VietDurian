@@ -1,5 +1,4 @@
 import { gardenService } from "@/services/gardenService.js";
-import createError from "http-errors";
 
 // View Map - Get all gardens with coordinates
 const viewMap = async (req, res, next) => {
@@ -23,7 +22,10 @@ const getUserGardens = async (req, res, next) => {
     const userId = req.user?.id || req.user?._id;
 
     if (!userId) {
-      throw createError(401, "User not authenticated");
+      return res.status(401).json({
+        code: 401,
+        message: "User not authenticated",
+      });
     }
 
     const gardens = await gardenService.getGardensByUser(userId);
@@ -45,7 +47,10 @@ const getGardenDetails = async (req, res, next) => {
     const { garden_id } = req.query;
 
     if (!garden_id) {
-      throw createError(400, "Garden ID is required");
+      return res.status(400).json({
+        code: 400,
+        message: "Garden ID is required",
+      });
     }
 
     const garden = await gardenService.getGardenById(garden_id);
@@ -68,7 +73,10 @@ const registerGarden = async (req, res, next) => {
     const gardenData = req.body;
 
     if (!userId) {
-      throw createError(401, "User not authenticated");
+      return res.status(401).json({
+        code: 401,
+        message: "User not authenticated",
+      });
     }
 
     const newGarden = await gardenService.createGarden(userId, gardenData);
@@ -91,7 +99,10 @@ const editGarden = async (req, res, next) => {
     const updateData = req.body;
 
     if (!garden_id) {
-      throw createError(400, "Garden ID is required");
+      return res.status(400).json({
+        code: 400,
+        message: "Garden ID is required",
+      });
     }
 
     // Validate update data
@@ -113,7 +124,10 @@ const editGarden = async (req, res, next) => {
     }
 
     if (Object.keys(filteredData).length === 0) {
-      throw createError(400, "No valid fields provided for update");
+      return res.status(400).json({
+        code: 400,
+        message: "No valid fields provided for update",
+      });
     }
 
     const updatedGarden = await gardenService.updateGarden(
@@ -138,7 +152,10 @@ const deleteGarden = async (req, res, next) => {
     const { garden_id } = req.query;
 
     if (!garden_id) {
-      throw createError(400, "Garden ID is required");
+      return res.status(400).json({
+        code: 400,
+        message: "Garden ID is required",
+      });
     }
 
     const deletedGarden = await gardenService.deleteGarden(garden_id);

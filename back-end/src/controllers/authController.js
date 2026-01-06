@@ -1,6 +1,5 @@
 /** Vo Lam Thuy Vi */
 const { authService } = require("../services/authService");
-const createError = require("http-errors");
 
 const register = async (req, res, next) => {
   try {
@@ -8,7 +7,10 @@ const register = async (req, res, next) => {
 
     // Validation
     if (!full_name || !email || !password) {
-      throw createError(400, "Please provide full_name, email and password");
+      return res.status(400).json({
+        code: 400,
+        message: "Please provide full_name, email and password",
+      });
     }
 
     const result = await authService.register({
@@ -37,7 +39,10 @@ const verifyEmail = async (req, res, next) => {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-      throw createError(400, "Please provide email and otp");
+      return res.status(400).json({
+        code: 400,
+        message: "Please provide email and otp",
+      });
     }
 
     const result = await authService.verifyEmail(email, otp);
@@ -59,7 +64,10 @@ const login = async (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      throw createError(400, "Please provide email and password");
+      return res.status(400).json({
+        code: 400,
+        message: "Please provide email and password",
+      });
     }
 
     const result = await authService.login(email, password);
@@ -108,7 +116,10 @@ const forgotPassword = async (req, res, next) => {
     const { email } = req.body;
 
     if (!email) {
-      throw createError(400, "Please provide email");
+      return res.status(400).json({
+        code: 400,
+        message: "Please provide email",
+      });
     }
 
     await authService.forgotPassword(email);
@@ -125,7 +136,12 @@ const forgotPassword = async (req, res, next) => {
 const verifyResetOtp = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
-    if (!email || !otp) throw createError(400, "Please provide email and otp");
+    if (!email || !otp) {
+      return res.status(400).json({
+        code: 400,
+        message: "Please provide email and otp",
+      });
+    }
 
     const { resetToken } = await authService.verifyResetOtp(email, otp);
 
@@ -144,13 +160,22 @@ const resetPassword = async (req, res, next) => {
     const token = req.params.token || req.body.token;
 
     if (!token) {
-      throw createError(400, "Missing reset token");
+      return res.status(400).json({
+        code: 400,
+        message: "Missing reset token",
+      });
     }
     if (!newPassword || !confirmPassword) {
-      throw createError(400, "Please provide newPassword and confirmPassword");
+      return res.status(400).json({
+        code: 400,
+        message: "Please provide newPassword and confirmPassword",
+      });
     }
     if (newPassword !== confirmPassword) {
-      throw createError(400, "Passwords do not match");
+      return res.status(400).json({
+        code: 400,
+        message: "Passwords do not match",
+      });
     }
 
     const result = await authService.resetPasswordWithToken(token, newPassword);
@@ -170,7 +195,7 @@ const googleLogin = async (req, res, next) => {
 
     if (!token) {
       return res.status(400).json({
-        success: false,
+        code: 400,
         message: "Google token is required",
       });
     }
