@@ -67,7 +67,7 @@ export default function LoginPage() {
         />
       </Link>
       {/* LEFT SECTION: Login Form */}
-      <div className="w-full lg:w-[45%] flex flex-col mt-10 lg:mt-0 p-8 md:p-8 lg:pt-20 items-center lg:pb-0">
+      <div className="w-full flex flex-col items-center justify-center">
         <div className="max-w-md w-full mx-auto lg:mx-0">
           <h1 className="text-3xl font-semibold text-gray-900 mb-3">
             Đăng Nhập
@@ -199,14 +199,14 @@ export default function LoginPage() {
       </div>
 
       {/* RIGHT SECTION: Branding & Testimonial */}
-      <div className="z-1 hidden m-5 rounded-2xl lg:flex w-[55%] bg-[#04543D] relative overflow-hidden flex-col justify-center px-16 xl:px-24">
+      {/* <div className="z-1 hidden m-5 rounded-2xl lg:flex w-[55%] bg-[#04543D] relative overflow-hidden flex-col justify-center px-16 xl:px-24">
         <Image
           src={"/images/1767343747.png"}
           fill
           alt="Login page image"
           className="object-cover z-0"
         />
-      </div>
+      </div> */}
     </div>
   );
 }

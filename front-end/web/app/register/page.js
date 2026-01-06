@@ -1,3 +1,4 @@
+// Nguyễn Trọng Quý - CE180596
 "use client";
 import React, { useState } from "react";
 import axios from "axios";
@@ -38,10 +39,11 @@ export default function RegisterPage() {
   const ROLES = [
     { key: "trader", label: "Trader", icon: Briefcase },
     { key: "farmer", label: "Farmer", icon: Leaf },
-    { key: "service_provider", label: "Service Provider", icon: Wrench },
-    { key: "content_expert", label: "Content Expert", icon: PenSquare },
+    { key: "serviceProvider", label: "Service Provider", icon: Wrench },
+    { key: "contentExpert", label: "Content Expert", icon: PenSquare },
   ];
 
+  // Handle Submit Register Form
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -66,10 +68,10 @@ export default function RegisterPage() {
         role: selectedRole,
       });
 
-      setNotificationSuccessMessage(
-        "Đăng ký thành công, kiểm tra mail cho mã OTP"
-      );
-      router.push("/verify-email");
+      setNotificationSuccessMessage("Kiểm tra mail cho mã OTP");
+      setTimeout(() => {
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+      }, 3000);
     } catch (err) {
       setNotificationErrorMessage(
         err?.message || "Có lỗi xảy ra, vui lòng thử lại."
@@ -93,8 +95,8 @@ export default function RegisterPage() {
           alt="logo"
         />
       </Link>
-      {/* LEFT SECTION: Login Form */}
-      <div className="w-full lg:w-[45%] flex flex-col mt-10 lg:mt-0 p-8 md:p-8 lg:pt-20 items-center lg:pb-0">
+      {/* LEFT SECTION: Register Form */}
+      <div className="w-full flex flex-col items-center justify-center">
         <div className="max-w-md w-full mx-auto lg:mx-0">
           <h1 className="text-3xl font-semibold text-gray-900 mb-3">Đăng Ký</h1>
           <p className="text-gray-500 text-sm mb-10 leading-relaxed">
@@ -293,14 +295,14 @@ export default function RegisterPage() {
       </div>
 
       {/* RIGHT SECTION: Branding & Testimonial */}
-      <div className="hidden m-5 rounded-2xl lg:flex w-[55%] bg-[#04543D] relative overflow-hidden flex-col justify-center px-16 xl:px-24">
+      {/* <div className="hidden m-5 rounded-2xl lg:flex w-[55%] bg-[#04543D] relative overflow-hidden flex-col justify-center px-16 xl:px-24">
         <Image
           src={"/images/Durian-login.jpg"}
           fill
           alt="Login page image"
           className="object-cover"
         />
-      </div>
+      </div> */}
     </div>
   );
 }
