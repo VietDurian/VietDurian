@@ -53,7 +53,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen font-sans bg-white">
+    <div className="flex min-h-screen font-sans bg-white p-5 pt-15 lg:pt-0">
       {/* Logo */}
       <Link
         href={"/"}

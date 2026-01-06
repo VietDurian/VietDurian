@@ -14,17 +14,56 @@ import {
   Wrench,
   PenSquare,
   ChevronLeft,
+  Check,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Notification from "@/components/Notification";
 
+function isValidPassword(pwd) {
+  const minLength = pwd.length >= 12;
+  const hasUppercase = /[A-Z]/.test(pwd);
+  const hasLowercase = /[a-z]/.test(pwd);
+  const hasNumber = /\d/.test(pwd);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>[\]\\';`~+=\-_/]/.test(pwd);
+
+  return (
+    minLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar
+  );
+}
+
+const passwordRules = [
+  { id: "length", test: (pwd) => pwd.length >= 12, label: "Ít nhất 12 ký tự" },
+  {
+    id: "uppercase",
+    test: (pwd) => /[A-Z]/.test(pwd),
+    label: "Có chữ in hoa",
+  },
+  {
+    id: "lowercase",
+    test: (pwd) => /[a-z]/.test(pwd),
+    label: "Có chữ thường",
+  },
+  {
+    id: "number",
+    test: (pwd) => /\d/.test(pwd),
+    label: "Có ít nhất một số",
+  },
+  {
+    id: "special",
+    test: (pwd) => /[!@#$%^&*(),.?":{}|<>[\]\\';`~+=\-_/]/.test(pwd),
+    label: "Có ký tự đặc biệt (ví dụ: @, #, $)",
+  },
+];
+
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [step, setStep] = useState(1); // 1: info entry, 2: role selection
@@ -47,6 +86,10 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
+    if (!isValidPassword(password)) {
+      setPasswordError("Vui lòng nhập mật khẩu hợp lệ");
+      return;
+    }
     if (step === 1) {
       setStep(2);
       return;
@@ -81,8 +124,13 @@ export default function RegisterPage() {
     }
   };
 
+  // Password real-time validation
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+  };
+
   return (
-    <div className="flex min-h-screen font-sans bg-white">
+    <div className="flex min-h-screen font-sans bg-white p-5 pt-15 lg:pt-0">
       {/* Logo */}
       <Link
         href={"/"}
@@ -161,7 +209,7 @@ export default function RegisterPage() {
                       placeholder="Nhập mật khẩu"
                       className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={handlePasswordChange}
                       required
                     />
                     <button
@@ -174,6 +222,43 @@ export default function RegisterPage() {
                     >
                       {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                     </button>
+                    {/* Password rules checklist */}
+                    {password && !isValidPassword(password) && (
+                      <div className="absolute bg-white mt-3 space-y-1 text-sm z-100 w-full p-5 border-2 border-gray-200 rounded-xl">
+                        {passwordRules.map((rule) => {
+                          const isValid = rule.test(password);
+                          let displayLabel = rule.label;
+
+                          // Speical handling for length rule
+                          if (rule.id === "length") {
+                            displayLabel = `Ít nhất 12 ký tự (hiện tại: ${password.length})`;
+                          }
+                          return (
+                            <div
+                              key={rule.id}
+                              className="flex items-center gap-2"
+                            >
+                              {isValid ? (
+                                <span className="text-green-600">
+                                  <Check />
+                                </span>
+                              ) : (
+                                <span className="text-red-500">
+                                  <X />
+                                </span>
+                              )}
+                              <span
+                                className={
+                                  isValid ? "text-green-600" : "text-red-500"
+                                }
+                              >
+                                {displayLabel}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
                 {/* Phone Number */}
