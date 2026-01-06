@@ -1,6 +1,5 @@
 // Vo Lam Thuy Vi
 import { productService } from "@/services/productService.js";
-import createError from "http-errors";
 
 // Create a new product
 const createProduct = async (req, res, next) => {
@@ -28,14 +27,18 @@ const createProduct = async (req, res, next) => {
       !weight ||
       !typeId
     ) {
-      throw createError(
-        400,
-        "Missing required fields: name, description, price, stock, origin, weight, typeId"
-      );
+      return res.status(400).json({
+        code: 400,
+        message:
+          "Missing required fields: name, description, price, stock, origin, weight, typeId",
+      });
     }
 
     if (!userId) {
-      throw createError(401, "User not authenticated");
+      return res.status(401).json({
+        code: 401,
+        message: "User not authenticated",
+      });
     }
 
     const newProduct = await productService.createProduct({
@@ -94,7 +97,10 @@ const getProductDetail = async (req, res, next) => {
     const { productId } = req.params;
 
     if (!productId) {
-      throw createError(400, "Product ID is required");
+      return res.status(400).json({
+        code: 400,
+        message: "Product ID is required",
+      });
     }
 
     const product = await productService.getProductById(productId);
@@ -118,16 +124,25 @@ const updateProduct = async (req, res, next) => {
     const userId = req.user?.id || req.user?._id;
 
     if (!productId) {
-      throw createError(400, "Product ID is required");
+      return res.status(400).json({
+        code: 400,
+        message: "Product ID is required",
+      });
     }
 
     if (!userId) {
-      throw createError(401, "User not authenticated");
+      return res.status(401).json({
+        code: 401,
+        message: "User not authenticated",
+      });
     }
 
     // Validate update data - prevent empty updates
     if (Object.keys(updateData).length === 0) {
-      throw createError(400, "No fields provided for update");
+      return res.status(400).json({
+        code: 400,
+        message: "No fields provided for update",
+      });
     }
 
     const updatedProduct = await productService.updateProduct(
@@ -153,11 +168,17 @@ const deleteProduct = async (req, res, next) => {
     const userId = req.user?.id || req.user?._id;
 
     if (!productId) {
-      throw createError(400, "Product ID is required");
+      return res.status(400).json({
+        code: 400,
+        message: "Product ID is required",
+      });
     }
 
     if (!userId) {
-      throw createError(401, "User not authenticated");
+      return res.status(401).json({
+        code: 401,
+        message: "User not authenticated",
+      });
     }
 
     await productService.deleteProduct(productId);
@@ -178,7 +199,10 @@ const searchProducts = async (req, res, next) => {
     const { keyword, page, limit } = req.query;
 
     if (!keyword) {
-      throw createError(400, "Search keyword is required");
+      return res.status(400).json({
+        code: 400,
+        message: "Search keyword is required",
+      });
     }
 
     const results = await productService.searchProducts({

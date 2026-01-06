@@ -1,12 +1,14 @@
 import { profileService } from "@/services/profileService.js";
-import createError from "http-errors";
 
 const getProfile = async (req, res, next) => {
   try {
     const userId = req.user?.id || req.user?._id;
 
     if (!userId) {
-      throw createError(401, "User not authenticated");
+      return res.status(401).json({
+        code: 401,
+        message: "User not authenticated",
+      });
     }
 
     const profile = await profileService.getProfile(userId);
@@ -28,7 +30,10 @@ const updateProfile = async (req, res, next) => {
     const updateData = req.body;
 
     if (!userId) {
-      throw createError(401, "User not authenticated");
+      return res.status(401).json({
+        code: 401,
+        message: "User not authenticated",
+      });
     }
 
     // Validate update data
@@ -42,7 +47,10 @@ const updateProfile = async (req, res, next) => {
     }
 
     if (Object.keys(filteredData).length === 0) {
-      throw createError(400, "No valid fields provided for update");
+      return res.status(400).json({
+        code: 400,
+        message: "No valid fields provided for update",
+      });
     }
 
     const updatedProfile = await profileService.updateProfile(
@@ -66,7 +74,10 @@ const getPublicProfile = async (req, res, next) => {
     const { user_id } = req.query;
 
     if (!user_id) {
-      throw createError(400, "User ID is required");
+      return res.status(400).json({
+        code: 400,
+        message: "User ID is required",
+      });
     }
 
     const publicProfile = await profileService.getPublicProfile(user_id);
