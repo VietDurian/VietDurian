@@ -18,7 +18,7 @@ import { useState } from "react";
 
 const ProfileCard = () => {
   return (
-    <section className="w-full">
+    <section className="w-full bg-white">
       <div className="relative border-2 border-gray-200 rounded-xl p-8 flex justify-between items-center w-full">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
