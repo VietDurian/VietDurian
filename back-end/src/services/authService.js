@@ -29,7 +29,7 @@ const register = async (userData) => {
       phone: userData.phone || "",
       avatar: userData.avatar || "",
       role: userData.role || "trader",
-      isVerify: false,
+      is_verified: false,
     });
 
     // Generate OTP for email verification
@@ -80,7 +80,7 @@ const verifyEmail = async (email, otp) => {
     }
 
     // Update user verification status
-    user.isVerify = true;
+    user.is_verified = true;
     await user.save();
 
     // Mark OTP as used
@@ -188,7 +188,7 @@ const login = async (email, password) => {
       );
     }
 
-    if (!user.isVerify) {
+    if (!user.is_verified) {
       throw createError(
         403,
         "Please verify your email address before logging in"
@@ -324,14 +324,12 @@ const googleLogin = async (token) => {
     if (!user) {
       // Create new user if not exists
       user = await User.create({
+        full_name: name || "",
         email,
-        name,
-        password: crypto.randomBytes(20).toString("hex"), // Generate random password
-        avatar: picture,
-        isVerify: true, // Google account is already verified
-        role: "user",
-        gender: "other",
-        dob: new Date(), // Default date, user can update later
+        password: crypto.randomBytes(20).toString("hex"),
+        avatar: picture || "",
+        is_verified: true,
+        role: "trader",
       });
     }
 

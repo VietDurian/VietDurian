@@ -16,6 +16,7 @@ import { favoriteRoute } from "@/routes/favoriteRoute";
 import gardenRoute from "@/routes/gardenRoute";
 import { chatRoute } from "@/routes/chatRoute";
 import { notificationRouter } from "@/routes/notificationRoute";
+import { permissionRoute } from "@/routes/permissionRoute";
 
 const Router = express.Router();
 
@@ -36,5 +37,6 @@ Router.use("/favorite", favoriteRoute);
 Router.use("/garden", gardenRoute);
 Router.use("/chat", chatRoute);
 Router.use("/notification", notificationRouter);
+Router.use("/permission", permissionRoute);
 
 export const API_v1 = Router;
