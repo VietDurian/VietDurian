@@ -1,11 +1,11 @@
 // Nguyễn Trọng Quý - CE180596
 import { Suspense } from "react";
-import VerifyEmailContent from "./component/VerifyEmailContent";
+import VerifyResetOTPContent from "./component/VerifyResetOTPContent";
 
-export default function VerifyEmailPage() {
+export default function ForgotPasswordPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <VerifyEmailContent />
+      <VerifyResetOTPContent />
     </Suspense>
   );
 }
