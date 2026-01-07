@@ -728,7 +728,7 @@ export default function GuidePage() {
                 </div>
             </div>
 
-            <main className="max-w-7xl mx-auto px-4 md:px-6 py-12">
+            <main className="max-w-8xl mx-auto px-4 md:px-6 py-12">
                 <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8">
 
                     {/* Sidebar Navigation */}
@@ -736,7 +736,7 @@ export default function GuidePage() {
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
                             <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 uppercase text-sm tracking-wide">
                                 <BookOpen className="w-4 h-4 text-emerald-600" />
-                                Mục lục hướng dẫn
+                                Mục lục
                             </h3>
                             <nav className="space-y-1">
                                 {guideSections.map((section) => (
