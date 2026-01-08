@@ -5,7 +5,6 @@ const register = async (req, res, next) => {
   try {
     const { full_name, email, password, phone, avatar, role } = req.body;
 
-    // Validation
     if (!full_name || !email || !password) {
       return res.status(400).json({
         code: 400,

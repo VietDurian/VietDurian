@@ -18,6 +18,8 @@ const userSchema = new mongoose.Schema(
       required: true,
       validate: {
         validator: function (value) {
+          if (!this.isModified("password")) return true;
+
           return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$*])[A-Za-z\d@#$*]{12,}$/.test(
             value
           );
@@ -26,6 +28,7 @@ const userSchema = new mongoose.Schema(
           "Password must be at least 12 characters, include uppercase, lowercase, number and special character",
       },
     },
+
     phone: {
       type: String,
       default: "",
