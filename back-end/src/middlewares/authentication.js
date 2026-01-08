@@ -1,9 +1,7 @@
 /** Vo Lam Thuy Vi */
-import jwt from "jsonwebtoken";
 import { verifyToken } from "../config/jwt.js";
 import User from "../model/userModel.js";
 import LogoutToken from "../model/logoutTokenModel.js";
-import createError from "http-errors";
 
 const protect = async (req, res, next) => {
   try {
@@ -23,44 +21,46 @@ const protect = async (req, res, next) => {
     }
 
     if (!token) {
-      return next(
-        createError(401, "You are not logged in. Please log in to get access.")
-      );
+      return res.status(401).json({
+        code: 401,
+        message: "You are not logged in. Please log in to get access.",
+      });
     }
 
     // Check if token is in the blacklist (logged out)
     const blacklistedToken = await LogoutToken.findOne({ token });
     if (blacklistedToken) {
-      return next(
-        createError(401, "Token is no longer valid. Please log in again.")
-      );
+      return res.status(401).json({
+        code: 401,
+        message: "Token is no longer valid. Please log in again.",
+      });
     }
 
     // Verify token
     const decoded = verifyToken(token);
     if (!decoded.valid) {
-      return next(
-        createError(401, "Invalid token or token expired. Please log in again.")
-      );
+      return res.status(401).json({
+        code: 401,
+        message: "Invalid token or token expired. Please log in again.",
+      });
     }
 
     // Check if user exists
     const user = await User.findById(decoded.decoded.id);
     if (!user) {
       console.log("⚠️ User not found in DB!");
-      return next(
-        createError(401, "The user belonging to this token no longer exists.")
-      );
+      return res.status(401).json({
+        code: 401,
+        message: "The user belonging to this token no longer exists.",
+      });
     }
 
     // Check if user is banned
     if (user.is_banned) {
-      return next(
-        createError(
-          403,
-          "Your account has been banned. Please contact support."
-        )
-      );
+      return res.status(403).json({
+        code: 403,
+        message: "Your account has been banned. Please contact support.",
+      });
     }
 
     // Add user to request object
@@ -68,7 +68,10 @@ const protect = async (req, res, next) => {
     req.token = token;
     next();
   } catch (error) {
-    next(createError(401, "Not authorized to access this route"));
+    return res.status(401).json({
+      code: 401,
+      message: "Not authorized to access this route",
+    });
   }
 };
 
@@ -77,24 +80,24 @@ const verifyResetToken = async (req, res, next) => {
     const token = req.params.token || req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-      return next(createError(400, "Reset token is required"));
+      return res.status(400).json({ code: 400, message: "Reset token is required" });
     }
 
     const decoded = verifyToken(token);
     if (!decoded.valid) {
-      return next(createError(400, "Invalid or expired reset token"));
+      return res.status(400).json({ code: 400, message: "Invalid or expired reset token" });
     }
 
     const user = await User.findById(decoded.decoded.id);
     if (!user) {
-      return next(createError(404, "User not found"));
+      return res.status(404).json({ code: 404, message: "User not found" });
     }
 
     req.user = user;
     req.token = token;
     next();
   } catch (error) {
-    next(createError(400, "Invalid reset token"));
+    return res.status(400).json({ code: 400, message: "Invalid reset token" });
   }
 };
 

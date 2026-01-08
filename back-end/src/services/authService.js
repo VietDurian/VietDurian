@@ -10,10 +10,13 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import path from "path";
 import { OAuth2Client } from "google-auth-library";
+import { PermissionAccountModel } from "@/model/permissionAccountModel.js";
 
 // Google OAuth client - replace with your actual client ID
 const GOOGLE_CLIENT_ID = process.env.YOUR_GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+
+const retricedRoles = ["serviceProvider", "contentExpert"];
 
 const register = async (userData) => {
   try {
@@ -22,15 +25,29 @@ const register = async (userData) => {
       throw createError(400, "Email already in use");
     }
 
+    const requestedRole = userData.role || "trader";
+    const needApproval = retricedRoles.includes(requestedRole);
+
+    //Create user
     const user = await User.create({
       full_name: userData.full_name,
       email: userData.email,
       password: userData.password,
       phone: userData.phone || "",
       avatar: userData.avatar || "",
-      role: userData.role || "trader",
+      role: needApproval ? "trader" : requestedRole,
       is_verified: false,
     });
+
+    if (needApproval) {
+      await PermissionAccountModel.create({
+        user_id: user._id,
+        requested_role: requestedRole,
+        description: userData.description || "",
+        document: userData.document || "",
+        status: "pending",
+      });
+    }
 
     // Generate OTP for email verification
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -193,6 +210,17 @@ const login = async (email, password) => {
         403,
         "Please verify your email address before logging in"
       );
+    }
+
+    const permission = await PermissionAccountModel.findOne({
+      user_id: user._id,
+    });
+
+    if (permission && permission.status === "pending") {
+      throw createError(403, "Your account upgrade request is still pending approval.");
+    }
+    if (permission && permission.status === "rejected") {
+      throw createError(403, "Your account upgrade request has been rejected.");
     }
 
     const token = generateToken(user._id);

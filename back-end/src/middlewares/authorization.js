@@ -1,13 +1,13 @@
 /** Vo Lam Thuy Vi */
-import createError from "http-errors";
 
 // Hoặc cho phép nhiều role: admin và moderator/staff
 const restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return next(
-        createError(403, "You do not have permission to perform this action")
-      );
+      return res.status(403).json({
+        code: 403,
+        message: "You do not have permission to perform this action",
+      });
     }
     next();
   };
@@ -16,7 +16,10 @@ const restrictTo = (...roles) => {
 // Chỉ admin mới được xem danh sách user
 const isAdmin = (req, res, next) => {
   if (req.user.role !== "admin") {
-    return next(createError(403, "Only admins can perform this action"));
+    return res.status(403).json({
+      code: 403,
+      message: "Only admins can perform this action",
+    });
   }
   next();
 };
@@ -25,12 +28,10 @@ const isAdmin = (req, res, next) => {
 const hasRole = (requiredRole) => {
   return (req, res, next) => {
     if (req.user.role !== requiredRole) {
-      return next(
-        createError(
-          403,
-          `This action requires ${requiredRole} role. Your role is ${req.user.role}`
-        )
-      );
+      return res.status(403).json({
+        code: 403,
+        message: `This action requires ${requiredRole} role. Your role is ${req.user.role}`,
+      });
     }
     next();
   };
@@ -42,9 +43,10 @@ const checkOwner = (req, res, next) => {
   const resourceUserId = req.params.userId || req.body.userId;
 
   if (userId !== resourceUserId && req.user.role !== "admin") {
-    return next(
-      createError(403, "You do not have permission to access this resource")
-    );
+    return res.status(403).json({
+      code: 403,
+      message: "You do not have permission to access this resource",
+    });
   }
   next();
 };
@@ -53,9 +55,10 @@ const checkOwner = (req, res, next) => {
 const isUser = (req, res, next) => {
   const nonUserRoles = ["admin"];
   if (nonUserRoles.includes(req.user.role)) {
-    return next(
-      createError(403, "This action is not allowed for your role")
-    );
+    return res.status(403).json({
+      code: 403,
+      message: "This action is not allowed for your role",
+    });
   }
   next();
 }

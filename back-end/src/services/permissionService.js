@@ -2,6 +2,7 @@
 import { PermissionAccountModel } from "@/model/permissionAccountModel.js";
 import User from "@/model/userModel.js";
 import { notificationService } from "@/services/notificationService.js";
+import { emailService } from "./emailService.js";
 
 const getPermissionRequests = async () => {
     try {
@@ -121,15 +122,14 @@ const confirmPermissionRequest = async (request_id, adminId) => {
 
         // Notify user 
         try {
-            await notificationService.createNotification({
-                receiver_id: user._id,
-                sender_id: adminId,
-                entity_type: "permission_approval",
-                message: `Your account upgrade to ${request.requested_role} has been approved.`,
+            await emailService.sendPermissionStatusEmail({
+                name: user.full_name || "User",
+                email: user.email,
+                status: "approved",
+                role: request.requested_role,
             });
         } catch (err) {
-            // Non-blocking
-            console.error("Notification error:", err.message);
+            console.error("Email error (approved):", err.message);
         }
 
         return request;
@@ -149,18 +149,20 @@ const rejectPermissionRequest = async (request_id, adminId, reason = "") => {
         // store rejection reason in description field
         request.description = reason || request.description;
         await request.save();
-
-        // Notify user
+        let user = null;
         try {
-            await notificationService.createNotification({
-                receiver_id: request.user_id,
-                sender_id: adminId,
-                entity_type: "permission_rejection",
-                message: `Your account upgrade request was rejected${reason ? ": " + reason : ""
-                    }.`,
+            user = await User.findById(request.user_id);
+        } catch { /* bỏ qua */ }
+        try {
+            await emailService.sendPermissionStatusEmail({
+                name: user?.full_name || "User",
+                email: user?.email,
+                status: "rejected",
+                role: request.requested_role,
+                reason,
             });
         } catch (err) {
-            console.error("Notification error:", err.message);
+            console.error("Email error (rejected):", err.message);
         }
 
         return request;
@@ -176,4 +178,5 @@ export const permissionService = {
     getPermissionRequestDetail,
     confirmPermissionRequest,
     rejectPermissionRequest,
+
 };
