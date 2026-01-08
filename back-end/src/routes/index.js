@@ -17,6 +17,7 @@ import gardenRoute from "@/routes/gardenRoute";
 import { chatRoute } from "@/routes/chatRoute";
 import { notificationRouter } from "@/routes/notificationRoute";
 import { permissionRoute } from "@/routes/permissionRoute";
+import { serviceProviderProfileRoute } from "@/routes/serviceProviderProfileRoute";
 
 const Router = express.Router();
 
@@ -38,5 +39,6 @@ Router.use("/garden", gardenRoute);
 Router.use("/chat", chatRoute);
 Router.use("/notification", notificationRouter);
 Router.use("/permission", permissionRoute);
+Router.use("/capability-profile", serviceProviderProfileRoute);
 
 export const API_v1 = Router;

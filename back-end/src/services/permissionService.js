@@ -17,7 +17,6 @@ const getPermissionRequests = async () => {
             { $unwind: "$user" },
         ];
 
-        // Default sort by created_at desc for stable listing
         pipeline.push({ $sort: { created_at: -1 } });
 
         return await PermissionAccountModel.aggregate(pipeline);
@@ -120,7 +119,7 @@ const confirmPermissionRequest = async (request_id, adminId) => {
         request.status = "approved";
         await request.save();
 
-        // Notify user
+        // Notify user 
         try {
             await notificationService.createNotification({
                 receiver_id: user._id,
