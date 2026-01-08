@@ -15,8 +15,16 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      minlength: 6,
       required: true,
+      validate: {
+        validator: function (value) {
+          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$*])[A-Za-z\d@#$*]{12,}$/.test(
+            value
+          );
+        },
+        message:
+          "Password must be at least 12 characters, include uppercase, lowercase, number and special character",
+      },
     },
     phone: {
       type: String,
