@@ -328,10 +328,11 @@ const Router = express.Router();
  */
 Router.post("/", authMiddleware.protect, productController.createProduct);
 Router.get("/", productController.getAllProducts);
-Router.get("/:productId", productController.getProductDetail);
 Router.get("/search", productController.searchProducts);
 Router.get("/sort", productController.sortProducts);
 Router.get("/filter", productController.filterProducts);
+Router.get("/:productId", productController.getProductDetail);
+
 Router.put(
   "/:productId",
   authMiddleware.protect,
