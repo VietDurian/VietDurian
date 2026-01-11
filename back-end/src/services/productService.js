@@ -82,19 +82,45 @@ const getAllProducts = async ({
     sortObj[sortBy] = sortOrder === "asc" ? 1 : -1;
 
     // Execute query in parallel
+
+
     const [products, total] = await Promise.all([
       Product.find(filter)
         .populate("user_id", "full_name avatar")
         .populate("type_id", "name")
-        .populate("images")
         .skip(skip)
         .limit(limitNumber)
-        .sort(sortObj),
+        .sort(sortObj)
+        .lean(),
       Product.countDocuments(filter),
     ]);
 
+    // lấy list productIds
+    const productIds = products.map((p) => p._id);
+
+    // lấy toàn bộ images của các product trong page hiện tại
+    const images = await ProductImage.find({ product_id: { $in: productIds } })
+      .lean();
+    console.log('images', images);
+    // group images theo product_id
+    const imagesByProductId = images.reduce((acc, img) => {
+      const key = String(img.product_id);
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(img);
+      return acc;
+    }, {});
+
+    // gán vào từng product
+    const productsWithImages = products.map((p) => ({
+      ...p,
+      images: imagesByProductId[String(p._id)] || [],
+    }));
+    console.log('productsWithImages', productsWithImages);
+
+
+
     return {
-      data: products,
+      data: productsWithImages,
       pagination: {
         totalItems: total,
         totalPages: Math.ceil(total / limitNumber),
@@ -117,8 +143,9 @@ const getProductById = async (productId) => {
     )
       .populate("user_id", "full_name avatar email phone")
       .populate("type_id", "name")
-      .populate("images");
 
+    const listImage = await ProductImage.find({ product_id: productId });
+    product.images = listImage;
     if (!product) {
       throw createError(404, "Product not found");
     }

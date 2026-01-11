@@ -2,7 +2,7 @@ import { TypeProductModel } from '@/model/typeProductModel';
 
 // Get all type products
 const getAllTypeProducts = async ({ searchName, page = 1, limit = 10 }) => {
-	try {
+    try {
         // 1. Xây dựng filter (bộ lọc)
         let filter = {};
         if (searchName) {
@@ -34,27 +34,27 @@ const getAllTypeProducts = async ({ searchName, page = 1, limit = 10 }) => {
                 itemsPerPage: limitNumber
             }
         };
-	} catch (error) {
-		throw error;
-	}
+    } catch (error) {
+        throw error;
+    }
 };
 
 // Create a new type product
 const createTypeProduct = async ({ name, description }) => {
-	try {
+    try {
         // Create a new TypeProduct instance
-		const newTypeProduct = new TypeProductModel({ name, description });
+        const newTypeProduct = new TypeProductModel({ name, description });
 
         // Save to database
-		const savedTypeProduct = await newTypeProduct.save();
-		return savedTypeProduct;
-	} catch (error) {
-		throw error;
-	}
+        const savedTypeProduct = await newTypeProduct.save();
+        return savedTypeProduct;
+    } catch (error) {
+        throw error;
+    }
 };
 
 // Update a type product
-const updateTypeProduct = async ({ id, name }) => {
+const updateTypeProduct = async ({ id, name, description }) => {
     try {
         const updatedTypeProduct = await TypeProductModel.findByIdAndUpdate(
             id,
@@ -77,7 +77,7 @@ const deleteTypeProduct = async ({ id }) => {
 };
 
 export const typeProductService = {
-	getAllTypeProducts,
+    getAllTypeProducts,
     createTypeProduct,
     updateTypeProduct,
     deleteTypeProduct,
