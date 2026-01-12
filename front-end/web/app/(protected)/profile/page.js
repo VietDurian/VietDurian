@@ -1,30 +1,16 @@
 "use client";
-import { useEffect, useState } from "react";
+import Navbar from "@/components/Navbar";
 import ContentExpertProfileContent from "./component/ContentExpertProfileContent";
 import FarmerProfileContent from "./component/FarmerProfileContent";
 import ServiceProviderProfileContent from "./component/ServiceProviderProfileContent";
 import TraderProfileContent from "./component/TraderProfileContent";
-import Navbar from "@/components/Navbar";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { useAuth } from "@/context/AuthContext";
 
-export default function ProfilePage() {
-  const [authUser, setAuthUser] = useState(null);
+function ProfileContent() {
+  const { user } = useAuth();
 
-  useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem("auth_user");
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        setAuthUser(parsedUser);
-      }
-    } catch (error) {
-      console.error("Failed to parse auth_user from localStorage", error);
-    }
-  }, []);
-
-  if (authUser === null) {
-    return <Navbar />;
-  }
-  switch (authUser.role) {
+  switch (user.role) {
     case "trader":
       return <TraderProfileContent />;
     case "farmer":
@@ -33,5 +19,15 @@ export default function ProfilePage() {
       return <ServiceProviderProfileContent />;
     case "contentExpert":
       return <ContentExpertProfileContent />;
+    default:
+      return <Navbar />;
   }
+}
+
+export default function ProfilePage() {
+  return (
+    <ProtectedRoute>
+      <ProfileContent />
+    </ProtectedRoute>
+  );
 }
