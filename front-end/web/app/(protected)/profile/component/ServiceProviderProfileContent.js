@@ -29,7 +29,7 @@ const ProfileCard = () => {
           </h1>
           <p className="text-gray-500 text-sm">@sophiamartinez</p>
           <button className="mt-4 border border-gray-300 px-4 py-1 rounded-lg text-sm font-medium hover:bg-gray-50">
-            Message
+            TRADER PAGE
           </button>
         </div>
         <div className="relative">
@@ -255,7 +255,7 @@ const Post = ({ post }) => {
   );
 };
 
-export default function ProfilePage() {
+export default function ServiceProviderProfileContent() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   const SAMPLE_POSTS = [

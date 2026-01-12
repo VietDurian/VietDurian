@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Notification from "@/components/Notification";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +17,8 @@ export default function LoginPage() {
   const router = useRouter();
   const API_BASE =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
+
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,21 +31,17 @@ export default function LoginPage() {
         password,
       });
 
-      const data = await res;
+      const data = res.data;
 
-      if (!data) {
+      // Validate response
+      if (!data?.data?.user || !data?.data?.token) {
         throw new Error(data?.message || "Đăng nhập thất bại");
       }
 
-      const token = data?.data?.data?.token;
-      const user = data?.data?.data?.user;
+      const user = data.data.user;
+      const token = data.data.token;
 
-      if (token) {
-        localStorage.setItem("auth_token", token);
-      }
-      if (user) {
-        localStorage.setItem("auth_user", JSON.stringify(user));
-      }
+      login(user, token);
 
       router.push("/");
     } catch (err) {

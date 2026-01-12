@@ -86,7 +86,7 @@ export default function Navbar() {
       }`}
     >
       <div className="mx-auto px-4 sm:px-6 lg:px-5">
-        <div className="flex items-center h-full">
+        <div className="flex items-center h-full justify-between">
           {/* Logo Section */}
           <Link href={"/"}>
             <Image
