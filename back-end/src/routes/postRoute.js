@@ -32,6 +32,12 @@ const Router = express.Router();
  *           type: string
  *         description: Search by content
  *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [newest, oldest]
+ *         description: Sort by creation date
+ *       - in: query
  *         name: author_id
  *         schema:
  *           type: string
