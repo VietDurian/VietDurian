@@ -30,7 +30,7 @@ const DiarySchema = new mongoose.Schema(
 		end_date: {
 			type: Date,
 		},
-		quatity_durian: {
+		quantity_durian: {
 			type: Number,
 			default: 0,
 		},
