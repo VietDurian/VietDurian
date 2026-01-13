@@ -38,9 +38,16 @@ const createGeneralPost = async ({
 };
 
 // Get general posts
-const getGeneralPost = async ({ status, category, search, author_id }) => {
+const getGeneralPost = async ({
+	status,
+	category,
+	search,
+	sort,
+	author_id,
+}) => {
 	try {
 		const query = {};
+		const sortOption = {};
 
 		if (status) {
 			query.status = status;
@@ -58,7 +65,20 @@ const getGeneralPost = async ({ status, category, search, author_id }) => {
 			query.author_id = author_id;
 		}
 
-		const posts = await GeneralPostModel.find(query).lean();
+		if (sort) {
+			if (sort === 'newest') {
+				sortOption.created_at = -1;
+			} else if (sort === 'oldest') {
+				sortOption.created_at = 1;
+			}
+		}
+
+		// Apply sort via Mongoose `.sort()`; if no sort provided, no sort applied.
+		const postsQuery = GeneralPostModel.find(query);
+		const posts = Object.keys(sortOption).length
+			? await postsQuery.sort(sortOption).lean()
+			: await postsQuery.lean();
+
 		return posts;
 	} catch (error) {
 		throw error;
