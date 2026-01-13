@@ -56,7 +56,7 @@ const updateDiary = async (diaryId, updateData) => {
     const updatedDiary = await DiaryModel.findByIdAndUpdate(
       diaryId,
       updateData,
-      { new: true }
+      { new: true, runValidators: true }
     );
     return updatedDiary;
   } catch (error) {

@@ -288,15 +288,7 @@ const Router = express.Router();
  *       404:
  *         description: Diary not found
  */
-Router.get('/', authMiddleware.protect, diaryController.getDiariesByUser);
-Router.post('/', authMiddleware.protect, diaryController.createDiary);
-Router.get(
-	'/:diaryId',
-	authMiddleware.protect,
-	diaryController.getDiaryDetails
-);
-Router.patch('/:diaryId', authMiddleware.protect, diaryController.updateDiary);
-Router.delete('/:diaryId', authMiddleware.protect, diaryController.deleteDiary);
+
 /**
  * @swagger
  * /diary/{diaryId}/step:
@@ -349,11 +341,6 @@ Router.delete('/:diaryId', authMiddleware.protect, diaryController.deleteDiary);
  *                 data:
  *                   $ref: '#/components/schemas/DiaryStep'
  */
-Router.post(
-	'/:diaryId/step',
-	authMiddleware.protect,
-	diaryController.addDiaryStep
-);
 
 /**
  * @swagger
@@ -400,11 +387,6 @@ Router.post(
  *                 data:
  *                   $ref: '#/components/schemas/DiaryStep'
  */
-Router.patch(
-	'/step/:stepId',
-	authMiddleware.protect,
-	diaryController.updateDiaryStep
-);
 
 /**
  * @swagger
@@ -425,6 +407,27 @@ Router.patch(
  *       200:
  *         description: Diary step deleted successfully
  */
+Router.post(
+	'/:diaryId/step',
+	authMiddleware.protect,
+	diaryController.addDiaryStep
+);
+
+Router.get('/', authMiddleware.protect, diaryController.getDiariesByUser);
+Router.post('/', authMiddleware.protect, diaryController.createDiary);
+Router.get(
+	'/:diaryId',
+	authMiddleware.protect,
+	diaryController.getDiaryDetails
+);
+Router.patch(
+	'/step/:stepId',
+	authMiddleware.protect,
+	diaryController.updateDiaryStep
+);
+
+Router.patch('/:diaryId', authMiddleware.protect, diaryController.updateDiary);
+Router.delete('/:diaryId', authMiddleware.protect, diaryController.deleteDiary);
 Router.delete(
 	'/step/:stepId',
 	authMiddleware.protect,
