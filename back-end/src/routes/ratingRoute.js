@@ -1,6 +1,7 @@
 import express from "express";
 import { ratingController } from "@/controllers/ratingController.js";
 import { authMiddleware } from "@/middlewares/authentication.js";
+import { authorizationMiddleware } from "@/middlewares/authorization.js";
 
 const Router = express.Router();
 
@@ -236,23 +237,51 @@ const Router = express.Router();
  *       401:
  *         description: User not authenticated
  */
-Router.post("/", authMiddleware.protect, ratingController.createRating);
+Router.post(
+  "/",
+  authMiddleware.protect,
+  authorizationMiddleware.restrictTo(
+    "farmer",
+    "trader",
+    "serviceProvider",
+    "contentExpert"
+  ),
+  ratingController.createRating
+);
 Router.get("/product/:productId", ratingController.getProductRatings);
-Router.put("/:ratingId", authMiddleware.protect, ratingController.updateRating);
+Router.put(
+  "/:ratingId",
+  authMiddleware.protect,
+  authorizationMiddleware.restrictTo(
+    "farmer",
+    "trader",
+    "serviceProvider",
+    "contentExpert"
+  ),
+  ratingController.updateRating
+);
 Router.get(
   "/product/:productId/my-rating",
   authMiddleware.protect,
+  authorizationMiddleware.isUser,
   ratingController.getUserProductRating
 );
 
 Router.get(
   "/user/my-ratings",
   authMiddleware.protect,
+  authorizationMiddleware.isUser,
   ratingController.getUserRatings
 );
 Router.delete(
   "/:ratingId",
   authMiddleware.protect,
+  authorizationMiddleware.restrictTo(
+    "farmer",
+    "trader",
+    "serviceProvider",
+    "contentExpert"
+  ),
   ratingController.deleteRating
 );
 
