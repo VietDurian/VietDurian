@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
 
 const SidebarItem = ({ icon: Icon, label, href, active }) => (
   <Link
@@ -35,18 +37,14 @@ export default function AsideBar() {
   const pathname = usePathname();
 
   const menuItems = [
-    { icon: Home, label: "Home", href: "/" },
-    { icon: Search, label: "Explore", href: "/explore" },
-    { icon: PlusSquare, label: "Create", href: "/create" },
-    { icon: Heart, label: "Notifications", href: "/notifications" },
-    { icon: Bookmark, label: "Saved", href: "/saved" },
-    { icon: Settings, label: "Settings", href: "/settings" },
+    { icon: Home, label: "Posts", href: "/" },
+    { icon: Search, label: "Blogs", href: "/blogs" },
   ];
 
   return (
     <aside className="w-64 h-[95vh] fixed top-10 border-r border-gray-100 bg-white flex flex-col p-5 pt-10">
       {/* Navigation Links */}
-      <nav className="flex-1 space-y-1">
+      <nav className="flex flex-col flex-1 space-y-1">
         {menuItems.map((item) => (
           <SidebarItem
             key={item.label}
@@ -55,7 +53,7 @@ export default function AsideBar() {
             href={item.href}
             active={
               pathname === item.href ||
-              (item.label === "Home" && pathname.includes("profile"))
+              (item.label === "Posts" && pathname.includes("profile"))
             }
           />
         ))}
