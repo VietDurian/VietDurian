@@ -47,7 +47,7 @@ const serviceProviderProfileSchema = new mongoose.Schema(
 );
 
 // Ensure one profile per user
-serviceProviderProfileSchema.index({ user_id: 1 }, { unique: true });
+// serviceProviderProfileSchema.index({ user_id: 1 }, { unique: true });
 
 const ServiceProviderProfile = mongoose.model(
     "ServiceProviderProfile",
