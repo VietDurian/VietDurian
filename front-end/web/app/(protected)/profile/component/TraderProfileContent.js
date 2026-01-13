@@ -21,7 +21,7 @@ const ProfileCard = () => {
     <section className="w-full bg-white">
       <div className="relative border-2 border-gray-200 rounded-xl p-8 flex justify-between items-center w-full">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="text-2xl font-bold flex items-center gap-2 text-black">
             Sophia Martinez
             <span className="bg-teal-600 text-white text-[10px] px-2 py-0.5 rounded-full">
               Verified
@@ -297,7 +297,7 @@ export default function TraderProfileContent() {
     <div>
       <Navbar />
       <AsideBar />
-      <main className="pt-18 p-5 lg:pt-20 flex flex-col justify-center items-center">
+      <main className="pt-18 p-5 lg:pt-20 flex flex-col justify-center items-center bg-white">
         <div className="w-full max-w-4xl">
           <ProfileCard />
         </div>

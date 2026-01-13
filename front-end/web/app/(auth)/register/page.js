@@ -167,7 +167,7 @@ export default function RegisterPage() {
                     <input
                       type="text"
                       placeholder="Nhập họ và tên"
-                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required
@@ -187,7 +187,7 @@ export default function RegisterPage() {
                     <input
                       type="email"
                       placeholder="Nhập email"
-                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -207,7 +207,7 @@ export default function RegisterPage() {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Nhập mật khẩu"
-                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
                       value={password}
                       onChange={handlePasswordChange}
                       required
@@ -274,7 +274,7 @@ export default function RegisterPage() {
                     <input
                       type="tel"
                       placeholder="Nhập số điện thoại"
-                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       required

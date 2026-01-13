@@ -88,7 +88,7 @@ export default function LoginPage() {
                 <input
                   type="email"
                   placeholder="Nhập email"
-                  className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                  className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -108,7 +108,7 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Nhập mật khẩu"
-                  className="w-full border border-gray-200 rounded-lg pl-10 pr-10 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                  className="w-full border border-gray-200 rounded-lg pl-10 pr-10 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
