@@ -3,7 +3,7 @@ import axios from 'axios';
 // Cấu hình base URL
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
-// Function lấy token - ưu tiên auth_token, sau đó api_token
+// Function lấy token
 const getToken = () => {
     if (typeof window !== 'undefined') {
         // Ưu tiên token user đăng nhập
@@ -83,6 +83,84 @@ export const blogAPI = {
             return response.data;
         } catch (error) {
             console.error('Error searching blogs:', error);
+            throw error;
+        }
+    }
+};
+
+// Product API
+export const productAPI = {
+    // Lấy tất cả sản phẩm với filter, search, sort
+    async getAllProducts(params = {}) {
+        try {
+            const response = await apiClient.get('/products', { params });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            throw error;
+        }
+    },
+
+    // Lấy chi tiết sản phẩm theo ID
+    async getProductById(id) {
+        try {
+            const response = await apiClient.get(`/products/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching product detail:', error);
+            throw error;
+        }
+    },
+
+    // Tìm kiếm sản phẩm
+    async searchProducts(keyword, params = {}) {
+        try {
+            const response = await apiClient.get('/products/search', {
+                params: { keyword, ...params }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error searching products:', error);
+            throw error;
+        }
+    },
+
+    // Lọc sản phẩm
+    async filterProducts(filters = {}) {
+        try {
+            const response = await apiClient.get('/products/filter', {
+                params: filters
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error filtering products:', error);
+            throw error;
+        }
+    },
+
+    // Sắp xếp sản phẩm
+    async sortProducts(sortBy, sortOrder = 'desc', params = {}) {
+        try {
+            const response = await apiClient.get('/products/sort', {
+                params: { sortBy, sortOrder, ...params }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error sorting products:', error);
+            throw error;
+        }
+    }
+};
+
+// Product Type API
+export const productTypeAPI = {
+    // Lấy tất cả loại sản phẩm
+    async getAllProductTypes(params = {}) {
+        try {
+            const response = await apiClient.get('/type-product', { params });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching product types:', error);
             throw error;
         }
     }
