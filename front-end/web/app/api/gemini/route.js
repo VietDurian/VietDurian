@@ -27,15 +27,17 @@ const examples = [
 ];
 
 // temperature điều chỉnh độ sáng tạo, maxOutputTokens giới hạn độ dài câu trả lời
-const generationConfig = { temperature: 0.3, maxOutputTokens: 256 };
+const generationConfig = { temperature: 0.3, maxOutputTokens: 512 };
 
 export async function POST(request) {
 	try {
-		const { message, history } = await request.json();
+		const { message, history, image } = await request.json();
 
-		if (!message?.trim()) {
+		const hasText = !!message?.trim();
+		const hasImage = !!(image?.data && image?.mimeType);
+		if (!hasText && !hasImage) {
 			return Response.json(
-				{ success: false, error: 'Tin nhắn không được để trống' },
+				{ success: false, error: 'Cần nhập nội dung hoặc đính kèm ảnh' },
 				{ status: 400 }
 			);
 		}
@@ -59,7 +61,11 @@ export async function POST(request) {
 			m.supportedGenerationMethods?.includes('generateContent')
 		);
 		const preferred = generateModels.find(
-			(m) => m.name.includes('1.5') || m.displayName?.includes('1.5')
+			(m) =>
+				m.name.includes('flash') ||
+				m.name.includes('vision') ||
+				m.displayName?.includes('flash') ||
+				m.displayName?.includes('vision')
 		);
 		const picked = preferred || generateModels[0];
 		if (!picked) {
@@ -77,13 +83,24 @@ export async function POST(request) {
 			systemInstruction,
 		});
 
+		const userParts = [];
+		if (hasText) userParts.push({ text: message });
+		if (hasImage) {
+			const base64 = image.data.includes('base64,')
+				? image.data.split('base64,')[1]
+				: image.data;
+			userParts.push({
+				inlineData: { data: base64, mimeType: image.mimeType },
+			});
+		}
+
 		const contents = [
 			...examples,
 			...(history || []).map((msg) => ({
 				role: msg.role === 'user' ? 'user' : 'model',
 				parts: [{ text: msg.content }],
 			})),
-			{ role: 'user', parts: [{ text: message }] },
+			{ role: 'user', parts: userParts },
 		];
 		const result = await model.generateContent({ contents, generationConfig });
 
