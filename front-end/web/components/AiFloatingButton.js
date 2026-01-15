@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { X, RefreshCcw, ArrowUp, Sparkles } from 'lucide-react';
+import { X, RefreshCcw, ArrowUp, Sparkles, Plus } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const initialMessages = [
@@ -20,7 +20,9 @@ export default function AiFloatingButton() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState(null);
 	const [showSuggestions, setShowSuggestions] = useState(true);
+	const [image, setImage] = useState(null);
 	const endRef = useRef(null);
+	const fileInputRef = useRef(null);
 
 	const suggestions = [
 		'Cách chăm sóc sầu riêng mùa hạn mặn',
@@ -41,6 +43,26 @@ export default function AiFloatingButton() {
 		setInput('');
 		setError(null);
 		setShowSuggestions(true);
+		setImage(null);
+	};
+
+	const handleFileChange = (e) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		if (!file.type.startsWith('image/')) {
+			setError('Chỉ hỗ trợ ảnh');
+			return;
+		}
+		const reader = new FileReader();
+		reader.onload = () => {
+			setImage({
+				name: file.name,
+				mimeType: file.type,
+				dataUrl: reader.result,
+			});
+			setError(null);
+		};
+		reader.readAsDataURL(file);
 	};
 
 	const handleSend = async (e) => {
@@ -51,9 +73,11 @@ export default function AiFloatingButton() {
 			id: `u-${Date.now()}`,
 			role: 'user',
 			content: input.trim(),
+			image,
 		};
 		setMessages((prev) => [...prev, userMessage]);
 		setInput('');
+		setImage(null);
 		setIsLoading(true);
 		setError(null);
 		setShowSuggestions(false);
@@ -66,7 +90,13 @@ export default function AiFloatingButton() {
 			const res = await fetch('/api/gemini', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ message: userMessage.content, history }),
+				body: JSON.stringify({
+					message: userMessage.content,
+					history,
+					image: image
+						? { data: image.dataUrl, mimeType: image.mimeType }
+						: null,
+				}),
 			});
 
 			const data = await res.json();
@@ -185,6 +215,24 @@ export default function AiFloatingButton() {
 								placeholder="Trả lời hoặc hỏi bất cứ điều gì"
 								className="flex-1 text-sm bg-transparent outline-none placeholder:text-gray-400"
 							/>
+							<div className="flex items-center gap-2">
+								<input
+									type="file"
+									accept="image/*"
+									className="hidden"
+									ref={fileInputRef}
+									onChange={handleFileChange}
+								/>
+								<button
+									type="button"
+									onClick={() => fileInputRef.current?.click()}
+									className="flex h-9 w-9 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-700 shadow-sm hover:border-emerald-300 hover:bg-emerald-50 disabled:opacity-60 cursor-pointer"
+									disabled={isLoading}
+									title="Đính kèm ảnh"
+								>
+									<Plus size={16} strokeWidth={2.5} />
+								</button>
+							</div>
 							<button
 								type="submit"
 								disabled={!input.trim() || isLoading}
@@ -193,6 +241,18 @@ export default function AiFloatingButton() {
 								<ArrowUp size={18} />
 							</button>
 						</div>
+						{image && (
+							<div className="flex items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+								<span className="truncate">Ảnh: {image.name}</span>
+								<button
+									type="button"
+									onClick={() => setImage(null)}
+									className="text-emerald-700 hover:text-emerald-900"
+								>
+									X
+								</button>
+							</div>
+						)}
 						<p className="text-center text-xs text-gray-500">
 							Do AI tạo. Hãy kiểm tra kỹ độ chính xác.
 						</p>
