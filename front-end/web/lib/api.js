@@ -166,4 +166,74 @@ export const productTypeAPI = {
     }
 };
 
+
+// Rating API
+export const ratingAPI = {
+    // Lấy tất cả ratings cho một sản phẩm (bao gồm statistics)
+    async getRatingsByProductId(productId, params = {}) {
+        try {
+            const response = await apiClient.get(`/ratings/product/${productId}`, { params });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching ratings:', error);
+            throw error;
+        }
+    },
+
+    // Lấy rating của user hiện tại cho một sản phẩm
+    async getMyRatingForProduct(productId) {
+        try {
+            const response = await apiClient.get(`/ratings/product/${productId}/my-rating`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching user rating:', error);
+            throw error;
+        }
+    },
+
+    // Tạo rating mới
+    async createRating(data) {
+        try {
+            const response = await apiClient.post('/ratings', data);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating rating:', error);
+            throw error;
+        }
+    },
+
+    // Cập nhật rating
+    async updateRating(ratingId, data) {
+        try {
+            const response = await apiClient.put(`/ratings/${ratingId}`, data);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating rating:', error);
+            throw error;
+        }
+    },
+
+    // Xóa rating
+    async deleteRating(ratingId) {
+        try {
+            const response = await apiClient.delete(`/ratings/${ratingId}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error deleting rating:', error);
+            throw error;
+        }
+    },
+
+    // Lấy tất cả ratings của user hiện tại
+    async getMyAllRatings(params = {}) {
+        try {
+            const response = await apiClient.get('/ratings/user/my-ratings', { params });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching user ratings:', error);
+            throw error;
+        }
+    }
+};
+
 export default apiClient;
