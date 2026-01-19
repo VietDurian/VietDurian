@@ -68,11 +68,24 @@ const createProduct = async (req, res, next) => {
 // Get all products with pagination, search, filter, and sort
 const getAllProducts = async (req, res, next) => {
   try {
-    const { name, typeId, sortBy, sortOrder, page, limit } = req.query;
+    const {
+      name,
+      typeId,
+      sortBy,
+      sortOrder,
+      page,
+      limit,
+      userId: userIdQuery,
+    } = req.query;
+
+    // Allow filtering by authenticated user or explicit query param
+    const authUserId = req.user?.id || req.user?._id;
+    const userId = userIdQuery || authUserId;
 
     const products = await productService.getAllProducts({
       searchName: name,
       typeId,
+      userId,
       sortBy: sortBy || "created_at",
       sortOrder: sortOrder || "desc",
       page: page || 1,
