@@ -26,14 +26,14 @@ const POST_CATEGORIES = [
   "Khác",
 ];
 
-const PostComposer = ({ onOpenModal }) => {
+const PostComposer = ({ onOpenModal, user }) => {
   return (
     <div className="bg-white border-2 border-gray-200 rounded-xl p-4 w-full max-w-4xl">
       <div className="flex items-center gap-3">
         {/* Avatar */}
         <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
           <img
-            src="/images/avatar.jpg"
+            src={user?.avatar}
             alt="User profile"
             className="w-full h-full object-cover"
           />
@@ -362,7 +362,6 @@ export default function ContentExpertProfileContent() {
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState(null);
-
   // Get User's posts
 
   useEffect(() => {
@@ -427,6 +426,7 @@ export default function ContentExpertProfileContent() {
             onOpenModal={() => {
               setIsPostModalOpen(true);
             }}
+            user={user}
           />
         </div>
         <PostModal

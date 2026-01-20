@@ -13,9 +13,13 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const pathname = usePathname();
+
+  const { user, logout } = useAuth();
+
   const NAV_LINKS = [
     { label: "Trang Chủ", href: "/" },
     { label: "Hướng Dẫn", href: "/guide" },
@@ -27,18 +31,6 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
-  const [authUser, setAuthUser] = useState(null);
-  const [authToken, setAuthToken] = useState(null);
-
-  // Fetch local storage
-  useEffect(() => {
-    try {
-      const storedToken = localStorage.getItem("auth_token");
-      const storedUser = localStorage.getItem("auth_user");
-      if (storedToken) setAuthToken(storedToken);
-      if (storedUser) setAuthUser(JSON.parse(storedUser));
-    } catch (error) {}
-  }, []);
 
   // Handle scroll effect for glassmorphism
   useEffect(() => {
@@ -67,14 +59,6 @@ export default function Navbar() {
   // Open profile dropdown
   const toggleOpenProfile = () => {
     setOpenProfile(!openProfile);
-  };
-
-  // Handle Logout
-  const handleLogout = () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("auth_user");
-    setAuthUser(null);
-    setAuthToken(null);
   };
 
   return (
@@ -117,8 +101,8 @@ export default function Navbar() {
           </div>
           {/* Right Side */}
           <div className="relative hidden md:flex items-center gap-5">
-            <ShoppingBag className="hover:text-emerald-600" />
-            {authToken ? (
+            <ShoppingBag className="hover:text-emerald-600 text-gray-500" />
+            {user ? (
               <>
                 <button
                   onClick={toggleOpenProfile}
@@ -126,7 +110,7 @@ export default function Navbar() {
                 >
                   <div className="relative w-10 h-10 rounded-full overflow-hidden">
                     <Image
-                      src="/images/avatar.jpg"
+                      src={user?.avatar}
                       alt="Profile"
                       fill
                       className="object-cover"
@@ -153,7 +137,7 @@ export default function Navbar() {
                     <div className="flex items-center gap-2">
                       <div className="relative w-10 h-10 rounded-full overflow-hidden">
                         <Image
-                          src="/images/avatar.jpg"
+                          src={user?.avatar}
                           alt="Profile"
                           fill
                           className="object-cover"
@@ -161,19 +145,21 @@ export default function Navbar() {
                         />
                       </div>
                       <div>
-                        <p className="font-bold text-nowrap">
-                          {authUser.full_name}
+                        <p className="font-bold text-nowrap text-black">
+                          {user.full_name}
                         </p>
-                        <p className="text-sm text-nowrap">{authUser.email}</p>
+                        <p className="text-sm text-nowrap text-gray-400">
+                          {user.email}
+                        </p>
                       </div>
                       <div className="ml-10 bg-emerald-700 px-2 py-1 rounded-full ">
-                        <p className="text-sm text-white">{authUser.role}</p>
+                        <p className="text-sm text-white">{user.role}</p>
                       </div>
                     </div>
                     <div className="my-3 border border-gray-200" />
                     <div className="space-y-1">
                       <Link
-                        href={"/profile"}
+                        href={"/profile/posts"}
                         className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-900 cursor-pointer"
                       >
                         <User className="w-5 h-5" />
@@ -188,7 +174,7 @@ export default function Navbar() {
                     <div className="my-3 border border-gray-200" />
                     <div className="space-y-1">
                       <button
-                        onClick={handleLogout}
+                        onClick={logout}
                         className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-red-50 text-red-500 cursor-pointer"
                       >
                         <LogOutIcon className="w-5 h-5" />
@@ -258,12 +244,12 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {authToken ? (
+          {user ? (
             <div className=" rounded-xl bg-white/50 border border-gray-200 p-3 overflow-auto">
               <div className="flex items-center gap-3">
                 <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
                   <Image
-                    src="/images/avatar.jpg"
+                    src={user?.avatar}
                     alt="Profile"
                     fill
                     className="object-cover"
@@ -272,19 +258,19 @@ export default function Navbar() {
 
                 <div className="flex-1">
                   <p className="font-semibold text-gray-900">
-                    {authUser.full_name}
+                    {user.full_name}
                   </p>
-                  <p className="text-sm text-gray-500">{authUser.email}</p>
+                  <p className="text-sm text-gray-500">{user.email}</p>
                 </div>
 
                 <span className="bg-emerald-700 text-white text-xs px-2 py-1 rounded-full">
-                  {authUser.role}
+                  {user.role}
                 </span>
               </div>
 
               <div className="mt-3 space-y-1">
                 <Link
-                  href={"/profile"}
+                  href={"/profile/posts"}
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-800"
                 >
                   <User className="w-5 h-5" />
@@ -296,9 +282,12 @@ export default function Navbar() {
                   Settings
                 </button>
 
-                <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-red-50 text-red-500">
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-red-50 text-red-500"
+                >
                   <LogOutIcon className="w-5 h-5" />
-                  Logout
+                  Đăng xuất
                 </button>
               </div>
             </div>
@@ -307,7 +296,7 @@ export default function Navbar() {
               <Link
                 href="/register"
                 onClick={closeMenu}
-                className="flex-1 text-center rounded-full border border-emerald-700 text-emerald-700 font-semibold hover:bg-emerald-50 transition"
+                className="flex-1 text-center px-4 py-2 rounded-full border border-emerald-700 text-emerald-700 font-semibold hover:bg-emerald-50 transition"
               >
                 Đăng Ký
               </Link>
