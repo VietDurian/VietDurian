@@ -110,7 +110,7 @@ export default function Navbar() {
                 >
                   <div className="relative w-10 h-10 rounded-full overflow-hidden">
                     <Image
-                      src="/images/avatar.jpg"
+                      src={user?.avatar}
                       alt="Profile"
                       fill
                       className="object-cover"
@@ -137,7 +137,7 @@ export default function Navbar() {
                     <div className="flex items-center gap-2">
                       <div className="relative w-10 h-10 rounded-full overflow-hidden">
                         <Image
-                          src="/images/avatar.jpg"
+                          src={user?.avatar}
                           alt="Profile"
                           fill
                           className="object-cover"
@@ -159,7 +159,7 @@ export default function Navbar() {
                     <div className="my-3 border border-gray-200" />
                     <div className="space-y-1">
                       <Link
-                        href={"/profile"}
+                        href={"/profile/posts"}
                         className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-900 cursor-pointer"
                       >
                         <User className="w-5 h-5" />
@@ -249,7 +249,7 @@ export default function Navbar() {
               <div className="flex items-center gap-3">
                 <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
                   <Image
-                    src="/images/avatar.jpg"
+                    src={user?.avatar}
                     alt="Profile"
                     fill
                     className="object-cover"
@@ -270,7 +270,7 @@ export default function Navbar() {
 
               <div className="mt-3 space-y-1">
                 <Link
-                  href={"/profile"}
+                  href={"/profile/posts"}
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-800"
                 >
                   <User className="w-5 h-5" />

@@ -1,18 +1,7 @@
 import React from "react";
-import {
-  Home,
-  Search,
-  PlusSquare,
-  Heart,
-  User,
-  Bookmark,
-  Settings,
-  LogOut,
-} from "lucide-react";
+import { Home, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import Image from "next/image";
 
 const SidebarItem = ({ icon: Icon, label, href, active }) => (
   <Link
@@ -37,8 +26,8 @@ export default function AsideBar() {
   const pathname = usePathname();
 
   const menuItems = [
-    { icon: Home, label: "Posts", href: "/" },
-    { icon: Search, label: "Blogs", href: "/blogs" },
+    { icon: Home, label: "Posts", href: "/profile/posts" },
+    { icon: Search, label: "Blogs", href: "/profile/blogs" },
   ];
 
   return (
@@ -51,10 +40,6 @@ export default function AsideBar() {
             icon={item.icon}
             label={item.label}
             href={item.href}
-            active={
-              pathname === item.href ||
-              (item.label === "Posts" && pathname.includes("profile"))
-            }
           />
         ))}
       </nav>
