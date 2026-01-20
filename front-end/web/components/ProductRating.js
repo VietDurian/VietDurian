@@ -1,0 +1,525 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { ratingAPI } from "@/lib/api";
+
+export default function ProductRating({ productId, userId }) {
+    const [userRating, setUserRating] = useState(0);
+    const [hoveredStar, setHoveredStar] = useState(0);
+    const [averageRating, setAverageRating] = useState(0);
+    const [totalRatings, setTotalRatings] = useState(0);
+    const [userOwnRating, setUserOwnRating] = useState(null);
+    const [otherReviews, setOtherReviews] = useState([]);
+
+    const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+    const [isReviewDetailModalVisible, setIsReviewDetailModalVisible] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingRatingId, setEditingRatingId] = useState(null);
+
+    const [ratingContent, setRatingContent] = useState('');
+    const [selectedReview, setSelectedReview] = useState(null);
+
+    const [success, setSuccess] = useState('');
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (productId) {
+            fetchRatings();
+        }
+    }, [productId]);
+
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+        if (isRatingModalVisible || isReviewDetailModalVisible) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isRatingModalVisible, isReviewDetailModalVisible]);
+
+    const fetchRatings = async () => {
+        try {
+            const response = await ratingAPI.getRatingsByProductId(productId, {
+                page: 1,
+                limit: 100
+            });
+
+            if (response.success) {
+                // Handle statistics
+                const avgRating = response.statistics?.averageRating;
+                const avgRatingValue = typeof avgRating === 'string'
+                    ? parseFloat(avgRating)
+                    : parseFloat(avgRating || 0);
+
+                setAverageRating(avgRatingValue);
+                setTotalRatings(response.statistics?.totalRatings || 0);
+
+                // Transform ratings data
+                const ratingsData = response.data || [];
+                const formattedReviews = ratingsData.map(rating => {
+                    // FIX 1: Sử dụng đúng field name từ API
+                    const userName = rating.user_id?.full_name || 'Anonymous';
+                    const avatar = rating.user_id?.avatar || null;
+                    const userIdValue = rating.user_id?._id || null;
+
+                    // FIX 2: Parse stars correctly
+                    const stars = rating.stars;
+                    const starsValue = typeof stars === 'object' && stars?.$numberDecimal
+                        ? parseFloat(stars.$numberDecimal)
+                        : parseFloat(stars || 0);
+
+                    // FIX 3: Format date correctly
+                    const dateStr = rating.created_at || rating.createdAt;
+                    const formattedDate = dateStr
+                        ? new Date(dateStr).toLocaleDateString('vi-VN')
+                        : 'Invalid Date';
+
+                    return {
+                        id: rating._id,
+                        userName: userName,
+                        avatar: avatar,
+                        rating: starsValue,
+                        comment: rating.content,
+                        date: formattedDate,
+                        userId: userIdValue,
+                        rawData: rating
+                    };
+                });
+
+                // Separate user's own rating and others
+                if (userId) {
+                    const ownRating = formattedReviews.find(r => r.userId === userId);
+                    const others = formattedReviews.filter(r => r.userId !== userId);
+
+                    setUserOwnRating(ownRating || null);
+                    setOtherReviews(others);
+                } else {
+                    setUserOwnRating(null);
+                    setOtherReviews(formattedReviews);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching ratings:', error);
+            setError('Không thể tải đánh giá');
+            setTimeout(() => setError(''), 5000);
+        }
+    };
+
+    const handleSubmitRating = async (e) => {
+        e.preventDefault();
+
+        if (!ratingContent.trim() || ratingContent.trim().length < 10) {
+            setError('Vui lòng nhập nội dung đánh giá (tối thiểu 10 ký tự)');
+            handleCloseRatingModal();
+            setTimeout(() => setError(''), 5000);
+            return;
+        }
+
+        if (!userId) {
+            setError('Vui lòng đăng nhập để đánh giá');
+            handleCloseRatingModal();
+            setTimeout(() => setError(''), 5000);
+            return;
+        }
+
+        if (userRating === 0) {
+            setError('Vui lòng chọn số sao đánh giá');
+            setTimeout(() => setError(''), 5000);
+            return;
+        }
+
+        try {
+            let response;
+
+            if (isEditMode && editingRatingId) {
+                response = await ratingAPI.updateRating(editingRatingId, {
+                    stars: userRating,
+                    content: ratingContent.trim()
+                });
+            } else {
+                response = await ratingAPI.createRating({
+                    productId,
+                    stars: userRating,
+                    content: ratingContent.trim()
+                });
+            }
+
+            if (response.success) {
+                setSuccess(isEditMode ? 'Cập nhật đánh giá thành công!' : 'Gửi đánh giá thành công!');
+                handleCloseRatingModal();
+                await fetchRatings();
+                setTimeout(() => setSuccess(''), 5000);
+            } else {
+                throw new Error(response.message);
+            }
+        } catch (err) {
+            console.error('Failed to submit rating:', err);
+            setError(isEditMode
+                ? 'Không thể cập nhật đánh giá. Vui lòng thử lại.'
+                : 'Bạn đã đánh giá sản phẩm này rồi!'
+            );
+            handleCloseRatingModal();
+            setTimeout(() => setError(''), 5000);
+        }
+    };
+
+    const handleDeleteRating = async (ratingId) => {
+        if (!confirm('Bạn có chắc muốn xóa đánh giá này?')) return;
+
+        try {
+            const response = await ratingAPI.deleteRating(ratingId);
+
+            if (response.success) {
+                setSuccess('Xóa đánh giá thành công!');
+                setIsReviewDetailModalVisible(false);
+                await fetchRatings();
+                setTimeout(() => setSuccess(''), 5000);
+            }
+        } catch (error) {
+            console.error('Failed to delete rating:', error);
+            setError('Không thể xóa đánh giá. Vui lòng thử lại.');
+            setTimeout(() => setError(''), 5000);
+        }
+    };
+
+    const renderStars = (rating, isInteractive = false) => {
+        return Array.from({ length: 5 }, (_, index) => {
+            const starValue = index + 1;
+            const isFilled = isInteractive
+                ? (hoveredStar ? starValue <= hoveredStar : starValue <= userRating)
+                : starValue <= Math.floor(rating);
+
+            return (
+                <span
+                    key={index}
+                    className={`inline-block transition-all ${isInteractive
+                        ? 'text-5xl cursor-pointer hover:scale-110'
+                        : 'text-xl'
+                        } ${isFilled ? 'text-yellow-400' : 'text-gray-300'}`}
+                    onClick={isInteractive ? () => handleStarClick(starValue) : undefined}
+                    onMouseEnter={isInteractive ? () => setHoveredStar(starValue) : undefined}
+                    onMouseLeave={isInteractive ? () => setHoveredStar(0) : undefined}
+                >
+                    ★
+                </span>
+            );
+        });
+    };
+
+    const handleStarClick = (rating) => {
+        setUserRating(rating);
+        setIsRatingModalVisible(true);
+    };
+
+    const handleCloseRatingModal = () => {
+        setIsRatingModalVisible(false);
+        setRatingContent('');
+        setUserRating(0);
+        setIsEditMode(false);
+        setEditingRatingId(null);
+    };
+
+    const handleReviewCardClick = (review, isEdit = false) => {
+        setSelectedReview(review);
+        if (isEdit) {
+            setIsEditMode(true);
+            setEditingRatingId(review.id);
+            setUserRating(review.rating);
+            setRatingContent(review.comment);
+            setIsRatingModalVisible(true);
+        } else {
+            setIsReviewDetailModalVisible(true);
+        }
+    };
+
+    const handleCloseReviewDetailModal = () => {
+        setIsReviewDetailModalVisible(false);
+        setSelectedReview(null);
+    };
+
+    return (
+        <div className="max-w-[1400px] mx-auto px-4 py-12">
+            {/* Rating Section */}
+            <div className="mb-16">
+                <h2 className="text-4xl font-bold text-gray-900 mb-8">Đánh giá</h2>
+
+                {/* Rating Overview */}
+                <div className="flex flex-col md:flex-row gap-6 items-center mb-8">
+                    <div>
+                        <div className="text-6xl font-bold text-gray-900 leading-none">
+                            {averageRating > 0 ? averageRating.toFixed(1) : '0.0'}
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                            {renderStars(averageRating)}
+                        </div>
+                        <div className="text-xl text-gray-600">
+                            {totalRatings} {totalRatings === 1 ? 'Đánh giá' : 'Đánh giá'}
+                        </div>
+                    </div>
+                </div>
+
+                {/* User Rating Input */}
+                <div className="flex gap-3">
+                    {renderStars(userRating, true)}
+                </div>
+            </div>
+
+            {/* Reviews List */}
+            <div className="overflow-x-auto pb-4">
+                <div className="flex gap-6 min-w-min">
+                    {/* User's Own Rating */}
+                    {userOwnRating && (
+                        <div
+                            className="flex-shrink-0 w-[320px] h-[140px] bg-white border-2 border-emerald-600 rounded-xl p-4 cursor-pointer hover:shadow-lg transition-all"
+                            style={{ boxShadow: '3px 3px 0px #10b981' }}
+                            onClick={() => handleReviewCardClick(userOwnRating, false)}
+                        >
+                            <div className="flex flex-col h-full">
+                                {/* Header with name and date */}
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="font-semibold text-base text-gray-900">
+                                        {userOwnRating.userName}
+                                    </div>
+                                    <div className="text-xs text-gray-400 whitespace-nowrap">
+                                        {userOwnRating.date}
+                                    </div>
+                                </div>
+
+                                {/* Stars and action buttons */}
+                                <div className="flex justify-between items-center mb-2">
+                                    <div className="flex gap-0.5">
+                                        {renderStars(userOwnRating.rating)}
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                        <button
+                                            className="p-1 border border-emerald-600 text-emerald-600 rounded hover:bg-emerald-50 transition-all"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleReviewCardClick(userOwnRating, true);
+                                            }}
+                                            title="Chỉnh sửa"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            className="p-1 border border-red-500 text-red-500 rounded hover:bg-red-50 transition-all"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteRating(userOwnRating.id);
+                                            }}
+                                            title="Xóa"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Comment */}
+                                <p className="text-gray-400 text-sm overflow-hidden break-all line-clamp-1">
+                                    {userOwnRating.comment}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Other Reviews */}
+                    {otherReviews.length > 0 ? (
+                        otherReviews.slice(0, userOwnRating ? 3 : 4).map((review) => (
+                            <div
+                                key={review.id}
+                                className="flex-shrink-0 w-[320px] h-[140px] bg-white border-2 border-emerald-600 rounded-xl p-4 cursor-pointer hover:shadow-lg transition-all"
+                                style={{ boxShadow: '3px 3px 0px #10b981' }}
+                                onClick={() => handleReviewCardClick(review)}
+                            >
+                                <div className="flex flex-col h-full">
+                                    {/* Header with name and date */}
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="font-semibold text-base text-gray-900">
+                                            {review.userName}
+                                        </div>
+                                        <div className="text-xs text-gray-400 whitespace-nowrap">
+                                            {review.date}
+                                        </div>
+                                    </div>
+
+                                    {/* Stars */}
+                                    <div className="flex gap-0.5 mb-2">
+                                        {renderStars(review.rating)}
+                                    </div>
+
+                                    {/* Comment */}
+                                    <p className="text-gray-400 text-sm overflow-hidden break-all line-clamp-1">
+                                        {review.comment}
+                                    </p>
+                                </div>
+                            </div>
+                        ))
+                    ) : !userOwnRating ? (
+                        <div className="w-full text-center py-12 text-gray-500 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                            <p className="text-lg">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+                        </div>
+                    ) : null}
+                </div>
+            </div>
+
+            {/* Rating Modal */}
+            {isRatingModalVisible && (
+                <div
+                    className="fixed inset-0 bg-black/35 flex items-center justify-center z-50 p-4 overflow-y-auto"
+                    onClick={handleCloseRatingModal}
+                >
+                    <div
+                        className="bg-white rounded-2xl w-full max-w-xl my-8"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center p-8 border-b border-gray-200">
+                            <h2 className="text-3xl font-bold text-gray-900">
+                                {isEditMode ? 'CHỈNH SỬA ĐÁNH GIÁ' : 'ĐÁNH GIÁ SẢN PHẨM'}
+                            </h2>
+                            <button
+                                className="text-gray-400 hover:text-gray-600 text-4xl leading-none"
+                                onClick={handleCloseRatingModal}
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        <div className="p-8">
+                            <div className="flex justify-center gap-3 mb-8 pb-6 border-b border-gray-200">
+                                {renderStars(userRating, true)}
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-lg font-medium text-gray-600 mb-6">
+                                    Chia sẻ trải nghiệm của bạn về sản phẩm này
+                                </label>
+                                <textarea
+                                    className="w-full border-2 border-gray-300 rounded-lg p-4 text-lg focus:outline-none focus:border-emerald-500 bg-gray-50 resize-none text-gray-900"
+                                    rows="5"
+                                    placeholder="Hãy chia sẻ cảm nhận của bạn về chất lượng, hương vị, hoặc bất cứ điều gì khác..."
+                                    value={ratingContent}
+                                    onChange={(e) => setRatingContent(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="flex justify-center gap-3">
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleSubmitRating(e);
+                                    }}
+                                    className="flex-1 max-w-[200px] px-6 py-3 border-2 border-emerald-600 text-emerald-600 font-bold rounded-lg hover:bg-emerald-600 hover:text-white transition-all"
+                                >
+                                    {isEditMode ? 'Cập nhật' : 'Gửi đánh giá'}
+                                </button>
+
+                                {isEditMode && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleCloseRatingModal();
+                                            handleDeleteRating(editingRatingId);
+                                        }}
+                                        className="flex-1 max-w-[200px] px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-all"
+                                    >
+                                        Xóa
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Review Detail Modal */}
+            {isReviewDetailModalVisible && selectedReview && (
+                <div
+                    className="fixed inset-0 bg-black/35 flex items-center justify-center z-50 p-4 overflow-y-auto"
+                    onClick={handleCloseReviewDetailModal}
+                >
+                    <div
+                        className="bg-white rounded-2xl w-full max-w-xl my-8"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center p-8 border-b border-gray-200">
+                            <h2 className="text-3xl font-bold text-gray-900">CHI TIẾT ĐÁNH GIÁ</h2>
+                            <button
+                                className="text-gray-400 hover:text-gray-600 text-4xl leading-none"
+                                onClick={handleCloseReviewDetailModal}
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        <div className="p-8 space-y-6">
+                            <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+                                <div className="font-semibold text-2xl text-gray-900">
+                                    {selectedReview.userName}
+                                </div>
+                                <div className="text-lg text-gray-500">
+                                    {selectedReview.date}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                                {renderStars(selectedReview.rating)}
+                            </div>
+
+                            <div className="bg-gray-50 rounded-lg p-4 min-h-[150px]">
+                                <p className="text-gray-700 text-lg leading-relaxed whitespace-pre-wrap">
+                                    {selectedReview.comment}
+                                </p>
+                            </div>
+
+                            {/* FIX 5: Add Edit and Delete buttons for user's own review */}
+                            {selectedReview.userId === userId && (
+                                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                                    <button
+                                        onClick={() => {
+                                            handleCloseReviewDetailModal();
+                                            handleReviewCardClick(selectedReview, true);
+                                        }}
+                                        className="flex-1 px-6 py-3 border-2 border-emerald-600 text-emerald-600 font-bold rounded-lg hover:bg-emerald-600 hover:text-white transition-all"
+                                    >
+                                        Chỉnh sửa
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteRating(selectedReview.id)}
+                                        className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-all"
+                                    >
+                                        Xóa
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Success Message */}
+            {success && (
+                <div className="fixed right-8 top-8 bg-emerald-100 border border-emerald-600 text-emerald-600 px-6 py-4 rounded-lg shadow-lg z-[9999] text-lg">
+                    {success}
+                </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+                <div className="fixed right-8 top-8 bg-red-100 border border-red-600 text-red-600 px-6 py-4 rounded-lg shadow-lg z-[9999] text-lg">
+                    {error}
+                </div>
+            )}
+        </div>
+    );
+}

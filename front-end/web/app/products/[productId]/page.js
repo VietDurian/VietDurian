@@ -7,6 +7,44 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { productAPI } from "@/lib/api";
+import ProductRating from "@/components/ProductRating";
+
+
+
+const getUserId = () => {
+    if (typeof window === 'undefined') return null;
+
+    const getCookie = (name) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    };
+
+    let userId = getCookie('user_id') || localStorage.getItem('user_id');
+
+    if (!userId) {
+        const accessToken = getCookie('accessToken') || localStorage.getItem('auth_token');
+        if (accessToken) {
+            try {
+                const base64Url = accessToken.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(
+                    atob(base64)
+                        .split('')
+                        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                        .join('')
+                );
+                const decoded = JSON.parse(jsonPayload);
+                userId = decoded.userId || decoded.id || decoded.sub;
+            } catch (e) {
+                console.error('Error decoding token:', e);
+            }
+        }
+    }
+
+    return userId;
+};
 
 export default function ProductDetailPage() {
     const params = useParams();
@@ -19,11 +57,16 @@ export default function ProductDetailPage() {
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState("description");
     const [imageError, setImageError] = useState(false);
+    const [userId, setUserId] = useState(null);
 
     const handleImageError = () => {
         setImageError(true);
     };
 
+    useEffect(() => {
+        const id = getUserId();
+        setUserId(id);
+    }, []);
     useEffect(() => {
         const fetchProduct = async () => {
             try {
@@ -492,7 +535,7 @@ export default function ProductDetailPage() {
                     </div>
                 </div>
             </section>
-
+            <ProductRating productId={productId} userId={userId} />
             <Footer />
         </div>
     );
