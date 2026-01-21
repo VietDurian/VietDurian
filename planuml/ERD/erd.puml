@@ -1,0 +1,196 @@
+@startchen
+
+entity users {
+}
+entity products {
+}
+entity productImages {
+}
+entity typeProducts {
+}
+entity generalPosts {
+}
+entity knowledgeBlogs {
+}
+entity knowledgeBlocks {
+}
+entity diaries {
+}
+entity diarySteps {
+}
+entity steps {
+}
+entity gardens {
+}
+entity serviceProviderProfiles {
+}
+entity commentPosts {
+}
+entity reactionComments {
+}
+entity reportPosts {
+}
+entity favorites {
+}
+entity ratings {
+}
+entity opts {
+}
+entity logoutTokens {
+}
+entity conversations {
+}
+entity messages {
+}
+entity permissionAccounts {
+}
+entity notifications {
+}
+
+relationship owns {
+}
+relationship hasImage {
+}
+relationship classifies {
+}
+relationship writesPost {
+}
+relationship writesBlog {
+}
+relationship containsBlock {
+}
+relationship createsDiary {
+}
+relationship includesStep {
+}
+relationship definesStep {
+}
+relationship ownsGarden {
+}
+relationship hasProfile {
+}
+relationship receivesComment {
+}
+relationship writesComment {
+}
+relationship hasReaction {
+}
+relationship reactsTo {
+}
+relationship savesFav {
+}
+relationship savedAs {
+}
+relationship givesRating {
+}
+relationship receivesRating {
+}
+relationship reportsPost {
+}
+relationship reported {
+}
+relationship participates {
+}
+relationship containsMsg {
+}
+relationship sendsMsg {
+}
+relationship requestsPerm {
+}
+relationship receivesNotif {
+}
+relationship sendsNotif {
+}
+relationship hasOpt {
+}
+relationship hasToken {
+}
+
+users -N- owns
+owns -N- products
+
+products -1- hasImage
+hasImage -N- productImages
+
+typeProducts -1- classifies
+classifies -N- products
+
+users -1- writesPost
+writesPost -N- generalPosts
+
+users -1- writesBlog
+writesBlog -N- knowledgeBlogs
+
+knowledgeBlogs -1- containsBlock
+containsBlock -N- knowledgeBlocks
+
+users -1- createsDiary
+createsDiary -N- diaries
+
+diaries -1- includesStep
+includesStep -N- diarySteps
+
+steps -1- definesStep
+definesStep -N- diarySteps
+
+users -1- ownsGarden
+ownsGarden -N- gardens
+
+users -1- hasProfile
+hasProfile -1- serviceProviderProfiles
+
+generalPosts -1- receivesComment
+receivesComment -N- commentPosts
+
+users -1- writesComment
+writesComment -N- commentPosts
+
+commentPosts -1- hasReaction
+hasReaction -N- reactionComments
+
+users -1- reactsTo
+reactsTo -N- reactionComments
+
+users -1- savesFav
+savesFav -N- favorites
+
+generalPosts -1- savedAs
+savedAs -N- favorites
+
+users -1- givesRating
+givesRating -N- ratings
+
+products -1- receivesRating
+receivesRating -N- ratings
+
+users -1- reportsPost
+reportsPost -N- reportPosts
+
+generalPosts -1- reported
+reported -N- reportPosts
+
+users -1- participates
+participates -N- conversations
+
+conversations -1- containsMsg
+containsMsg -N- messages
+
+users -1- sendsMsg
+sendsMsg -N- messages
+
+users -1- requestsPerm
+requestsPerm -N- permissionAccounts
+
+users -1- receivesNotif
+receivesNotif -N- notifications
+
+users -1- sendsNotif
+sendsNotif -N- notifications
+
+users -1- hasOpt
+hasOpt -N- opts
+
+users -1- hasToken
+hasToken -N- logoutTokens
+
+@endchen

@@ -1,7 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { X, RefreshCcw, ArrowUp, Sparkles, Plus } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import {
+	X,
+	RefreshCcw,
+	ArrowUp,
+	Sparkles,
+	Plus,
+	MessageCircleMore,
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const initialMessages = [
@@ -13,6 +21,7 @@ const initialMessages = [
 ];
 
 export default function AiFloatingButton() {
+	const pathname = usePathname();
 	const { user, loading } = useAuth();
 	const [open, setOpen] = useState(false);
 	const [input, setInput] = useState('');
@@ -35,6 +44,7 @@ export default function AiFloatingButton() {
 	}, [messages, open]);
 
 	if (loading || !user) return null;
+	if (pathname?.startsWith('/dashboard')) return null;
 
 	const toggle = () => setOpen((v) => !v);
 
@@ -165,8 +175,8 @@ export default function AiFloatingButton() {
 										msg.role === 'user'
 											? 'bg-green-600 text-white rounded-br-none'
 											: msg.isError
-											? 'bg-red-50 text-red-600 border border-red-100'
-											: 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
+												? 'bg-red-50 text-red-600 border border-red-100'
+												: 'bg-white text-gray-800 border border-gray-100 rounded-bl-none'
 									}
 									`}
 								>
@@ -269,7 +279,7 @@ export default function AiFloatingButton() {
 				aria-label="Mở trợ lý AI"
 			>
 				<span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-20 animate-ping"></span>
-				<span className="text-2xl font-bold">?</span>
+				<MessageCircleMore size={30} />
 				<div className="absolute right-full mr-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none translate-x-2 group-hover:translate-x-0 duration-200">
 					Hỗ trợ
 					<div className="absolute top-1/2 -right-1 -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>
