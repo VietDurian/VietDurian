@@ -17,12 +17,13 @@ import gardenRoute from "@/routes/gardenRoute";
 import { chatRoute } from "@/routes/chatRoute";
 import { notificationRouter } from "@/routes/notificationRoute";
 import { permissionRoute } from "@/routes/permissionRoute";
+import { userRoute } from "@/routes/userRoute";
 import { serviceProviderProfileRoute } from "@/routes/serviceProviderProfileRoute";
 
 const Router = express.Router();
 
 Router.use("/auth", authRoute);
-// Router.use('/user', userRoute);
+Router.use('/user', userRoute);
 Router.use("/profile", profileRoute);
 Router.use("/products", productRoute);
 Router.use("/ratings", ratingRoute);
