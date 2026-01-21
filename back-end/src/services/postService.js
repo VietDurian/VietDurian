@@ -74,12 +74,37 @@ const getGeneralPost = async ({
 		}
 
 		// Apply sort via Mongoose `.sort()`; if no sort provided, no sort applied.
-		const postsQuery = GeneralPostModel.find(query);
-		const posts = Object.keys(sortOption).length
+		const postsQuery = GeneralPostModel.find(query).populate({
+			path: 'author_id',
+			select: 'full_name avatar',
+		});
+
+		const rawPosts = Object.keys(sortOption).length
 			? await postsQuery.sort(sortOption).lean()
 			: await postsQuery.lean();
 
-		return posts;
+		const postsWithAuthor = rawPosts.map((post) => {
+			const author = post.author_id;
+			const normalizedAuthorId =
+				author && author._id
+					? author._id.toString()
+					: post.author_id?.toString?.();
+
+			return {
+				...post,
+				author:
+					author && author._id
+						? {
+								_id: author._id.toString(),
+								full_name: author.full_name,
+								avatar: author.avatar,
+							}
+						: null,
+				author_id: normalizedAuthorId || '',
+			};
+		});
+
+		return postsWithAuthor;
 	} catch (error) {
 		throw error;
 	}
@@ -102,7 +127,7 @@ const updateGeneralPost = async (post_id, data) => {
 		const updatedPost = await GeneralPostModel.findByIdAndUpdate(
 			post_id,
 			data,
-			{ new: true }
+			{ new: true },
 		);
 		return updatedPost;
 	} catch (error) {
@@ -125,7 +150,7 @@ const approveGeneralPost = async (post_id, adminId) => {
 		const updatedPost = await GeneralPostModel.findByIdAndUpdate(
 			post_id,
 			{ status: 'active' },
-			{ new: true }
+			{ new: true },
 		);
 
 		// Notification Logic
