@@ -12,7 +12,6 @@ export function PostsPage() {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [statusFilter, setStatusFilter] = useState('all');
 	const [categoryFilter, setCategoryFilter] = useState('all');
-	const [sortField, setSortField] = useState('createdAt');
 	const [sortOrder, setSortOrder] = useState('desc');
 	const [selectedPost, setSelectedPost] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
@@ -91,17 +90,7 @@ export function PostsPage() {
 
 	const sortedPosts = [...filteredPosts].sort((a, b) => {
 		const direction = sortOrder === 'asc' ? 1 : -1;
-		switch (sortField) {
-			case 'author':
-				return a.author.localeCompare(b.author) * direction;
-			case 'category':
-				return a.category.localeCompare(b.category) * direction;
-			case 'status':
-				return a.status.localeCompare(b.status) * direction;
-			case 'createdAt':
-			default:
-				return (parseDate(a.createdAt) - parseDate(b.createdAt)) * direction;
-		}
+		return (parseDate(a.createdAt) - parseDate(b.createdAt)) * direction;
 	});
 
 	const snippet = (text = '', max = 80) =>
@@ -180,7 +169,7 @@ export function PostsPage() {
 						</select>
 					</div>
 
-					{/* Sort */}
+					{/* Category + order */}
 					<div className="flex items-center gap-2">
 						<select
 							value={categoryFilter}
@@ -194,23 +183,13 @@ export function PostsPage() {
 							<option value="Thuê dịch vụ">Thuê dịch vụ</option>
 							<option value="Khác">Khác</option>
 						</select>
-						<select
-							value={sortField}
-							onChange={(e) => setSortField(e.target.value)}
-							className="w-full md:w-48 pl-4 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent bg-white"
-						>
-							<option value="createdAt">Mới nhất</option>
-							<option value="author">Tên (A-Z)</option>
-							<option value="category">Thể loại</option>
-							<option value="status">Trạng thái</option>
-						</select>
 						<button
 							type="button"
 							onClick={() =>
 								setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
 							}
 							className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-							title="Đổi thứ tự"
+							title="Đổi thứ tự thời gian"
 						>
 							<ArrowUpDown
 								className={`w-4 h-4 text-gray-600 ${
