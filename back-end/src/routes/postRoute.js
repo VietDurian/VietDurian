@@ -252,6 +252,9 @@ const Router = express.Router();
  *               contact:
  *                 type: string
  *                 example: "updated-contact@example.com"
+ *               status:
+ *                 type: string
+ *                 example: "active"
  *     responses:
  *       200:
  *         description: General blog updated successfully

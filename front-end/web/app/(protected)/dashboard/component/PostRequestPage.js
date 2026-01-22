@@ -1,34 +1,17 @@
 'use client';
 import { useEffect, useState } from 'react';
-import {
-	Search,
-	Filter,
-	PauseCircle,
-	Trash2,
-	ArrowUpDown,
-	Check,
-} from 'lucide-react';
+import { Search, PauseCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import {
-	getOwnPosts,
-	deletePost as deletePostApi,
-	setPostActive,
-	setPostInactive,
-} from '@/lib/api';
+import { getOwnPosts } from '@/lib/api';
 import { useLanguage } from '../context/LanguageContext';
 
-export function PostsPage() {
+export function PostRequestPage() {
 	const { t } = useLanguage();
 	const [posts, setPosts] = useState([]);
-	const [searchTerm, setSearchTerm] = useState('');
-	const [statusFilter, setStatusFilter] = useState('all');
-	const [categoryFilter, setCategoryFilter] = useState('all');
 	const [sortOrder, setSortOrder] = useState('desc');
 	const [selectedPost, setSelectedPost] = useState(null);
-	const [postToDelete, setPostToDelete] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
-	const [updatingPostId, setUpdatingPostId] = useState(null);
 
 	// Fetch posts with current filters and normalize author fields
 	useEffect(() => {
@@ -38,9 +21,7 @@ export function PostsPage() {
 			setIsLoading(true);
 			try {
 				const data = await getOwnPosts({
-					status: statusFilter === 'all' ? undefined : statusFilter,
-					category: categoryFilter === 'all' ? undefined : categoryFilter,
-					search: searchTerm || undefined,
+					status: 'progressing',
 				});
 
 				if (!isMounted) return;
@@ -79,7 +60,12 @@ export function PostsPage() {
 		return () => {
 			isMounted = false;
 		};
-	}, [searchTerm, statusFilter, categoryFilter]);
+	}, []);
+
+	const sortedPosts = [...filteredPosts].sort((a, b) => {
+		const direction = sortOrder === 'asc' ? 1 : -1;
+		return (parseDate(a.createdAt) - parseDate(b.createdAt)) * direction;
+	});
 
 	const parseDate = (value) => {
 		if (!value) return 0;
@@ -93,94 +79,6 @@ export function PostsPage() {
 		return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('vi-VN');
 	};
 
-	const filteredPosts = posts.filter((post) => {
-		const matchesSearch =
-			post.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			post.content.toLowerCase().includes(searchTerm.toLowerCase());
-		const matchesStatus =
-			statusFilter === 'all' || post.status === statusFilter;
-		return matchesSearch && matchesStatus;
-	});
-
-	const sortedPosts = [...filteredPosts].sort((a, b) => {
-		const direction = sortOrder === 'asc' ? 1 : -1;
-		return (parseDate(a.createdAt) - parseDate(b.createdAt)) * direction;
-	});
-
-	const snippet = (text = '', max = 80) =>
-		text.length > max ? `${text.slice(0, max)}...` : text;
-
-	// Set post status to inactive (toggle: if inactive then activate)
-	const setInactive = async (postOrId) => {
-		const id =
-			typeof postOrId === 'string' ? postOrId : postOrId?._id || postOrId?.id;
-		if (!id) return;
-		const post = posts.find((p) => p.id === id);
-		if (!post) return;
-		setUpdatingPostId(id);
-		try {
-			if (post.status === 'active') {
-				// set to inactive
-				await setPostInactive(id);
-				setPosts((prev) =>
-					prev.map((p) => (p.id === id ? { ...p, status: 'inactive' } : p)),
-				);
-				if (selectedPost?.id === id) {
-					setSelectedPost((prev) =>
-						prev ? { ...prev, status: 'inactive' } : prev,
-					);
-				}
-				toast.success(t('inactive_post'));
-			} else {
-				// currently inactive -> activate
-				await setPostActive(id);
-				setPosts((prev) =>
-					prev.map((p) => (p.id === id ? { ...p, status: 'active' } : p)),
-				);
-				if (selectedPost?.id === id) {
-					setSelectedPost((prev) =>
-						prev ? { ...prev, status: 'active' } : prev,
-					);
-				}
-				toast.success(t('active_post'));
-			}
-		} catch (error) {
-			toast.error(error?.message || t('error'));
-		} finally {
-			setUpdatingPostId(null);
-		}
-	};
-
-	const handleDeletePost = async (postOrId) => {
-		// cho phép hàm nhận cả một id (string) hoặc một id object
-		const id =
-			typeof postOrId === 'string' ? postOrId : postOrId._id || postOrId.id;
-		try {
-			await deletePostApi(id);
-			setPosts((prev) => prev.filter((p) => p.id !== id));
-			if (selectedPost?.id === id) {
-				setSelectedPost(null);
-			}
-			setPostToDelete(null);
-			toast.success(t('delete_post'));
-		} catch (error) {
-			toast.error(error?.message || t('error'));
-		}
-	};
-
-	const getStatusColor = (status) => {
-		switch (status) {
-			case 'active':
-				return 'bg-green-100 text-green-700';
-			case 'progressing':
-				return 'bg-yellow-100 text-yellow-700';
-			case 'inactive':
-				return 'bg-gray-100 text-gray-700';
-			default:
-				return 'bg-gray-100 text-gray-700';
-		}
-	};
-
 	return (
 		<div className="p-4 md:p-8">
 			{/* Header */}
@@ -191,67 +89,6 @@ export function PostsPage() {
 				<p className="text-sm md:text-base text-gray-600">
 					{t('content_moderation')}
 				</p>
-			</div>
-
-			{/* Filters */}
-			<div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100 mb-6">
-				<div className="flex flex-col md:flex-row gap-4">
-					{/* Search */}
-					<div className="flex-1 relative">
-						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-						<input
-							type="text"
-							placeholder={t('search_users')}
-							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
-							className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
-						/>
-					</div>
-
-					{/* Status Filter */}
-					<div className="relative">
-						<Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-						<select
-							value={statusFilter}
-							onChange={(e) => setStatusFilter(e.target.value)}
-							className="w-full md:w-48 pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent appearance-none bg-white"
-						>
-							<option value="all">Tất cả</option>
-							<option value="active">Hoạt động</option>
-							<option value="inactive">Ngưng hoạt động</option>
-						</select>
-					</div>
-
-					{/* Category + order */}
-					<div className="flex items-center gap-2">
-						<select
-							value={categoryFilter}
-							onChange={(e) => setCategoryFilter(e.target.value)}
-							className="w-full md:w-48 pl-4 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent bg-white"
-						>
-							<option value="all">Tất cả thể loại</option>
-							<option value="Dịch vụ">Dịch vụ</option>
-							<option value="Kinh nghiệm">Kinh nghiệm</option>
-							<option value="Sản phẩm">Sản phẩm</option>
-							<option value="Thuê dịch vụ">Thuê dịch vụ</option>
-							<option value="Khác">Khác</option>
-						</select>
-						<button
-							type="button"
-							onClick={() =>
-								setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
-							}
-							className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-							title="Đổi thứ tự thời gian"
-						>
-							<ArrowUpDown
-								className={`w-4 h-4 text-gray-600 ${
-									sortOrder === 'desc' ? 'rotate-180' : ''
-								}`}
-							/>
-						</button>
-					</div>
-				</div>
 			</div>
 
 			{isLoading && (
@@ -337,21 +174,17 @@ export function PostsPage() {
 											<button
 												onClick={(e) => {
 													e.stopPropagation();
-													setInactive(post.id);
+													setInactive(post);
 												}}
 												className="p-2 hover:bg-yellow-100 rounded-lg transition-colors"
 												title={t('inactive_post')}
 											>
-												{updatingPostId === post.id ? (
-													<div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
-												) : (
-													<PauseCircle className="w-4 h-4 text-gray-500" />
-												)}
+												<PauseCircle className="w-4 h-4 text-gray-500" />
 											</button>
 											<button
 												onClick={(e) => {
 													e.stopPropagation();
-													setPostToDelete(post);
+													deletePost(post);
 												}}
 												className="p-2 hover:bg-red-100 rounded-lg transition-colors"
 												title={t('delete_post')}
@@ -420,20 +253,16 @@ export function PostsPage() {
 								<button
 									onClick={(e) => {
 										e.stopPropagation();
-										setInactive(post.id);
+										setInactive(post);
 									}}
 									className="p-2 rounded-lg transition-colors hover:bg-yellow-100"
 								>
-									{updatingPostId === post.id ? (
-										<div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
-									) : (
-										<PauseCircle className="w-4 h-4 text-gray-600" />
-									)}
+									<PauseCircle className="w-4 h-4 text-gray-600" />
 								</button>
 								<button
 									onClick={(e) => {
 										e.stopPropagation();
-										setPostToDelete(post);
+										deletePost(post);
 									}}
 									className="p-2 rounded-lg transition-colors hover:bg-red-100"
 								>
@@ -444,41 +273,6 @@ export function PostsPage() {
 					</div>
 				))}
 			</div>
-
-			{/* Delete Confirmation Modal */}
-			{postToDelete && (
-				<div
-					className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
-					role="dialog"
-					aria-modal="true"
-				>
-					<div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-						<div className="p-4 md:p-6">
-							<h3 className="text-lg font-semibold text-gray-900 mb-2">
-								{t('delete_post_title') || 'Xác nhận xóa'}
-							</h3>
-							<p className="text-sm text-gray-600 mb-4">
-								{t('delete_post_message') ||
-									'Bạn có chắc chắn muốn xóa bài viết này?'}
-							</p>
-							<div className="flex justify-end gap-2">
-								<button
-									onClick={() => setPostToDelete(null)}
-									className="px-4 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 cursor-pointer"
-								>
-									{t('cancel') || 'Hủy'}
-								</button>
-								<button
-									onClick={() => handleDeletePost(postToDelete)}
-									className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 cursor-pointer"
-								>
-									{t('delete_post')}
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			)}
 
 			{/* Results Info */}
 			<div className="mt-4 text-sm text-gray-500 text-center md:text-left">
