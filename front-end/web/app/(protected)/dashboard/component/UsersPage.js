@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
 	Search,
 	Filter,
@@ -9,101 +9,73 @@ import {
 	ShieldOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
-
+import { usersAPI } from '../../../../lib/api';
 import { useLanguage } from '../context/LanguageContext';
 import { BlockModal } from './BlockModal';
 
-const mockUsersData = [
-	{
-		id: 1,
-		name: 'Nguyễn Văn A',
-		email: 'nguyenvana@gmail.com',
-		phone: '0901234567',
-		role: 'farmer',
-		status: 'active',
-		joinDate: '15/01/2026',
-		location: 'Đồng Tháp',
-	},
-	{
-		id: 2,
-		name: 'Trần Thị B',
-		email: 'tranthib@gmail.com',
-		phone: '0902345678',
-		role: 'expert',
-		status: 'active',
-		joinDate: '14/01/2026',
-		location: 'TP.HCM',
-	},
-	{
-		id: 3,
-		name: 'Lê Văn C',
-		email: 'levanc@gmail.com',
-		phone: '0903456789',
-		role: 'farmer',
-		status: 'pending',
-		joinDate: '13/01/2026',
-		location: 'Bến Tre',
-	},
-	{
-		id: 4,
-		name: 'Phạm Thị D',
-		email: 'phamthid@gmail.com',
-		phone: '0904567890',
-		role: 'business',
-		status: 'active',
-		joinDate: '12/01/2026',
-		location: 'Hà Nội',
-	},
-	{
-		id: 5,
-		name: 'Hoàng Văn E',
-		email: 'hoangvane@gmail.com',
-		phone: '0905678901',
-		role: 'farmer',
-		status: 'blocked',
-		joinDate: '11/01/2026',
-		location: 'Tiền Giang',
-	},
-	{
-		id: 6,
-		name: 'Võ Thị F',
-		email: 'vothif@gmail.com',
-		phone: '0906789012',
-		role: 'expert',
-		status: 'active',
-		joinDate: '10/01/2026',
-		location: 'Đà Nẵng',
-	},
-	{
-		id: 7,
-		name: 'Đặng Văn G',
-		email: 'dangvang@gmail.com',
-		phone: '0907890123',
-		role: 'farmer',
-		status: 'active',
-		joinDate: '09/01/2026',
-		location: 'Đắk Lắk',
-	},
-	{
-		id: 8,
-		name: 'Bùi Thị H',
-		email: 'buithih@gmail.com',
-		phone: '0908901234',
-		role: 'business',
-		status: 'pending',
-		joinDate: '08/01/2026',
-		location: 'Cần Thơ',
-	},
-];
 
 export function UsersPage() {
 	const { t } = useLanguage();
-	const [users, setUsers] = useState(mockUsersData);
+	const [users, setUsers] = useState([]);
+	const [loading, setLoading] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [roleFilter, setRoleFilter] = useState('all');
 	const [statusFilter, setStatusFilter] = useState('all');
 	const [blockModalOpen, setBlockModalOpen] = useState(false);
 	const [selectedUser, setSelectedUser] = useState(null);
+
+
+	const mapUser = (u) => ({
+		id: u._id || u.id,
+		name: u.full_name || 'No Name',
+		email: u.email,
+		phone: u.phone || 'N/A',
+		role: u.role,
+		status: u.is_banned ? 'blocked' : 'active',
+		joinDate: (u.created_at || u.createdAt)
+			? new Date(u.created_at || u.createdAt).toLocaleDateString('vi-VN')
+			: 'N/A',
+		location: u.location || 'Unknown',
+	})
+
+	const fetchUsers = async () => {
+		setLoading(true);
+		try {
+			const data = await usersAPI.getAllUsers({ page: 1, limit: 100 });
+			console.log('Fetched Users Data:', data);
+			const list = Array.isArray(data?.users) ? data.users : [];
+			setUsers(list.map(mapUser));
+		} catch (error) {
+			console.error('Loi Loi', error);
+			toast.error(t('error_fetching_users'));
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		const term = searchTerm.trim();
+		const handler = setTimeout(async () => {
+			setLoading(true);
+			try {
+				if (term) {
+					const res = await usersAPI.searchUsers(term, { page: 1, limit: 100 });
+					const list = Array.isArray(res?.data) ? res.data : [];
+					setUsers(list.map(mapUser));
+				} else {
+					await fetchUsers();
+				}
+			} catch (error) {
+				console.error('Error searching users:', error);
+				toast.error(t('error_fetching_users'));
+			} finally {
+				setLoading(false);
+			}
+		}, 500);
+
+		return () => clearTimeout(handler);
+	}, [searchTerm]);
+
 
 	const filteredUsers = users.filter((user) => {
 		const matchesSearch =
@@ -165,10 +137,14 @@ export function UsersPage() {
 		switch (role) {
 			case 'farmer':
 				return 'bg-[#1a4d2e] text-white';
-			case 'expert':
+			case 'admin':
+				return 'bg-yellow-600 text-white';
+			case 'serviceProvider':
 				return 'bg-blue-600 text-white';
-			case 'business':
+			case 'trader':
 				return 'bg-purple-600 text-white';
+			case 'contentExpert':
+				return 'bg-pink-600 text-white';
 			default:
 				return 'bg-gray-600 text-white';
 		}
@@ -269,11 +245,10 @@ export function UsersPage() {
 									<td className="px-6 py-4 whitespace-nowrap">
 										<div className="flex items-center">
 											<div
-												className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-													user.status === 'blocked'
-														? 'bg-gradient-to-br from-red-500 to-red-700'
-														: 'bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f]'
-												}`}
+												className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${user.status === 'blocked'
+													? 'bg-gradient-to-br from-red-500 to-red-700'
+													: 'bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f]'
+													}`}
 											>
 												{user.name.charAt(0)}
 											</div>
@@ -328,11 +303,10 @@ export function UsersPage() {
 											{user.status !== 'pending' && (
 												<button
 													onClick={() => handleBlockUnblock(user)}
-													className={`p-2 rounded-lg transition-colors group ${
-														user.status === 'blocked'
-															? 'hover:bg-green-100'
-															: 'hover:bg-red-100'
-													}`}
+													className={`p-2 rounded-lg transition-colors group ${user.status === 'blocked'
+														? 'hover:bg-green-100'
+														: 'hover:bg-red-100'
+														}`}
 													title={
 														user.status === 'blocked'
 															? t('unblock')
@@ -364,11 +338,10 @@ export function UsersPage() {
 					>
 						<div className="flex items-start gap-3 mb-3">
 							<div
-								className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${
-									user.status === 'blocked'
-										? 'bg-gradient-to-br from-red-500 to-red-700'
-										: 'bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f]'
-								}`}
+								className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${user.status === 'blocked'
+									? 'bg-gradient-to-br from-red-500 to-red-700'
+									: 'bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f]'
+									}`}
 							>
 								{user.name.charAt(0)}
 							</div>
@@ -414,11 +387,10 @@ export function UsersPage() {
 								{user.status !== 'pending' && (
 									<button
 										onClick={() => handleBlockUnblock(user)}
-										className={`p-2 rounded-lg transition-colors ${
-											user.status === 'blocked'
-												? 'hover:bg-green-100'
-												: 'hover:bg-red-100'
-										}`}
+										className={`p-2 rounded-lg transition-colors ${user.status === 'blocked'
+											? 'hover:bg-green-100'
+											: 'hover:bg-red-100'
+											}`}
 									>
 										{user.status === 'blocked' ? (
 											<ShieldOff className="w-4 h-4 text-green-600" />
@@ -450,4 +422,4 @@ export function UsersPage() {
 			)}
 		</div>
 	);
-}
+};
