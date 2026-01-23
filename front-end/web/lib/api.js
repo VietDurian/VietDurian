@@ -344,4 +344,32 @@ export async function approvePost(postId, status, reason) {
   }
 }
 
+// Report post
+export async function getAllReport(params) {
+  try {
+    const response = await apiClient.get('/report', params);
+    return response?.data?.data || [];
+  } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error.message ||
+      "Failed to fetch reports";
+    throw new Error(message);
+  }
+}
+
+// Delete report
+export async function deleteReport(reportId) {
+  try { 
+    const response = await apiClient.delete(`/report/${reportId}`);
+    return response?.data?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message || 
+      error?.message ||
+      "Failed to delete report";
+    throw new Error(message);
+  }
+}
+
 export default apiClient;

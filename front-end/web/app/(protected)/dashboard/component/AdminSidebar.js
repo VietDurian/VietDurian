@@ -10,6 +10,7 @@ import {
 	Newspaper,
 	MessageSquareText,
 	ChevronDown,
+	Flag
 } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
@@ -30,6 +31,7 @@ export function AdminSidebar({
 		{ id: 'products', icon: ShoppingBag, label: t('products') },
 		{ id: 'posts', icon: MessageSquareText, label: t('posts') },
 		{ id: 'blogs', icon: Newspaper, label: t('blogs') },
+		{ id: 'reports', icon: Flag, label: t('reports') },
 		{ id: 'moderation', icon: FileCheck, label: t('moderation') },
 		{ id: 'settings', icon: Settings, label: t('settings') },
 	];

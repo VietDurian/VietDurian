@@ -108,6 +108,20 @@ const translations = {
 		post_rejected_success: 'Từ chối bài viết thành công',
 		reject_button: 'Từ chối',
 
+		// Reports Page
+		reports: 'Báo cáo',
+		manage_reports: 'Xử lý các báo cáo vi phạm từ người dùng',
+		search_reports: 'Tìm kiếm báo cáo...',
+		reporter: 'Người báo cáo',
+		reason: 'Lý do',
+		report_image: 'Hình ảnh',
+		time: 'Thời gian',
+		resolve: 'Xử lí',
+		resolved: 'Đã xử lý',
+		completed: 'Đã hoàn thành',
+		report_resolved: 'Đã xử lý báo cáo thành công',
+		report_resolved_desc: 'Báo cáo đã được đánh dấu là đã hoàn thành',
+		no_image: 'Không có hình ảnh',
 	},
 	en: {
 		// Header
@@ -213,6 +227,21 @@ const translations = {
 		post_approved_success: 'Post approved successfully',
 		post_rejected_success: 'Post rejected successfully',
 		reject_button: 'Reject',
+
+		// Reports Page
+		reports: 'Reports',
+		manage_reports: 'Handle violation reports from users',
+		search_reports: 'Search reports...',
+		reporter: 'Reporter',
+		reason: 'Reason',
+		report_image: 'Image',
+		time: 'Time',
+		resolve: 'Resolve',
+		resolved: 'Resolved',
+		completed: 'Completed',
+		report_resolved: 'Report resolved successfully',
+		report_resolved_desc: 'Report has been marked as completed',
+		no_image: 'No image',
 	},
 };
 

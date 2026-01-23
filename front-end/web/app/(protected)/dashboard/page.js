@@ -11,6 +11,7 @@ import { DashboardPage } from './component/DashboardPage';
 import { UsersPage } from './component/UsersPage';
 import { PostsPage } from './component/PostsPage';
 import { PostRequestPage } from './component/PostRequestPage';
+import { ReportPage } from './component/ReportPage';
 import { LanguageSwitcher } from './component/LanguageSwitcher';
 
 export default function App() {
@@ -86,6 +87,9 @@ export default function App() {
 						<p className="text-gray-600 mt-2">Đang phát triển...</p>
 					</div>
 				);
+
+			case 'reports':
+				return <ReportPage />;
 			case 'settings':
 				return (
 					<div className="p-8 text-center">
