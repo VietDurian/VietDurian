@@ -329,4 +329,19 @@ export async function setPostActive(postId) {
   }
 }
 
+// Approve post
+export async function approvePost(postId, status, reason) {
+  try {
+    const param = { status, reason };
+    const response = await apiClient.patch(`/post/${postId}/approve-general`, param);
+    return response?.data?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message || 
+      error?.message ||
+      "Failed to approve post";
+    throw new Error(message);
+  }
+}
+
 export default apiClient;

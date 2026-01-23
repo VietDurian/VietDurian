@@ -98,6 +98,16 @@ const translations = {
 		// Delete Post Modal
 		delete_post_title: 'Xóa bài viết',
 		delete_post_message: 'Bạn có chắc chắn muốn xóa bài viết này?',
+
+		// postRequests
+		postRequests: 'Yêu cầu bài viết',
+		reject_post: 'Từ chối bài viết',
+		reject_post_message: 'Bạn có chắc chắn muốn từ chối bài viết này?',
+		enter_reason: 'Nhập lý do từ chối...',
+		post_approved_success: 'Duyệt bài viết thành công',
+		post_rejected_success: 'Từ chối bài viết thành công',
+		reject_button: 'Từ chối',
+
 	},
 	en: {
 		// Header
@@ -194,6 +204,15 @@ const translations = {
 		// Delete Post Modal
 		delete_post_title: 'Delete Post',
 		delete_post_message: 'Are you sure you want to delete this post?',
+
+		// postRequests
+		postRequests: 'Post Requests',
+		reject_post: 'Reject Post',
+		reject_post_message: 'Are you sure you want to reject this post?',
+		enter_reason: 'Enter rejection reason...',
+		post_approved_success: 'Post approved successfully',
+		post_rejected_success: 'Post rejected successfully',
+		reject_button: 'Reject',
 	},
 };
 
