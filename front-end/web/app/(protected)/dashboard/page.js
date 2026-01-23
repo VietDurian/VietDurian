@@ -10,6 +10,7 @@ import { AdminSidebar } from './component/AdminSidebar';
 import { DashboardPage } from './component/DashboardPage';
 import { UsersPage } from './component/UsersPage';
 import { PostsPage } from './component/PostsPage';
+import { PostRequestPage } from './component/PostRequestPage';
 import { LanguageSwitcher } from './component/LanguageSwitcher';
 
 export default function App() {
@@ -67,7 +68,8 @@ export default function App() {
 				);
 			case 'posts':
 				return <PostsPage />;
-
+			case 'postRequests':
+				return <PostRequestPage />;
 			case 'blogs':
 				return (
 					<div className="p-8 text-center">

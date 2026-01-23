@@ -25,6 +25,7 @@ export function AdminSidebar({
 		{ id: 'gardens', icon: Sprout, label: t('gardens') },
 		{ id: 'products', icon: ShoppingBag, label: t('products') },
 		{ id: 'posts', icon: MessageSquareText, label: t('posts') },
+		{ id: 'postRequests', icon: FileCheck, label: t('postRequests') },
 		{ id: 'blogs', icon: Newspaper, label: t('blogs') },
 		{ id: 'moderation', icon: FileCheck, label: t('moderation') },
 		{ id: 'settings', icon: Settings, label: t('settings') },

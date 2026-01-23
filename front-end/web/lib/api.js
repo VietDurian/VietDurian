@@ -285,4 +285,48 @@ export async function createPost({ category, content, image, contact }) {
   }
 }
 
+// Delete post
+export async function deletePost(postId) {
+  try {
+    const response = await apiClient.delete(`/post/${postId}/general`);
+    return response?.data?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to delete post";
+    throw new Error(message);
+  }
+}
+
+// Update post status become inactive
+export async function setPostInactive(postId) {
+  try {
+    const status = { status: "inactive" };
+    const response = await apiClient.patch(`/post/${postId}/general`, status);
+    return response?.data?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to update post status";
+    throw new Error(message);
+  }
+}
+
+// Update post status become active
+export async function setPostActive(postId) {
+  try {
+    const status = { status: "active" };
+    const response = await apiClient.patch(`/post/${postId}/general`, status);
+    return response?.data?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to update post status";
+    throw new Error(message);
+  }
+}
+
 export default apiClient;

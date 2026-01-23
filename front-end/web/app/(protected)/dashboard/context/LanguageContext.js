@@ -28,7 +28,8 @@ const translations = {
 		post_management: 'Quản lý bài viết',
 		content: 'Nội dung',
 		category: 'Thể loại',
-		inactive_post: 'Đưa về trạng thái Inactive',
+		inactive_post: 'Đưa về trạng thái Ngưng hoạt động',
+		active_post: 'Đưa về trạng thái Hoạt động',
 		delete_post: 'Xóa bài viết',
 		close: 'Đóng',
 		image: 'Hình ảnh',
@@ -93,6 +94,10 @@ const translations = {
 		high: 'Cao',
 		medium: 'Trung bình',
 		low: 'Thấp',
+
+		// Delete Post Modal
+		delete_post_title: 'Xóa bài viết',
+		delete_post_message: 'Bạn có chắc chắn muốn xóa bài viết này?',
 	},
 	en: {
 		// Header
@@ -121,6 +126,7 @@ const translations = {
 		content: 'Content',
 		category: 'Category',
 		inactive_post: 'Set to Inactive',
+		active_post: 'Set to Active',
 		delete_post: 'Delete Post',
 		close: 'Close',
 		image: 'Image',
@@ -184,6 +190,10 @@ const translations = {
 		high: 'High',
 		medium: 'Medium',
 		low: 'Low',
+
+		// Delete Post Modal
+		delete_post_title: 'Delete Post',
+		delete_post_message: 'Are you sure you want to delete this post?',
 	},
 };
 

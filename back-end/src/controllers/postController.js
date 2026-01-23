@@ -54,12 +54,13 @@ const createGeneralPost = async (req, res, next) => {
 const updateGeneralPost = async (req, res, next) => {
 	try {
 		const { post_id } = req.params;
-		const { category, content, image, contact } = req.body;
+		const { category, content, image, contact, status } = req.body;
 		const updatedPost = await postService.updateGeneralPost(post_id, {
 			category,
 			content,
 			image,
 			contact,
+			status,
 		});
 		res.status(200).json({
 			code: 200,
