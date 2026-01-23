@@ -1,17 +1,59 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, PauseCircle, Trash2 } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { getOwnPosts } from '@/lib/api';
+import { getOwnPosts, approvePost } from '@/lib/api';
 import { useLanguage } from '../context/LanguageContext';
 
 export function PostRequestPage() {
 	const { t } = useLanguage();
 	const [posts, setPosts] = useState([]);
-	const [sortOrder, setSortOrder] = useState('desc');
 	const [selectedPost, setSelectedPost] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
+	// Approve / Reject state & helpers
+	const [isActionLoading, setIsActionLoading] = useState(false);
+	const [rejectModalOpen, setRejectModalOpen] = useState(false);
+	const [rejectTargetId, setRejectTargetId] = useState(null);
+	const [rejectReason, setRejectReason] = useState('');
+
+	const handleApprove = async (post) => {
+		setIsActionLoading(true);
+		try {
+			await approvePostRequest(post.id, true);
+		} finally {
+			setIsActionLoading(false);
+		}
+	};
+
+	const openRejectModal = (post) => {
+		setRejectTargetId(post.id);
+		setRejectReason('');
+		setRejectModalOpen(true);
+	};
+
+	const confirmReject = async () => {
+		if (!rejectTargetId) return;
+		if (!rejectReason || !rejectReason.trim()) {
+			toast.error(t('enter_reason'));
+			return;
+		}
+		setIsActionLoading(true);
+		try {
+			await approvePostRequest(rejectTargetId, false, rejectReason.trim());
+			setRejectModalOpen(false);
+			setRejectTargetId(null);
+			setRejectReason('');
+		} catch (error) {
+			toast.error(error?.message || t('error'));
+		}
+	};
+
+	const cancelReject = () => {
+		setRejectModalOpen(false);
+		setRejectTargetId(null);
+		setRejectReason('');
+	};
 
 	// Fetch posts with current filters and normalize author fields
 	useEffect(() => {
@@ -62,15 +104,27 @@ export function PostRequestPage() {
 		};
 	}, []);
 
-	const sortedPosts = [...filteredPosts].sort((a, b) => {
-		const direction = sortOrder === 'asc' ? 1 : -1;
-		return (parseDate(a.createdAt) - parseDate(b.createdAt)) * direction;
-	});
-
-	const parseDate = (value) => {
-		if (!value) return 0;
-		const timestamp = new Date(value).getTime();
-		return Number.isNaN(timestamp) ? 0 : timestamp;
+	// Hàm duyet or từ chối bài viết
+	const approvePostRequest = async (postId, isApproved, reason) => {
+		try {
+			let status = false;
+			if (!isApproved) {
+				status = 'inactive';
+			} else {
+				status = 'active';
+			}
+			await approvePost(postId, status, reason);
+			toast.success(
+				isApproved ? t('post_approved_success') : t('post_rejected_success'),
+			);
+			// Cập nhật lại danh sách bài viết sau khi duyệt hoặc từ chối
+			// Khi duyệt thành công: loại bỏ bài có postId trên khỏi danh sách (ẩn)
+			setPosts((prevPosts) => prevPosts.filter((p) => p.id !== postId));
+			// Nếu đang mở chi tiết bài này thì đóng luôn
+			setSelectedPost((cur) => (cur && cur.id === postId ? null : cur));
+		} catch (error) {
+			toast.error(error?.message || t('error'));
+		}
 	};
 
 	const formatDate = (value) => {
@@ -78,6 +132,10 @@ export function PostRequestPage() {
 		const date = new Date(value);
 		return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('vi-VN');
 	};
+
+	// snippet dung de hien thi noi dung rut gon
+	const snippet = (text = '', max = 80) =>
+		text.length > max ? `${text.slice(0, max)}...` : text;
 
 	return (
 		<div className="p-4 md:p-8">
@@ -119,7 +177,7 @@ export function PostRequestPage() {
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-gray-200">
-							{sortedPosts.map((post) => (
+							{posts.map((post) => (
 								<tr
 									key={post.id}
 									onClick={() => setSelectedPost(post)}
@@ -161,11 +219,7 @@ export function PostRequestPage() {
 										</span>
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
-										<span
-											className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-												post.status,
-											)}`}
-										>
+										<span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
 											{t(post.status)}
 										</span>
 									</td>
@@ -174,22 +228,22 @@ export function PostRequestPage() {
 											<button
 												onClick={(e) => {
 													e.stopPropagation();
-													setInactive(post);
+													handleApprove(post);
 												}}
-												className="p-2 hover:bg-yellow-100 rounded-lg transition-colors"
-												title={t('inactive_post')}
+												className="p-2 hover:bg-green-100 rounded-lg transition-colors"
+												title={t('approve')}
 											>
-												<PauseCircle className="w-4 h-4 text-gray-500" />
+												<Check className="w-4 h-4 text-green-600" />
 											</button>
 											<button
 												onClick={(e) => {
 													e.stopPropagation();
-													deletePost(post);
+													openRejectModal(post);
 												}}
 												className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-												title={t('delete_post')}
+												title={t('reject')}
 											>
-												<Trash2 className="w-4 h-4 text-red-600" />
+												<X className="w-4 h-4 text-red-600" />
 											</button>
 										</div>
 									</td>
@@ -202,7 +256,7 @@ export function PostRequestPage() {
 
 			{/* Posts Cards - Mobile */}
 			<div className="md:hidden space-y-4">
-				{sortedPosts.map((post) => (
+				{posts.map((post) => (
 					<div
 						key={post.id}
 						onClick={() => setSelectedPost(post)}
@@ -242,31 +296,27 @@ export function PostRequestPage() {
 						</p>
 
 						<div className="flex items-center justify-between">
-							<span
-								className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-									post.status,
-								)}`}
-							>
+							<span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
 								{t(post.status)}
 							</span>
 							<div className="flex gap-2">
 								<button
 									onClick={(e) => {
 										e.stopPropagation();
-										setInactive(post);
+										handleApprove(post._id);
 									}}
-									className="p-2 rounded-lg transition-colors hover:bg-yellow-100"
+									className="p-2 rounded-lg transition-colors hover:bg-green-100"
 								>
-									<PauseCircle className="w-4 h-4 text-gray-600" />
+									<Check className="w-4 h-4 text-green-600" />
 								</button>
 								<button
 									onClick={(e) => {
 										e.stopPropagation();
-										deletePost(post);
+										openRejectModal(post);
 									}}
 									className="p-2 rounded-lg transition-colors hover:bg-red-100"
 								>
-									<Trash2 className="w-4 h-4 text-red-600" />
+									<X className="w-4 h-4 text-red-600" />
 								</button>
 							</div>
 						</div>
@@ -276,8 +326,47 @@ export function PostRequestPage() {
 
 			{/* Results Info */}
 			<div className="mt-4 text-sm text-gray-500 text-center md:text-left">
-				{t('total')}: {sortedPosts.length} {t('posts').toLowerCase()}
+				{t('total')}: {posts.length} {t('posts').toLowerCase()}
 			</div>
+
+			{rejectModalOpen && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+					<div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+						<div className="p-4 border-b">
+							<h3 className="text-lg font-semibold text-gray-900">
+								{t('reject_post')}
+							</h3>
+							<p className="text-sm text-gray-500">
+								{t('reject_post_message')}
+							</p>
+						</div>
+						<div className="p-4 space-y-3">
+							<textarea
+								value={rejectReason}
+								onChange={(e) => setRejectReason(e.target.value)}
+								rows={4}
+								className="w-full border border-gray-200 rounded-md p-2"
+								placeholder={t('enter_reason')}
+							/>
+							<div className="flex justify-end gap-2">
+								<button
+									onClick={cancelReject}
+									className="px-4 py-2 rounded-md border"
+								>
+									{t('cancel')}
+								</button>
+								<button
+									onClick={confirmReject}
+									className="px-4 py-2 rounded-md bg-red-600 text-white"
+									disabled={isActionLoading}
+								>
+									{isActionLoading ? t('reject_button') : t('reject')}
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
 
 			{/* Detail Modal */}
 			{selectedPost && (
@@ -309,11 +398,7 @@ export function PostRequestPage() {
 								<span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
 									{selectedPost.category}
 								</span>
-								<span
-									className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-										selectedPost.status,
-									)}`}
-								>
+								<span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
 									{t(selectedPost.status)}
 								</span>
 							</div>

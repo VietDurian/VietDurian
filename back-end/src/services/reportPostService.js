@@ -8,24 +8,19 @@ export const getAllReport = async (search, page = 1, limit = 10) => {
 	let total = 0;
 
 	if (search) {
-		let query = ReportPostModel
-			.find()
-			.populate('user_id', 'full_name') 
-			.populate('post_id', 'content');
-
+		let query = ReportPostModel.find().populate('user_id', 'full_name avatar');
 		const allReports = await query.lean();
 
 		const filteredReports = allReports.filter((report) =>
-			report.post_id?.content?.toLowerCase().includes(search.toLowerCase())
+			report.post_id?.content?.toLowerCase().includes(search.toLowerCase()),
 		);
 
 		total = filteredReports.length;
 		reports = filteredReports.slice(skip, skip + limit);
 	} else {
 		total = await ReportPostModel.countDocuments();
-		reports = await ReportPostModel
-			.find()
-			.populate('user_id', 'full_name')
+		reports = await ReportPostModel.find()
+			.populate('user_id', 'full_name avatar')
 			.populate('post_id', 'content')
 			.skip(skip)
 			.limit(limit)
@@ -69,7 +64,7 @@ export const updateReport = async (id) => {
 	const report = await ReportPostModel.findByIdAndUpdate(
 		id,
 		{ status: 'Resolved' },
-		{ new: true }
+		{ new: true },
 	);
 	return report;
 };

@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import {
 	Users,
 	ShoppingBag,
@@ -6,7 +7,10 @@ import {
 	Settings,
 	Sprout,
 	X,
-	Newspaper,	MessageSquareText,
+	Newspaper,
+	MessageSquareText,
+	ChevronDown,
+	Flag
 } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
@@ -18,6 +22,7 @@ export function AdminSidebar({
 	onMobileClose,
 }) {
 	const { t } = useLanguage();
+	const [isModerationOpen, setIsModerationOpen] = useState(false);
 
 	const menuItems = [
 		{ id: 'dashboard', icon: LayoutDashboard, label: t('dashboard') },
@@ -25,8 +30,8 @@ export function AdminSidebar({
 		{ id: 'gardens', icon: Sprout, label: t('gardens') },
 		{ id: 'products', icon: ShoppingBag, label: t('products') },
 		{ id: 'posts', icon: MessageSquareText, label: t('posts') },
-		{ id: 'postRequests', icon: FileCheck, label: t('postRequests') },
 		{ id: 'blogs', icon: Newspaper, label: t('blogs') },
+		{ id: 'reports', icon: Flag, label: t('reports') },
 		{ id: 'moderation', icon: FileCheck, label: t('moderation') },
 		{ id: 'settings', icon: Settings, label: t('settings') },
 	];
@@ -80,6 +85,59 @@ export function AdminSidebar({
 				<nav className="flex-1 p-4 space-y-2">
 					{menuItems.map((item) => {
 						const Icon = item.icon;
+
+						// Moderation is expandable and contains two sub-items
+						if (item.id === 'moderation') {
+							return (
+								<div key={item.id}>
+									<button
+										onClick={() => setIsModerationOpen((s) => !s)}
+										className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all ${
+											currentPage === item.id ||
+											(currentPage && currentPage.startsWith('moderation'))
+												? 'bg-[#ffd93d] text-[#1a4d2e] shadow-lg'
+												: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+										}`}
+									>
+										<div className="flex items-center gap-3">
+											<Icon className="w-5 h-5" />
+											<span className="font-medium">{item.label}</span>
+										</div>
+										<ChevronDown
+											className={`w-4 h-4 transform transition-transform ${isModerationOpen ? 'rotate-180' : ''}`}
+										/>
+									</button>
+
+									{/* Sub-items for moderation */}
+									{isModerationOpen && (
+										<div className="mt-2 space-y-1 pl-8">
+											<button
+												onClick={() => handleItemClick('postRequests')}
+												className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
+													currentPage === 'postRequests'
+														? 'bg-[#ffd93d] text-[#1a4d2e]'
+														: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+												}`}
+											>
+												<span className="text-sm">{t('posts')}</span>
+											</button>
+
+											<button
+												onClick={() => handleItemClick('moderation_users')}
+												className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
+													currentPage === 'moderation_users'
+														? 'bg-[#ffd93d] text-[#1a4d2e]'
+														: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+												}`}
+											>
+												<span className="text-sm">{t('users')}</span>
+											</button>
+										</div>
+									)}
+								</div>
+							);
+						}
+
 						return (
 							<button
 								key={item.id}

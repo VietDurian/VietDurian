@@ -157,7 +157,7 @@ export function ControlCenter() {
 				<div className="space-y-3">
 					{reportedPosts.map((report) => (
 						<div
-							key={report.id}
+							key={report._id || report.id}
 							className="flex items-center justify-between p-3 md:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
 						>
 							<div className="flex-1 min-w-0">

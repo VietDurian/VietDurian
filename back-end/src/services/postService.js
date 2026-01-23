@@ -145,29 +145,47 @@ const deleteGeneralPost = async (post_id) => {
 };
 
 // Approve a general post
-const approveGeneralPost = async (post_id, adminId) => {
+const approveGeneralPost = async (post_id, adminId, status, reason) => {
 	try {
 		const updatedPost = await GeneralPostModel.findByIdAndUpdate(
 			post_id,
-			{ status: 'active' },
+			{ status: status },
 			{ new: true },
 		);
 
-		// Notification Logic
-		if (updatedPost) {
-			try {
-				const receiver_id = updatedPost.author_id;
-				if (receiver_id && receiver_id.toString() !== adminId.toString()) {
-					await notificationService.createNotification({
-						receiver_id: receiver_id,
-						sender_id: adminId,
-						entity_type: 'post_approval',
-						post_id: post_id,
-						message: `Your post has been approved by admin.`,
-					});
+		if (status == 'active') {
+			if (updatedPost) {
+				try {
+					const receiver_id = updatedPost.author_id;
+					if (receiver_id && receiver_id.toString() !== adminId.toString()) {
+						await notificationService.createNotification({
+							receiver_id: receiver_id,
+							sender_id: adminId,
+							entity_type: 'Accepted Post',
+							post_id: post_id,
+							message: `Your post has been ${status} by admin.`,
+						});
+					}
+				} catch (error) {
+					console.error('Notification error:', error);
 				}
-			} catch (error) {
-				console.error('Notification error:', error);
+			}
+		} else if (status == 'inactive') {
+			if (updatedPost) {
+				try {
+					const receiver_id = updatedPost.author_id;
+					if (receiver_id && receiver_id.toString() !== adminId.toString()) {
+						await notificationService.createNotification({
+							receiver_id: receiver_id,
+							sender_id: adminId,
+							entity_type: 'Rejected Post',
+							post_id: post_id,
+							message: `Your post has been rejected by admin because ${reason}.`,
+						});
+					}
+				} catch (error) {
+					console.error('Notification error:', error);
+				}
 			}
 		}
 

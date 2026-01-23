@@ -362,4 +362,47 @@ export async function setPostActive(postId) {
   }
 }
 
+// Approve post
+export async function approvePost(postId, status, reason) {
+  try {
+    const param = { status, reason };
+    const response = await apiClient.patch(`/post/${postId}/approve-general`, param);
+    return response?.data?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message || 
+      error?.message ||
+      "Failed to approve post";
+    throw new Error(message);
+  }
+}
+
+// Report post
+export async function getAllReport(params) {
+  try {
+    const response = await apiClient.get('/report', params);
+    return response?.data?.data || [];
+  } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error.message ||
+      "Failed to fetch reports";
+    throw new Error(message);
+  }
+}
+
+// Delete report
+export async function deleteReport(reportId) {
+  try { 
+    const response = await apiClient.delete(`/report/${reportId}`);
+    return response?.data?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message || 
+      error?.message ||
+      "Failed to delete report";
+    throw new Error(message);
+  }
+}
+
 export default apiClient;

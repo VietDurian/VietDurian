@@ -1,0 +1,166 @@
+@startuml
+skinparam classAttributeIconSize 0
+left to right direction
+
+' =======================
+' ======= ENTITIES ======
+' =======================
+
+class Course {
+  +CourseId: string
+  +AuthorId: string
+  +CourseName: string
+  +CourseDescription: string
+  +CourseStatus: int
+  +CourseImage: string
+  +Price: decimal
+  +EstimatedDuration: int
+  +DifficultyLevel: byte
+  +IsFeatured: bool
+  +ApprovalStatus: string
+  +ApprovedBy: string
+  +ApprovedAt: DateTime
+  +EnforceSequentialAccess: bool
+  +AllowLessonPreview: bool
+  +CourseCreatedAt: DateTime
+  +CourseUpdatedAt: DateTime
+}
+
+class Chapter {
+  +ChapterId: string
+  +CourseId: string
+  +ChapterName: string
+  +ChapterDescription: string
+  +ChapterOrder: int
+  +ChapterStatus: int
+  +IsLocked: bool
+  +UnlockAfterChapterId: string
+  +ChapterCreatedAt: DateTime
+  +ChapterUpdatedAt: DateTime
+}
+
+class Lesson {
+  +LessonId: string
+  +ChapterId: string
+  +LessonName: string
+  +LessonDescription: string
+  +LessonContent: string
+  +LessonOrder: int
+  +LessonTypeId: int
+  +LessonStatus: int
+  +IsLocked: bool
+  +UnlockAfterLessonId: string
+  +MinCompletionPercentage: decimal
+  +MinTimeSpent: int
+  +LessonCreatedAt: DateTime
+  +LessonUpdatedAt: DateTime
+}
+
+class LessonType {
+  +LessonTypeId: int
+  +LessonTypeName: string
+}
+
+class UserProgress {
+  +UserId: string
+  +LessonId: string
+  +IsCompleted: bool
+  +ProgressPercentage: decimal
+  +TimeSpent: int
+  +LastAccessedAt: DateTime
+  +CompletedAt: DateTime
+  +AccessCount: int
+  +FirstAccessedAt: DateTime
+  +IsUnlocked: bool
+  +UnlockedAt: DateTime
+  +MeetsTimeRequirement: bool
+  +MeetsPercentageRequirement: bool
+  +MeetsQuizRequirement: bool
+}
+
+' =======================
+' ======= SERVICES ======
+' =======================
+
+interface ILessonService {
+  +CreateLessonAsync(lesson: Lesson): bool
+  +GetLessonTypesAsync(): List<LessonType>
+  +GetNextLessonOrderAsync(courseId: string): int
+  +IsDuplicateLessonNameAsync(lessonName: string, courseId: string): bool
+  +GetChapterByIdAsync(chapterId: string): Chapter
+  +UpdateLessonOrdersAsync(lessonIds: List<string>): bool
+  +GetLessonsInChapterAsync(chapterId: string): List<Lesson>
+}
+
+class LessonService {
+  -_lessonRepo: ILessonRepo
+  -_chapterRepo: IChapterRepo
+  +CreateLessonAsync(lesson: Lesson): bool
+  +GetLessonTypesAsync(): List<LessonType>
+  +GetNextLessonOrderAsync(courseId: string): int
+  +IsDuplicateLessonNameAsync(lessonName: string, courseId: string): bool
+  +GetChapterByIdAsync(chapterId: string): Chapter
+  +UpdateLessonOrdersAsync(lessonIds: List<string>): bool
+  +GetLessonsInChapterAsync(chapterId: string): List<Lesson>
+}
+
+ILessonService <|.. LessonService
+
+' =======================
+' ===== REPOSITORIES ====
+' =======================
+
+interface ILessonRepo {
+  +CreateLessonAsync(lesson: Lesson): bool
+  +UpdateLessonAsync(lesson: Lesson): bool
+  +DeleteLessonAsync(lessonId: string): bool
+  +GetLessonByIdAsync(lessonId: string): Lesson
+}
+
+class LessonRepo {
+  -_context: BrainStormEraContext
+  +CreateLessonAsync(lesson: Lesson): bool
+  +UpdateLessonAsync(lesson: Lesson): bool
+  +DeleteLessonAsync(lessonId: string): bool
+  +GetLessonByIdAsync(lessonId: string): Lesson
+}
+
+ILessonRepo <|.. LessonRepo
+
+interface IChapterRepo {
+  +CreateChapterAsync(chapter: Chapter): bool
+  +UpdateChapterAsync(chapter: Chapter): bool
+  +DeleteChapterAsync(chapterId: string): bool
+  +GetChapterWithCourseAsync(courseId: string): Chapter
+  +GetChaptersByCourseAsync(courseId: string): List<Chapter>
+}
+
+class ChapterRepo {
+  -_context: BrainStormEraContext
+  +CreateChapterAsync(chapter: Chapter): bool
+  +UpdateChapterAsync(chapter: Chapter): bool
+  +DeleteChapterAsync(chapterId: string): bool
+  +GetChapterWithCourseAsync(courseId: string): Chapter
+  +GetChaptersByCourseAsync(courseId: string): List<Chapter>
+}
+
+IChapterRepo <|.. ChapterRepo
+
+class BrainStormEraContext
+
+' =======================
+' ===== RELATIONSHIPS ===
+' =======================
+
+Course "1" o-- "many" Chapter
+Chapter "1" o-- "many" Lesson
+Lesson "many" --> "1" LessonType
+Lesson "1" o-- "many" UserProgress
+
+LessonService --> ILessonRepo
+LessonService --> IChapterRepo
+
+LessonRepo --> BrainStormEraContext
+ChapterRepo --> BrainStormEraContext
+
+@enduml
