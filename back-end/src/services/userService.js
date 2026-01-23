@@ -39,7 +39,7 @@ const searchUsers = async (query) => {
   // Tìm tất cả account chứa keyword trong tên hoặc email
   const allMatches = await User.find({
     $or: [
-      { name: { $regex: keyword, $options: "i" } },
+      { full_name: { $regex: keyword, $options: "i" } },
       { email: { $regex: keyword, $options: "i" } },
     ],
   }).select("-password");
@@ -50,7 +50,7 @@ const searchUsers = async (query) => {
     const lowerKeyword = keyword.toLowerCase();
     const exactMatches = allMatches.filter(
       (u) =>
-        u.name.toLowerCase() === lowerKeyword ||
+        u.full_name.toLowerCase() === lowerKeyword ||
         u.email.toLowerCase() === lowerKeyword
     );
     // Nếu có nhiều account trùng tên/email, trả về hết các account này
