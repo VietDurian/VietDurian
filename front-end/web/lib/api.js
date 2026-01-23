@@ -51,6 +51,40 @@ apiClient.interceptors.response.use(
   },
 );
 
+// User API
+export const usersAPI = {
+  async getAllUsers(params = { page: 1, litmit: 10 }) {
+    const response = await apiClient.get("/user", { params });
+    return response.data;
+  },
+  async getUserById(id) {
+    const response = await apiClient.get(`/user/${id}`);
+    return response.data;
+  },
+  async toggleBanUser(id) {
+    const response = await apiClient.patch(`/user/${id}/toggle-ban`);
+    return response.data;
+  },
+  async searchUsers(keyword, params = {}) {
+    const response = await apiClient.get(`/user/search/${keyword}`, {
+      params: { keyword, ...params },
+    });
+    return response.data;
+  },
+  async filterUsers(filters = {}) {
+    const response = await apiClient.get("/user/filter", {
+      params: filters,
+    });
+    return response.data;
+  },
+  async sortUsers(sortBy, sortOrder = "desc", params = {}) {
+    const response = await apiClient.get("/user/sort", {
+      params: { sortBy, sortOrder, ...params },
+    });
+    return response.data;
+  },
+}
+
 // Blog API
 export const blogAPI = {
   // Lấy tất cả blog
@@ -254,9 +288,8 @@ export async function getOwnPosts(filters = {}) {
   if (search) params.append("search", search);
   if (author_id) params.append("author_id", author_id);
 
-  const url = `/post/general${
-    params.toString() ? `?${params.toString()}` : ""
-  }`;
+  const url = `/post/general${params.toString() ? `?${params.toString()}` : ""
+    }`;
 
   try {
     const response = await apiClient.get(url);
