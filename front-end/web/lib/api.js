@@ -405,4 +405,47 @@ export async function deleteReport(reportId) {
   }
 }
 
+// get all report comment
+export async function getAllReportComment(params) {
+  try {
+    const response = await apiClient.get('/report-comment', { params });
+    // backend returns either an array or an object { data: [] }
+    return response?.data?.data ?? response?.data ?? [];
+  } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error.message ||
+      "Failed to fetch comment reports";
+    throw new Error(message);
+  }
+} 
+
+// update report comment
+export async function updateReportComment(reportId, status) {
+  try {
+    const response = await apiClient.patch(`/report-comment/${reportId}`, { status });
+    return response?.data?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to update comment report";
+    throw new Error(message);
+  }
+}
+
+// ban report comment
+export async function banReportComment(reportId) {
+  try {
+    const response = await apiClient.patch(`/report-comment/ban/${reportId}`);
+    return response?.data?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to ban comment report";
+    throw new Error(message);
+  }
+}
+
 export default apiClient;

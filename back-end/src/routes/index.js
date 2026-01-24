@@ -19,6 +19,7 @@ import { notificationRouter } from "@/routes/notificationRoute";
 import { permissionRoute } from "@/routes/permissionRoute";
 import { userRoute } from "@/routes/userRoute";
 import { serviceProviderProfileRoute } from "@/routes/serviceProviderProfileRoute";
+import { reportCommentRoute } from "@/routes/reportCommentRoute";
 
 const Router = express.Router();
 
@@ -41,5 +42,6 @@ Router.use("/chat", chatRoute);
 Router.use("/notification", notificationRouter);
 Router.use("/permission", permissionRoute);
 Router.use("/capability-profile", serviceProviderProfileRoute);
+Router.use("/report-comment", reportCommentRoute);
 
 export const API_v1 = Router;

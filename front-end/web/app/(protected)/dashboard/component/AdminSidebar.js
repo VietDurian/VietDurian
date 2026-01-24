@@ -10,7 +10,7 @@ import {
 	Newspaper,
 	MessageSquareText,
 	ChevronDown,
-	Flag
+	Flag,
 } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
@@ -23,6 +23,7 @@ export function AdminSidebar({
 }) {
 	const { t } = useLanguage();
 	const [isModerationOpen, setIsModerationOpen] = useState(false);
+	const [isReportsOpen, setIsReportsOpen] = useState(false);
 
 	const menuItems = [
 		{ id: 'dashboard', icon: LayoutDashboard, label: t('dashboard') },
@@ -131,6 +132,59 @@ export function AdminSidebar({
 												}`}
 											>
 												<span className="text-sm">{t('users')}</span>
+											</button>
+										</div>
+									)}
+								</div>
+							);
+						}
+
+						// Reports dropdown (expandable)
+						if (item.id === 'reports') {
+							return (
+								<div key={item.id}>
+									<button
+										onClick={() => setIsReportsOpen((s) => !s)}
+										className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all ${
+											currentPage === item.id ||
+											currentPage === 'reportComments'
+												? 'bg-[#ffd93d] text-[#1a4d2e] shadow-lg'
+												: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+										}`}
+									>
+										<div className="flex items-center gap-3">
+											<Icon className="w-5 h-5" />
+											<span className="font-medium">{item.label}</span>
+										</div>
+										<ChevronDown
+											className={`w-4 h-4 transform transition-transform ${isReportsOpen ? 'rotate-180' : ''}`}
+										/>
+									</button>
+
+									{isReportsOpen && (
+										<div className="mt-2 space-y-1 pl-8">
+											<button
+												onClick={() => handleItemClick('reports')}
+												className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
+													currentPage === 'reports'
+														? 'bg-[#ffd93d] text-[#1a4d2e]'
+														: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+												}`}
+											>
+												<span className="text-sm">{t('report_post')}</span>
+											</button>
+
+											<button
+												onClick={() => handleItemClick('reportComments')}
+												className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
+													currentPage === 'reportComments'
+														? 'bg-[#ffd93d] text-[#1a4d2e]'
+														: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+												}`}
+											>
+												<span className="text-sm">
+													{t('report_comment')}
+												</span>
 											</button>
 										</div>
 									)}
