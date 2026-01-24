@@ -61,8 +61,8 @@ export const usersAPI = {
     const response = await apiClient.get(`/user/${id}`);
     return response.data;
   },
-  async toggleBanUser(id) {
-    const response = await apiClient.patch(`/user/${id}/toggle-ban`);
+  async toggleBanUser(id, is_banned) {
+    const response = await apiClient.patch(`/user/ban/${id}`, { is_banned });
     return response.data;
   },
   async searchUsers(keyword, params = {}) {

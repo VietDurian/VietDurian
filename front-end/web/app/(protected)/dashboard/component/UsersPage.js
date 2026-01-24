@@ -92,30 +92,33 @@ export function UsersPage() {
 		setBlockModalOpen(true);
 	};
 
-	const confirmBlockUnblock = () => {
+	const confirmBlockUnblock = async () => {
 		if (!selectedUser) return;
+		try {
+			setLoading(true);
+			const newIsBanned = selectedUser.status !== "blocked";
+			const res = await usersAPI.toggleBanUser(selectedUser.id, newIsBanned);
 
-		setUsers(
-			users.map((user) => {
-				if (user.id === selectedUser.id) {
-					const newStatus = user.status === 'blocked' ? 'active' : 'blocked';
+			const updated = res.data || res.user || null;
 
-					// Show toast notification
-					if (newStatus === 'blocked') {
-						toast.success(t('user_blocked'), {
-							description: `${user.name} ${t('blocked').toLowerCase()}`,
-						});
-					} else {
-						toast.success(t('user_unblocked'), {
-							description: `${user.name} ${t('active').toLowerCase()}`,
-						});
-					}
+			setUsers(pre =>
+				pre.map(u =>
+					u.id === updated._id
+						? { ...u, status: updated.is_banned ? 'blocked' : 'active' }
+						: u
+				)
+			);
+			toast.success(updated.is_banned ? t("user_blocked") : t("user_unblocked"),
+				{ description: `${updated.full_name} ${updated.is_banned ? t("blocked").toLowerCase() : t("active").toLowerCase()}` });
 
-					return { ...user, status: newStatus };
-				}
-				return user;
-			}),
-		);
+			setBlockModalOpen(false);
+			setSelectedUser(null);
+		} catch (error) {
+			console.error('Error toggling ban status:', error);
+			toast.error(t('error_updating_user_status'));
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const getStatusColor = (status) => {
