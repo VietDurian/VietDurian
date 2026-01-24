@@ -39,14 +39,13 @@ const toggleBan = async (req, res, next) => {
     const updatedUser = await userService.banUser(userId, is_banned);
 
     console.log(
-      `Ban status updated: user=${updatedUser.name}, is_banned=${updatedUser.is_banned}`
+      `Ban status updated: user=${updatedUser.full_name}, is_banned=${updatedUser.is_banned}`
     );
 
     res.status(200).json({
       success: true,
-      message: `User ${updatedUser.name} has been successfully ${
-        is_banned ? "locked" : "unlocked"
-      }`,
+      message: `User ${updatedUser.full_name} has been successfully ${is_banned ? "locked" : "unlocked"
+        }`,
       data: updatedUser,
     });
   } catch (error) {
