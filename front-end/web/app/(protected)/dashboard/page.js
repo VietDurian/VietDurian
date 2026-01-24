@@ -12,6 +12,7 @@ import { UsersPage } from './component/UsersPage';
 import { PostsPage } from './component/PostsPage';
 import { PostRequestPage } from './component/PostRequestPage';
 import { ReportPage } from './component/ReportPage';
+import { ReportCommentPage } from './component/ReportCommentPage';
 import { LanguageSwitcher } from './component/LanguageSwitcher';
 
 export default function App() {
@@ -90,6 +91,8 @@ export default function App() {
 
 			case 'reports':
 				return <ReportPage />;
+			case 'reportComments':
+				return <ReportCommentPage />;
 			case 'settings':
 				return (
 					<div className="p-8 text-center">

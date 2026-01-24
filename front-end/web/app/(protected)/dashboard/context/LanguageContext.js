@@ -122,6 +122,18 @@ const translations = {
 		report_resolved: 'Đã xử lý báo cáo thành công',
 		report_resolved_desc: 'Báo cáo đã được đánh dấu là đã hoàn thành',
 		no_image: 'Không có hình ảnh',
+		report_post: 'Bài viết',
+		report_comment: 'Bình luận',
+		ban_confirm_comment: 'Bạn có chắc chắn muốn khoá bình luận này?',
+		ban_success: 'Bình luận đã bị khoá',
+		hide: 'Ẩn bình luận',
+		hide_confirm_comment:
+			'Bạn có chắc chắn muốn ẩn bình luận này và đánh dấu báo cáo là đã xử lý?',
+		hide_success: 'Bình luận đã được ẩn',
+		hide_and_resolved_success:
+			'Bình luận đã được ẩn và báo cáo đã được đánh dấu là đã xử lý',
+		report_status_updated: 'Cập nhật trạng thái thành công',
+		no_reports: 'Không có báo cáo',
 	},
 	en: {
 		// Header
@@ -242,6 +254,17 @@ const translations = {
 		report_resolved: 'Report resolved successfully',
 		report_resolved_desc: 'Report has been marked as completed',
 		no_image: 'No image',
+		report_post: 'Posts',
+		report_comment: 'Comment',
+		ban_confirm_comment: 'Are you sure you want to ban this comment?',
+		ban_success: 'Comment banned successfully',
+		hide: 'Hide Comment',
+		hide_confirm_comment:
+			'Are you sure you want to hide this comment and mark the report as resolved?',
+		hide_success: 'Comment hidden successfully',
+		hide_and_resolved_success: 'Comment hidden and report marked as resolved',
+		report_status_updated: 'Status updated successfully',
+		no_reports: 'No reports',
 	},
 };
 
