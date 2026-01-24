@@ -1,0 +1,542 @@
+"use client";
+
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import Image from "next/image";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { productAPI } from "@/lib/api";
+import ProductRating from "@/components/ProductRating";
+
+
+
+const getUserId = () => {
+    if (typeof window === 'undefined') return null;
+
+    const getCookie = (name) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    };
+
+    let userId = getCookie('user_id') || localStorage.getItem('user_id');
+
+    if (!userId) {
+        const accessToken = getCookie('accessToken') || localStorage.getItem('auth_token');
+        if (accessToken) {
+            try {
+                const base64Url = accessToken.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(
+                    atob(base64)
+                        .split('')
+                        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                        .join('')
+                );
+                const decoded = JSON.parse(jsonPayload);
+                userId = decoded.userId || decoded.id || decoded.sub;
+            } catch (e) {
+                console.error('Error decoding token:', e);
+            }
+        }
+    }
+
+    return userId;
+};
+
+export default function ProductDetailPage() {
+    const params = useParams();
+    const productId = params?.productId;
+
+    const [product, setProduct] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(0);
+    const [quantity, setQuantity] = useState(1);
+    const [activeTab, setActiveTab] = useState("description");
+    const [imageError, setImageError] = useState(false);
+    const [userId, setUserId] = useState(null);
+
+    const handleImageError = () => {
+        setImageError(true);
+    };
+
+    useEffect(() => {
+        const id = getUserId();
+        setUserId(id);
+    }, []);
+    useEffect(() => {
+        const fetchProduct = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                const response = await productAPI.getProductById(productId);
+
+                if (response.success) {
+                    setProduct(response.data);
+                } else {
+                    setError('Không tìm thấy sản phẩm');
+                }
+
+                setLoading(false);
+            } catch (err) {
+                console.error('Error fetching product:', err);
+                setError('Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau.');
+                setLoading(false);
+            }
+        };
+
+        if (productId) {
+            fetchProduct();
+        }
+    }, [productId]);
+
+    const formatPrice = (price) => {
+        const numericPrice = typeof price === 'object' && price.$numberDecimal
+            ? parseFloat(price.$numberDecimal)
+            : parseFloat(price);
+
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(numericPrice);
+    };
+
+    const calculateDiscountedPrice = (price, discount) => {
+        const numericPrice = typeof price === 'object' && price.$numberDecimal
+            ? parseFloat(price.$numberDecimal)
+            : parseFloat(price);
+        const numericDiscount = typeof discount === 'object' && discount.$numberDecimal
+            ? parseFloat(discount.$numberDecimal)
+            : parseFloat(discount || 0);
+
+        return numericPrice - numericDiscount;
+    };
+
+    const calculateDiscountPercent = (price, discount) => {
+        const numericPrice = typeof price === 'object' && price.$numberDecimal
+            ? parseFloat(price.$numberDecimal)
+            : parseFloat(price);
+        const numericDiscount = typeof discount === 'object' && discount.$numberDecimal
+            ? parseFloat(discount.$numberDecimal)
+            : parseFloat(discount || 0);
+
+        if (numericDiscount === 0) return 0;
+        return Math.round((numericDiscount / numericPrice) * 100);
+    };
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const handleQuantityChange = (change) => {
+        const newQuantity = quantity + change;
+        if (newQuantity >= 1 && newQuantity <= product.stock) {
+            setQuantity(newQuantity);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <Navbar />
+                <div className="flex flex-col justify-center items-center py-32">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
+                    <p className="text-gray-600">Đang tải thông tin sản phẩm...</p>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
+    if (error || !product) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <Navbar />
+                <div className="flex flex-col justify-center items-center py-32">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
+                        <div className="flex items-center gap-3 mb-3">
+                            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <h3 className="text-lg font-semibold text-red-900">Lỗi</h3>
+                        </div>
+                        <p className="text-red-700 mb-4">{error || "Không tìm thấy sản phẩm"}</p>
+                        <Link
+                            href="/products"
+                            className="inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                            Quay lại danh sách
+                        </Link>
+                    </div>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
+    const price = typeof product.price === 'object' && product.price.$numberDecimal
+        ? parseFloat(product.price.$numberDecimal)
+        : parseFloat(product.price);
+    const discount = typeof product.discount === 'object' && product.discount.$numberDecimal
+        ? parseFloat(product.discount.$numberDecimal)
+        : parseFloat(product.discount || 0);
+    const rating = typeof product.rating === 'object' && product.rating.$numberDecimal
+        ? parseFloat(product.rating.$numberDecimal)
+        : parseFloat(product.rating || 0);
+
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <Navbar />
+
+            <div className="bg-white border-b border-gray-200 pt-24 pb-4 px-4">
+                <div className="max-w-[1400px] mx-auto">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Link href="/" className="hover:text-emerald-600 transition-colors">Trang chủ</Link>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <Link href="/products" className="hover:text-emerald-600 transition-colors">Sản phẩm</Link>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="text-gray-900 font-medium">{product.name}</span>
+                    </div>
+                </div>
+            </div>
+
+            <section className="py-12 px-4">
+                <div className="max-w-[1400px] mx-auto">
+                    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
+                            <div className="flex flex-col h-full">
+                                <div className="relative flex-1 rounded-xl overflow-hidden bg-gray-100 shadow-md min-h-[600px]">
+                                    {product.images && product.images.length > 0 ? (
+                                        <>
+                                            <Image
+                                                src={imageError ? "/images/Durian1.jpg" : product.images[selectedImage].url}
+                                                alt={product.name}
+                                                fill
+                                                unoptimized
+                                                className="object-cover"
+                                                onError={handleImageError}
+                                            />
+                                            {discount > 0 && (
+                                                <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg">
+                                                    -{calculateDiscountPercent(product.price, product.discount)}%
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Image
+                                                src="/images/Durian1.jpg"
+                                                alt={product.name}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                            {discount > 0 && (
+                                                <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg">
+                                                    -{calculateDiscountPercent(product.price, product.discount)}%
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Thumbnail images */}
+                                {product.images && product.images.length > 1 && (
+                                    <div className="flex gap-2 mt-4">
+                                        {product.images.map((image, index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => {
+                                                    setSelectedImage(index);
+                                                    setImageError(false);
+                                                }}
+                                                className={`relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === index
+                                                    ? "border-emerald-600"
+                                                    : "border-gray-200 hover:border-gray-300"
+                                                    }`}
+                                            >
+                                                <Image
+                                                    src={image.url}
+                                                    alt={`${product.name} ${index + 1}`}
+                                                    fill
+                                                    unoptimized
+                                                    className="object-cover"
+                                                    onError={(e) => {
+                                                        e.target.src = "/images/Durian1.jpg";
+                                                    }}
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex flex-col h-full space-y-6">
+                                <div>
+                                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                                        {product.name}
+                                    </h1>
+
+                                    <div className="flex items-center gap-6 mb-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <svg
+                                                        key={star}
+                                                        className={`w-5 h-5 ${star <= Math.floor(rating)
+                                                            ? "text-yellow-400 fill-current"
+                                                            : "text-gray-300"
+                                                            }`}
+                                                        viewBox="0 0 20 20"
+                                                    >
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                    </svg>
+                                                ))}
+                                            </div>
+                                            <span className="text-lg font-semibold text-gray-700">{rating.toFixed(1)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-gray-600">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            <span>{product.view_count} lượt xem</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-emerald-50 rounded-xl p-6">
+                                    {discount > 0 ? (
+                                        <div className="space-y-2">
+                                            <div className="flex items-baseline gap-3">
+                                                <span className="text-4xl font-bold text-emerald-600">
+                                                    {formatPrice(calculateDiscountedPrice(product.price, product.discount))}
+                                                </span>
+                                                <span className="text-xl text-gray-500 line-through">
+                                                    {formatPrice(product.price)}
+                                                </span>
+                                            </div>
+                                            <p className="text-green-600 font-medium">
+                                                Tiết kiệm {formatPrice(product.discount)} ({calculateDiscountPercent(product.price, product.discount)}%)
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <span className="text-4xl font-bold text-emerald-600">
+                                            {formatPrice(product.price)}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                        <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Xuất xứ:</span>
+                                            <span className="ml-2 font-semibold text-gray-900">{product.origin}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                        <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                                        </svg>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Trọng lượng:</span>
+                                            <span className="ml-2 font-semibold text-gray-900">{product.weight}kg / trái</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                        <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                        </svg>
+                                        <div>
+                                            <span className="text-sm text-gray-600">Tình trạng kho:</span>
+                                            <span className={`ml-2 font-semibold ${product.stock > 20 ? 'text-green-600' : 'text-orange-600'}`}>
+                                                {product.stock > 20 ? 'Còn hàng' : `Chỉ còn ${product.stock} sản phẩm`}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {product.type_id && (
+                                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                            <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                            </svg>
+                                            <div>
+                                                <span className="text-sm text-gray-600">Loại sản phẩm:</span>
+                                                <span className="ml-2 font-semibold text-gray-900">{product.type_id.name}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-sm font-semibold text-gray-700">Số lượng:</label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center border-2 border-emerald-300 rounded-lg overflow-hidden bg-white">
+                                            <button
+                                                onClick={() => handleQuantityChange(-1)}
+                                                disabled={quantity <= 1}
+                                                className="px-4 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                                                </svg>
+                                            </button>
+                                            <input
+                                                type="number"
+                                                value={quantity}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value) || 1;
+                                                    if (val >= 1 && val <= product.stock) {
+                                                        setQuantity(val);
+                                                    }
+                                                }}
+                                                className="w-20 text-center font-semibold text-lg text-gray-900 bg-white border-0 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                                min="1"
+                                                max={product.stock}
+                                            />
+                                            <button
+                                                onClick={() => handleQuantityChange(1)}
+                                                disabled={quantity >= product.stock}
+                                                className="px-4 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <span className="text-gray-600">{product.stock} sản phẩm có sẵn</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 pt-4">
+                                    <button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-2">
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                        Thêm vào giỏ hàng
+                                    </button>
+                                    <button className="px-6 py-4 border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors">
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                {product.user_id && (
+                                    <div className="border-t border-gray-200 pt-6">
+                                        <h3 className="text-sm font-semibold text-gray-700 mb-3">Thông tin người bán:</h3>
+                                        <div className="flex items-center gap-4">
+                                            <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                                                {product.user_id.avatar ? (
+                                                    <Image src={product.user_id.avatar} alt={product.user_id.full_name} fill className="object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-emerald-600 text-white font-bold text-lg">
+                                                        {product.user_id.full_name?.charAt(0) || 'U'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-gray-900">{product.user_id.full_name || 'Người bán'}</p>
+                                                {product.user_id.email && (
+                                                    <p className="text-sm text-gray-600">{product.user_id.email}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="border-t border-gray-200">
+                            <div className="flex border-b border-gray-200">
+                                <button
+                                    onClick={() => setActiveTab("description")}
+                                    className={`px-8 py-4 font-semibold transition-colors ${activeTab === "description"
+                                        ? "text-emerald-600 border-b-2 border-emerald-600"
+                                        : "text-gray-600 hover:text-gray-900"
+                                        }`}
+                                >
+                                    Mô tả sản phẩm
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab("specifications")}
+                                    className={`px-8 py-4 font-semibold transition-colors ${activeTab === "specifications"
+                                        ? "text-emerald-600 border-b-2 border-emerald-600"
+                                        : "text-gray-600 hover:text-gray-900"
+                                        }`}
+                                >
+                                    Thông số kỹ thuật
+                                </button>
+                            </div>
+
+                            <div className="p-8">
+                                {activeTab === "description" && (
+                                    <div className="prose max-w-none">
+                                        <p className="text-gray-700 leading-relaxed text-lg">
+                                            {product.description}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {activeTab === "specifications" && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between py-3 border-b border-gray-200">
+                                                <span className="font-semibold text-gray-700">Tên sản phẩm:</span>
+                                                <span className="text-gray-900">{product.name}</span>
+                                            </div>
+                                            <div className="flex justify-between py-3 border-b border-gray-200">
+                                                <span className="font-semibold text-gray-700">Xuất xứ:</span>
+                                                <span className="text-gray-900">{product.origin}</span>
+                                            </div>
+                                            <div className="flex justify-between py-3 border-b border-gray-200">
+                                                <span className="font-semibold text-gray-700">Trọng lượng:</span>
+                                                <span className="text-gray-900">{product.weight}kg / trái</span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between py-3 border-b border-gray-200">
+                                                <span className="font-semibold text-gray-700">Tình trạng:</span>
+                                                <span className="text-green-600 font-semibold">Còn hàng</span>
+                                            </div>
+                                            <div className="flex justify-between py-3 border-b border-gray-200">
+                                                <span className="font-semibold text-gray-700">Ngày đăng:</span>
+                                                <span className="text-gray-900">{formatDate(product.created_at)}</span>
+                                            </div>
+                                            <div className="flex justify-between py-3 border-b border-gray-200">
+                                                <span className="font-semibold text-gray-700">Cập nhật:</span>
+                                                <span className="text-gray-900">{formatDate(product.updated_at)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <ProductRating productId={productId} userId={userId} />
+            <Footer />
+        </div>
+    );
+}

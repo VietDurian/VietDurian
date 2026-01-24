@@ -3,11 +3,22 @@
 import Navbar from "@/components/Navbar";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    if (loading) return;
+    if (user?.role === "admin") {
+      router.push("/dashboard");
+    }
+  }, [loading, router, user]);
 
   const products = [
     {

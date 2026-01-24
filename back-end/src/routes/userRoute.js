@@ -1,7 +1,9 @@
 // Vo Lam Thuy Vi
 import express from "express";
 import { userController } from "../controllers/userController.js";
-import { authMiddleware } from "../middlewares/authentication.js";
+import { authMiddleware } from '@/middlewares/authentication';
+import { authorizationMiddleware } from '@/middlewares/authorization';
+
 
 const Router = express.Router();
 
@@ -276,39 +278,38 @@ const Router = express.Router();
 Router.get(
   "/",
   authMiddleware.protect,
-  authMiddleware.restrictTo("admin"),
+  authorizationMiddleware.isAdmin,
   userController.getAllUsers
 );
 Router.get(
   "/:id",
   authMiddleware.protect,
-  authMiddleware.restrictTo("admin", "user"),
+  authorizationMiddleware.isAdmin,
   userController.getUserById
 );
 Router.patch(
   "/ban/:id",
   authMiddleware.protect,
-  authMiddleware.restrictTo("admin"),
+  authorizationMiddleware.isAdmin,
   userController.toggleBan
 );
 Router.get(
   "/search/:keyword",
   authMiddleware.protect,
-  authMiddleware.restrictTo("admin"),
+  authorizationMiddleware.isAdmin,
   userController.searchUser
 );
 Router.get(
   "/filter",
   authMiddleware.protect,
-  authMiddleware.restrictTo("admin"),
+  authorizationMiddleware.isAdmin,
   userController.filterUsers
 );
 Router.get(
   "/sort",
   authMiddleware.protect,
-  authMiddleware.restrictTo("admin"),
+  authorizationMiddleware.isAdmin,
   userController.sortUsers
 );
 
-export const userRoute = Router;
-module.exports = Router;
+export { Router as userRoute };

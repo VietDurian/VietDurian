@@ -1,14 +1,5 @@
 import React from "react";
-import {
-  Home,
-  Search,
-  PlusSquare,
-  Heart,
-  User,
-  Bookmark,
-  Settings,
-  LogOut,
-} from "lucide-react";
+import { Home, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -35,28 +26,20 @@ export default function AsideBar() {
   const pathname = usePathname();
 
   const menuItems = [
-    { icon: Home, label: "Home", href: "/" },
-    { icon: Search, label: "Explore", href: "/explore" },
-    { icon: PlusSquare, label: "Create", href: "/create" },
-    { icon: Heart, label: "Notifications", href: "/notifications" },
-    { icon: Bookmark, label: "Saved", href: "/saved" },
-    { icon: Settings, label: "Settings", href: "/settings" },
+    { icon: Home, label: "Posts", href: "/profile/posts" },
+    { icon: Search, label: "Blogs", href: "/profile/blogs" },
   ];
 
   return (
     <aside className="w-64 h-[95vh] fixed top-10 border-r border-gray-100 bg-white flex flex-col p-5 pt-10">
       {/* Navigation Links */}
-      <nav className="flex-1 space-y-1">
+      <nav className="flex flex-col flex-1 space-y-1">
         {menuItems.map((item) => (
           <SidebarItem
             key={item.label}
             icon={item.icon}
             label={item.label}
             href={item.href}
-            active={
-              pathname === item.href ||
-              (item.label === "Home" && pathname.includes("profile"))
-            }
           />
         ))}
       </nav>

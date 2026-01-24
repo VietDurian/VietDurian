@@ -54,6 +54,7 @@ const createProduct = async ({
 const getAllProducts = async ({
   searchName,
   typeId,
+  userId,
   sortBy = "created_at",
   sortOrder = "desc",
   page = 1,
@@ -72,6 +73,10 @@ const getAllProducts = async ({
       filter = { ...filter, type_id: typeId };
     }
 
+    if (userId) {
+      filter = { ...filter, user_id: userId };
+    }
+
     // Calculate pagination
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
@@ -82,8 +87,6 @@ const getAllProducts = async ({
     sortObj[sortBy] = sortOrder === "asc" ? 1 : -1;
 
     // Execute query in parallel
-
-
     const [products, total] = await Promise.all([
       Product.find(filter)
         .populate("user_id", "full_name avatar")

@@ -32,6 +32,12 @@ const Router = express.Router();
  *           type: string
  *         description: Search by content
  *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [newest, oldest]
+ *         description: Sort by creation date
+ *       - in: query
  *         name: author_id
  *         schema:
  *           type: string
@@ -246,6 +252,9 @@ const Router = express.Router();
  *               contact:
  *                 type: string
  *                 example: "updated-contact@example.com"
+ *               status:
+ *                 type: string
+ *                 example: "active"
  *     responses:
  *       200:
  *         description: General blog updated successfully

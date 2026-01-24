@@ -27,13 +27,22 @@ const createTypeProduct = async (req, res, next) => {
 		const { name, description } = req.body;
 
 		// check if name is provided
-		if (!name || name.empty || typeof name !== 'string' || !description || typeof description !== 'string') {
+		if (
+			!name ||
+			name.empty ||
+			typeof name !== 'string' ||
+			!description ||
+			typeof description !== 'string'
+		) {
 			return res.status(400).json({
 				code: 400,
 				message: 'Invalid type product name or description',
 			});
 		}
-		const newTypeProduct = await typeProductService.createTypeProduct({ name, description });
+		const newTypeProduct = await typeProductService.createTypeProduct({
+			name,
+			description,
+		});
 		res.status(201).json({
 			code: 201,
 			message: 'Type product created successfully',
@@ -48,10 +57,17 @@ const createTypeProduct = async (req, res, next) => {
 const updateTypeProduct = async (req, res, next) => {
 	try {
 		const { id } = req.params;
-		const { name } = req.body;
+		const { name, description } = req.body;
 
 		// Validate input
-		if (!id || typeof id !== 'string' || !name || typeof name !== 'string') {
+		if (
+			!id ||
+			typeof id !== 'string' ||
+			!name ||
+			typeof name !== 'string' ||
+			!description ||
+			typeof description !== 'string'
+		) {
 			return res.status(400).json({
 				code: 400,
 				message: 'Invalid input data',
@@ -60,6 +76,7 @@ const updateTypeProduct = async (req, res, next) => {
 		const updatedTypeProduct = await typeProductService.updateTypeProduct({
 			id,
 			name,
+			description,
 		});
 		res.status(200).json({
 			code: 200,

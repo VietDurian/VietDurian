@@ -38,9 +38,16 @@ const createGeneralPost = async ({
 };
 
 // Get general posts
-const getGeneralPost = async ({ status, category, search, author_id }) => {
+const getGeneralPost = async ({
+	status,
+	category,
+	search,
+	sort,
+	author_id,
+}) => {
 	try {
 		const query = {};
+		const sortOption = {};
 
 		if (status) {
 			query.status = status;
@@ -58,8 +65,46 @@ const getGeneralPost = async ({ status, category, search, author_id }) => {
 			query.author_id = author_id;
 		}
 
-		const posts = await GeneralPostModel.find(query).lean();
-		return posts;
+		if (sort) {
+			if (sort === 'newest') {
+				sortOption.created_at = -1;
+			} else if (sort === 'oldest') {
+				sortOption.created_at = 1;
+			}
+		}
+
+		// Apply sort via Mongoose `.sort()`; if no sort provided, no sort applied.
+		const postsQuery = GeneralPostModel.find(query).populate({
+			path: 'author_id',
+			select: 'full_name avatar',
+		});
+
+		const rawPosts = Object.keys(sortOption).length
+			? await postsQuery.sort(sortOption).lean()
+			: await postsQuery.lean();
+
+		const postsWithAuthor = rawPosts.map((post) => {
+			const author = post.author_id;
+			const normalizedAuthorId =
+				author && author._id
+					? author._id.toString()
+					: post.author_id?.toString?.();
+
+			return {
+				...post,
+				author:
+					author && author._id
+						? {
+								_id: author._id.toString(),
+								full_name: author.full_name,
+								avatar: author.avatar,
+							}
+						: null,
+				author_id: normalizedAuthorId || '',
+			};
+		});
+
+		return postsWithAuthor;
 	} catch (error) {
 		throw error;
 	}
@@ -82,7 +127,7 @@ const updateGeneralPost = async (post_id, data) => {
 		const updatedPost = await GeneralPostModel.findByIdAndUpdate(
 			post_id,
 			data,
-			{ new: true }
+			{ new: true },
 		);
 		return updatedPost;
 	} catch (error) {
@@ -100,29 +145,47 @@ const deleteGeneralPost = async (post_id) => {
 };
 
 // Approve a general post
-const approveGeneralPost = async (post_id, adminId) => {
+const approveGeneralPost = async (post_id, adminId, status, reason) => {
 	try {
 		const updatedPost = await GeneralPostModel.findByIdAndUpdate(
 			post_id,
-			{ status: 'active' },
-			{ new: true }
+			{ status: status },
+			{ new: true },
 		);
 
-		// Notification Logic
-		if (updatedPost) {
-			try {
-				const receiver_id = updatedPost.author_id;
-				if (receiver_id && receiver_id.toString() !== adminId.toString()) {
-					await notificationService.createNotification({
-						receiver_id: receiver_id,
-						sender_id: adminId,
-						entity_type: 'post_approval',
-						post_id: post_id,
-						message: `Your post has been approved by admin.`,
-					});
+		if (status == 'active') {
+			if (updatedPost) {
+				try {
+					const receiver_id = updatedPost.author_id;
+					if (receiver_id && receiver_id.toString() !== adminId.toString()) {
+						await notificationService.createNotification({
+							receiver_id: receiver_id,
+							sender_id: adminId,
+							entity_type: 'Accepted Post',
+							post_id: post_id,
+							message: `Your post has been ${status} by admin.`,
+						});
+					}
+				} catch (error) {
+					console.error('Notification error:', error);
 				}
-			} catch (error) {
-				console.error('Notification error:', error);
+			}
+		} else if (status == 'inactive') {
+			if (updatedPost) {
+				try {
+					const receiver_id = updatedPost.author_id;
+					if (receiver_id && receiver_id.toString() !== adminId.toString()) {
+						await notificationService.createNotification({
+							receiver_id: receiver_id,
+							sender_id: adminId,
+							entity_type: 'Rejected Post',
+							post_id: post_id,
+							message: `Your post has been rejected by admin because ${reason}.`,
+						});
+					}
+				} catch (error) {
+					console.error('Notification error:', error);
+				}
 			}
 		}
 

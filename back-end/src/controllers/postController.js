@@ -3,11 +3,12 @@ import { postService } from '@/services/postService';
 // Get blogs general
 const getGeneralPost = async (req, res, next) => {
 	try {
-		const { status, category, search, author_id } = req.query;
+		const { status, category, search, sort, author_id } = req.query;
 		const posts = await postService.getGeneralPost({
 			status,
 			category,
 			search,
+			sort,
 			author_id,
 		});
 		res.status(200).json({
@@ -53,12 +54,13 @@ const createGeneralPost = async (req, res, next) => {
 const updateGeneralPost = async (req, res, next) => {
 	try {
 		const { post_id } = req.params;
-		const { category, content, image, contact } = req.body;
+		const { category, content, image, contact, status } = req.body;
 		const updatedPost = await postService.updateGeneralPost(post_id, {
 			category,
 			content,
 			image,
 			contact,
+			status,
 		});
 		res.status(200).json({
 			code: 200,
@@ -88,8 +90,9 @@ const deleteGeneralPost = async (req, res, next) => {
 const approveGeneralPost = async (req, res, next) => {
 	try {
 		const { post_id } = req.params;
+		const {status, reason} = req.body;
 		const adminId = req.user._id;
-		const updatedPost = await postService.approveGeneralPost(post_id, adminId);
+		const updatedPost = await postService.approveGeneralPost(post_id, adminId, status, reason);
 
 		res.status(200).json({
 			code: 200,
