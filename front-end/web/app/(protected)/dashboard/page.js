@@ -12,6 +12,7 @@ import { UsersPage } from './component/UsersPage';
 import { PostsPage } from './component/PostsPage';
 import { PostRequestPage } from './component/PostRequestPage';
 import { ReportPage } from './component/ReportPage';
+import { ProductsPage } from './component/ProductsPage';
 import { ReportCommentPage } from './component/ReportCommentPage';
 import { LanguageSwitcher } from './component/LanguageSwitcher';
 
@@ -60,14 +61,7 @@ export default function App() {
 					</div>
 				);
 			case 'products':
-				return (
-					<div className="p-8 text-center">
-						<h1 className="text-2xl font-bold text-[#1a4d2e]">
-							Trang Sản phẩm
-						</h1>
-						<p className="text-gray-600 mt-2">Đang phát triển...</p>
-					</div>
-				);
+				return <ProductsPage />;
 			case 'posts':
 				return <PostsPage />;
 			case 'postRequests':
