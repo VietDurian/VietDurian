@@ -281,12 +281,7 @@ Router.get(
   authorizationMiddleware.isAdmin,
   userController.getAllUsers
 );
-Router.get(
-  "/:id",
-  authMiddleware.protect,
-  authorizationMiddleware.isAdmin,
-  userController.getUserById
-);
+
 Router.patch(
   "/ban/:id",
   authMiddleware.protect,
@@ -311,5 +306,10 @@ Router.get(
   authorizationMiddleware.isAdmin,
   userController.sortUsers
 );
-
+Router.get(
+  "/:id",
+  authMiddleware.protect,
+  authorizationMiddleware.isAdmin,
+  userController.getUserById
+);
 export { Router as userRoute };

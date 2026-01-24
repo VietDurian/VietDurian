@@ -53,7 +53,7 @@ apiClient.interceptors.response.use(
 
 // User API
 export const usersAPI = {
-  async getAllUsers(params = { page: 1, litmit: 10 }) {
+  async getAllUsers(params = { page: 1, limit: 10 }) {
     const response = await apiClient.get("/user", { params });
     return response.data;
   },
@@ -84,6 +84,45 @@ export const usersAPI = {
     return response.data;
   },
 }
+//Product Type of Admin management API
+export const productTypesAPI = {
+  async getAllProductTypes(params = {}) {
+    const response = await apiClient.get("type-product", { params });
+    return response.data;
+  },
+};
+
+
+//Product of Admin management API
+export const productsAPI = {
+  async getAllProducts(params = {}) {
+    const response = await apiClient.get("admin/products", { params });
+    return response.data;
+  },
+  async getProductById(id) {
+    const response = await apiClient.get(`admin/products/${id}`);
+    return response.data;
+  },
+  async searchProducts(keyword, params = {}) {
+    const response = await apiClient.get("/products/search", {
+      params: { keyword, ...params },
+    });
+    return response.data;
+  },
+  async filterProducts(filters = {}) {
+    const response = await apiClient.get("admin/products/filter", {
+      params: filters,
+    });
+    return response.data;
+  },
+  async sortProducts(sortBy, sortOrder = "desc", params = {}) {
+    const response = await apiClient.get("admin/products/sort", {
+      params: { sortBy, sortOrder, ...params },
+    });
+    return response.data;
+  }
+
+};
 
 // Blog API
 export const blogAPI = {
@@ -370,7 +409,7 @@ export async function approvePost(postId, status, reason) {
     return response?.data?.data;
   } catch (error) {
     const message =
-      error?.response?.data?.message || 
+      error?.response?.data?.message ||
       error?.message ||
       "Failed to approve post";
     throw new Error(message);
@@ -393,12 +432,12 @@ export async function getAllReport(params) {
 
 // Delete report
 export async function deleteReport(reportId) {
-  try { 
+  try {
     const response = await apiClient.delete(`/report/${reportId}`);
     return response?.data?.data;
   } catch (error) {
     const message =
-      error?.response?.data?.message || 
+      error?.response?.data?.message ||
       error?.message ||
       "Failed to delete report";
     throw new Error(message);
@@ -418,7 +457,7 @@ export async function getAllReportComment(params) {
       "Failed to fetch comment reports";
     throw new Error(message);
   }
-} 
+}
 
 // update report comment
 export async function updateReportComment(reportId, status) {
