@@ -53,7 +53,9 @@ const getReactionCommentsByCommentId = async ({ commentId }) => {
 		// Thống kê tổng số reaction và phân loại theo type theo comment ID
 		const reactions = await ReactionCommentModel.find({
 			comment_id: commentId,
-		}).lean();
+		})
+			.populate('user_id', 'full_name avatar')
+			.lean();
 
 		const total = reactions.length;
 		const breakdown = {
@@ -81,7 +83,6 @@ const getReactionCommentsByCommentId = async ({ commentId }) => {
 		throw error;
 	}
 };
-
 // Update a reaction
 const updateReaction = async ({ id, type }) => {
 	try {
