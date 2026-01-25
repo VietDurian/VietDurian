@@ -17,6 +17,7 @@ import {
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { createPost, getOwnPosts } from "@/lib/api";
+import CommentModal from "@/components/CommentModal";
 
 const POST_CATEGORIES = [
   "Dịch vụ",
@@ -285,77 +286,92 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 };
 
 const Post = ({ post }) => {
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [commentCount, setCommentCount] = useState(post.comments || 0);
+
   return (
-    <article className="bg-white border border-gray-100 rounded-xl p-4 mb-4 shadow-sm w-full">
-      {/* Header: Avatar, Name, and Menu */}
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex gap-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+    <>
+      <article className="bg-white border border-gray-100 rounded-xl p-4 mb-4 shadow-sm w-full">
+        {/* Header: Avatar, Name, and Menu */}
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex gap-3">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+              <img
+                src={post.userAvatar || "/images/avatar.jpg"}
+                alt={post.userName}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <h4 className="font-bold text-gray-900 leading-tight">
+                {post.userName}
+              </h4>
+              <p className="text-gray-400 text-xs mt-0.5">
+                @{post.userHandle} • {post.timestamp}
+              </p>
+            </div>
+          </div>
+          <button className="text-gray-400 hover:bg-gray-50 p-1 rounded-full transition">
+            <MoreHorizontal size={20} />
+          </button>
+        </div>
+
+        {/* Post Content */}
+        <div className="text-sm text-gray-700 leading-relaxed mb-4">
+          <p>{post.content}</p>
+          {post.link && (
+            <a
+              href={post.link}
+              className="text-blue-500 hover:underline block mt-2"
+            >
+              {post.link}
+            </a>
+          )}
+        </div>
+
+        {/* Post Image (Optional) */}
+        {post.image && (
+          <div className="rounded-xl overflow-hidden mb-4 border border-gray-100">
             <img
-              src={post.userAvatar || "/images/avatar.jpg"}
-              alt={post.userName}
-              className="w-full h-full object-cover"
+              src={post.image}
+              alt="Post content"
+              className="w-full h-auto object-cover"
             />
           </div>
-          <div>
-            <h4 className="font-bold text-gray-900 leading-tight">
-              {post.userName}
-            </h4>
-            <p className="text-gray-400 text-xs mt-0.5">
-              @{post.userHandle} • {post.timestamp}
-            </p>
-          </div>
-        </div>
-        <button className="text-gray-400 hover:bg-gray-50 p-1 rounded-full transition">
-          <MoreHorizontal size={20} />
-        </button>
-      </div>
-
-      {/* Post Content */}
-      <div className="text-sm text-gray-700 leading-relaxed mb-4">
-        <p>{post.content}</p>
-        {post.link && (
-          <a
-            href={post.link}
-            className="text-blue-500 hover:underline block mt-2"
-          >
-            {post.link}
-          </a>
         )}
-      </div>
 
-      {/* Post Image (Optional) */}
-      {post.image && (
-        <div className="rounded-xl overflow-hidden mb-4 border border-gray-100">
-          <img
-            src={post.image}
-            alt="Post content"
-            className="w-full h-auto object-cover"
-          />
+        {/* Footer: Interaction Buttons */}
+        <div className="pt-3 border-t border-gray-50 flex items-center justify-between px-2 text-gray-400">
+          <button className="flex items-center gap-2 hover:text-red-500 transition group">
+            <Heart size={18} className="group-hover:fill-current" />
+            <span className="text-xs font-medium">{post.likes} Thích</span>
+          </button>
+
+          <button
+            onClick={() => setIsCommentModalOpen(true)}
+            className="flex items-center gap-2 hover:text-emerald-700 transition group"
+          >
+            <MessageCircle size={18} />
+            <span className="text-xs font-medium">{commentCount}</span> {/* ĐỔI TỪ {post.comments} THÀNH {commentCount} */}
+          </button>
+
+          <button className="flex items-center gap-2 hover:text-blue-600 transition group">
+            <Share2 size={18} />
+            <span className="text-xs font-medium">{post.shares}</span>
+          </button>
         </div>
-      )}
+      </article>
 
-      {/* Footer: Interaction Buttons */}
-      <div className="pt-3 border-t border-gray-50 flex items-center justify-between px-2 text-gray-400">
-        <button className="flex items-center gap-2 hover:text-red-500 transition group">
-          <Heart size={18} className="group-hover:fill-current" />
-          <span className="text-xs font-medium">{post.likes} Thích</span>
-        </button>
-
-        <button className="flex items-center gap-2 hover:text-emerald-700 transition group">
-          <MessageCircle size={18} />
-          <span className="text-xs font-medium">{post.comments}</span>
-        </button>
-
-        <button className="flex items-center gap-2 hover:text-blue-600 transition group">
-          <Share2 size={18} />
-          <span className="text-xs font-medium">{post.shares}</span>
-        </button>
-      </div>
-    </article>
+      {/* MỚI THÊM: CommentModal */}
+      <CommentModal
+        isOpen={isCommentModalOpen}
+        onClose={() => setIsCommentModalOpen(false)}
+        postId={post.id}
+        onCommentCountChange={setCommentCount}
+      />
+    </>
   );
 };
-
 export default function ContentExpertProfileContent() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const { user } = useAuth();

@@ -487,4 +487,132 @@ export async function banReportComment(reportId) {
   }
 }
 
+// Comment API
+export const commentAPI = {
+  // Get all comments
+  async getAllComments() {
+    try {
+      const response = await apiClient.get("/comment");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      throw error;
+    }
+  },
+
+  // Get comments by Post ID
+  async getCommentsByPost(postId, sort = "all") {
+    try {
+      const response = await apiClient.get(`/comment/${postId}/post`, {
+        params: { sort },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching comments by post:", error);
+      throw error;
+    }
+  },
+
+  // Create a new comment
+  async createComment(data) {
+    try {
+      const response = await apiClient.post("/comment", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      throw error;
+    }
+  },
+
+  // Update a comment
+  async updateComment(commentId, content) {
+    try {
+      const response = await apiClient.patch(`/comment/${commentId}`, {
+        content
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      throw error;
+    }
+  },
+
+  // Delete a comment
+  async deleteComment(commentId) {
+    try {
+      const response = await apiClient.delete(`/comment/${commentId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      throw error;
+    }
+  },
+};
+
+// Reaction Comment API
+export const reactionCommentAPI = {
+  // Get all reaction comments
+  async getAllReactions() {
+    try {
+      const response = await apiClient.get("/reaction");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching reactions:", error);
+      throw error;
+    }
+  },
+
+  // Get reactions by comment ID
+  async getReactionsByComment(commentId) {
+    try {
+      const response = await apiClient.get(`/reaction/${commentId}/comment`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching reactions by comment:", error);
+      throw error;
+    }
+  },
+
+  // Add a reaction to a comment
+  async addReaction(data) {
+    try {
+      const response = await apiClient.post("/reaction", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error adding reaction:", error);
+      throw error;
+    }
+  },
+
+  // Update a reaction
+  async updateReaction(reactionId, type) {
+    try {
+      const response = await apiClient.patch(`/reaction/${reactionId}`, {
+        type
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error updating reaction:", error);
+      throw error;
+    }
+  },
+
+  // Delete a reaction
+  async deleteReaction(reactionId) {
+    try {
+      const response = await apiClient.delete(`/reaction/${reactionId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting reaction:", error);
+      throw error;
+    }
+  },
+};
+export const reportCommentAPI = {
+  async createReport(data) {
+    const response = await apiClient.post("/report-comment", data);
+    return response.data;
+  },
+};
+
 export default apiClient;
