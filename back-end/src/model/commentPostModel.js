@@ -17,6 +17,11 @@ const commentPostSchema = new mongoose.Schema(
 			ref: 'CommentPost',
 			default: null,
 		},
+		is_active: {
+			type: String,
+			default: "active",
+			enum : ["active", "inactive"],
+		},
 		content: {
 			type: String,
 			required: true,

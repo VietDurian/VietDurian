@@ -3,8 +3,6 @@ import { useState, useEffect, useMemo } from 'react';
 import {
 	Search,
 	Filter,
-	CheckCircle,
-	XCircle,
 	Ban,
 	ShieldOff,
 } from 'lucide-react';
@@ -24,7 +22,11 @@ export function UsersPage() {
 	const [blockModalOpen, setBlockModalOpen] = useState(false);
 	const [selectedUser, setSelectedUser] = useState(null);
 
-
+	const toIsBannedParam = (status) => {
+		if (status === "blocked") return true;
+		if (status === "active") return false;
+		return undefined; // pending/inactive/all => backend chưa support
+	};
 	const mapUser = (u) => ({
 		id: u._id || u.id,
 		name: u.full_name || 'No Name',
@@ -38,16 +40,15 @@ export function UsersPage() {
 		location: u.location || 'Unknown',
 	})
 
-	const fetchUsers = async () => {
+	const fetchUsers = async (params = {}) => {
 		setLoading(true);
 		try {
-			const data = await usersAPI.getAllUsers({ page: 1, limit: 100 });
-			console.log('Fetched Users Data:', data);
-			const list = Array.isArray(data?.users) ? data.users : [];
+			const res = await usersAPI.filterUsers(params);
+			const list = Array.isArray(res?.data) ? res.data : [];
 			setUsers(list.map(mapUser));
 		} catch (error) {
-			console.error('Loi Loi', error);
-			toast.error(t('error_fetching_users'));
+			console.error("Error fetching users:", error);
+			toast.error(t("error_fetching_users"));
 		} finally {
 			setLoading(false);
 		}
@@ -55,77 +56,81 @@ export function UsersPage() {
 
 	useEffect(() => {
 		const term = searchTerm.trim();
+
 		const handler = setTimeout(async () => {
-			setLoading(true);
 			try {
+				setLoading(true);
+
+				const role = roleFilter !== "all" ? roleFilter : undefined;
+				const is_banned = toIsBannedParam(statusFilter);
+
 				if (term) {
-					const res = await usersAPI.searchUsers(term, { page: 1, limit: 100 });
-					const list = Array.isArray(res?.data) ? res.data : [];
-					setUsers(list.map(mapUser));
-				} else {
-					await fetchUsers();
+					const res = await usersAPI.searchUsers(term, { page: 1, limit: 10 });
+					let list = Array.isArray(res?.data) ? res.data.map(mapUser) : [];
+
+					if (role) list = list.filter(u => u.role === role);
+					if (is_banned !== undefined) {
+						list = list.filter(u => (is_banned ? u.status === "blocked" : u.status === "active"));
+					}
+					setUsers(list);
+					return;
 				}
+				const params = {
+					...(role ? { role } : {}),
+					...(is_banned !== undefined ? { is_banned } : {}),
+				};
+				console.log("Calling filter API with:", params);
+
+				await fetchUsers(params);
+
 			} catch (error) {
-				console.error('Error searching users:', error);
-				toast.error(t('error_fetching_users'));
+				console.error("Error:", error);
+				toast.error(t("error_fetching_users"));
 			} finally {
 				setLoading(false);
 			}
 		}, 500);
 
 		return () => clearTimeout(handler);
-	}, [searchTerm]);
-
-
-	const filteredUsers = users.filter((user) => {
-		const matchesSearch =
-			user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			user.email.toLowerCase().includes(searchTerm.toLowerCase());
-		const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-		const matchesStatus =
-			statusFilter === 'all' || user.status === statusFilter;
-		return matchesSearch && matchesRole && matchesStatus;
-	});
-
+	}, [searchTerm, roleFilter, statusFilter]);
 	const handleBlockUnblock = (user) => {
 		setSelectedUser(user);
 		setBlockModalOpen(true);
 	};
 
-	const confirmBlockUnblock = () => {
+	const confirmBlockUnblock = async () => {
 		if (!selectedUser) return;
+		try {
+			setLoading(true);
+			const newIsBanned = selectedUser.status !== "blocked";
+			const res = await usersAPI.toggleBanUser(selectedUser.id, newIsBanned);
 
-		setUsers(
-			users.map((user) => {
-				if (user.id === selectedUser.id) {
-					const newStatus = user.status === 'blocked' ? 'active' : 'blocked';
+			const updated = res.data || res.user || null;
 
-					// Show toast notification
-					if (newStatus === 'blocked') {
-						toast.success(t('user_blocked'), {
-							description: `${user.name} ${t('blocked').toLowerCase()}`,
-						});
-					} else {
-						toast.success(t('user_unblocked'), {
-							description: `${user.name} ${t('active').toLowerCase()}`,
-						});
-					}
+			setUsers(pre =>
+				pre.map(u =>
+					u.id === updated._id
+						? { ...u, status: updated.is_banned ? 'blocked' : 'active' }
+						: u
+				)
+			);
+			toast.success(updated.is_banned ? t("user_blocked") : t("user_unblocked"),
+				{ description: `${updated.full_name} ${updated.is_banned ? t("blocked").toLowerCase() : t("active").toLowerCase()}` });
 
-					return { ...user, status: newStatus };
-				}
-				return user;
-			}),
-		);
+			setBlockModalOpen(false);
+			setSelectedUser(null);
+		} catch (error) {
+			console.error('Error toggling ban status:', error);
+			toast.error(t('error_updating_user_status'));
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const getStatusColor = (status) => {
 		switch (status) {
 			case 'active':
 				return 'bg-green-100 text-green-700';
-			case 'inactive':
-				return 'bg-gray-100 text-gray-700';
-			case 'pending':
-				return 'bg-yellow-100 text-yellow-700';
 			case 'blocked':
 				return 'bg-red-100 text-red-700';
 			default:
@@ -187,8 +192,10 @@ export function UsersPage() {
 						>
 							<option value="all">{t('all_roles')}</option>
 							<option value="farmer">{t('farmer')}</option>
-							<option value="expert">{t('expert')}</option>
-							<option value="business">{t('business')}</option>
+							<option value="trader">{t('trader')}</option>
+							<option value="serviceProvider">{t('serviceProvider')}</option>
+							<option value="contentExpert">{t('contentExpert')}</option>
+							<option value="admin">{t('admin')}</option>
 						</select>
 					</div>
 
@@ -202,9 +209,7 @@ export function UsersPage() {
 						>
 							<option value="all">{t('all_status')}</option>
 							<option value="active">{t('active')}</option>
-							<option value="pending">{t('pending')}</option>
 							<option value="blocked">{t('blocked')}</option>
-							<option value="inactive">{t('inactive')}</option>
 						</select>
 					</div>
 				</div>
@@ -237,7 +242,7 @@ export function UsersPage() {
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-gray-200">
-							{filteredUsers.map((user) => (
+							{users.map((user) => (
 								<tr
 									key={user.id}
 									className={`hover:bg-gray-50 transition-colors ${user.status === 'blocked' ? 'bg-red-50/30' : ''}`}
@@ -284,42 +289,24 @@ export function UsersPage() {
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
 										<div className="flex gap-2">
-											{user.status === 'pending' && (
-												<>
-													<button
-														className="p-2 hover:bg-green-100 rounded-lg transition-colors group"
-														title={t('approve')}
-													>
-														<CheckCircle className="w-4 h-4 text-gray-400 group-hover:text-green-600" />
-													</button>
-													<button
-														className="p-2 hover:bg-red-100 rounded-lg transition-colors group"
-														title={t('reject')}
-													>
-														<XCircle className="w-4 h-4 text-gray-400 group-hover:text-red-600" />
-													</button>
-												</>
-											)}
-											{user.status !== 'pending' && (
-												<button
-													onClick={() => handleBlockUnblock(user)}
-													className={`p-2 rounded-lg transition-colors group ${user.status === 'blocked'
-														? 'hover:bg-green-100'
-														: 'hover:bg-red-100'
-														}`}
-													title={
-														user.status === 'blocked'
-															? t('unblock')
-															: t('block')
-													}
-												>
-													{user.status === 'blocked' ? (
-														<ShieldOff className="w-4 h-4 text-gray-400 group-hover:text-green-600" />
-													) : (
-														<Ban className="w-4 h-4 text-gray-400 group-hover:text-red-600" />
-													)}
-												</button>
-											)}
+											<button
+												onClick={() => handleBlockUnblock(user)}
+												className={`p-2 rounded-lg transition-colors group ${user.status === 'blocked'
+													? 'hover:bg-green-100'
+													: 'hover:bg-red-100'
+													}`}
+												title={
+													user.status === 'blocked'
+														? t('unblock')
+														: t('block')
+												}
+											>
+												{user.status === 'blocked' ? (
+													<ShieldOff className="w-4 h-4 text-gray-400 group-hover:text-green-600" />
+												) : (
+													<Ban className="w-4 h-4 text-gray-400 group-hover:text-red-600" />
+												)}
+											</button>
 										</div>
 									</td>
 								</tr>
@@ -331,7 +318,7 @@ export function UsersPage() {
 
 			{/* Users Cards - Mobile */}
 			<div className="md:hidden space-y-4">
-				{filteredUsers.map((user) => (
+				{users.map((user) => (
 					<div
 						key={user.id}
 						className={`bg-white rounded-xl p-4 shadow-sm border border-gray-100 ${user.status === 'blocked' ? 'border-red-200 bg-red-50/30' : ''}`}
@@ -374,31 +361,19 @@ export function UsersPage() {
 								{t(user.status)}
 							</span>
 							<div className="flex gap-2">
-								{user.status === 'pending' && (
-									<>
-										<button className="p-2 hover:bg-green-100 rounded-lg transition-colors">
-											<CheckCircle className="w-4 h-4 text-green-600" />
-										</button>
-										<button className="p-2 hover:bg-red-100 rounded-lg transition-colors">
-											<XCircle className="w-4 h-4 text-red-600" />
-										</button>
-									</>
-								)}
-								{user.status !== 'pending' && (
-									<button
-										onClick={() => handleBlockUnblock(user)}
-										className={`p-2 rounded-lg transition-colors ${user.status === 'blocked'
-											? 'hover:bg-green-100'
-											: 'hover:bg-red-100'
-											}`}
-									>
-										{user.status === 'blocked' ? (
-											<ShieldOff className="w-4 h-4 text-green-600" />
-										) : (
-											<Ban className="w-4 h-4 text-red-600" />
-										)}
-									</button>
-								)}
+								<button
+									onClick={() => handleBlockUnblock(user)}
+									className={`p-2 rounded-lg transition-colors ${user.status === 'blocked'
+										? 'hover:bg-green-100'
+										: 'hover:bg-red-100'
+										}`}
+								>
+									{user.status === 'blocked' ? (
+										<ShieldOff className="w-4 h-4 text-green-600" />
+									) : (
+										<Ban className="w-4 h-4 text-red-600" />
+									)}
+								</button>
 							</div>
 						</div>
 					</div>
@@ -407,7 +382,7 @@ export function UsersPage() {
 
 			{/* Results Info */}
 			<div className="mt-4 text-sm text-gray-500 text-center md:text-left">
-				{t('total')}: {filteredUsers.length} {t('users').toLowerCase()}
+				{t('total')}: {users.length} {t('users').toLowerCase()}
 			</div>
 
 			{/* Block/Unblock Modal */}

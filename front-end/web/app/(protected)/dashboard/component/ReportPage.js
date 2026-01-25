@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import {
 	Search,
 	CheckCircle,
@@ -230,11 +231,20 @@ export function ReportPage() {
 														: 'bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f]'
 												}`}
 											>
-												<img
-													src={report.user_id.avatar}
-													alt="Avatar"
-													className="w-full h-full rounded-full object-cover"
-												/>
+												{report.user_id?.avatar ? (
+													<Image
+														src={report.user_id.avatar}
+														alt={report.user_id.full_name || 'Avatar'}
+														width={40}
+														height={40}
+														className="w-full h-full rounded-full object-cover"
+														unoptimized
+													/>
+												) : (
+													<div className="w-full h-full flex items-center justify-center text-sm font-semibold text-white">
+														{(report.user_id?.full_name || report.reporter?.name || ' ')[0]}
+													</div>
+												)}
 											</div>
 											<div className="ml-3">
 												<p className="font-medium text-gray-900">
@@ -252,18 +262,27 @@ export function ReportPage() {
 										</div>
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
-										<img
-											src={report.image}
-											alt="Report"
-											className="w-16 h-16 object-cover rounded-lg border border-gray-200 hover:opacity-90 cursor-pointer"
-											onClick={() => openImage(report.image)}
-											role="button"
-											aria-label={t('view_image') || 'Xem ảnh'}
-											onKeyDown={(e) => {
-												if (e.key === 'Enter') openImage(report.image);
-											}}
-											tabIndex={0}
-										/>
+										{report.image ? (
+											<Image
+												src={report.image}
+												alt="Report"
+												width={64}
+												height={64}
+												className="w-16 h-16 object-cover rounded-lg border border-gray-200 hover:opacity-90 cursor-pointer"
+												onClick={() => openImage(report.image)}
+												role="button"
+												aria-label={t('view_image') || 'Xem ảnh'}
+												onKeyDown={(e) => {
+													if (e.key === 'Enter') openImage(report.image);
+												}}
+												tabIndex={0}
+												unoptimized
+											/>
+										) : (
+											<div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+												{t('no_image') || 'Không có ảnh'}
+											</div>
+										)}
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
 										<div className="flex items-center gap-2 text-sm text-gray-500">
@@ -337,11 +356,24 @@ export function ReportPage() {
 										: 'bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f]'
 								}`}
 							>
-								<img
-									src={report.user_id.avatar}
-									alt="Avatar"
-									className="w-full h-full rounded-full object-cover"
-								/>
+								{report.user_id?.avatar ? (
+									<Image
+										src={report.user_id.avatar}
+										alt={report.user_id.full_name || 'Avatar'}
+										width={48}
+										height={48}
+										className="w-full h-full rounded-full object-cover"
+										unoptimized
+									/>
+								) : (
+									<div className="w-full h-full flex items-center justify-center text-sm font-semibold text-white">
+										{
+											(report.user_id?.full_name ||
+												report.reporter?.name ||
+												' ')[0]
+										}
+									</div>
+								)}
 							</div>
 							<div className="flex-1 min-w-0">
 								<h3 className="font-medium text-gray-900 mb-1">
@@ -367,9 +399,11 @@ export function ReportPage() {
 								<p className="text-sm text-gray-700">{report.reason}</p>
 							</div>
 							{report.image ? (
-								<img
+								<Image
 									src={report.image}
 									alt="Report"
+									width={800}
+									height={320}
 									className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer"
 									onClick={() => openImage(report.image)}
 									aria-label={t('view_image') || 'Xem ảnh'}
@@ -380,6 +414,7 @@ export function ReportPage() {
 									onError={(e) => {
 										e.currentTarget.style.display = 'none';
 									}}
+									unoptimized
 								/>
 							) : (
 								<div className="w-full h-32 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
@@ -428,10 +463,13 @@ export function ReportPage() {
 						className="max-w-[90%] max-h-[90%] p-4"
 						onClick={(e) => e.stopPropagation()}
 					>
-						<img
+						<Image
 							src={modalImageSrc}
 							alt="Report Large"
+							width={1200}
+							height={900}
 							className="max-w-full max-h-[80vh] rounded-lg shadow-lg"
+							unoptimized
 						/>
 						<button
 							type="button"

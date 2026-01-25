@@ -18,7 +18,7 @@ const reportCommentSchema = new mongoose.Schema(
 		},
 		status: {
 			type: String,
-			enum: ['pending', 'reviewed', 'rejected'],
+			enum: ['pending', 'reviewed'],
 			default: 'pending',
 		},
 	},

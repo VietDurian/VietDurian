@@ -3,6 +3,7 @@ import express from "express";
 import { authRoute } from "@/routes/authRoute";
 import { profileRoute } from "@/routes/profileRoute";
 import { productRoute } from "@/routes/productRoute";
+import { adminProductRoute } from "@/routes/adminProductRoute";
 import { ratingRoute } from "@/routes/ratingRoute";
 import { typeProductRoute } from "@/routes/typeProductRoute";
 import { stepRoute } from "@/routes/stepRoute";
@@ -19,6 +20,7 @@ import { notificationRouter } from "@/routes/notificationRoute";
 import { permissionRoute } from "@/routes/permissionRoute";
 import { userRoute } from "@/routes/userRoute";
 import { serviceProviderProfileRoute } from "@/routes/serviceProviderProfileRoute";
+import { reportCommentRoute } from "@/routes/reportCommentRoute";
 
 const Router = express.Router();
 
@@ -26,6 +28,7 @@ Router.use("/auth", authRoute);
 Router.use('/user', userRoute);
 Router.use("/profile", profileRoute);
 Router.use("/products", productRoute);
+Router.use("/admin/products", adminProductRoute);
 Router.use("/ratings", ratingRoute);
 Router.use("/type-product", typeProductRoute);
 Router.use("/step", stepRoute);
@@ -41,5 +44,6 @@ Router.use("/chat", chatRoute);
 Router.use("/notification", notificationRouter);
 Router.use("/permission", permissionRoute);
 Router.use("/capability-profile", serviceProviderProfileRoute);
+Router.use("/report-comment", reportCommentRoute);
 
 export const API_v1 = Router;

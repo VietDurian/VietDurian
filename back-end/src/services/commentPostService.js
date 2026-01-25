@@ -98,7 +98,11 @@ const getCommentsByPostId = async ({ postId, sort }) => {
 		// sort: 'all' (default) -> created_at: 1 (Oldest first - Chronological)
 		const sortOption =
 			sort === 'newest' ? { created_at: -1 } : { created_at: 1 };
-		const comments = await CommentPostModel.find({ post_id: postId })
+		// Only return active comments
+		const comments = await CommentPostModel.find({
+			post_id: postId,
+			is_active: 'active',
+		})
 			.populate('author_id', 'full_name avatar')
 			.sort(sortOption)
 			.lean();
@@ -135,7 +139,7 @@ const updateComment = async ({ id, content }) => {
 		const updatedComment = await CommentPostModel.findByIdAndUpdate(
 			id,
 			{ content },
-			{ new: true }
+			{ new: true },
 		);
 		return updatedComment;
 	} catch (error) {
