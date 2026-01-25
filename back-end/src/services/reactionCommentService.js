@@ -3,7 +3,9 @@ import { ReactionCommentModel } from '@/model/reactionCommentModel';
 // Get all reaction comments
 const getAllReactionComments = async () => {
 	try {
-		const reactions = await ReactionCommentModel.find().lean();
+		const reactions = await ReactionCommentModel.find()
+			.populate('user_id', 'full_name avatar')
+			.lean();
 		return reactions;
 	} catch (error) {
 		throw error;
@@ -53,7 +55,9 @@ const getReactionCommentsByCommentId = async ({ commentId }) => {
 		// Thống kê tổng số reaction và phân loại theo type theo comment ID
 		const reactions = await ReactionCommentModel.find({
 			comment_id: commentId,
-		}).lean();
+		})
+			.populate('user_id', 'full_name avatar')
+			.lean();
 
 		const total = reactions.length;
 		const breakdown = {
@@ -88,7 +92,7 @@ const updateReaction = async ({ id, type }) => {
 		const updatedReaction = await ReactionCommentModel.findByIdAndUpdate(
 			id,
 			{ type },
-			{ new: true }
+			{ new: true },
 		);
 		return updatedReaction;
 	} catch (error) {
