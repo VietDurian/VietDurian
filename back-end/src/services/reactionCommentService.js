@@ -85,7 +85,6 @@ const getReactionCommentsByCommentId = async ({ commentId }) => {
 		throw error;
 	}
 };
-
 // Update a reaction
 const updateReaction = async ({ id, type }) => {
 	try {

@@ -20,6 +20,9 @@ const getUserById = async (id) => {
   if (!user) throw createError(404, "User not found");
   return user;
 };
+
+
+
 const banUser = async (id, is_banned) => {
   console.log(`Attempting to update user ${id} with is_banned=${is_banned}`);
   const user = await User.findByIdAndUpdate(id, { is_banned }, { new: true });
@@ -27,10 +30,13 @@ const banUser = async (id, is_banned) => {
   if (!user) throw createError(404, "User not found");
 
   console.log(
-    `User updated successfully: ${user.name}, is_banned=${user.is_banned}`
+    `User updated successfully: ${user.full_name}, is_banned=${user.is_banned}`
   );
   return user;
 };
+
+
+
 const searchUsers = async (query) => {
   const keyword = (query || "").trim();
   console.log("Searching with keyword:", keyword);

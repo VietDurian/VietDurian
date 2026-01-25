@@ -53,7 +53,7 @@ apiClient.interceptors.response.use(
 
 // User API
 export const usersAPI = {
-  async getAllUsers(params = { page: 1, litmit: 10 }) {
+  async getAllUsers(params = { page: 1, limit: 10 }) {
     const response = await apiClient.get("/user", { params });
     return response.data;
   },
@@ -61,8 +61,8 @@ export const usersAPI = {
     const response = await apiClient.get(`/user/${id}`);
     return response.data;
   },
-  async toggleBanUser(id) {
-    const response = await apiClient.patch(`/user/${id}/toggle-ban`);
+  async toggleBanUser(id, is_banned) {
+    const response = await apiClient.patch(`/user/ban/${id}`, { is_banned });
     return response.data;
   },
   async searchUsers(keyword, params = {}) {
@@ -84,6 +84,45 @@ export const usersAPI = {
     return response.data;
   },
 }
+//Product Type of Admin management API
+export const productTypesAPI = {
+  async getAllProductTypes(params = {}) {
+    const response = await apiClient.get("type-product", { params });
+    return response.data;
+  },
+};
+
+
+//Product of Admin management API
+export const productsAPI = {
+  async getAllProducts(params = {}) {
+    const response = await apiClient.get("admin/products", { params });
+    return response.data;
+  },
+  async getProductById(id) {
+    const response = await apiClient.get(`admin/products/${id}`);
+    return response.data;
+  },
+  async searchProducts(keyword, params = {}) {
+    const response = await apiClient.get("/products/search", {
+      params: { keyword, ...params },
+    });
+    return response.data;
+  },
+  async filterProducts(filters = {}) {
+    const response = await apiClient.get("admin/products/filter", {
+      params: filters,
+    });
+    return response.data;
+  },
+  async sortProducts(sortBy, sortOrder = "desc", params = {}) {
+    const response = await apiClient.get("admin/products/sort", {
+      params: { sortBy, sortOrder, ...params },
+    });
+    return response.data;
+  }
+
+};
 
 // Blog API
 export const blogAPI = {
@@ -370,7 +409,7 @@ export async function approvePost(postId, status, reason) {
     return response?.data?.data;
   } catch (error) {
     const message =
-      error?.response?.data?.message || 
+      error?.response?.data?.message ||
       error?.message ||
       "Failed to approve post";
     throw new Error(message);
@@ -393,12 +432,12 @@ export async function getAllReport(params) {
 
 // Delete report
 export async function deleteReport(reportId) {
-  try { 
+  try {
     const response = await apiClient.delete(`/report/${reportId}`);
     return response?.data?.data;
   } catch (error) {
     const message =
-      error?.response?.data?.message || 
+      error?.response?.data?.message ||
       error?.message ||
       "Failed to delete report";
     throw new Error(message);
@@ -418,7 +457,7 @@ export async function getAllReportComment(params) {
       "Failed to fetch comment reports";
     throw new Error(message);
   }
-} 
+}
 
 // update report comment
 export async function updateReportComment(reportId, status) {
@@ -447,5 +486,133 @@ export async function banReportComment(reportId) {
     throw new Error(message);
   }
 }
+
+// Comment API
+export const commentAPI = {
+  // Get all comments
+  async getAllComments() {
+    try {
+      const response = await apiClient.get("/comment");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      throw error;
+    }
+  },
+
+  // Get comments by Post ID
+  async getCommentsByPost(postId, sort = "all") {
+    try {
+      const response = await apiClient.get(`/comment/${postId}/post`, {
+        params: { sort },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching comments by post:", error);
+      throw error;
+    }
+  },
+
+  // Create a new comment
+  async createComment(data) {
+    try {
+      const response = await apiClient.post("/comment", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      throw error;
+    }
+  },
+
+  // Update a comment
+  async updateComment(commentId, content) {
+    try {
+      const response = await apiClient.patch(`/comment/${commentId}`, {
+        content
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      throw error;
+    }
+  },
+
+  // Delete a comment
+  async deleteComment(commentId) {
+    try {
+      const response = await apiClient.delete(`/comment/${commentId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      throw error;
+    }
+  },
+};
+
+// Reaction Comment API
+export const reactionCommentAPI = {
+  // Get all reaction comments
+  async getAllReactions() {
+    try {
+      const response = await apiClient.get("/reaction");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching reactions:", error);
+      throw error;
+    }
+  },
+
+  // Get reactions by comment ID
+  async getReactionsByComment(commentId) {
+    try {
+      const response = await apiClient.get(`/reaction/${commentId}/comment`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching reactions by comment:", error);
+      throw error;
+    }
+  },
+
+  // Add a reaction to a comment
+  async addReaction(data) {
+    try {
+      const response = await apiClient.post("/reaction", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error adding reaction:", error);
+      throw error;
+    }
+  },
+
+  // Update a reaction
+  async updateReaction(reactionId, type) {
+    try {
+      const response = await apiClient.patch(`/reaction/${reactionId}`, {
+        type
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error updating reaction:", error);
+      throw error;
+    }
+  },
+
+  // Delete a reaction
+  async deleteReaction(reactionId) {
+    try {
+      const response = await apiClient.delete(`/reaction/${reactionId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting reaction:", error);
+      throw error;
+    }
+  },
+};
+export const reportCommentAPI = {
+  async createReport(data) {
+    const response = await apiClient.post("/report-comment", data);
+    return response.data;
+  },
+};
 
 export default apiClient;
