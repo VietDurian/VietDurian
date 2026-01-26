@@ -221,7 +221,6 @@ const deleteProduct = async (productId) => {
   }
 };
 
-// Search products
 const searchProducts = async ({ keyword, page = 1, limit = 10 }) => {
   try {
     const regex = new RegExp(keyword, "i");

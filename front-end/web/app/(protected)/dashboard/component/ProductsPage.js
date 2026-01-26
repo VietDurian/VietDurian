@@ -7,8 +7,8 @@ import { productTypesAPI } from "@/lib/api";
 
 export function ProductsPage() {
     const { t } = useLanguage();
-    const [products, setProducts] = useState(null);
-    const [productTypes, setProductTypes] = useState(null);
+    const [products, setProducts] = useState([]);
+    const [productTypes, setProductTypes] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [typeFilter, setTypeFilter] = useState('all');
@@ -25,8 +25,6 @@ export function ProductsPage() {
                 : typeof p.price === "number"
                     ? p.price
                     : Number(p.price || 0),
-
-        type: p.type_id?.name || p.type || '',
         stock: p.stock ?? 0,
         origin: p.origin || '',
         viewCount: p.view_count ?? 0,
@@ -34,29 +32,12 @@ export function ProductsPage() {
             ? Number(p.rating.$numberDecimal)
             : (typeof p.rating === 'number' ? p.rating : Number(p.rating || 0)),
     });
-    const fetchProducts = async () => {
-        setLoading(true);
-        try {
-            const res = await productAPI.getAllProducts({ page: 1, limit: 10 });
-            const list = Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.data) ? res.data.data : [];
-            const mapped = list.map(mapProduct);
-            setProducts(mapped);
-        } catch (error) {
-            console.error('Error fetching products:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-    useEffect(() => {
-        fetchProducts();
-    }, []);
-
-
     const fetchProductTypes = async () => {
         try {
             const res = await productTypesAPI.getAllProductTypes({ page: 1, limit: 10 });
             const list = Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.data) ? res.data.data : [];
             setProductTypes(list);
+            console.log('Fetched product types:', list);
         } catch (error) {
             console.error('Error fetching product types:', error);
         }
@@ -64,6 +45,42 @@ export function ProductsPage() {
     useEffect(() => {
         fetchProductTypes();
     }, []);
+    useEffect(() => {
+        const term = searchTerm.trim();
+
+        const handler = setTimeout(async () => {
+            setLoading(true);
+            try {
+                if (term) {
+                    const res = await productAPI.searchProducts(term, { page: 1, limit: 10 });
+
+                    let list = Array.isArray(res?.data) ? res.data : [];
+
+                    list = list.map(mapProduct);
+
+                    if (typeFilter !== "all") {
+                        list = list.filter(p => p.typeId === typeFilter);
+                    }
+
+                    setProducts(list);
+                } else {
+                    const res = await productAPI.getAllProducts({ page: 1, limit: 10 });
+                    const list = Array.isArray(res?.data) ? res.data : [];
+                    setProducts(list.map(mapProduct));
+                }
+            } catch (e) {
+                console.error("Error:", e);
+            } finally {
+                setLoading(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(handler);
+    }, [searchTerm, typeFilter]);
+
+
+
+
 
 
     const getTypeBadgeColor = (type) => {
@@ -89,7 +106,7 @@ export function ProductsPage() {
             const desc = (p.description || '').toLowerCase();
             const origin = (p.origin || '').toLowerCase();
             const matchesSearch = !term || name.includes(term) || desc.includes(term) || origin.includes(term);
-            const matchesType = typeFilter === 'all' || p.type === typeFilter;
+            const matchesType = typeFilter === 'all' || p.typeName === typeFilter;
             return matchesSearch && matchesType;
         });
     }, [products, searchTerm, typeFilter]);
@@ -111,10 +128,10 @@ export function ProductsPage() {
             {/* Header */}
             <div className="mb-6 md:mb-8">
                 <h1 className="text-2xl md:text-3xl font-bold text-[#1a4d2e] mb-2">
-                    {t('product_management') || 'Product Management'}
+                    {t('Product Management')}
                 </h1>
                 <p className="text-sm md:text-base text-gray-600">
-                    {t('manage_products') || 'Manage products'}
+                    {t('Manage products')}
                 </p>
             </div>
 
@@ -126,7 +143,7 @@ export function ProductsPage() {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                             type="text"
-                            placeholder={t('search_products') || 'Search products'}
+                            placeholder={t('Search products')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
@@ -141,11 +158,15 @@ export function ProductsPage() {
                             onChange={(e) => setTypeFilter(e.target.value)}
                             className="w-full md:w-48 pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent appearance-none bg-white"
                         >
-                            <option value="all">{t('all_types') || 'All types'}</option>
-                            <option value="fruit">{t('fruit') || 'Fruit'}</option>
-                            <option value="fertilizer">{t('fertilizer') || 'Fertilizer'}</option>
-                            <option value="service">{t('service') || 'Service'}</option>
-                            <option value="equipment">{t('equipment') || 'Equipment'}</option>
+                            <option key="all" value="all">
+                                {t('All Types')}
+                            </option>
+
+                            {(Array.isArray(productTypes) ? productTypes : []).map((type) => (
+                                <option key={type._id} value={type.name}>
+                                    {t(type.name)}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
@@ -185,7 +206,7 @@ export function ProductsPage() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(p.type)}`}>{t(p.type) || p.type}</span>
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(p.typeName)}`}>{t(p.typeName)}</span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatVND(p.price)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.stock}</td>
