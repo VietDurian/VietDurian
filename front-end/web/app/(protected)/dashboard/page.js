@@ -15,6 +15,7 @@ import { ReportPage } from './component/ReportPage';
 import { ProductsPage } from './component/ProductsPage';
 import { ReportCommentPage } from './component/ReportCommentPage';
 import { LanguageSwitcher } from './component/LanguageSwitcher';
+import PermissionPage from './component/PermissionPage';
 
 export default function App() {
 	const { user, loading } = useAuth();
@@ -94,6 +95,8 @@ export default function App() {
 						<p className="text-gray-600 mt-2">Đang phát triển...</p>
 					</div>
 				);
+			case 'moderation_users':
+				return <PermissionPage />;
 			default:
 				return <DashboardPage onNavigate={setCurrentPage} />;
 		}

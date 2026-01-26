@@ -222,7 +222,7 @@ const login = async (email, password) => {
     if (permission && permission.status === "rejected") {
       throw createError(403, "Your account upgrade request has been rejected.");
     }
-
+    console.log('Đăng nhập thành công user logged in:', user._id);
     const token = generateToken(user._id);
 
     user.password = undefined;

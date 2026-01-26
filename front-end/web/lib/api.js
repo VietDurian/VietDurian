@@ -84,10 +84,45 @@ export const usersAPI = {
     return response.data;
   },
 }
+//Permission API
+export const permissionAPI = {
+  async getAllPermissions(params = {}) {
+    const response = await apiClient.get("permission", { params });
+    return response.data;
+  },
+  async getPermissionById(id) {
+    const response = await apiClient.get(`permission/${id}`);
+    return response.data;
+  },
+  async filterPermissions(filters = {}) {
+    const response = await apiClient.get("permission/filter", {
+      params: filters,
+    });
+    return response.data;
+  },
+  async sortPermissions(sortBy, sortOrder = "desc", params = {}) {
+    const response = await apiClient.get("permission/sort", {
+      params: { sortBy, sortOrder, ...params },
+    });
+    return response.data;
+  },
+};
+
+
 //Product Type of Admin management API
 export const productTypesAPI = {
   async getAllProductTypes(params = {}) {
     const response = await apiClient.get("type-product", { params });
+    return response.data;
+  },
+  async getProductTypeById(id) {
+    const response = await apiClient.get(`type-product/${id}`);
+    return response.data;
+  },
+  async filterProductTypes(filters = {}) {
+    const response = await apiClient.get("type-product/filter", {
+      params: filters,
+    });
     return response.data;
   },
 };
@@ -104,7 +139,7 @@ export const productsAPI = {
     return response.data;
   },
   async searchProducts(keyword, params = {}) {
-    const response = await apiClient.get("/products/search", {
+    const response = await apiClient.get("admin/products/search", {
       params: { keyword, ...params },
     });
     return response.data;
