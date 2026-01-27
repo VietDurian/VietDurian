@@ -138,6 +138,10 @@ export const productsAdminAPI = {
     const response = await apiClient.get(`admin/products/${id}`);
     return response.data;
   },
+  async deleteProduct(id) {
+    const response = await apiClient.patch(`admin/products/${id}`);
+    return response.data;
+  },
   async searchProducts(keyword, params = {}) {
     const response = await apiClient.get("admin/products/search", {
       params: { keyword, ...params },

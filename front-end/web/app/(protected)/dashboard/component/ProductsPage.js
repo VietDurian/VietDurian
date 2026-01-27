@@ -1,6 +1,6 @@
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, Filter, Star, StarHalf } from 'lucide-react';
+import { Search, Filter, Star, StarHalf, Trash2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { productsAdminAPI } from '@/lib/api';
 import { productTypesAPI } from "@/lib/api";
@@ -256,7 +256,15 @@ export function ProductsPage() {
             setPage(newPage);
         }
     };
-
+    const deleteProduct = async (id) => {
+        try {
+            await productsAdminAPI.deleteProduct(id);
+            setProducts((prev) =>
+                prev.map((p) => (p.id === id ? { ...p, status: 'inactive' } : p)));
+        } catch (error) {
+            console.error("Error deleting product:", error);
+        }
+    };
     const filteredProducts = useMemo(() => {
         const data = Array.isArray(products) ? products : [];
         const term = searchTerm.trim().toLowerCase();
@@ -375,20 +383,21 @@ export function ProductsPage() {
 
             {/* Products Table - Desktop */}
             <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
+                <div className="overflow-x-hidden">
+                    <table className="w-full ">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('name')}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('type') || 'Type'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('price') || 'Price'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('origin') || 'Origin'}</th>
-                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('weight') || 'Weight'}</th>
+                                {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('weight') || 'Weight'}</th> */}
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('Harvest Start')}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('Harvest End')}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('status') || 'Status'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('views') || 'Views'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('rating') || 'Rating'}</th>
+                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('actions') || 'Actions'}</th>
 
                             </tr>
                         </thead>
@@ -405,8 +414,8 @@ export function ProductsPage() {
                                                 )}
                                             </div>
                                             <div className="ml-4">
-                                                <p className="font-medium text-gray-900">{p.name}</p>
-                                                <p className="text-xs text-gray-500 line-clamp-1">{p.description}</p>
+                                                <p className="font-medium text-gray-900 break-words">{p.name}</p>
+                                                <p className="ttext-xs text-gray-500 break-words line-clamp-2">{p.description}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -415,7 +424,7 @@ export function ProductsPage() {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatVND(p.price)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.origin}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.weight}</td>
+                                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.weight}</td> */}
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatDate(p.harvestStartDate)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatDate(p.harvestEndDate)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
@@ -423,6 +432,17 @@ export function ProductsPage() {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.viewCount}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">{renderRatingStars(p.rating)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <button
+                                            type="button"
+                                            onClick={() => deleteProduct(p.id)}
+                                            className="inline-flex items-center justify-center p-2 rounded-md border border-red-200 text-red-600 hover:text-white hover:bg-red-600 hover:border-red-600 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            aria-label={t('Delete')}
+                                            title={t('Delete')}
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </td>
 
                                 </tr>
                             ))}

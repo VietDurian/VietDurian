@@ -10,7 +10,7 @@ const Router = express.Router();
  * /products:
  *   post:
  *     summary: Create a new product
- *     description: Add a new agricultural product to the marketplace
+ *     description: Add a new agricultural product to the marketplace. Requires a valid `typeId`, price > 0, and `harvestStartDate` <= `harvestEndDate`.
  *     tags:
  *       - Products
  *     security:
@@ -30,13 +30,9 @@ const Router = express.Router();
  *                 example: "Fresh organic tomatoes grown without pesticides"
  *               price:
  *                 type: number
+ *                 minimum: 0.01
+ *                 description: Must be greater than 0
  *                 example: 50000
- *               discount:
- *                 type: number
- *                 example: 10000
- *               stock:
- *                 type: number
- *                 example: 100
  *               origin:
  *                 type: string
  *                 example: "Da Lat, Vietnam"
@@ -45,7 +41,22 @@ const Router = express.Router();
  *                 example: 2.5
  *               typeId:
  *                 type: string
+ *                 description: Must be a valid TypeProduct ID
  *                 example: "507f1f77bcf86cd799439011"
+ *               harvestStartDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Must be less than or equal to harvestEndDate
+ *                 example: "2026-01-15"
+ *               harvestEndDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Must be greater than or equal to harvestStartDate
+ *                 example: "2026-02-15"
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive, pending]
+ *                 example: "active"
  *               images:
  *                 type: array
  *                 items:
@@ -54,8 +65,22 @@ const Router = express.Router();
  *     responses:
  *       201:
  *         description: Product created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 201
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
  *       400:
- *         description: Missing required fields
+ *         description: Validation error (missing/invalid fields, type not found)
  *       401:
  *         description: User not authenticated
  */
@@ -281,14 +306,20 @@ const Router = express.Router();
  *                 type: string
  *               price:
  *                 type: number
- *               discount:
- *                 type: number
- *               stock:
- *                 type: number
+ *                 minimum: 0.01
  *               origin:
  *                 type: string
  *               weight:
  *                 type: number
+ *               harvestStartDate:
+ *                 type: string
+ *                 format: date
+ *               harvestEndDate:
+ *                 type: string
+ *                 format: date
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive, pending]
  *               images:
  *                 type: array
  *                 items:

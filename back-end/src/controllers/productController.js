@@ -8,11 +8,12 @@ const createProduct = async (req, res, next) => {
       name,
       description,
       price,
-      discount,
-      stock,
       origin,
       weight,
       typeId,
+      harvestStartDate,
+      harvestEndDate,
+      status,
       images,
     } = req.body;
     const userId = req.user?.id || req.user?._id;
@@ -22,15 +23,17 @@ const createProduct = async (req, res, next) => {
       !name ||
       !description ||
       !price ||
-      !stock ||
       !origin ||
       !weight ||
-      !typeId
+      !typeId ||
+      !harvestStartDate ||
+      !harvestEndDate ||
+      !status
     ) {
       return res.status(400).json({
         code: 400,
         message:
-          "Missing required fields: name, description, price, stock, origin, weight, typeId",
+          "Missing required fields: name, description, price, origin, weight, typeId, harvestStartDate, harvestEndDate, status",
       });
     }
 
@@ -47,10 +50,11 @@ const createProduct = async (req, res, next) => {
       name,
       description,
       price,
-      discount: discount || 0,
-      stock,
       origin,
       weight,
+      harvestStartDate,
+      harvestEndDate,
+      status,
       images: images || [],
     });
 
