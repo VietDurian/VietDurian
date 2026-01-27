@@ -129,7 +129,7 @@ export const productTypesAPI = {
 
 
 //Product of Admin management API
-export const productsAPI = {
+export const productsAdminAPI = {
   async getAllProducts(params = {}) {
     const response = await apiClient.get("admin/products", { params });
     return response.data;
