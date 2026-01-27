@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'sonner';
-import { getAllReport, deleteReport } from '@/lib/api';
+import { getAllReport, deleteReport, updateReport } from '@/lib/api';
 
 // Reports are loaded from API via `getAllReport`.
 
@@ -18,12 +18,26 @@ export function ReportPage() {
 	const { t } = useLanguage();
 	const [reports, setReports] = useState([]);
 	const [searchTerm, setSearchTerm] = useState('');
-	const [sortOrder, setSortOrder] = useState('desc'); // 'desc' = newest first, 'asc' = oldest first
 	const [loading, setLoading] = useState(false);
 	const [actionLoading, setActionLoading] = useState(null); // report id being acted on
+	const [sortBy, setSortBy] = useState('date');
+	const [sortOrder, setSortOrder] = useState('desc');
 	// Image modal state
 	const [imageModalOpen, setImageModalOpen] = useState(false);
 	const [modalImageSrc, setModalImageSrc] = useState(null);
+	// Delete modal state
+	const [confirmOpen, setConfirmOpen] = useState(false);
+	const [selectedReportId, setSelectedReportId] = useState(null);
+
+	const openDeleteConfirm = (id) => {
+  	setSelectedReportId(id);
+  	setConfirmOpen(true);
+	};
+
+	const closeDeleteConfirm = () => {
+  	setConfirmOpen(false);
+  	setSelectedReportId(null);
+	};
 
 	useEffect(() => {
 		fetchReports();
@@ -49,19 +63,27 @@ export function ReportPage() {
 	const filteredReports = reports
 		.filter((report) => {
 			const q = searchTerm.trim().toLowerCase();
+			const status = (report.status || '').toLowerCase();
+			const postContent = (report.post_id?.content || '').toLowerCase();
 			if (!q) return true;
 			return (
-				(report.user_id?.full_name || report.reporter?.name || '')
-					.toLowerCase()
-					.includes(q) || (report.reason || '').toLowerCase().includes(q)
+  				(report.user_id?.full_name || '').toLowerCase().includes(q) ||
+  				(report.reason || '').toLowerCase().includes(q) || status.includes(q) || postContent.includes(q)
 			);
 		})
 		.sort((a, b) => {
-			const aTime = a.created_at ? new Date(a.created_at).getTime() : a.id || 0;
-			const bTime = b.created_at ? new Date(b.created_at).getTime() : b.id || 0;
-			if (sortOrder === 'asc') return aTime - bTime;
-			return bTime - aTime;
-		});
+  if (sortBy === 'date') {
+    const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return sortOrder === 'asc' ? aTime - bTime : bTime - aTime;
+  }
+
+  const aName = (a.user_id?.full_name || '').toLowerCase().trim();
+  const bName = (b.user_id?.full_name || '').toLowerCase().trim();
+
+  const cmp = aName.localeCompare(bName, 'vi', { sensitivity: 'base' });
+  return sortOrder === 'asc' ? cmp : -cmp;
+});
 
 	const getStatusColor = (status) => {
 		const s = (status || '').toString().toLowerCase();
@@ -112,38 +134,44 @@ export function ReportPage() {
 	}, [imageModalOpen]);
 
 	// Mark as resolved locally (UI-only)
-	const handleResolve = (reportId) => {
-		setActionLoading(reportId);
-		setReports((prev) =>
-			prev.map((r) =>
-				r._id === reportId || r.id === reportId
-					? { ...r, status: 'resolved' }
-					: r,
-			),
-		);
-		toast.success(t('report_resolved'), {
-			description: t('report_resolved_desc'),
-		});
-		setActionLoading(null);
-	};
+	const handleResolve = async (reportId) => {
+  		setActionLoading(reportId);
+  		try {
+    		const updated = await updateReport(reportId);
 
-	const handleDelete = async (reportId) => {
-		if (!window.confirm(t('confirm_delete_report') || 'Xóa báo cáo này?'))
-			return;
-		setActionLoading(reportId);
-		try {
-			await deleteReport(reportId);
-			setReports((prev) =>
-				prev.filter((r) => r._id !== reportId && r.id !== reportId),
-			);
-			toast.success(t('report_deleted') || 'Đã xóa báo cáo');
-		} catch (error) {
-			console.error(error);
-			toast.error(error.message || 'Xóa báo cáo thất bại');
-		} finally {
-			setActionLoading(null);
-		}
-	};
+    		setReports((prev) =>
+      		prev.map((r) =>
+        	(r._id === reportId || r.id === reportId) ? { ...r, ...updated } : r
+    		)
+    		);
+
+    	toast.success('Đã xử lý báo cáo thành công');
+  		} catch (error) {
+    	toast.error(error.message || 'Xử lý báo cáo thất bại');
+  } finally {
+    setActionLoading(null);
+  }
+};
+
+	const handleDelete = async () => {
+  if (!selectedReportId) return;
+
+  setActionLoading(selectedReportId);
+  try {
+    await deleteReport(selectedReportId);
+
+    setReports((prev) =>
+      prev.filter((r) => r._id !== selectedReportId && r.id !== selectedReportId),
+    );
+
+    toast.success(t('Xóa báo cáo thành công') || 'Delete report successful');
+    closeDeleteConfirm();
+  } catch (error) {
+    toast.error(error.message || 'Xóa báo cáo thất bại');
+  } finally {
+    setActionLoading(null);
+  }
+};
 
 	return (
 		<div className="p-4 md:p-8">
@@ -165,28 +193,54 @@ export function ReportPage() {
 						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
 						<input
 							type="text"
-							placeholder={t('search_reports')}
+							placeholder={t('search_reports') || 'Tìm theo tên người báo cáo / lý do / trạng thái…'}
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
-							className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+							className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-gray-500 font-medium placeholder:text-gray-500 placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
 						/>
 					</div>
 
 					{/* Sort */}
-					<button
-						type="button"
-						onClick={() =>
-							setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
-						}
-						className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-						title="Đổi thứ tự thời gian"
-					>
-						<ArrowUpDown
-							className={`w-4 h-4 text-gray-600 ${
-								sortOrder === 'desc' ? 'rotate-180' : ''
-							}`}
-						/>
-					</button>
+<div className="flex gap-3">
+  {/* Sort By */}
+  <div className="relative">
+    <select
+      value={sortBy}
+      onChange={(e) => {
+        const v = e.target.value;
+        setSortBy(v);
+        setSortOrder(v === 'date' ? 'desc' : 'asc');
+      }}
+      className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700
+                 focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+    >
+      <option value="date">{t('sort_date') || 'Ngày'}</option>
+      <option value="name">{t('sort_name') || 'Tên'}</option>
+    </select>
+  </div>
+
+  {/* Order */}
+  <div className="relative">
+    <select
+      value={sortOrder}
+      onChange={(e) => setSortOrder(e.target.value)}
+      className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700
+                 focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+    >
+      {sortBy === 'date' ? (
+        <>
+          <option value="desc">{t('newest') || 'Mới nhất'}</option>
+          <option value="asc">{t('oldest')|| 'Cũ nhất'}</option>
+        </>
+      ) : (
+        <>
+          <option value="asc">A → Z</option>
+          <option value="desc">Z → A</option>
+        </>
+      )}
+    </select>
+  </div>
+</div>
 				</div>
 			</div>
 
@@ -308,8 +362,8 @@ export function ReportPage() {
 												</button>
 												<button
 													className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-													onClick={() => handleDelete(report._id || report.id)}
-													title={t('delete_report') || t('delete_post')}
+													onClick={() => openDeleteConfirm(report._id || report.id)}
+													title={t('Xóa report') || t('Delete report')}
 													disabled={actionLoading === (report._id || report.id)}
 												>
 													{actionLoading === (report._id || report.id) ? (
@@ -486,6 +540,72 @@ export function ReportPage() {
 			<div className="mt-4 text-sm text-gray-500 text-center md:text-left">
 				{t('total')}: {filteredReports.length} {t('reports').toLowerCase()}
 			</div>
+
+			{/* Delete Modal */}
+			{confirmOpen && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center"
+    role="dialog"
+    aria-modal="true"
+    onClick={closeDeleteConfirm}
+  >
+    {/* overlay */}
+    <div className="absolute inset-0 bg-black/50" />
+
+    {/* modal */}
+    <div
+      className="relative w-[92%] max-w-md rounded-2xl bg-white shadow-xl border border-gray-100 p-5 md:p-6"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-50">
+          <Trash2 className="h-5 w-5 text-red-600" />
+        </div>
+
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-gray-900">
+            {t('confirm_delete_title') || 'Xác nhận xóa'}
+          </h3>
+          <p className="mt-1 text-sm text-gray-600">
+            {t('confirm_delete_desc') ||
+              'Bạn có chắc muốn xóa báo cáo này?'}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={closeDeleteConfirm}
+          className="text-gray-400 hover:text-gray-600"
+          aria-label="Close"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="mt-6 flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={closeDeleteConfirm}
+          className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
+          disabled={actionLoading === selectedReportId}
+        >
+          {t('cancel') || 'Hủy'}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleDelete}
+          className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed"
+          disabled={actionLoading === selectedReportId}
+        >
+          {actionLoading === selectedReportId
+            ? (t('deleting') || 'Đang xóa...')
+            : (t('delete') || 'Xóa')}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 		</div>
 	);
 }
