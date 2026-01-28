@@ -1,0 +1,131 @@
+@startuml 1_register
+hide footbox
+title Register
+
+actor User as "Users"
+boundary "RegisterPage" as View
+control "AuthController" as Controller
+control "OtpController" as OtpController
+participant ":AuthService" as Service
+participant ":SmsService" as SmsService
+entity "UserModel" as Model
+database Database as Database
+participant ":SmsAPI" as SmsAPI
+
+User -> View : 1. Input register fields\n(email, password, confirmPassword, name)
+activate User
+activate View
+
+
+View -> View : 2. Validate input
+activate View
+deactivate View
+
+opt Empty or mailformed information
+    View --> User : 2.1. Show validation error 
+end
+
+View -> Controller : 3. Forward RegisterRequest
+activate Controller
+
+Controller -> Service : 4. Process user registration
+activate Service
+
+
+Service -> Model : 5. Get User by email
+activate Model
+
+Model -> Database : 6. Query User by email
+activate Database
+Database --> Model : 7. Return result
+deactivate Database
+
+Model --> Service : 8. Return result
+deactivate Model
+
+Service -> Service : 9. Check email/phone uniqueness
+activate Service
+deactivate Service
+
+alt User already exists
+    Service --> Controller : 9.1. Return error message
+    
+
+    Controller --> View : 9.1.1. Show register error
+
+    View --> User : 9.1.2. Display error message
+
+else User does not exist
+    Service -> Controller : 9.2. Successful registration
+    deactivate Service
+    Controller --> View : 9.2.1. Return status success
+    deactivate Controller
+
+    View -> OtpController : 9.2.2. Otp Request
+    activate OtpController
+
+    OtpController -> SmsService : 9.2.3. SendOtpRequest
+    activate SmsService
+
+    SmsService -> SmsService: 9.2.4. Generate random OTP code
+    activate SmsService
+    deactivate SmsService    
+
+    SmsService -> SmsAPI: 9.2.5. Call API to send SMS
+    activate SmsAPI
+    SmsAPI --> SmsService: 9.2.6. Send OTP message
+    deactivate SmsAPI
+    SmsService -> SmsService: 9.2.7. Save OTP in cache
+    activate SmsService
+    deactivate SmsService
+    SmsService --> OtpController: 9.2.8. Return OTP
+    OtpController --> View: 9.2.9. Return OTP
+
+    View --> User: 9.2.10. Display OTP authentication modal
+    User -> View: 9.2.11. Enter OTP code
+    View -> View: 9.2.12. Check form valid
+    activate View
+    deactivate View
+
+    opt Empty or mailformed information
+    View --> User : 9.2.12.1. Display error message 
+    end
+
+    View -> OtpController: 9.2.13. Submit OTP verification request
+    OtpController -> SmsService: 9.2.14. VerifyOtpRequest
+    SmsService -> SmsService: 9.2.15. Check OTP in cache
+    activate SmsService
+    deactivate SmsService
+
+alt Otp does not match
+    SmsService --> OtpController : 9.2.16.1. Return false
+    OtpController --> View : 9.2.16.1.1. Return error message
+    View --> User : 9.2.16.1.2. Display error message
+
+else Otp match
+    SmsService --> OtpController : 9.2.16.2. Return true
+    deactivate SmsService
+    OtpController --> View : 9.2.16.2.1. Return true
+    deactivate Controller
+end
+    View -> OtpController : 9.2.17. Register user
+    OtpController -> Service : 9.2.18. RegisterUser
+    activate Service
+    Service -> Model : 9.2.19. Create a new account
+    activate Model
+    Model -> Database : 9.2.20. Execute query
+    activate Database
+    Database --> Model : 9.2.21. Return result
+    deactivate Database
+    Model --> Service : 9.2.22. Confirm account creation
+    deactivate Model
+    Service --> OtpController : 9.2.23. Return success message
+    deactivate Service
+    OtpController --> View : 9.2.24. Return success message
+    deactivate OtpController
+    View --> User : 9.2.25. Display a success message
+    deactivate View
+    deactivate User
+end
+
+@enduml
