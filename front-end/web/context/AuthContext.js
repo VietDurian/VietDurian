@@ -10,6 +10,8 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 
+import { profileAPI } from "@/lib/api";
+
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -17,6 +19,26 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null); // 👈 new
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const setUserUnsafe = useCallback((nextUser) => {
+    localStorage.setItem("auth_user", JSON.stringify(nextUser));
+    setUser(nextUser);
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    try {
+      const res = await profileAPI.getMe();
+      const latestUser = res?.data ?? res?.user ?? res;
+      if (latestUser && typeof latestUser === "object") {
+        localStorage.setItem("auth_user", JSON.stringify(latestUser));
+        setUser(latestUser);
+      }
+      return latestUser;
+    } catch (error) {
+      console.error("Failed to refresh profile", error);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("auth_user");
@@ -35,7 +57,12 @@ export function AuthProvider({ children }) {
       setToken(storedToken);
     }
 
-    setLoading(false);
+    if (!storedToken) {
+      setLoading(false);
+      return;
+    }
+
+    refreshProfile().finally(() => setLoading(false));
   }, []);
 
   const login = useCallback((userData, authToken) => {
@@ -58,7 +85,17 @@ export function AuthProvider({ children }) {
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        logout,
+        refreshProfile,
+        setUserUnsafe,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

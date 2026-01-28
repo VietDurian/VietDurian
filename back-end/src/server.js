@@ -20,7 +20,8 @@ connectDB();
 app.use(cors());
 
 // Body parser
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Socket.IO
 const io = initSocket(httpServer);
@@ -44,6 +45,31 @@ app.get('/socket-status', (req, res) => {
 		connectedClients: socketHelper.utils.getConnectedClientsCount(),
 		isConnected: socketHelper.utils.isConnected(),
 		timestamp: new Date(),
+	});
+});
+
+// Fallback 404 for unknown routes
+app.use((req, res) => {
+	res.status(404).json({
+		success: false,
+		message: 'Route not found',
+	});
+});
+
+// Central error handler (ensures JSON responses)
+app.use((err, req, res, next) => {
+	const status = err?.status || err?.statusCode || 500;
+	let message = err?.message || 'Server error';
+
+	if (err?.name === 'ValidationError' && err?.errors) {
+		const firstKey = Object.keys(err.errors)[0];
+		const firstMessage = firstKey ? err.errors[firstKey]?.message : null;
+		if (firstMessage) message = firstMessage;
+	}
+
+	res.status(status).json({
+		success: false,
+		message,
 	});
 });
 

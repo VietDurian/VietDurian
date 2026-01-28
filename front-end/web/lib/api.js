@@ -108,6 +108,26 @@ export const permissionAPI = {
   },
 };
 
+// Profile API
+export const profileAPI = {
+  async getMe() {
+    const response = await apiClient.get('/profile/me');
+    return response.data;
+  },
+  async update(payload) {
+    const response = await apiClient.put('/profile/update', payload);
+    return response.data;
+  },
+};
+
+// Auth API
+export const authAPI = {
+  async changePassword(payload) {
+    const response = await apiClient.post('/auth/change-password', payload);
+    return response.data;
+  },
+};
+
 
 //Product Type of Admin management API
 export const productTypesAPI = {

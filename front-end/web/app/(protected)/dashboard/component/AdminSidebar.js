@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 import {
 	Users,
 	ShoppingBag,
@@ -21,10 +22,20 @@ export function AdminSidebar({
 	onNavigate,
 	isMobileOpen,
 	onMobileClose,
+	adminUser,
+	onProfileClick,
 }) {
 	const { t } = useLanguage();
 	const [isModerationOpen, setIsModerationOpen] = useState(false);
 	const [isReportsOpen, setIsReportsOpen] = useState(false);
+
+	const handleProfileClick = () => {
+		if (typeof onProfileClick === 'function') {
+			onProfileClick();
+			return;
+		}
+		handleItemClick('profile');
+	};
 
 	const menuItems = [
 		{ id: 'dashboard', icon: LayoutDashboard, label: t('dashboard') },
@@ -203,18 +214,45 @@ export function AdminSidebar({
 					})}
 				</nav>
 
-				{/* Admin Info */}
-				<div className="p-6 border-t border-[#2d7a4f]">
+				{/* Admin Info (clickable) */}
+				<button
+					type="button"
+					onClick={handleProfileClick}
+					className="w-full p-6 border-t border-[#2d7a4f] text-left hover:bg-[#2d7a4f]/40 transition-colors cursor-pointer"
+				>
 					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 bg-[#ffd93d] rounded-full flex items-center justify-center">
-							<span className="text-[#1a4d2e] font-bold">AD</span>
+						<div className="w-10 h-10 bg-[#ffd93d] rounded-full flex items-center justify-center overflow-hidden">
+							{adminUser?.avatar ? (
+								<Image
+									src={adminUser.avatar}
+									alt={adminUser.full_name || 'Avatar'}
+									width={40}
+									height={40}
+									className="w-full h-full object-cover"
+									unoptimized
+								/>
+							) : (
+								<span className="text-[#1a4d2e] font-bold">
+									{(adminUser?.full_name || 'AD')
+										.split(' ')
+										.filter(Boolean)
+										.slice(-2)
+										.map((w) => w[0])
+										.join('')
+										.toUpperCase()}
+								</span>
+							)}
 						</div>
-						<div>
-							<p className="font-medium text-white">Admin</p>
-							<p className="text-xs text-[#a8d5ba]">admin@vietdurian.vn</p>
+						<div className="min-w-0">
+							<p className="font-medium text-white truncate">
+								{adminUser?.full_name || 'Admin'}
+							</p>
+							<p className="text-xs text-[#a8d5ba] truncate">
+								{adminUser?.email || ''}
+							</p>
 						</div>
 					</div>
-				</div>
+				</button>
 			</div>
 		</>
 	);
