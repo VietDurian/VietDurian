@@ -458,13 +458,27 @@ export async function approvePost(postId, status, reason) {
 // Report post
 export async function getAllReport(params) {
   try {
-    const response = await apiClient.get('/report', params);
+    const response = await apiClient.get('/report',params );
     return response?.data?.data || [];
   } catch (error) {
     const message =
       error?.response?.data?.message ||
       error.message ||
       "Failed to fetch reports";
+    throw new Error(message);
+  }
+}
+
+// Update report
+export async function updateReport(reportId) {
+  try {
+    const response = await apiClient.patch(`/report/${reportId}`);
+    return response?.data?.report || response?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to update report";
     throw new Error(message);
   }
 }
