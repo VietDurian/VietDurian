@@ -20,26 +20,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const setUserUnsafe = useCallback((nextUser) => {
-    localStorage.setItem("auth_user", JSON.stringify(nextUser));
-    setUser(nextUser);
-  }, []);
-
-  const refreshProfile = useCallback(async () => {
-    try {
-      const res = await profileAPI.getMe();
-      const latestUser = res?.data ?? res?.user ?? res;
-      if (latestUser && typeof latestUser === "object") {
-        localStorage.setItem("auth_user", JSON.stringify(latestUser));
-        setUser(latestUser);
-      }
-      return latestUser;
-    } catch (error) {
-      console.error("Failed to refresh profile", error);
-      return null;
-    }
-  }, []);
-
   useEffect(() => {
     const storedUser = localStorage.getItem("auth_user");
     const storedToken = localStorage.getItem("auth_token"); // 👈 load token
