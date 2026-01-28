@@ -1,5 +1,7 @@
 import { Product, ProductImage } from "@/model/productModel.js";
 import createError from "http-errors";
+import mongoose from "mongoose";
+import { TypeProductModel } from "@/model/typeProductModel.js";
 
 // Create a new product
 const createProduct = async ({
@@ -8,23 +10,50 @@ const createProduct = async ({
   name,
   description,
   price,
-  discount,
-  stock,
   origin,
   weight,
+  harvestStartDate,
+  harvestEndDate,
+  status,
   images,
 }) => {
   try {
+    // Validate typeId
+    if (!mongoose.Types.ObjectId.isValid(typeId)) {
+      throw createError(400, "Invalid typeId");
+    }
+    const typeExists = await TypeProductModel.findById(typeId).lean();
+    if (!typeExists) {
+      throw createError(404, "TypeProduct not found");
+    }
+
+    // Validate price > 0
+    const numericPrice = typeof price === "number" ? price : Number(price);
+    if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
+      throw createError(400, "price must be a positive number");
+    }
+
+    // Validate harvest dates
+    const startDate = new Date(harvestStartDate);
+    const endDate = new Date(harvestEndDate);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+      throw createError(400, "Invalid harvest dates");
+    }
+    if (startDate > endDate) {
+      throw createError(400, "harvestStartDate must be before or equal to harvestEndDate");
+    }
+
     const newProduct = new Product({
       user_id: userId,
       type_id: typeId,
       name,
       description,
-      price,
-      discount: discount || 0,
-      stock,
+      price: mongoose.Types.Decimal128.fromString(String(numericPrice)),
       origin,
       weight,
+      harvest_start_date: startDate,
+      harvest_end_date: endDate,
+      status: status ?? "active",
     });
 
     const savedProduct = await newProduct.save();
@@ -50,7 +79,6 @@ const createProduct = async ({
   }
 };
 
-// Get all products with search, filter, sort, and pagination
 const getAllProducts = async ({
   searchName,
   typeId,

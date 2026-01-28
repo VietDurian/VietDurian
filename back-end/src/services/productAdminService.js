@@ -73,7 +73,6 @@ const getAllProducts = async ({
     }
 };
 
-// Admin: Get product by ID (increments view_count)
 const getProductById = async (productId) => {
     try {
         const product = await Product.findByIdAndUpdate(
@@ -99,11 +98,10 @@ const getProductById = async (productId) => {
 
 const deleteProduct = async (productId) => {
     try {
-        const product = await Product.findByIdAndDelete(productId);
+        const product = await Product.findByIdAndUpdate(productId, { status: "inactive" }, { new: true });
         if (!product) {
             throw createError(404, "Product not found");
         }
-        await ProductImage.deleteMany({ product_id: productId });
         return product;
     } catch (error) {
         throw error;

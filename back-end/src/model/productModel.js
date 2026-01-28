@@ -47,17 +47,6 @@ const productSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
-    discount: {
-      type: mongoose.Types.Decimal128,
-      default: 0,
-      min: 0,
-    },
-    stock: {
-      type: Number,
-      required: true,
-      default: 0,
-      min: 0,
-    },
     origin: {
       type: String,
       required: true,
@@ -83,6 +72,19 @@ const productSchema = new mongoose.Schema(
       default: 0,
       min: 0,
       max: 5,
+    },
+    harvest_start_date: {
+      type: Date,
+      required: true,
+    },
+    harvest_end_date: {
+      type: Date,
+      required: true,
+    },
+    status: {
+      type: String,
+      required: true,
+      trim: true,
     },
   },
   {

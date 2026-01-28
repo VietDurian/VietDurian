@@ -38,8 +38,8 @@ const adminGetProductDetail = async (req, res, next) => {
 const adminDeleteProduct = async (req, res, next) => {
     try {
         const { productId } = req.params;
-        await productAdminService.deleteProduct(productId);
-        res.status(200).json({ success: true, message: "Product deleted successfully" });
+        const productDeleted = await productAdminService.deleteProduct(productId);
+        res.status(200).json({ success: true, data: productDeleted });
     } catch (error) {
         next(error);
     }

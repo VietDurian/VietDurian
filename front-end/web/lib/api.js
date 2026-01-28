@@ -149,13 +149,17 @@ export const productTypesAPI = {
 
 
 //Product of Admin management API
-export const productsAPI = {
+export const productsAdminAPI = {
   async getAllProducts(params = {}) {
     const response = await apiClient.get("admin/products", { params });
     return response.data;
   },
   async getProductById(id) {
     const response = await apiClient.get(`admin/products/${id}`);
+    return response.data;
+  },
+  async deleteProduct(id) {
+    const response = await apiClient.patch(`admin/products/${id}`);
     return response.data;
   },
   async searchProducts(keyword, params = {}) {
