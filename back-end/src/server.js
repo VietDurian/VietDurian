@@ -19,6 +19,9 @@ connectDB();
 // Cors
 app.use(cors());
 
+// Body parser
+app.use(express.json());
+
 // Socket.IO
 const io = initSocket(httpServer);
 
