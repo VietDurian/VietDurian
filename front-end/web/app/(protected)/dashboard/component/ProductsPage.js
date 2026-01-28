@@ -1,9 +1,10 @@
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, Filter, Star, StarHalf, Trash2 } from 'lucide-react';
+import { Search, Filter, Star, StarHalf, Trash2, Eye, EyeClosed } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { productsAdminAPI } from '@/lib/api';
 import { productTypesAPI } from "@/lib/api";
+import { useRouter } from 'next/navigation';
 
 export function ProductsPage() {
     const { t } = useLanguage();
@@ -18,6 +19,8 @@ export function ProductsPage() {
     const LIMIT = 10;
     const [isTypeOpen, setIsTypeOpen] = useState(false);
     const typeDropdownRef = useRef(null);
+    const [confirmDelete, setConfirmDelete] = useState(null);
+    const router = useRouter();
 
     const decimalToNumber = (value) => {
         if (typeof value === "number") return value;
@@ -116,7 +119,7 @@ export function ProductsPage() {
         name: p.name,
         userId: p.user_id?._id || p.user_id || '',
         typeId: p.type_id?._id || p.typeId || '',
-        typeName: p.type_id?.name || p.typeName || '',
+        typeName: p.type_id?.name || p.typeName || 'undefined',
         description: p.description || '',
         price: decimalToNumber(p.price),
         origin: p.origin || '',
@@ -391,9 +394,6 @@ export function ProductsPage() {
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('type') || 'Type'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('price') || 'Price'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('origin') || 'Origin'}</th>
-                                {/* <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('weight') || 'Weight'}</th> */}
-                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('Harvest Start')}</th>
-                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('Harvest End')}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('status') || 'Status'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('views') || 'Views'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('rating') || 'Rating'}</th>
@@ -424,9 +424,6 @@ export function ProductsPage() {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatVND(p.price)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.origin}</td>
-                                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.weight}</td> */}
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatDate(p.harvestStartDate)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatDate(p.harvestEndDate)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(p.status)}`}>{t(p.status) || p.status || '--'}</span>
                                     </td>
@@ -435,7 +432,15 @@ export function ProductsPage() {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <button
                                             type="button"
-                                            onClick={() => deleteProduct(p.id)}
+                                            onClick={() => router.push(`/products/${p.id}`)}
+                                            className="mr-2 inline-flex items-center justify-center px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50"
+                                        >  <Eye className="w-4 h-4" />
+
+
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setConfirmDelete({ id: p.id, name: p.name })}
                                             className="inline-flex items-center justify-center p-2 rounded-md border border-red-200 text-red-600 hover:text-white hover:bg-red-600 hover:border-red-600 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500"
                                             aria-label={t('Delete')}
                                             title={t('Delete')}
@@ -524,6 +529,45 @@ export function ProductsPage() {
                     </button>
                 </div>
             </div>
-        </div>
+
+            {/* Confirm Delete Modal */}
+            {
+                confirmDelete && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="confirm-delete-title"
+                    >
+                        <div className="bg-white rounded-lg shadow-lg w-full max-w-sm">
+                            <div className="p-4 ">
+                                <h2 id="confirm-delete-title" className="text-lg font-semibold text-gray-900">
+                                    {t('Confirm Delete')}
+                                </h2>
+                            </div>
+                            <div className="p-4 text-sm text-gray-600">
+                                {t('Are you sure you want to delete')} {confirmDelete?.name || t('this product')}?
+                            </div>
+                            <div className="p-4 flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setConfirmDelete(null)}
+                                    className="px-3 py-1.5 text-sm rounded-md border bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                >
+                                    {t('Cancel')}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={async () => { await deleteProduct(confirmDelete.id); setConfirmDelete(null); }}
+                                    className="px-3 py-1.5 text-sm rounded-md border bg-red-600 text-white border-red-600 hover:bg-red-700"
+                                >
+                                    {t('Delete')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }

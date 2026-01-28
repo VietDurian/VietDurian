@@ -73,7 +73,6 @@ const getAllProducts = async ({
     }
 };
 
-// Admin: Get product by ID (increments view_count)
 const getProductById = async (productId) => {
     try {
         const product = await Product.findByIdAndUpdate(
