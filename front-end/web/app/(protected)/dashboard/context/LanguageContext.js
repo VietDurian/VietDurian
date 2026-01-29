@@ -3,9 +3,48 @@ import { createContext, useContext, useState } from 'react';
 
 const translations = {
 	vi: {
+		// Profile Page
+		profile_title: 'Hồ sơ tài khoản',
+		profile_subtitle: 'Quản lý thông tin và bảo mật tài khoản.',
+		avatar_title: 'Ảnh đại diện',
+		upload_photo: 'Tải ảnh lên',
+		file_hint: 'PNG/JPG, tối đa 5MB.',
+		account_info: 'Thông tin tài khoản',
+		created_at: 'Ngày tạo tài khoản',
+		save_changes: 'Lưu thay đổi',
+		saving: 'Đang lưu...',
+		change_password: 'Đổi mật khẩu',
+		current_password: 'Mật khẩu hiện tại',
+		new_password: 'Mật khẩu mới',
+		confirm_password: 'Nhập lại',
+		change_password_btn: 'Đổi mật khẩu',
+		changing: 'Đang đổi...',
+		loading_profile: 'Đang tải hồ sơ...',
+		not_logged_in: 'Chưa đăng nhập.',
+		no_image: 'Không có hình ảnh',
+		placeholder_full_name: 'Nhập họ và tên',
+		placeholder_phone: 'Nhập số điện thoại',
+		err_select_image: 'Vui lòng chọn file hình ảnh',
+		err_image_too_large: 'Ảnh quá lớn (tối đa 5MB)',
+		err_read_image: 'Không đọc được file ảnh',
+		err_full_name_required: 'Họ và tên không được để trống',
+		err_phone_required: 'Số điện thoại không được để trống',
+		err_full_name_and_phone_required: 'Vui lòng nhập họ và tên và số điện thoại',
+		err_phone_min10: 'Số điện thoại phải có ít nhất 10 chữ số',
+		err_payload_too_large: 'Dữ liệu gửi lên quá lớn. Vui lòng chọn ảnh nhỏ hơn.',
+		profile_updated: 'Cập nhật hồ sơ thành công',
+		profile_update_failed: 'Cập nhật hồ sơ thất bại',
+		pw_required: 'Vui lòng nhập đủ mật khẩu',
+		pw_policy:
+			'Mật khẩu mới phải có ít nhất 12 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt (@, #, $, *)',
+		pw_mismatch: 'Mật khẩu mới không khớp',
+		pw_changed: 'Đổi mật khẩu thành công',
+		pw_change_failed: 'Đổi mật khẩu thất bại',
+
 		// Header
 		welcome: 'Chào mừng trở lại, Admin!',
 		overview: 'Tổng quan hoạt động hệ thống VietDurian',
+		logout: 'Đăng xuất',
 
 		// Sidebar
 		dashboard: 'Bảng điều khiển',
@@ -34,6 +73,7 @@ const translations = {
 		close: 'Đóng',
 		image: 'Hình ảnh',
 		contact: 'Liên hệ',
+		showing_range: 'Hiển thị',
 
 		// Charts
 		market_trend: 'Xu hướng thị trường sầu riêng',
@@ -90,10 +130,19 @@ const translations = {
 		user_blocked: 'Đã chặn người dùng thành công',
 		user_unblocked: 'Đã bỏ chặn người dùng thành công',
 
+		// Status labels
+		Pending: 'Chờ duyệt',
+		Resolved: 'Đã xử lý',
+
 		// Priority
 		high: 'Cao',
 		medium: 'Trung bình',
 		low: 'Thấp',
+
+		// page
+		to: 'đến',
+		of: 'trên',
+		page: 'Trang',
 
 		// Delete Post Modal
 		delete_post_title: 'Xóa bài viết',
@@ -101,6 +150,7 @@ const translations = {
 
 		// postRequests
 		postRequests: 'Yêu cầu bài viết',
+		search_posts: 'Tìm kiếm bài viết...',
 		reject_post: 'Từ chối bài viết',
 		reject_post_message: 'Bạn có chắc chắn muốn từ chối bài viết này?',
 		enter_reason: 'Nhập lý do từ chối...',
@@ -140,11 +190,64 @@ const translations = {
 			'Bình luận đã được ẩn và báo cáo đã được đánh dấu là đã xử lý',
 		report_status_updated: 'Cập nhật trạng thái thành công',
 		no_reports: 'Không có báo cáo',
+
+		// blogs
+		author: 'Họ tên tác giả',
+		title: 'Tiêu đề',
+		manage_blogs: 'Quản lý bài viết kiến thức',
+		search_blogs: 'Tìm kiếm blog...',
+		confirm_delete_blog: 'Bạn có chắc chắn muốn xóa blog này?',
+		delete_warning: 'Hành động này không thể hoàn tác!',
+
+		// stages
+		stages: 'Giai đoạn',
+
+		//type
+		types: 'Phân Loại',
 	},
 	en: {
+		// Profile Page
+		profile_title: 'Account Profile',
+		profile_subtitle: 'Manage account information and security.',
+		avatar_title: 'Avatar',
+		upload_photo: 'Upload photo',
+		file_hint: 'PNG/JPG, up to 5MB.',
+		account_info: 'Account Information',
+		created_at: 'Account created',
+		save_changes: 'Save changes',
+		saving: 'Saving...',
+		change_password: 'Change password',
+		current_password: 'Current password',
+		new_password: 'New password',
+		confirm_password: 'Confirm',
+		change_password_btn: 'Change password',
+		changing: 'Changing...',
+		loading_profile: 'Loading profile...',
+		not_logged_in: 'Not logged in.',
+		no_image: 'No image',
+		placeholder_full_name: 'Enter full name',
+		placeholder_phone: 'Enter phone number',
+		err_select_image: 'Please select an image file',
+		err_image_too_large: 'Image is too large (max 5MB)',
+		err_read_image: 'Could not read the image file',
+		err_full_name_required: 'Full name is required',
+		err_phone_required: 'Phone number is required',
+		err_full_name_and_phone_required: 'Full name and phone number are required',
+		err_phone_min10: 'Phone number must be at least 10 digits',
+		err_payload_too_large: 'Upload payload is too large. Please choose a smaller image.',
+		profile_updated: 'Profile updated successfully',
+		profile_update_failed: 'Failed to update profile',
+		pw_required: 'Please enter both passwords',
+		pw_policy:
+			'New password must be at least 12 characters and include uppercase, lowercase, number, and a special character (@, #, $, *)',
+		pw_mismatch: 'New passwords do not match',
+		pw_changed: 'Password changed successfully',
+		pw_change_failed: 'Failed to change password',
+
 		// Header
 		welcome: 'Welcome back, Admin!',
 		overview: 'VietDurian System Overview',
+		logout: 'Logout',
 
 		// Sidebar
 		dashboard: 'Dashboard',
@@ -165,6 +268,7 @@ const translations = {
 
 		// Posts
 		post_management: 'Post Management',
+		search_posts: 'Search posts...',
 		content: 'Content',
 		category: 'Category',
 		inactive_post: 'Set to Inactive',
@@ -203,9 +307,9 @@ const translations = {
 		active: 'Active',
 		inactive: 'Inactive',
 		pending: 'Pending',
-		name: 'Name',
+		name: 'Full name',
 		email: 'Email',
-		phone: 'Phone',
+		phone: 'Phone number',
 		role: 'Role',
 		status: 'Status',
 		actions: 'Actions',
@@ -229,9 +333,19 @@ const translations = {
 		user_unblocked: 'User unblocked successfully',
 
 		// Priority
+		// Status labels
+		Pending: 'Pending',
+		Resolved: 'Resolved',
+
+		// Priority
 		high: 'High',
 		medium: 'Medium',
 		low: 'Low',
+
+		// page
+		to: 'to',
+		of: 'of',
+		page: 'Page',
 
 		// Delete Post Modal
 		delete_post_title: 'Delete Post',
@@ -277,6 +391,21 @@ const translations = {
 		hide_and_resolved_success: 'Comment hidden and report marked as resolved',
 		report_status_updated: 'Status updated successfully',
 		no_reports: 'No reports',
+		showing_range: 'Showing',
+
+		// blogs
+		author: 'Author Name',
+		title: 'Title',
+		manage_blogs: 'Manage knowledge blogs',
+		search_blogs: 'Search blogs...',
+		confirm_delete_blog: 'Are you sure you want to delete this blog?',
+		delete_warning: 'This action cannot be undone!',
+
+		// stages
+		stages: 'Stages',
+
+		// type
+		types: 'Types',
 	},
 };
 

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { blogAPI } from "@/lib/api";
+import { BookOpen, Calendar, Book } from "lucide-react";
 
 export default function BlogDetailPage() {
     const params = useParams();
@@ -41,6 +42,31 @@ export default function BlogDetailPage() {
             fetchBlogDetail();
         }
     }, [params.id]);
+
+    // Scroll spy effect - tự động highlight section khi scroll
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!blog?.knowledgeBlocks) return;
+
+            const scrollPosition = window.scrollY + 200;
+
+            for (let index = 0; index < blog.knowledgeBlocks.length; index++) {
+                const element = document.getElementById(`block-${index}`);
+                if (element) {
+                    const elementTop = element.offsetTop;
+                    const elementBottom = elementTop + element.offsetHeight;
+
+                    if (elementTop <= scrollPosition && elementBottom > scrollPosition) {
+                        setActiveBlock(index);
+                        break;
+                    }
+                }
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [blog]);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -89,7 +115,7 @@ export default function BlogDetailPage() {
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar />
-            {/* Hero Section with Back Button and Title - REPLACED VERSION */}
+            {/* Hero Section with Back Button and Title */}
             <section className="bg-gradient-to-r from-emerald-700 to-emerald-900 pt-20 pb-12">
                 <div className="max-w-[1400px] mx-auto">
                     {/* Back Button - Far Left */}
@@ -117,18 +143,14 @@ export default function BlogDetailPage() {
                         </h1>
                         <div className="flex items-center justify-center gap-4 text-emerald-100 flex-wrap">
                             <div className="flex items-center gap-2">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
+                                <Calendar className="w-5 h-5" />
                                 <span>{formatDate(blog.created_at)}</span>
                             </div>
                             {blog.knowledgeBlocks && blog.knowledgeBlocks.length > 0 && (
                                 <>
                                     <span>•</span>
                                     <div className="flex items-center gap-2">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                                        </svg>
+                                        <Book className="w-5 h-5" />
                                         <span>{blog.knowledgeBlocks.length} chương</span>
                                     </div>
                                 </>
@@ -142,17 +164,15 @@ export default function BlogDetailPage() {
                 <div className="max-w-[1500px] mx-auto">
                     <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-8">
 
-                        {/* Sidebar - Table of Contents */}
+                        {/* Sidebar - Table of Contents - UPDATED STYLE */}
                         {blog.knowledgeBlocks && blog.knowledgeBlocks.length > 0 && (
                             <div className="lg:sticky lg:top-24 h-fit">
-                                <div className="bg-white rounded-xl shadow-md p-6">
-                                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                                        </svg>
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                                    <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 uppercase text-sm tracking-wide">
+                                        <BookOpen className="w-4 h-4 text-emerald-600" />
                                         Mục lục
                                     </h3>
-                                    <nav className="space-y-2">
+                                    <nav className="space-y-1">
                                         {blog.knowledgeBlocks.map((block, index) => (
                                             <button
                                                 key={block._id}
@@ -163,18 +183,18 @@ export default function BlogDetailPage() {
                                                         block: 'start'
                                                     });
                                                 }}
-                                                className={`w-full text-left px-4 py-3 rounded-lg transition-all ${activeBlock === index
-                                                    ? 'bg-emerald-600 text-white shadow-md'
-                                                    : 'hover:bg-gray-100 text-gray-700'
+                                                className={`w-full flex items-center gap-3 px-4 py-5 text-sm font-medium rounded-lg transition-all duration-200 text-left border-l-4 ${activeBlock === index
+                                                        ? "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm"
+                                                        : "border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                                                     }`}
                                             >
-                                                <div className="flex items-start gap-3">
-                                                    <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${activeBlock === index ? 'bg-white text-emerald-600' : 'bg-emerald-100 text-emerald-600'
-                                                        }`}>
-                                                        {index + 1}
-                                                    </span>
-                                                    <span className="text-sm line-clamp-2">{block.title}</span>
-                                                </div>
+                                                <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${activeBlock === index
+                                                        ? 'bg-emerald-100 text-emerald-600'
+                                                        : 'bg-gray-100 text-gray-500'
+                                                    }`}>
+                                                    {index + 1}
+                                                </span>
+                                                <span className="truncate">{block.title}</span>
                                             </button>
                                         ))}
                                     </nav>
@@ -197,7 +217,7 @@ export default function BlogDetailPage() {
                                 <div
                                     key={block._id}
                                     id={`block-${index}`}
-                                    className="bg-white rounded-xl shadow-md overflow-hidden scroll-mt-24"
+                                    className="bg-white rounded-xl shadow-md overflow-hidden scroll-mt-32"
                                 >
                                     {/* Block Image */}
                                     {block.image && (

@@ -395,7 +395,6 @@ export function ProductsPage() {
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('type') || 'Type'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('price') || 'Price'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('status') || 'Status'}</th>
-                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('views') || 'Views'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('rating') || 'Rating'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('actions') || 'Actions'}</th>
 
@@ -426,7 +425,6 @@ export function ProductsPage() {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(p.status)}`}>{t(p.status) || p.status || '--'}</span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.viewCount}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">{renderRatingStars(p.rating)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <button

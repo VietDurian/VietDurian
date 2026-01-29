@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
+import { BookOpen, CheckCircle, Zap, Globe, ShoppingCart, User, Briefcase, Package, Users, Lightbulb, ChevronLeft, ChevronRight, Star } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -135,14 +136,17 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <Navbar />
 
-      {/* Header Title - Outside Grid */}
+      {/* Header Title - Simple and Professional */}
       <div className="text-center pt-28 pb-4 px-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-          Nền Tảng Phát Triển Sầu Riêng Việt Nam
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+          Kết Nối Nông Dân - Dịch Vụ - Thị Trường
         </h1>
+        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          Nền tảng số hóa chuỗi giá trị sầu riêng Việt Nam
+        </p>
       </div>
 
-      {/* Image Grid Section with Slogan in Center */}
+      {/* Image Grid Section with Enhanced Slogan and Buttons */}
       <section className="px-4 lg:px-6 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-[0.8fr_2fr_0.8fr] gap-6">
 
@@ -172,7 +176,7 @@ export default function Home() {
             {/* Slogan & Buttons */}
             <div className="text-center py-4 mb-6">
               <p className="text-gray-600 text-base max-w-2xl mx-auto mb-8">
-                Từ kiến thức kỹ thuật đến sản phẩm chất lượng, cùng xây dựng ngành sầu riêng bền vững
+                Từ kiến thức kỹ thuật đến sản phẩm chất lượng, cùng kết nối và phát triển bền vững
               </p>
 
               {/* CTA Buttons */}
@@ -247,8 +251,420 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ===== SECTION: HÀNH TRÌNH PHÁT TRIỂN SẦU RIÊNG ===== */}
+      <section className="py-20 px-4 lg:px-6 bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-900 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}></div>
+        </div>
+
+        <div className="max-w-[1400px] mx-auto relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              Hành Trình Từ Vườn Đến Thị Trường
+            </h2>
+            <p className="text-emerald-100 text-lg max-w-3xl mx-auto">
+              Kết nối liền mạch mọi khâu trong chuỗi giá trị sầu riêng Việt Nam
+            </p>
+          </div>
+
+          {/* Journey Flow */}
+          <div className="relative">
+            {/* Connection Line */}
+            <div className="hidden lg:block absolute top-[90px] left-[10%] right-[10%] h-1 bg-gradient-to-r from-lime-400 via-yellow-400 to-orange-400"></div>
+
+            {/* Journey Steps */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+              {/* Step 1 */}
+              <div className="relative">
+                <div className="bg-white rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-lime-400 min-h-[280px] flex flex-col">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-20 h-20 bg-gradient-to-br from-lime-400 to-lime-500 rounded-full flex items-center justify-center shadow-lg relative z-10">
+                      <BookOpen className="w-10 h-10 text-white" />
+                    </div>
+                  </div>
+                  <div className="text-center flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-3">Học Hỏi & Nghiên Cứu</h3>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        Tiếp cận kiến thức canh tác, kỹ thuật VietGAP, và chia sẻ kinh nghiệm từ cộng đồng nông dân
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="relative">
+                <div className="bg-white rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-emerald-400 min-h-[280px] flex flex-col">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg relative z-10">
+                      <CheckCircle className="w-10 h-10 text-white" />
+                    </div>
+                  </div>
+                  <div className="text-center flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-3">Trồng Trọt & Chăm Sóc</h3>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        Áp dụng AI phát hiện sâu bệnh, quản lý nhật ký canh tác và mua sắm vật tư chất lượng
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="relative">
+                <div className="bg-white rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-yellow-400 min-h-[280px] flex flex-col">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center shadow-lg relative z-10">
+                      <Zap className="w-10 h-10 text-white" />
+                    </div>
+                  </div>
+                  <div className="text-center flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-3">Kết Nối Thương Mại</h3>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        Gặp gỡ nhà phân phối, doanh nghiệp thu mua và tìm kiếm cơ hội xuất khẩu
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div className="relative">
+                <div className="bg-white rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2 border-t-4 border-orange-400 min-h-[280px] flex flex-col">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg relative z-10">
+                      <Globe className="w-10 h-10 text-white" />
+                    </div>
+                  </div>
+                  <div className="text-center flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-3">Phát Triển Bền Vững</h3>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        Xây dựng thương hiệu, đảm bảo truy xuất nguồn gốc và nâng cao giá trị sản phẩm
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SECTION MỚI: HỆ SINH THÁI KẾT NỐI - ĐÃ ĐƯỢC THIẾT KẾ LẠI ===== */}
+      <section className="py-20 px-4 lg:px-6 bg-white relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-64 h-64 bg-lime-100 rounded-full opacity-20 blur-3xl"></div>
+          <div className="absolute bottom-20 right-10 w-64 h-64 bg-emerald-100 rounded-full opacity-20 blur-3xl"></div>
+        </div>
+
+        <div className="max-w-[1400px] mx-auto relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Hệ Sinh Thái Kết Nối
+            </h2>
+            <p className="text-gray-600 text-lg max-w-3xl mx-auto">
+              VietDurian tạo ra những kết nối thực tế giữa Nông Dân, Nhà Cung Cấp Dịch Vụ, Thương Nhân và Chuyên Gia trong chuỗi giá trị sầu riêng
+            </p>
+          </div>
+
+          {/* Connection Scenarios */}
+          <div className="space-y-12">
+
+            {/* Scenario 1: Farmer ↔ AI (Giải quyết sâu bệnh) */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-8 items-center">
+              {/* Left: Farmer */}
+              <div className="group relative bg-gradient-to-br from-lime-50 to-lime-100 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-lime-500">
+                <div className="relative flex items-start gap-5">
+                  <div className="w-20 h-20 bg-gradient-to-br from-lime-400 to-lime-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                    <User className="w-10 h-10 text-white" strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-2xl font-bold text-gray-900">Nông Dân</h3>
+                      <div className="px-3 py-1 bg-lime-200 text-lime-800 text-xs font-semibold rounded-full">Hỏi</div>
+                    </div>
+                    <p className="text-gray-700 text-sm mb-4 font-medium">Anh Minh - Tiền Giang</p>
+                    <div className="bg-white rounded-xl p-4 text-sm text-gray-700 border-l-3 border-lime-500 relative shadow-sm">
+                      <svg className="absolute top-3 left-3 w-5 h-5 text-lime-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                      </svg>
+                      <p className="italic pl-6">Cây tôi bị vàng lá, không biết bệnh gì...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Center: Connection Icon */}
+              <div className="hidden lg:flex flex-col items-center justify-center">
+                <div className="relative">
+                  <div className="w-28 h-28 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                    <svg className="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="mt-4 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-sm shadow-md">
+                  AI Scan & Tư Vấn
+                </div>
+              </div>
+
+              {/* Right: AI */}
+              <div className="group relative bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-r-4 border-cyan-500">
+                <div className="relative flex items-start gap-5">
+                  <div className="w-20 h-20 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                    <Lightbulb className="w-10 h-10 text-white" strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-2xl font-bold text-gray-900">AI Scan</h3>
+                      <div className="px-3 py-1 bg-cyan-200 text-cyan-800 text-xs font-semibold rounded-full">Trả lời</div>
+                    </div>
+                    <p className="text-gray-700 text-sm mb-4 font-medium">Trí tuệ nhân tạo</p>
+                    <div className="bg-white rounded-xl p-4 text-sm text-gray-700 border-r-3 border-cyan-500 relative shadow-sm">
+                      <svg className="absolute top-3 right-3 w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.57-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z" />
+                      </svg>
+                      <p className="italic pr-6">Đây là bệnh khảm lá. Dùng phương pháp này...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center justify-center py-4">
+              <div className="flex items-center gap-2">
+                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-emerald-300 to-emerald-400 rounded"></div>
+                <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
+                <div className="h-1 w-16 bg-gradient-to-r from-emerald-400 via-emerald-300 to-transparent rounded"></div>
+              </div>
+            </div>
+
+            {/* Scenario 2: Farmer ↔ Service Provider (Thuê dịch vụ) */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-8 items-center">
+              {/* Left: Farmer */}
+              <div className="group relative bg-gradient-to-br from-lime-50 to-lime-100 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-lime-500">
+                <div className="relative flex items-start gap-5">
+                  <div className="w-20 h-20 bg-gradient-to-br from-lime-400 to-lime-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                    <User className="w-10 h-10 text-white" strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-2xl font-bold text-gray-900">Nông Dân</h3>
+                      <div className="px-3 py-1 bg-lime-200 text-lime-800 text-xs font-semibold rounded-full">Cần thuê</div>
+                    </div>
+                    <p className="text-gray-700 text-sm mb-4 font-medium">Chị Lan - Đồng Nai</p>
+                    <div className="bg-white rounded-xl p-4 text-sm text-gray-700 border-l-3 border-lime-500 relative shadow-sm">
+                      <svg className="absolute top-3 left-3 w-5 h-5 text-lime-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                      </svg>
+                      <p className="italic pl-6">Cần thuê đội phun thuốc chuyên nghiệp...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Center: Connection Icon */}
+              <div className="hidden lg:flex flex-col items-center justify-center">
+                <div className="relative">
+                  <div className="w-28 h-28 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                    <svg className="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="mt-4 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-sm shadow-md">
+                  Thuê Dịch Vụ
+                </div>
+              </div>
+
+              {/* Right: Service Provider */}
+              <div className="group relative bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-r-4 border-indigo-500">
+                <div className="relative flex items-start gap-5">
+                  <div className="w-20 h-20 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                    <Briefcase className="w-10 h-10 text-white" strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-2xl font-bold text-gray-900">Nhà Cung Cấp Dịch Vụ</h3>
+                      <div className="px-3 py-1 bg-indigo-200 text-indigo-800 text-xs font-semibold rounded-full">Sẵn sàng</div>
+                    </div>
+                    <p className="text-gray-700 text-sm mb-4 font-medium">Đội Phun Thuốc Xanh</p>
+                    <div className="bg-white rounded-xl p-4 text-sm text-gray-700 border-r-3 border-indigo-500 relative shadow-sm">
+                      <svg className="absolute top-3 right-3 w-5 h-5 text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.57-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z" />
+                      </svg>
+                      <p className="italic pr-6">Nhận phun thuốc 5ha, thiết bị chuyên nghiệp...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center justify-center py-4">
+              <div className="flex items-center gap-2">
+                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-emerald-300 to-emerald-400 rounded"></div>
+                <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
+                <div className="h-1 w-16 bg-gradient-to-r from-emerald-400 via-emerald-300 to-transparent rounded"></div>
+              </div>
+            </div>
+
+            {/* Scenario 3: Farmer ↔ Service Provider (Mua vật tư) */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-8 items-center">
+              {/* Left: Farmer */}
+              <div className="group relative bg-gradient-to-br from-lime-50 to-lime-100 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-lime-500">
+                <div className="relative flex items-start gap-5">
+                  <div className="w-20 h-20 bg-gradient-to-br from-lime-400 to-lime-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                    <User className="w-10 h-10 text-white" strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-2xl font-bold text-gray-900">Nông Dân</h3>
+                      <div className="px-3 py-1 bg-lime-200 text-lime-800 text-xs font-semibold rounded-full">Cần mua</div>
+                    </div>
+                    <p className="text-gray-700 text-sm mb-4 font-medium">Anh Sơn - Bến Tre</p>
+                    <div className="bg-white rounded-xl p-4 text-sm text-gray-700 border-l-3 border-lime-500 relative shadow-sm">
+                      <svg className="absolute top-3 left-3 w-5 h-5 text-lime-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                      </svg>
+                      <p className="italic pl-6">Cần mua phân bón hữu cơ chứng nhận...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Center: Connection Icon */}
+              <div className="hidden lg:flex flex-col items-center justify-center">
+                <div className="relative">
+                  <div className="w-28 h-28 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                    <svg className="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="mt-4 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-sm shadow-md">
+                  Mua Vật Tư
+                </div>
+              </div>
+
+              {/* Right: Service Provider (Supplier) */}
+              <div className="group relative bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-r-4 border-orange-500">
+                <div className="relative flex items-start gap-5">
+                  <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                    <Package className="w-10 h-10 text-white" strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-2xl font-bold text-gray-900">Nhà Cung Cấp Vật Tư</h3>
+                      <div className="px-3 py-1 bg-orange-200 text-orange-800 text-xs font-semibold rounded-full">Có hàng</div>
+                    </div>
+                    <p className="text-gray-700 text-sm mb-4 font-medium">Công Ty Phân Bón Xanh</p>
+                    <div className="bg-white rounded-xl p-4 text-sm text-gray-700 border-r-3 border-orange-500 relative shadow-sm">
+                      <svg className="absolute top-3 right-3 w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.57-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z" />
+                      </svg>
+                      <p className="italic pr-6">Có phân hữu cơ VietGAP, giao tận vườn...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center justify-center py-4">
+              <div className="flex items-center gap-2">
+                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-emerald-300 to-emerald-400 rounded"></div>
+                <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
+                <div className="h-1 w-16 bg-gradient-to-r from-emerald-400 via-emerald-300 to-transparent rounded"></div>
+              </div>
+            </div>
+
+            {/* Scenario 4: Farmer ↔ Trader (Bán sản phẩm) */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-8 items-center">
+              {/* Left: Farmer */}
+              <div className="group relative bg-gradient-to-br from-lime-50 to-lime-100 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-lime-500">
+                <div className="relative flex items-start gap-5">
+                  <div className="w-20 h-20 bg-gradient-to-br from-lime-400 to-lime-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                    <User className="w-10 h-10 text-white" strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-2xl font-bold text-gray-900">Nông Dân</h3>
+                      <div className="px-3 py-1 bg-lime-200 text-lime-800 text-xs font-semibold rounded-full">Cần bán</div>
+                    </div>
+                    <p className="text-gray-700 text-sm mb-4 font-medium">Anh Tuấn - Cần Thơ</p>
+                    <div className="bg-white rounded-xl p-4 text-sm text-gray-700 border-l-3 border-lime-500 relative shadow-sm">
+                      <svg className="absolute top-3 left-3 w-5 h-5 text-lime-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                      </svg>
+                      <p className="italic pl-6">5 tấn sầu riêng Ri6 chuẩn VietGAP cần bán...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Center: Connection Icon */}
+              <div className="hidden lg:flex flex-col items-center justify-center">
+                <div className="relative">
+                  <div className="w-28 h-28 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                    <svg className="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="mt-4 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-sm shadow-md">
+                  Giao Dịch Minh Bạch
+                </div>
+              </div>
+
+              {/* Right: Trader */}
+              <div className="group relative bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-r-4 border-purple-500">
+                <div className="relative flex items-start gap-5">
+                  <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                    <ShoppingCart className="w-10 h-10 text-white" strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-2xl font-bold text-gray-900">Thương Nhân Thu Mua</h3>
+                      <div className="px-3 py-1 bg-purple-200 text-purple-800 text-xs font-semibold rounded-full">Mua ngay</div>
+                    </div>
+                    <p className="text-gray-700 text-sm mb-4 font-medium">Xuất Khẩu Trái Cây Việt</p>
+                    <div className="bg-white rounded-xl p-4 text-sm text-gray-700 border-r-3 border-purple-500 relative shadow-sm">
+                      <svg className="absolute top-3 right-3 w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.57-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z" />
+                      </svg>
+                      <p className="italic pr-6">Nhận mua toàn bộ, giá tốt, thanh toán ngay...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
       {/* Featured Products Section */}
-      <section className="relative py-16 px-4 lg:px-6 bg-emerald-800">
+      <section className="relative py-16 px-4 lg:px-6 bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-900 overflow-hidden">
+        {/* Background Pattern - giống Hành Trình */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}></div>
+        </div>
+
         <div className="max-w-[1400px] mx-auto relative z-10">
           {/* Section Title */}
           <h2 className="text-3xl md:text-4xl font-bold text-white text-center mb-12">
@@ -262,9 +678,7 @@ export default function Home() {
               onClick={prevSlide}
               className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-lime-400 hover:bg-lime-500 transition-all flex items-center justify-center shadow-lg hover:scale-105"
             >
-              <svg className="w-6 h-6 text-emerald-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft className="w-6 h-6 text-emerald-900" strokeWidth={2.5} />
             </button>
 
             {/* Products Grid */}
@@ -305,9 +719,7 @@ export default function Home() {
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <svg className="w-4 h-4 text-yellow-500 fill-current" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
+                            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                             <span>{product.likes} Đánh giá</span>
                           </div>
                           <button className="px-5 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">
@@ -326,9 +738,7 @@ export default function Home() {
               onClick={nextSlide}
               className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-lime-400 hover:bg-lime-500 transition-all flex items-center justify-center shadow-lg hover:scale-105"
             >
-              <svg className="w-6 h-6 text-emerald-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight className="w-6 h-6 text-emerald-900" strokeWidth={2.5} />
             </button>
           </div>
         </div>

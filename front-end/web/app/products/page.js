@@ -6,6 +6,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { productAPI, productTypeAPI } from "@/lib/api";
+import {
+    Search,
+    X,
+    Tag,
+    List,
+    ChevronDown,
+    ChevronUp,
+    ArrowDown,
+    AlertCircle,
+    Package,
+    Eye,
+    MapPin,
+    Weight,
+    Star,
+    ChevronLeft,
+    ChevronRight
+} from "lucide-react";
 
 export default function ProductsPage() {
     const [products, setProducts] = useState([]);
@@ -192,22 +209,13 @@ export default function ProductsPage() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full px-6 py-4 pl-14 rounded-2xl border-2 border-white/30 focus:border-white focus:outline-none text-gray-900 placeholder-gray-500 bg-white transition-all duration-300"
                             />
-                            <svg
-                                className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-600 group-focus-within:text-emerald-700 transition-colors"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-600 group-focus-within:text-emerald-700 transition-colors" />
                             {searchTerm && (
                                 <button
                                     onClick={() => setSearchTerm("")}
                                     className="absolute right-5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
                                 >
-                                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    <X className="w-4 h-4 text-gray-600" />
                                 </button>
                             )}
                         </div>
@@ -222,9 +230,7 @@ export default function ProductsPage() {
                         {/* Product Type Filter */}
                         <div className="flex flex-col gap-3">
                             <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                </svg>
+                                <Tag className="w-5 h-5 text-emerald-600" />
                                 Loại sản phẩm
                             </h3>
                             <div className="flex flex-wrap gap-2">
@@ -236,9 +242,7 @@ export default function ProductsPage() {
                                         }`}
                                 >
                                     <span className="flex items-center gap-2">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                                        </svg>
+                                        <List className="w-4 h-4" />
                                         Tất cả
                                     </span>
                                 </button>
@@ -269,14 +273,7 @@ export default function ProductsPage() {
                                             className="min-w-[160px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
                                         >
                                             <span>{getCurrentSortLabel()}</span>
-                                            <svg
-                                                className={`w-4 h-4 text-gray-500 transition-all duration-200 ${isSortDropdownOpen ? 'rotate-180' : ''}`}
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
+                                            <ChevronDown className={`w-4 h-4 text-gray-500 transition-all duration-200 ${isSortDropdownOpen ? 'rotate-180' : ''}`} />
                                         </button>
 
                                         {/* Dropdown Menu */}
@@ -308,9 +305,7 @@ export default function ProductsPage() {
                                                 }`}
                                             title="Tăng dần"
                                         >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                            </svg>
+                                            <ChevronUp className="w-5 h-5" />
                                         </button>
                                         <button
                                             onClick={() => setSortOrder("desc")}
@@ -320,9 +315,7 @@ export default function ProductsPage() {
                                                 }`}
                                             title="Giảm dần"
                                         >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
+                                            <ChevronDown className="w-5 h-5" />
                                         </button>
                                     </div>
                                 </div>
@@ -344,9 +337,7 @@ export default function ProductsPage() {
                         <div className="flex flex-col justify-center items-center py-20">
                             <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                    <AlertCircle className="w-6 h-6 text-red-600" />
                                     <h3 className="text-lg font-semibold text-red-900">Lỗi</h3>
                                 </div>
                                 <p className="text-red-700 mb-4">{error}</p>
@@ -360,9 +351,7 @@ export default function ProductsPage() {
                         </div>
                     ) : products.length === 0 ? (
                         <div className="text-center py-20">
-                            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                            </svg>
+                            <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                             <p className="text-gray-500 text-lg">Không tìm thấy sản phẩm nào</p>
                         </div>
                     ) : (
@@ -441,23 +430,15 @@ export default function ProductsPage() {
 
                                                     <div className="flex items-center gap-4 mb-3 text-xs text-gray-600">
                                                         <div className="flex items-center gap-1">
-                                                            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                            </svg>
+                                                            <Eye className="w-4 h-4 text-gray-500" />
                                                             <span>{product.view_count}</span>
                                                         </div>
                                                         <div className="flex items-center gap-1">
-                                                            <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                            </svg>
+                                                            <MapPin className="w-4 h-4 text-emerald-600" />
                                                             <span>{product.origin}</span>
                                                         </div>
                                                         <div className="flex items-center gap-1">
-                                                            <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                                                            </svg>
+                                                            <Weight className="w-4 h-4 text-emerald-600" />
                                                             <span>{product.weight}kg</span>
                                                         </div>
                                                     </div>
@@ -480,9 +461,7 @@ export default function ProductsPage() {
                                                     </div>
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-1 text-xs text-gray-500">
-                                                            <svg className="w-4 h-4 text-yellow-500 fill-current" viewBox="0 0 20 20">
-                                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                            </svg>
+                                                            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                                                             <span>{rating.toFixed(1)}</span>
                                                         </div>
                                                         <button
@@ -507,9 +486,7 @@ export default function ProductsPage() {
                                         disabled={pagination.currentPage === 1}
                                         className="px-4 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                        </svg>
+                                        <ChevronLeft className="w-5 h-5" />
                                     </button>
 
                                     {[...Array(pagination.totalPages)].map((_, index) => {
@@ -545,9 +522,7 @@ export default function ProductsPage() {
                                         disabled={pagination.currentPage === pagination.totalPages}
                                         className="px-4 py-2 rounded-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
+                                        <ChevronRight className="w-5 h-5" />
                                     </button>
                                 </div>
                             )}
