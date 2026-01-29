@@ -79,6 +79,7 @@ const getAllProducts = async (req, res, next) => {
       sortOrder,
       page,
       limit,
+      status,
       userId: userIdQuery,
     } = req.query;
 
@@ -90,6 +91,7 @@ const getAllProducts = async (req, res, next) => {
       searchName: name,
       typeId,
       userId,
+      status,
       sortBy: sortBy || "created_at",
       sortOrder: sortOrder || "desc",
       page: page || 1,

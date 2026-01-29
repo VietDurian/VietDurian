@@ -3,7 +3,8 @@ import { stepService } from '@/services/stepService';
 // Get all steps
 const getAllSteps = async (req, res, next) => {
 	try {
-		const steps = await stepService.getAllSteps();
+		const {search} = req.query;
+		const steps = await stepService.getAllSteps({search});
 		res.status(200).json({
 			code: 200,
 			message: 'Steps retrieved successfully',

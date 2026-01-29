@@ -83,6 +83,7 @@ const getAllProducts = async ({
   searchName,
   typeId,
   userId,
+  status,
   sortBy = "created_at",
   sortOrder = "desc",
   page = 1,
@@ -103,6 +104,10 @@ const getAllProducts = async ({
 
     if (userId) {
       filter = { ...filter, user_id: userId };
+    }
+
+    if (status) {
+      filter = { ...filter, status };
     }
 
     // Calculate pagination

@@ -1,10 +1,16 @@
 import { StepModel } from '@/model/stepModel';
 
 // Get all steps
-const getAllSteps = async () => {
+const getAllSteps = async ({search}) => {
 	try {
-		// chi lay nhung thang ko co parent_id (la step cha)
-		const steps = await StepModel.find({ parent_id: null });
+		// lam chu nang search va chi lay nhung thang ko co parent_id (la step cha)
+		let query = {};
+		if (search) {
+			query = { parent_id: null, title: { $regex: search, $options: 'i' } };
+		} else {
+			query = { parent_id: null };
+		}
+		const steps = await StepModel.find(query);
 		return steps;
 	} catch (error) {
 		throw error;

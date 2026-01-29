@@ -699,4 +699,22 @@ export const reportCommentAPI = {
   },
 };
 
+export const stepAPI = {
+  async getAllStage(params = {}) {
+    const response = await apiClient.get("/step", { params });
+    return response.data;
+  },
+  async createStage(title, description) {
+    const response = await apiClient.post("/step", { title, description });
+    return response.data;
+  },
+  async updateStage(id, title, description) {
+    const response = await apiClient.put(`/step/${id}`, { title, description });
+    return response.data;
+  },
+  async deleteStage(id) {
+    const response = await apiClient.delete(`/step/${id}`);
+    return response.data;
+  }
+}
 export default apiClient;
