@@ -1,7 +1,7 @@
 // Vo Lam Thuy Vi
-import express from "express";
-import { productController } from "@/controllers/productController.js";
-import { authMiddleware } from "@/middlewares/authentication.js";
+import express from 'express';
+import { productController } from '@/controllers/productController.js';
+import { authMiddleware } from '@/middlewares/authentication.js';
 
 const Router = express.Router();
 
@@ -111,6 +111,12 @@ const Router = express.Router();
  *           enum: [created_at, price, name, view_count]
  *         description: Field to sort by
  *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, inactive, pending]
+ *         description: Filter by product status
+ *       - in: query
  *         name: sortOrder
  *         schema:
  *           type: string
@@ -202,6 +208,12 @@ const Router = express.Router();
  *         schema:
  *           type: number
  *         description: Maximum price
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, inactive]
+ *         description: Filter by product status
  *       - in: query
  *         name: sortBy
  *         schema:
@@ -357,22 +369,22 @@ const Router = express.Router();
  *       404:
  *         description: Product not found
  */
-Router.post("/", authMiddleware.protect, productController.createProduct);
-Router.get("/", productController.getAllProducts);
-Router.get("/search", productController.searchProducts);
-Router.get("/sort", productController.sortProducts);
-Router.get("/filter", productController.filterProducts);
-Router.get("/:productId", productController.getProductDetail);
+Router.post('/', authMiddleware.protect, productController.createProduct);
+Router.get('/', productController.getAllProducts);
+Router.get('/search', productController.searchProducts);
+Router.get('/sort', productController.sortProducts);
+Router.get('/filter', productController.filterProducts);
+Router.get('/:productId', productController.getProductDetail);
 
 Router.put(
-  "/:productId",
-  authMiddleware.protect,
-  productController.updateProduct
+	'/:productId',
+	authMiddleware.protect,
+	productController.updateProduct,
 );
 Router.delete(
-  "/:productId",
-  authMiddleware.protect,
-  productController.deleteProduct
+	'/:productId',
+	authMiddleware.protect,
+	productController.deleteProduct,
 );
 
 export const productRoute = Router;
