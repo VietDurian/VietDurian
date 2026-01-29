@@ -18,7 +18,7 @@ import { BlogPage } from './component/BlogPage';
 import { StagePage } from './component/StagePage';
 import { TypePage } from './component/TypePage';
 import { LanguageSwitcher } from './component/LanguageSwitcher';
-import PermissionPage from './component/PermissionManagement/PermissionPage';
+import PermissionPage from './component/PermissionManagement/PermissionPage.js';
 import { AdminProfilePage } from './component/AdminProfilePage';
 
 export default function App() {
