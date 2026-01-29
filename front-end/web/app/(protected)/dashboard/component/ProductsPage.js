@@ -427,7 +427,6 @@ export function ProductsPage() {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(p.status)}`}>{t(p.status) || p.status || '--'}</span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.viewCount}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">{renderRatingStars(p.rating)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <button

@@ -76,7 +76,7 @@ const getKnowledgeBlogs = async ({ search, sort, author_id }) => {
 			sortOption = { created_at: -1 };
 		}
 
-		const blogs = await KnowledgeBlogModel.find(query).sort(sortOption).lean();
+		const blogs = await KnowledgeBlogModel.find(query).sort(sortOption).lean().populate('author_id', 'full_name avatar');
 		const knowledgeBlogs = await Promise.all(
 			blogs.map(async (blog) => {
 				const blocks = await KnowledgeBlockModel.find({
@@ -94,7 +94,7 @@ const getKnowledgeBlogs = async ({ search, sort, author_id }) => {
 // Get knowledge blog details
 const getKnowledgeBlogDetails = async (blog_id) => {
 	try {
-		const blog = await KnowledgeBlogModel.findById(blog_id).lean();
+		const blog = await KnowledgeBlogModel.findById(blog_id).lean().populate('author_id', 'full_name avatar');
 		if (!blog) {
 			return null;
 		}

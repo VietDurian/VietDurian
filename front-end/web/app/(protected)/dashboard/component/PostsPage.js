@@ -29,6 +29,8 @@ export function PostsPage() {
 	const [postToDelete, setPostToDelete] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [updatingPostId, setUpdatingPostId] = useState(null);
+	const [page, setPage] = useState(1);
+	const pageSize = 10;
 
 	// Fetch posts with current filters and normalize author fields
 	useEffect(() => {
@@ -66,6 +68,7 @@ export function PostsPage() {
 				}));
 
 				setPosts(normalizedPosts);
+				setPage(1);
 			} catch (error) {
 				if (!isMounted) return;
 				toast.error(error?.message || t('error'));
@@ -106,6 +109,22 @@ export function PostsPage() {
 		const direction = sortOrder === 'asc' ? 1 : -1;
 		return (parseDate(a.createdAt) - parseDate(b.createdAt)) * direction;
 	});
+
+	const totalPages = Math.max(1, Math.ceil(sortedPosts.length / pageSize));
+	const safePage = Math.min(page, totalPages);
+	const paginatedPosts = sortedPosts.slice(
+		(safePage - 1) * pageSize,
+		safePage * pageSize,
+	);
+	const startItem =
+		sortedPosts.length === 0 ? 0 : (safePage - 1) * pageSize + 1;
+	const endItem = Math.min(safePage * pageSize, sortedPosts.length);
+	const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+	const changePage = (nextPage) => {
+		if (nextPage < 1 || nextPage > totalPages) return;
+		setPage(nextPage);
+	};
 
 	const snippet = (text = '', max = 80) =>
 		text.length > max ? `${text.slice(0, max)}...` : text;
@@ -201,7 +220,7 @@ export function PostsPage() {
 						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
 						<input
 							type="text"
-							placeholder={t('search_users')}
+							placeholder={t('search_posts') || 'Tìm kiếm bài viết...'}
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 							className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
@@ -282,7 +301,7 @@ export function PostsPage() {
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-gray-200">
-							{sortedPosts.map((post) => (
+							{paginatedPosts.map((post) => (
 								<tr
 									key={post.id}
 									onClick={() => setSelectedPost(post)}
@@ -369,7 +388,7 @@ export function PostsPage() {
 
 			{/* Posts Cards - Mobile */}
 			<div className="md:hidden space-y-4">
-				{sortedPosts.map((post) => (
+				{paginatedPosts.map((post) => (
 					<div
 						key={post.id}
 						onClick={() => setSelectedPost(post)}
@@ -480,10 +499,46 @@ export function PostsPage() {
 				</div>
 			)}
 
-			{/* Results Info */}
-			<div className="mt-4 text-sm text-gray-500 text-center md:text-left">
-				{t('total')}: {sortedPosts.length} {t('posts').toLowerCase()}
-			</div>
+			{/* Pagination */}
+			{!isLoading && sortedPosts.length > 0 && (
+				<div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-sm">
+					{/* Results Info */}
+					<div className="mt-4 text-sm text-gray-500 text-center md:text-left">
+						{t('showing_range') || 'Hiển thị'} {startItem} {t('to') || '–'}{' '}
+						{endItem} {t('of') || 'trên'} {sortedPosts.length}{' '}
+						{t('posts')?.toLowerCase() || 'bài'}
+					</div>
+					<div className="flex items-center gap-2 md:order-2 justify-center">
+						<button
+							onClick={() => changePage(safePage - 1)}
+							disabled={safePage === 1}
+							className="px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+						>
+							{t('previous') || 'Previous'}
+						</button>
+						{pageNumbers.map((num) => (
+							<button
+								key={num}
+								onClick={() => changePage(num)}
+								className={`w-10 h-9 rounded-md border text-sm transition-colors ${
+									num === safePage
+										? 'bg-emerald-700 text-white border-emerald-700'
+										: 'border-gray-200 text-gray-700 hover:bg-gray-50'
+								}`}
+							>
+								{num}
+							</button>
+						))}
+						<button
+							onClick={() => changePage(safePage + 1)}
+							disabled={safePage === totalPages}
+							className="px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+						>
+							{t('next') || 'Next'}
+						</button>
+					</div>
+				</div>
+			)}
 
 			{/* Detail Modal */}
 			{selectedPost && (
