@@ -201,6 +201,9 @@ const translations = {
 
 		// stages
 		stages: 'Giai đoạn',
+
+		//type
+		types: 'Phân Loại',
 	},
 	en: {
 		// Profile Page
@@ -400,6 +403,9 @@ const translations = {
 
 		// stages
 		stages: 'Stages',
+
+		// type
+		types: 'Types',
 	},
 };
 

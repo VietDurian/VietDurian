@@ -10,6 +10,7 @@ import {
   useRef,
 } from "react";
 import { useRouter } from "next/navigation";
+import {profileAPI} from "@/lib/api";
 import apiClient from "@/lib/api";
 
 const AuthContext = createContext();

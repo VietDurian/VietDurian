@@ -12,6 +12,7 @@ import {
 	MessageSquareText,
 	ChevronDown,
 	Flag,
+	Milestone,
 } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
@@ -26,7 +27,7 @@ export function AdminSidebar({
 	onProfileClick,
 }) {
 	const { t } = useLanguage();
-	const {user} = useAuth();
+	const { user } = useAuth();
 	const [isModerationOpen, setIsModerationOpen] = useState(false);
 	const [isReportsOpen, setIsReportsOpen] = useState(false);
 
@@ -41,13 +42,13 @@ export function AdminSidebar({
 	const menuItems = [
 		{ id: 'dashboard', icon: LayoutDashboard, label: t('dashboard') },
 		{ id: 'users', icon: Users, label: t('users') },
-		{ id: 'gardens', icon: Sprout, label: t('gardens') },
-		{ id: 'stages', icon: ShoppingBag, label: t('stages') },
+		{ id: 'types', icon: Sprout, label: t('types') },
+		{ id: 'products', icon: ShoppingBag, label: t('products') },
+		{ id: 'stages', icon: Milestone, label: t('stages') },
 		{ id: 'posts', icon: MessageSquareText, label: t('posts') },
 		{ id: 'blogs', icon: Newspaper, label: t('blogs') },
 		{ id: 'reports', icon: Flag, label: t('reports') },
 		{ id: 'moderation', icon: FileCheck, label: t('moderation') },
-		{ id: 'settings', icon: Settings, label: t('settings') },
 	];
 
 	const handleItemClick = (id) => {
@@ -106,11 +107,12 @@ export function AdminSidebar({
 								<div key={item.id}>
 									<button
 										onClick={() => setIsModerationOpen((s) => !s)}
-										className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all ${currentPage === item.id ||
+										className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all ${
+											currentPage === item.id ||
 											(currentPage && currentPage.startsWith('moderation'))
-											? 'bg-[#ffd93d] text-[#1a4d2e] shadow-lg'
-											: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
-											}`}
+												? 'bg-[#ffd93d] text-[#1a4d2e] shadow-lg'
+												: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+										}`}
 									>
 										<div className="flex items-center gap-3">
 											<Icon className="w-5 h-5" />
@@ -126,20 +128,22 @@ export function AdminSidebar({
 										<div className="mt-2 space-y-1 pl-8">
 											<button
 												onClick={() => handleItemClick('postRequests')}
-												className={`w-full text-left px-4 py-2 rounded-lg transition-all ${currentPage === 'postRequests'
-													? 'bg-[#ffd93d] text-[#1a4d2e]'
-													: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
-													}`}
+												className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
+													currentPage === 'postRequests'
+														? 'bg-[#ffd93d] text-[#1a4d2e]'
+														: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+												}`}
 											>
 												<span className="text-sm">{t('posts')}</span>
 											</button>
 
 											<button
 												onClick={() => handleItemClick('moderation_users')}
-												className={`w-full text-left px-4 py-2 rounded-lg transition-all ${currentPage === 'moderation_users'
-													? 'bg-[#ffd93d] text-[#1a4d2e]'
-													: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
-													}`}
+												className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
+													currentPage === 'moderation_users'
+														? 'bg-[#ffd93d] text-[#1a4d2e]'
+														: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+												}`}
 											>
 												<span className="text-sm">{t('users')}</span>
 											</button>
@@ -155,11 +159,12 @@ export function AdminSidebar({
 								<div key={item.id}>
 									<button
 										onClick={() => setIsReportsOpen((s) => !s)}
-										className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all ${currentPage === item.id ||
+										className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all ${
+											currentPage === item.id ||
 											currentPage === 'reportComments'
-											? 'bg-[#ffd93d] text-[#1a4d2e] shadow-lg'
-											: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
-											}`}
+												? 'bg-[#ffd93d] text-[#1a4d2e] shadow-lg'
+												: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+										}`}
 									>
 										<div className="flex items-center gap-3">
 											<Icon className="w-5 h-5" />
@@ -174,24 +179,24 @@ export function AdminSidebar({
 										<div className="mt-2 space-y-1 pl-8">
 											<button
 												onClick={() => handleItemClick('reports')}
-												className={`w-full text-left px-4 py-2 rounded-lg transition-all ${currentPage === 'reports'
-													? 'bg-[#ffd93d] text-[#1a4d2e]'
-													: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
-													}`}
+												className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
+													currentPage === 'reports'
+														? 'bg-[#ffd93d] text-[#1a4d2e]'
+														: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+												}`}
 											>
 												<span className="text-sm">{t('report_post')}</span>
 											</button>
 
 											<button
 												onClick={() => handleItemClick('reportComments')}
-												className={`w-full text-left px-4 py-2 rounded-lg transition-all ${currentPage === 'reportComments'
-													? 'bg-[#ffd93d] text-[#1a4d2e]'
-													: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
-													}`}
+												className={`w-full text-left px-4 py-2 rounded-lg transition-all ${
+													currentPage === 'reportComments'
+														? 'bg-[#ffd93d] text-[#1a4d2e]'
+														: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+												}`}
 											>
-												<span className="text-sm">
-													{t('report_comment')}
-												</span>
+												<span className="text-sm">{t('report_comment')}</span>
 											</button>
 										</div>
 									)}
@@ -203,10 +208,11 @@ export function AdminSidebar({
 							<button
 								key={item.id}
 								onClick={() => handleItemClick(item.id)}
-								className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${currentPage === item.id
-									? 'bg-[#ffd93d] text-[#1a4d2e] shadow-lg'
-									: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
-									}`}
+								className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+									currentPage === item.id
+										? 'bg-[#ffd93d] text-[#1a4d2e] shadow-lg'
+										: 'text-[#a8d5ba] hover:bg-[#2d7a4f] hover:text-white'
+								}`}
 							>
 								<Icon className="w-5 h-5" />
 								<span className="font-medium">{item.label}</span>
