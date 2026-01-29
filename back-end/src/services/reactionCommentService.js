@@ -3,7 +3,9 @@ import { ReactionCommentModel } from '@/model/reactionCommentModel';
 // Get all reaction comments
 const getAllReactionComments = async () => {
 	try {
-		const reactions = await ReactionCommentModel.find().lean();
+		const reactions = await ReactionCommentModel.find()
+			.populate('user_id', 'full_name avatar')
+			.lean();
 		return reactions;
 	} catch (error) {
 		throw error;
@@ -89,7 +91,7 @@ const updateReaction = async ({ id, type }) => {
 		const updatedReaction = await ReactionCommentModel.findByIdAndUpdate(
 			id,
 			{ type },
-			{ new: true }
+			{ new: true },
 		);
 		return updatedReaction;
 	} catch (error) {

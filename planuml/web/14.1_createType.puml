@@ -1,8 +1,7 @@
 @startuml 14.1_createType
 hide footbox
-title Create Type
 
-actor User as "Users"
+actor User as "Admin" 
 boundary TypePage as View
 participant ":TypeRoute" as Route
 control "AuthMiddleware" as Middleware

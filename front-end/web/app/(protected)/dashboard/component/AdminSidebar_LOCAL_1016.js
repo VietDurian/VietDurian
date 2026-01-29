@@ -16,7 +16,6 @@ import {
 
 import { useLanguage } from '../context/LanguageContext';
 import PermissionPage from '../../dashboard/component/PermissionPage.js';
-import { useAuth } from '@/context/AuthContext';
 
 export function AdminSidebar({
 	currentPage,
@@ -27,7 +26,6 @@ export function AdminSidebar({
 	onProfileClick,
 }) {
 	const { t } = useLanguage();
-	const {user} = useAuth();
 	const [isModerationOpen, setIsModerationOpen] = useState(false);
 	const [isReportsOpen, setIsReportsOpen] = useState(false);
 

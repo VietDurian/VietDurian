@@ -11,7 +11,7 @@ const KnowledgeBlogSchema = new mongoose.Schema(
 		},
 		author_id: {
 			type: mongoose.Schema.Types.ObjectId,
-			ref: 'users',
+			ref: 'User',
 			required: true,
 		},
 		image: {

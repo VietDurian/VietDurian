@@ -44,6 +44,7 @@ const translations = {
 		// Header
 		welcome: 'Chào mừng trở lại, Admin!',
 		overview: 'Tổng quan hoạt động hệ thống VietDurian',
+		logout: 'Đăng xuất',
 
 		// Sidebar
 		dashboard: 'Bảng điều khiển',
@@ -72,6 +73,7 @@ const translations = {
 		close: 'Đóng',
 		image: 'Hình ảnh',
 		contact: 'Liên hệ',
+		showing_range: 'Hiển thị',
 
 		// Charts
 		market_trend: 'Xu hướng thị trường sầu riêng',
@@ -128,10 +130,19 @@ const translations = {
 		user_blocked: 'Đã chặn người dùng thành công',
 		user_unblocked: 'Đã bỏ chặn người dùng thành công',
 
+		// Status labels
+		Pending: 'Chờ duyệt',
+		Resolved: 'Đã xử lý',
+
 		// Priority
 		high: 'Cao',
 		medium: 'Trung bình',
 		low: 'Thấp',
+
+		// page
+		to: 'đến',
+		of: 'trên',
+		page: 'Trang',
 
 		// Delete Post Modal
 		delete_post_title: 'Xóa bài viết',
@@ -139,6 +150,7 @@ const translations = {
 
 		// postRequests
 		postRequests: 'Yêu cầu bài viết',
+		search_posts: 'Tìm kiếm bài viết...',
 		reject_post: 'Từ chối bài viết',
 		reject_post_message: 'Bạn có chắc chắn muốn từ chối bài viết này?',
 		enter_reason: 'Nhập lý do từ chối...',
@@ -165,6 +177,7 @@ const translations = {
 		report_resolved_desc: 'Báo cáo đã được đánh dấu là đã hoàn thành',
 		confirm_delete_title: "Xác nhận xóa",
 		confirm_delete_desc: "Bạn có chắc muốn xóa báo cáo này?",
+		no_image: 'Không có hình ảnh',
 		report_post: 'Bài viết',
 		report_comment: 'Bình luận',
 		ban_confirm_comment: 'Bạn có chắc chắn muốn khoá bình luận này?',
@@ -177,6 +190,14 @@ const translations = {
 			'Bình luận đã được ẩn và báo cáo đã được đánh dấu là đã xử lý',
 		report_status_updated: 'Cập nhật trạng thái thành công',
 		no_reports: 'Không có báo cáo',
+
+		// blogs
+		author: 'Họ tên tác giả',
+		title: 'Tiêu đề',
+		manage_blogs: 'Quản lý bài viết kiến thức',
+		search_blogs: 'Tìm kiếm blog...',
+		confirm_delete_blog: 'Bạn có chắc chắn muốn xóa blog này?',
+		delete_warning: 'Hành động này không thể hoàn tác!',
 	},
 	en: {
 		// Profile Page
@@ -220,6 +241,7 @@ const translations = {
 		// Header
 		welcome: 'Welcome back, Admin!',
 		overview: 'VietDurian System Overview',
+		logout: 'Logout',
 
 		// Sidebar
 		dashboard: 'Dashboard',
@@ -240,6 +262,7 @@ const translations = {
 
 		// Posts
 		post_management: 'Post Management',
+		search_posts: 'Search posts...',
 		content: 'Content',
 		category: 'Category',
 		inactive_post: 'Set to Inactive',
@@ -304,9 +327,19 @@ const translations = {
 		user_unblocked: 'User unblocked successfully',
 
 		// Priority
+		// Status labels
+		Pending: 'Pending',
+		Resolved: 'Resolved',
+
+		// Priority
 		high: 'High',
 		medium: 'Medium',
 		low: 'Low',
+
+		// page
+		to: 'to',
+		of: 'of',
+		page: 'Page',
 
 		// Delete Post Modal
 		delete_post_title: 'Delete Post',
@@ -340,7 +373,7 @@ const translations = {
 		report_resolved_desc: 'Report has been marked as completed',
 		confirm_delete_title: "Confirm deletion",
 		confirm_delete_desc: "Are you sure you want to delete this report?",
-		// no_image is defined above
+		no_image: 'No image',
 		report_post: 'Posts',
 		report_comment: 'Comment',
 		ban_confirm_comment: 'Are you sure you want to ban this comment?',
@@ -352,6 +385,15 @@ const translations = {
 		hide_and_resolved_success: 'Comment hidden and report marked as resolved',
 		report_status_updated: 'Status updated successfully',
 		no_reports: 'No reports',
+		showing_range: 'Showing',
+
+		// blogs
+		author: 'Author Name',
+		title: 'Title',
+		manage_blogs: 'Manage knowledge blogs',
+		search_blogs: 'Search blogs...',
+		confirm_delete_blog: 'Are you sure you want to delete this blog?',
+		delete_warning: 'This action cannot be undone!',
 	},
 };
 
