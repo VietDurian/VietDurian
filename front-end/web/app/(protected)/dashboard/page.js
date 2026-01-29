@@ -15,7 +15,7 @@ import { ReportPage } from './component/ReportPage';
 import { ProductsPage } from './component/ProductManagement/ProductsPage';
 import { ReportCommentPage } from './component/ReportCommentPage';
 import { LanguageSwitcher } from './component/LanguageSwitcher';
-import PermissionPage from './component/PermissionPage';
+import PermissionPage from './component/PermissionManagement/PermissionPage';
 
 export default function App() {
 	const { user, loading } = useAuth();

@@ -87,7 +87,7 @@ export const usersAPI = {
 //Permission API
 export const permissionAPI = {
   async getAllPermissions(params = {}) {
-    const response = await apiClient.get("permission", { params });
+    const response = await apiClient.get("permission/requests", { params });
     return response.data;
   },
   async getPermissionById(id) {
@@ -458,7 +458,7 @@ export async function approvePost(postId, status, reason) {
 // Report post
 export async function getAllReport(params) {
   try {
-    const response = await apiClient.get('/report',params );
+    const response = await apiClient.get('/report', params);
     return response?.data?.data || [];
   } catch (error) {
     const message =

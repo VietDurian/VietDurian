@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
-import PermissionPage from '../../dashboard/component/PermissionPage.js';
+import PermissionPage from './PermissionManagement/PermissionPage.js';
 
 export function AdminSidebar({
 	currentPage,
