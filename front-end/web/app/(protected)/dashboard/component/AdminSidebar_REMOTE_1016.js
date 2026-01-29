@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Image from 'next/image';
 import {
 	Users,
 	ShoppingBag,
@@ -15,6 +14,7 @@ import {
 } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
+import PermissionPage from '../../dashboard/component/PermissionPage.js';
 import { useAuth } from '@/context/AuthContext';
 
 export function AdminSidebar({
@@ -22,27 +22,17 @@ export function AdminSidebar({
 	onNavigate,
 	isMobileOpen,
 	onMobileClose,
-	adminUser,
-	onProfileClick,
 }) {
 	const { t } = useLanguage();
 	const {user} = useAuth();
 	const [isModerationOpen, setIsModerationOpen] = useState(false);
 	const [isReportsOpen, setIsReportsOpen] = useState(false);
 
-	const handleProfileClick = () => {
-		if (typeof onProfileClick === 'function') {
-			onProfileClick();
-			return;
-		}
-		handleItemClick('profile');
-	};
-
 	const menuItems = [
 		{ id: 'dashboard', icon: LayoutDashboard, label: t('dashboard') },
 		{ id: 'users', icon: Users, label: t('users') },
 		{ id: 'gardens', icon: Sprout, label: t('gardens') },
-		{ id: 'stages', icon: ShoppingBag, label: t('stages') },
+		{ id: 'products', icon: ShoppingBag, label: t('products') },
 		{ id: 'posts', icon: MessageSquareText, label: t('posts') },
 		{ id: 'blogs', icon: Newspaper, label: t('blogs') },
 		{ id: 'reports', icon: Flag, label: t('reports') },
@@ -215,45 +205,18 @@ export function AdminSidebar({
 					})}
 				</nav>
 
-				{/* Admin Info (clickable) */}
-				<button
-					type="button"
-					onClick={handleProfileClick}
-					className="w-full p-6 border-t border-[#2d7a4f] text-left hover:bg-[#2d7a4f]/40 transition-colors cursor-pointer"
-				>
+				{/* Admin Info */}
+				<div className="p-6 border-t border-[#2d7a4f]">
 					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 bg-[#ffd93d] rounded-full flex items-center justify-center overflow-hidden">
-							{adminUser?.avatar ? (
-								<Image
-									src={adminUser.avatar}
-									alt={adminUser.full_name || 'Avatar'}
-									width={40}
-									height={40}
-									className="w-full h-full object-cover"
-									unoptimized
-								/>
-							) : (
-								<span className="text-[#1a4d2e] font-bold">
-									{(adminUser?.full_name || 'AD')
-										.split(' ')
-										.filter(Boolean)
-										.slice(-2)
-										.map((w) => w[0])
-										.join('')
-										.toUpperCase()}
-								</span>
-							)}
+						<div className="w-10 h-10 bg-[#ffd93d] rounded-full flex items-center justify-center">
+							<span className="text-[#1a4d2e] font-bold">AD</span>
 						</div>
-						<div className="min-w-0">
-							<p className="font-medium text-white truncate">
-								{adminUser?.full_name || 'Admin'}
-							</p>
-							<p className="text-xs text-[#a8d5ba] truncate">
-								{adminUser?.email || ''}
-							</p>
+						<div>
+							<p className="font-medium text-white">{user?.full_name}</p>
+							<p className="text-xs text-[#a8d5ba]">{user?.email}</p>
 						</div>
 					</div>
-				</button>
+				</div>
 			</div>
 		</>
 	);

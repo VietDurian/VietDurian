@@ -18,6 +18,7 @@ import { BlogPage } from './component/BlogPage';
 import { StagePage } from './component/StagePage';
 import { LanguageSwitcher } from './component/LanguageSwitcher';
 import PermissionPage from './component/PermissionPage';
+import { AdminProfilePage } from './component/AdminProfilePage';
 
 export default function App() {
 	const { user, loading, logout } = useAuth();
@@ -96,6 +97,8 @@ export default function App() {
 				);
 			case 'moderation_users':
 				return <PermissionPage />;
+			case 'profile':
+				return <AdminProfilePage />;
 			default:
 				return <DashboardPage onNavigate={setCurrentPage} />;
 		}
@@ -110,6 +113,7 @@ export default function App() {
 					onNavigate={setCurrentPage}
 					isMobileOpen={isMobileMenuOpen}
 					onMobileClose={() => setIsMobileMenuOpen(false)}
+					adminUser={user}
 				/>
 
 				{/* Main Content */}

@@ -1,4 +1,5 @@
 import { profileService } from "@/services/profileService.js";
+import { cloudinary } from "@/config/cloudinary.js";
 
 const getProfile = async (req, res, next) => {
   try {
@@ -43,6 +44,28 @@ const updateProfile = async (req, res, next) => {
     for (const field of allowedFields) {
       if (updateData[field] !== undefined) {
         filteredData[field] = updateData[field];
+      }
+    }
+
+    // If avatar is provided as base64/dataURL, upload to Cloudinary and store URL
+    if (
+      typeof filteredData.avatar === "string" &&
+      filteredData.avatar &&
+      (filteredData.avatar.startsWith("data:image/") ||
+        filteredData.avatar.startsWith("data:application/octet-stream"))
+    ) {
+      try {
+        const result = await cloudinary.uploader.upload(filteredData.avatar, {
+          folder: "vietdurian/avatars",
+          resource_type: "image",
+        });
+        filteredData.avatar = result.secure_url;
+      } catch (e) {
+        return res.status(400).json({
+          code: 400,
+          success: false,
+          message: "Image upload failed",
+        });
       }
     }
 

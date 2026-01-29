@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
+import PermissionPage from '../../dashboard/component/PermissionPage.js';
 import { useAuth } from '@/context/AuthContext';
 
 export function AdminSidebar({
@@ -42,7 +43,7 @@ export function AdminSidebar({
 		{ id: 'dashboard', icon: LayoutDashboard, label: t('dashboard') },
 		{ id: 'users', icon: Users, label: t('users') },
 		{ id: 'gardens', icon: Sprout, label: t('gardens') },
-		{ id: 'stages', icon: ShoppingBag, label: t('stages') },
+		{ id: 'products', icon: ShoppingBag, label: t('products') },
 		{ id: 'posts', icon: MessageSquareText, label: t('posts') },
 		{ id: 'blogs', icon: Newspaper, label: t('blogs') },
 		{ id: 'reports', icon: Flag, label: t('reports') },
@@ -244,6 +245,7 @@ export function AdminSidebar({
 								</span>
 							)}
 						</div>
+<<<<<<< HEAD
 						<div className="min-w-0">
 							<p className="font-medium text-white truncate">
 								{adminUser?.full_name || 'Admin'}
@@ -251,6 +253,11 @@ export function AdminSidebar({
 							<p className="text-xs text-[#a8d5ba] truncate">
 								{adminUser?.email || ''}
 							</p>
+=======
+						<div>
+							<p className="font-medium text-white">{user?.full_name}</p>
+							<p className="text-xs text-[#a8d5ba]">{user?.email}</p>
+>>>>>>> main
 						</div>
 					</div>
 				</button>

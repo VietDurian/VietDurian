@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '@/context/AuthContext';
+import PermissionPage from '../../dashboard/component/PermissionPage.js';
 
 export function AdminSidebar({
 	currentPage,
@@ -26,7 +26,6 @@ export function AdminSidebar({
 	onProfileClick,
 }) {
 	const { t } = useLanguage();
-	const {user} = useAuth();
 	const [isModerationOpen, setIsModerationOpen] = useState(false);
 	const [isReportsOpen, setIsReportsOpen] = useState(false);
 
@@ -42,7 +41,7 @@ export function AdminSidebar({
 		{ id: 'dashboard', icon: LayoutDashboard, label: t('dashboard') },
 		{ id: 'users', icon: Users, label: t('users') },
 		{ id: 'gardens', icon: Sprout, label: t('gardens') },
-		{ id: 'stages', icon: ShoppingBag, label: t('stages') },
+		{ id: 'products', icon: ShoppingBag, label: t('products') },
 		{ id: 'posts', icon: MessageSquareText, label: t('posts') },
 		{ id: 'blogs', icon: Newspaper, label: t('blogs') },
 		{ id: 'reports', icon: Flag, label: t('reports') },
