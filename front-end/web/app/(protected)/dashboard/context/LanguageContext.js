@@ -198,6 +198,12 @@ const translations = {
 		search_blogs: 'Tìm kiếm blog...',
 		confirm_delete_blog: 'Bạn có chắc chắn muốn xóa blog này?',
 		delete_warning: 'Hành động này không thể hoàn tác!',
+
+		// stages
+		stages: 'Giai đoạn',
+
+		//type
+		types: 'Phân Loại',
 	},
 	en: {
 		// Profile Page
@@ -394,6 +400,12 @@ const translations = {
 		search_blogs: 'Search blogs...',
 		confirm_delete_blog: 'Are you sure you want to delete this blog?',
 		delete_warning: 'This action cannot be undone!',
+
+		// stages
+		stages: 'Stages',
+
+		// type
+		types: 'Types',
 	},
 };
 

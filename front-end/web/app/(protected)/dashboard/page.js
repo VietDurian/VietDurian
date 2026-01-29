@@ -15,6 +15,8 @@ import { ReportPage } from './component/ReportPage';
 import { ProductsPage } from './component/ProductManagement/ProductsPage';
 import { ReportCommentPage } from './component/ReportCommentPage';
 import { BlogPage } from './component/BlogPage';
+import { StagePage } from './component/StagePage';
+import { TypePage } from './component/TypePage';
 import { LanguageSwitcher } from './component/LanguageSwitcher';
 import PermissionPage from './component/PermissionPage';
 import { AdminProfilePage } from './component/AdminProfilePage';
@@ -54,15 +56,8 @@ export default function App() {
 				return <DashboardPage onNavigate={setCurrentPage} />;
 			case 'users':
 				return <UsersPage />;
-			case 'gardens':
-				return (
-					<div className="p-8 text-center">
-						<h1 className="text-2xl font-bold text-[#1a4d2e]">
-							Trang Vườn sầu riêng
-						</h1>
-						<p className="text-gray-600 mt-2">Đang phát triển...</p>
-					</div>
-				);
+			case 'types':
+				return <TypePage />;
 			case 'products':
 				return <ProductsPage />;
 			case 'posts':
@@ -71,6 +66,8 @@ export default function App() {
 				return <PostRequestPage />;
 			case 'blogs':
 				return <BlogPage />;
+			case 'stages':
+				return <StagePage />;
 			case 'moderation':
 				return (
 					<div className="p-8 text-center">
@@ -85,13 +82,6 @@ export default function App() {
 				return <ReportPage />;
 			case 'reportComments':
 				return <ReportCommentPage />;
-			case 'settings':
-				return (
-					<div className="p-8 text-center">
-						<h1 className="text-2xl font-bold text-[#1a4d2e]">Trang Cài đặt</h1>
-						<p className="text-gray-600 mt-2">Đang phát triển...</p>
-					</div>
-				);
 			case 'moderation_users':
 				return <PermissionPage />;
 			case 'profile':
