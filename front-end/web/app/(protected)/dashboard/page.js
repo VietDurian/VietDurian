@@ -15,6 +15,7 @@ import { ReportPage } from './component/ReportPage';
 import { ProductsPage } from './component/ProductManagement/ProductsPage';
 import { ReportCommentPage } from './component/ReportCommentPage';
 import { BlogPage } from './component/BlogPage';
+import { StagePage } from './component/StagePage';
 import { LanguageSwitcher } from './component/LanguageSwitcher';
 import PermissionPage from './component/PermissionPage';
 
@@ -70,6 +71,8 @@ export default function App() {
 				return <PostRequestPage />;
 			case 'blogs':
 				return <BlogPage />;
+			case 'stages':
+				return <StagePage />;
 			case 'moderation':
 				return (
 					<div className="p-8 text-center">

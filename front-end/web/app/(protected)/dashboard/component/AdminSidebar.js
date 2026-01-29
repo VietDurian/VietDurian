@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
-import PermissionPage from '../../dashboard/component/PermissionPage.js';
 import { useAuth } from '@/context/AuthContext';
 
 export function AdminSidebar({
@@ -32,7 +31,7 @@ export function AdminSidebar({
 		{ id: 'dashboard', icon: LayoutDashboard, label: t('dashboard') },
 		{ id: 'users', icon: Users, label: t('users') },
 		{ id: 'gardens', icon: Sprout, label: t('gardens') },
-		{ id: 'products', icon: ShoppingBag, label: t('products') },
+		{ id: 'stages', icon: ShoppingBag, label: t('stages') },
 		{ id: 'posts', icon: MessageSquareText, label: t('posts') },
 		{ id: 'blogs', icon: Newspaper, label: t('blogs') },
 		{ id: 'reports', icon: Flag, label: t('reports') },
