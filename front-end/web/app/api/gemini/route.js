@@ -5,7 +5,11 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const systemInstruction = `Bạn là trợ lý nông nghiệp chuyên về sầu riêng.
 - Trả lời ngắn gọn, tiếng Việt hoặc tiếng anh tùy theo câu hỏi, thân thiện.
 - Ưu tiên hướng dẫn chăm sóc, dinh dưỡng, tưới tiêu, phòng trừ sâu bệnh.
-- Nếu câu hỏi ngoài chủ đề sầu riêng/nông nghiệp, từ chối lịch sự.`;
+- Nếu câu hỏi ngoài chủ đề sầu riêng/nông nghiệp, từ chối lịch sự.
+- Quan trọng: xuất trả lời dưới dạng plain text, không dùng Markdown, không dùng ký hiệu **, *, gạch đầu dòng, tiêu đề hoặc danh sách.`;
+
+const plainTextGuard =
+	'Please return the answer as plain text only — do not use Markdown, bullets, lists, or ** for bold.';
 
 const examples = [
 	{
@@ -38,13 +42,13 @@ export async function POST(request) {
 		if (!hasText && !hasImage) {
 			return Response.json(
 				{ success: false, error: 'Cần nhập nội dung hoặc đính kèm ảnh' },
-				{ status: 400 }
+				{ status: 400 },
 			);
 		}
 
 		// List models via REST to see what this key can access
 		const listRes = await fetch(
-			`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`
+			`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`,
 		);
 		const listJson = await listRes.json();
 		if (!listRes.ok) {
@@ -54,18 +58,18 @@ export async function POST(request) {
 					error: 'Cannot list models for this API key',
 					details: listJson,
 				},
-				{ status: 502 }
+				{ status: 502 },
 			);
 		}
 		const generateModels = (listJson.models || []).filter((m) =>
-			m.supportedGenerationMethods?.includes('generateContent')
+			m.supportedGenerationMethods?.includes('generateContent'),
 		);
 		const preferred = generateModels.find(
 			(m) =>
 				m.name.includes('flash') ||
 				m.name.includes('vision') ||
 				m.displayName?.includes('flash') ||
-				m.displayName?.includes('vision')
+				m.displayName?.includes('vision'),
 		);
 		const picked = preferred || generateModels[0];
 		if (!picked) {
@@ -75,7 +79,7 @@ export async function POST(request) {
 					error: 'No generateContent model available for this API key',
 					available: listJson.models?.map((m) => m.name) || [],
 				},
-				{ status: 502 }
+				{ status: 502 },
 			);
 		}
 		const model = genAI.getGenerativeModel({
@@ -84,7 +88,7 @@ export async function POST(request) {
 		});
 
 		const userParts = [];
-		if (hasText) userParts.push({ text: message });
+		if (hasText) userParts.push({ text: `${message}\n\n${plainTextGuard}` });
 		if (hasImage) {
 			const base64 = image.data.includes('base64,')
 				? image.data.split('base64,')[1]
@@ -111,7 +115,7 @@ export async function POST(request) {
 		console.error('Gemini error:', error.message);
 		return Response.json(
 			{ success: false, error: error.message || 'Gemini API error' },
-			{ status: 502 }
+			{ status: 502 },
 		);
 	}
 }
@@ -120,12 +124,12 @@ export async function GET() {
 	try {
 		return Response.json(
 			{ success: true, message: 'Gemini route is alive' },
-			{ status: 200 }
+			{ status: 200 },
 		);
 	} catch (error) {
 		return Response.json(
 			{ success: false, error: error.message || 'Status error' },
-			{ status: 500 }
+			{ status: 500 },
 		);
 	}
 }
