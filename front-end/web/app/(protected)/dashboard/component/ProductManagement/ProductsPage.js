@@ -1,10 +1,10 @@
 'use client';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, Filter, Star, StarHalf, Trash2, Eye, EyeClosed } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { productsAdminAPI } from '@/lib/api';
 import { productTypesAPI } from "@/lib/api";
-import { useRouter } from 'next/navigation';
+import { ProductDetail } from './ProductDetail';
 
 export function ProductsPage() {
     const { t } = useLanguage();
@@ -20,7 +20,7 @@ export function ProductsPage() {
     const [isTypeOpen, setIsTypeOpen] = useState(false);
     const typeDropdownRef = useRef(null);
     const [confirmDelete, setConfirmDelete] = useState(null);
-    const router = useRouter();
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
     const decimalToNumber = (value) => {
         if (typeof value === "number") return value;
@@ -118,6 +118,7 @@ export function ProductsPage() {
         id: p._id,
         name: p.name,
         userId: p.user_id?._id || p.user_id || '',
+        user_name: p.user_id?.full_name || p.userName || 'undefined',
         typeId: p.type_id?._id || p.typeId || '',
         typeName: p.type_id?.name || p.typeName || 'undefined',
         description: p.description || '',
@@ -150,7 +151,6 @@ export function ProductsPage() {
             const res = await productTypesAPI.getAllProductTypes({ page: 1, limit: 10 });
             const list = Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.data) ? res.data.data : [];
             setProductTypes(list);
-            console.log('Fetched product types:', list);
         } catch (error) {
             console.error('Error fetching product types:', error);
         }
@@ -224,6 +224,7 @@ export function ProductsPage() {
                         : mapped;
 
                     setProducts(finalList);
+                    console.log("Products fetched:", finalList);
 
                     const pgn = res?.data?.pagination || res?.pagination || null;
                     setPagination(pgn ? {
@@ -431,11 +432,10 @@ export function ProductsPage() {
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <button
                                             type="button"
-                                            onClick={() => router.push(`/products/${p.id}`)}
+                                            onClick={() => setSelectedProduct(p)}
                                             className="mr-2 inline-flex items-center justify-center px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50"
-                                        >  <Eye className="w-4 h-4" />
-
-
+                                        >
+                                            <Eye className="w-4 h-4" />
                                         </button>
                                         <button
                                             type="button"
@@ -528,6 +528,14 @@ export function ProductsPage() {
                     </button>
                 </div>
             </div>
+
+            {/* Product Detail Modal */}
+            {selectedProduct && (
+                <ProductDetail
+                    product={selectedProduct}
+                    onClose={() => setSelectedProduct(null)}
+                />
+            )}
 
             {/* Confirm Delete Modal */}
             {

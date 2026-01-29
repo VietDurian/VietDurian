@@ -12,7 +12,7 @@ import { UsersPage } from './component/UsersPage';
 import { PostsPage } from './component/PostsPage';
 import { PostRequestPage } from './component/PostRequestPage';
 import { ReportPage } from './component/ReportPage';
-import { ProductsPage } from './component/ProductsPage';
+import { ProductsPage } from './component/ProductManagement/ProductsPage';
 import { ReportCommentPage } from './component/ReportCommentPage';
 import { BlogPage } from './component/BlogPage';
 import { LanguageSwitcher } from './component/LanguageSwitcher';
