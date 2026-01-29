@@ -2,6 +2,12 @@ import { GeneralPostModel } from '@/model/generalPostModel';
 import { cloudinary } from '@/config/cloudinary';
 import { notificationService } from '@/services/notificationService';
 
+const normalizeText = (text = '') =>
+	text
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase();
+
 // Create a new general post
 const createGeneralPost = async ({
 	author_id,
@@ -48,6 +54,8 @@ const getGeneralPost = async ({
 	try {
 		const query = {};
 		const sortOption = {};
+		const shouldFilterBySearch = Boolean(search);
+		const normalizedSearch = normalizeText(search || '');
 
 		if (status) {
 			query.status = status;
@@ -55,10 +63,6 @@ const getGeneralPost = async ({
 
 		if (category) {
 			query.category = category;
-		}
-
-		if (search) {
-			query.content = { $regex: search, $options: 'i' };
 		}
 
 		if (author_id) {
@@ -104,7 +108,15 @@ const getGeneralPost = async ({
 			};
 		});
 
-		return postsWithAuthor;
+		if (!shouldFilterBySearch) {
+			return postsWithAuthor;
+		}
+
+		const filteredPosts = postsWithAuthor.filter((post) =>
+			normalizeText(post.content || '').includes(normalizedSearch),
+		);
+
+		return filteredPosts;
 	} catch (error) {
 		throw error;
 	}

@@ -18,6 +18,12 @@ import {
 } from '@/lib/api';
 import { useLanguage } from '../context/LanguageContext';
 
+const normalizeText = (text = '') =>
+	text
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase();
+
 export function PostsPage() {
 	const { t } = useLanguage();
 	const [posts, setPosts] = useState([]);
@@ -96,10 +102,10 @@ export function PostsPage() {
 		return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('vi-VN');
 	};
 
+	const normalizedSearch = normalizeText(searchTerm);
 	const filteredPosts = posts.filter((post) => {
-		const matchesSearch =
-			post.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			post.content.toLowerCase().includes(searchTerm.toLowerCase());
+		const normalizedContent = normalizeText(post.content);
+		const matchesSearch = normalizedContent.includes(normalizedSearch);
 		const matchesStatus =
 			statusFilter === 'all' || post.status === statusFilter;
 		return matchesSearch && matchesStatus;

@@ -2,6 +2,12 @@ import { KnowledgeBlogModel } from '@/model/knowledgeBlogModel';
 import { KnowledgeBlockModel } from '@/model/knowledgeBlockModel';
 import { cloudinary } from '@/config/cloudinary.js';
 
+const normalizeText = (text = '') =>
+	text
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase();
+
 // Create a new knowledge blog
 const createKnowledgeBlog = async ({ author_id, title, content, image }) => {
 	try {
@@ -62,9 +68,8 @@ const createKnowledgeBlock = async ({ blog_id, title, content, image }) => {
 const getKnowledgeBlogs = async ({ search, sort, author_id }) => {
 	try {
 		const query = {};
-		if (search) {
-			query.title = { $regex: search, $options: 'i' };
-		}
+		const shouldFilterBySearch = Boolean(search);
+		const normalizedSearch = normalizeText(search || '');
 		if (author_id) {
 			query.author_id = author_id;
 		}
@@ -76,16 +81,31 @@ const getKnowledgeBlogs = async ({ search, sort, author_id }) => {
 			sortOption = { created_at: -1 };
 		}
 
-		const blogs = await KnowledgeBlogModel.find(query).sort(sortOption).lean().populate('author_id', 'full_name avatar');
+		const blogs = await KnowledgeBlogModel.find(query)
+			.sort(sortOption)
+			.lean()
+			.populate('author_id', 'full_name avatar');
 		const knowledgeBlogs = await Promise.all(
 			blogs.map(async (blog) => {
 				const blocks = await KnowledgeBlockModel.find({
 					blog_id: blog._id,
 				}).lean();
 				return { ...blog, knowledgeBlocks: blocks };
-			})
+			}),
 		);
-		return knowledgeBlogs;
+
+		if (!shouldFilterBySearch) {
+			return knowledgeBlogs;
+		}
+
+		const filteredBlogs = knowledgeBlogs.filter((blog) => {
+			const normalizedTitle = normalizeText(blog.title || '');
+			return (
+				normalizedTitle.includes(normalizedSearch)
+			);
+		});
+
+		return filteredBlogs;
 	} catch (error) {
 		throw error;
 	}
@@ -94,7 +114,9 @@ const getKnowledgeBlogs = async ({ search, sort, author_id }) => {
 // Get knowledge blog details
 const getKnowledgeBlogDetails = async (blog_id) => {
 	try {
-		const blog = await KnowledgeBlogModel.findById(blog_id).lean().populate('author_id', 'full_name avatar');
+		const blog = await KnowledgeBlogModel.findById(blog_id)
+			.lean()
+			.populate('author_id', 'full_name avatar');
 		if (!blog) {
 			return null;
 		}
