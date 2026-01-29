@@ -1,16 +1,29 @@
 import { StepModel } from '@/model/stepModel';
 
-// Get all steps
-const getAllSteps = async ({search}) => {
+// Normalize text by removing accents and converting to lowercase
+const normalizeText = (value = '') =>
+	value
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase();
+
+// Get all steps (accent-insensitive search)
+const getAllSteps = async ({ search }) => {
 	try {
-		// lam chu nang search va chi lay nhung thang ko co parent_id (la step cha)
-		let query = {};
+		// Only fetch parent steps; filter in Node to ignore diacritics
+		const steps = await StepModel.find({ parent_id: null })
+			.select('parent_id title description order_index created_at updated_at')
+			.lean();
+
 		if (search) {
-			query = { parent_id: null, title: { $regex: search, $options: 'i' } };
-		} else {
-			query = { parent_id: null };
+			const keyword = normalizeText(search);
+			return steps.filter(
+				(step) =>
+					normalizeText(step.title).includes(keyword) ||
+					normalizeText(step.description).includes(keyword),
+			);
 		}
-		const steps = await StepModel.find(query);
+
 		return steps;
 	} catch (error) {
 		throw error;
@@ -52,7 +65,7 @@ const updateStep = async ({ id, title, description }) => {
 		const updatedStep = await StepModel.findByIdAndUpdate(
 			id,
 			{ title, description },
-			{ new: true }
+			{ new: true },
 		);
 		return updatedStep;
 	} catch (error) {

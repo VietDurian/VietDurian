@@ -709,7 +709,7 @@ export const stepAPI = {
     return response.data;
   },
   async updateStage(id, title, description) {
-    const response = await apiClient.put(`/step/${id}`, { title, description });
+    const response = await apiClient.patch(`/step/${id}`, { title, description });
     return response.data;
   },
   async deleteStage(id) {
