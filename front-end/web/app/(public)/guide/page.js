@@ -729,7 +729,7 @@ export default function GuidePage() {
             </div>
 
             <main className="max-w-8xl mx-auto px-4 md:px-6 py-12">
-                <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-8">
 
                     {/* Sidebar Navigation */}
                     <aside className="hidden lg:block h-fit sticky top-28 z-10">
@@ -743,7 +743,7 @@ export default function GuidePage() {
                                     <button
                                         key={section.id}
                                         onClick={() => scrollToSection(section.id)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-left border-l-4 ${activeSection === section.id
+                                        className={`w-full flex items-center gap-3 px-4 py-5 text-sm font-medium rounded-lg transition-all duration-200 text-left border-l-4 ${activeSection === section.id
                                             ? "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm"
                                             : "border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                                             }`}
@@ -755,18 +755,6 @@ export default function GuidePage() {
                                     </button>
                                 ))}
                             </nav>
-
-                            {/* Promo Box */}
-                            <div className="mt-6 p-4 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-xl text-white text-center shadow-lg">
-                                <p className="text-xs font-medium opacity-90 mb-2">BẠN CẦN TRỢ GIÚP?</p>
-                                <p className="text-sm font-bold mb-3">Kiểm tra sâu bệnh bằng AI ngay!</p>
-                                <div className="flex justify-center">
-                                    <button className="w-full py-2 bg-white text-emerald-700 text-sm font-bold rounded-lg hover:bg-lime-100 transition flex items-center justify-center gap-2">
-                                        <ScanLine className="w-4 h-4" />
-                                        Quét Ngay
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     </aside>
 
