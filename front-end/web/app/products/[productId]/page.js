@@ -15,11 +15,10 @@ import {
     Weight,
     Package,
     Tag,
-    Minus,
-    Plus,
     MessageCircle,
     Star,
-    AlertCircle
+    AlertCircle,
+    Calendar
 } from "lucide-react";
 
 const getUserId = () => {
@@ -65,7 +64,6 @@ export default function ProductDetailPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedImage, setSelectedImage] = useState(0);
-    const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState("description");
     const [imageError, setImageError] = useState(false);
     const [userId, setUserId] = useState(null);
@@ -117,45 +115,14 @@ export default function ProductDetailPage() {
         }).format(numericPrice);
     };
 
-    const calculateDiscountedPrice = (price, discount) => {
-        const numericPrice = typeof price === 'object' && price.$numberDecimal
-            ? parseFloat(price.$numberDecimal)
-            : parseFloat(price);
-        const numericDiscount = typeof discount === 'object' && discount.$numberDecimal
-            ? parseFloat(discount.$numberDecimal)
-            : parseFloat(discount || 0);
-
-        return numericPrice - numericDiscount;
-    };
-
-    const calculateDiscountPercent = (price, discount) => {
-        const numericPrice = typeof price === 'object' && price.$numberDecimal
-            ? parseFloat(price.$numberDecimal)
-            : parseFloat(price);
-        const numericDiscount = typeof discount === 'object' && discount.$numberDecimal
-            ? parseFloat(discount.$numberDecimal)
-            : parseFloat(discount || 0);
-
-        if (numericDiscount === 0) return 0;
-        return Math.round((numericDiscount / numericPrice) * 100);
-    };
-
     const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
         const date = new Date(dateString);
         return date.toLocaleDateString('vi-VN', {
             day: '2-digit',
             month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            year: 'numeric'
         });
-    };
-
-    const handleQuantityChange = (change) => {
-        const newQuantity = quantity + change;
-        if (newQuantity >= 1 && newQuantity <= product.stock) {
-            setQuantity(newQuantity);
-        }
     };
 
     if (loading) {
@@ -195,12 +162,6 @@ export default function ProductDetailPage() {
         );
     }
 
-    const price = typeof product.price === 'object' && product.price.$numberDecimal
-        ? parseFloat(product.price.$numberDecimal)
-        : parseFloat(product.price);
-    const discount = typeof product.discount === 'object' && product.discount.$numberDecimal
-        ? parseFloat(product.discount.$numberDecimal)
-        : parseFloat(product.discount || 0);
     const rating = typeof product.rating === 'object' && product.rating.$numberDecimal
         ? parseFloat(product.rating.$numberDecimal)
         : parseFloat(product.rating || 0);
@@ -228,40 +189,26 @@ export default function ProductDetailPage() {
                             <div className="flex flex-col h-full">
                                 <div className="relative flex-1 rounded-xl overflow-hidden bg-gray-100 shadow-md min-h-[600px]">
                                     {product.images && product.images.length > 0 ? (
-                                        <>
-                                            <Image
-                                                src={imageError ? "/images/Durian1.jpg" : product.images[selectedImage].url}
-                                                alt={product.name}
-                                                fill
-                                                unoptimized
-                                                className="object-cover"
-                                                onError={handleImageError}
-                                            />
-                                            {discount > 0 && (
-                                                <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg">
-                                                    -{calculateDiscountPercent(product.price, product.discount)}%
-                                                </div>
-                                            )}
-                                        </>
+                                        <Image
+                                            src={imageError ? "/images/Durian1.jpg" : product.images[selectedImage].url}
+                                            alt={product.name}
+                                            fill
+                                            unoptimized
+                                            className="object-cover"
+                                            onError={handleImageError}
+                                        />
                                     ) : (
-                                        <>
-                                            <Image
-                                                src="/images/Durian1.jpg"
-                                                alt={product.name}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                            {discount > 0 && (
-                                                <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg">
-                                                    -{calculateDiscountPercent(product.price, product.discount)}%
-                                                </div>
-                                            )}
-                                        </>
+                                        <Image
+                                            src="/images/Durian1.jpg"
+                                            alt={product.name}
+                                            fill
+                                            className="object-cover"
+                                        />
                                     )}
                                 </div>
 
                                 {/* Thumbnail images */}
-                                {product.images && product.images.length > 1 && (
+                                {/* {product.images && product.images.length > 1 && (
                                     <div className="flex gap-2 mt-4">
                                         {product.images.map((image, index) => (
                                             <button
@@ -288,7 +235,7 @@ export default function ProductDetailPage() {
                                             </button>
                                         ))}
                                     </div>
-                                )}
+                                )} */}
                             </div>
 
                             <div className="flex flex-col h-full space-y-6">
@@ -320,25 +267,10 @@ export default function ProductDetailPage() {
                                 </div>
 
                                 <div className="bg-emerald-50 rounded-xl p-6">
-                                    {discount > 0 ? (
-                                        <div className="space-y-2">
-                                            <div className="flex items-baseline gap-3">
-                                                <span className="text-4xl font-bold text-emerald-600">
-                                                    {formatPrice(calculateDiscountedPrice(product.price, product.discount))}
-                                                </span>
-                                                <span className="text-xl text-gray-500 line-through">
-                                                    {formatPrice(product.price)}
-                                                </span>
-                                            </div>
-                                            <p className="text-green-600 font-medium">
-                                                Tiết kiệm {formatPrice(product.discount)} ({calculateDiscountPercent(product.price, product.discount)}%)
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        <span className="text-4xl font-bold text-emerald-600">
-                                            {formatPrice(product.price)}
-                                        </span>
-                                    )}
+                                    <p className="text-sm text-gray-600 mb-2">Giá tham khảo</p>
+                                    <span className="text-4xl font-bold text-emerald-600">
+                                        {formatPrice(product.price)}
+                                    </span>
                                 </div>
 
                                 <div className="space-y-3">
@@ -361,9 +293,9 @@ export default function ProductDetailPage() {
                                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                         <Package className="w-6 h-6 text-emerald-600" />
                                         <div>
-                                            <span className="text-sm text-gray-600">Tình trạng kho:</span>
-                                            <span className={`ml-2 font-semibold ${product.stock > 20 ? 'text-green-600' : 'text-orange-600'}`}>
-                                                {product.stock > 20 ? 'Còn hàng' : `Chỉ còn ${product.stock} sản phẩm`}
+                                            <span className="text-sm text-gray-600">Trạng thái:</span>
+                                            <span className="ml-2 font-semibold text-green-600">
+                                                {product.status === 'active' ? 'Đang bán' : 'Ngừng bán'}
                                             </span>
                                         </div>
                                     </div>
@@ -377,42 +309,18 @@ export default function ProductDetailPage() {
                                             </div>
                                         </div>
                                     )}
-                                </div>
 
-                                <div className="space-y-3">
-                                    <label className="text-sm font-semibold text-gray-700">Số lượng:</label>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center border-2 border-emerald-300 rounded-lg overflow-hidden bg-white">
-                                            <button
-                                                onClick={() => handleQuantityChange(-1)}
-                                                disabled={quantity <= 1}
-                                                className="px-4 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                            >
-                                                <Minus className="w-5 h-5" />
-                                            </button>
-                                            <input
-                                                type="number"
-                                                value={quantity}
-                                                onChange={(e) => {
-                                                    const val = parseInt(e.target.value) || 1;
-                                                    if (val >= 1 && val <= product.stock) {
-                                                        setQuantity(val);
-                                                    }
-                                                }}
-                                                className="w-20 text-center font-semibold text-lg text-gray-900 bg-white border-0 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                                min="1"
-                                                max={product.stock}
-                                            />
-                                            <button
-                                                onClick={() => handleQuantityChange(1)}
-                                                disabled={quantity >= product.stock}
-                                                className="px-4 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                            >
-                                                <Plus className="w-5 h-5" />
-                                            </button>
+                                    {(product.harvest_start_date || product.harvest_end_date) && (
+                                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                            <Calendar className="w-6 h-6 text-emerald-600" />
+                                            <div>
+                                                <span className="text-sm text-gray-600">Mùa vụ:</span>
+                                                <span className="ml-2 font-semibold text-gray-900">
+                                                    {formatDate(product.harvest_start_date)} - {formatDate(product.harvest_end_date)}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <span className="text-gray-600">{product.stock} sản phẩm có sẵn</span>
-                                    </div>
+                                    )}
                                 </div>
 
                                 <div className="flex gap-4 pt-4">
@@ -509,20 +417,34 @@ export default function ProductDetailPage() {
                                                 <span className="font-semibold text-gray-700">Trọng lượng:</span>
                                                 <span className="text-gray-900">{product.weight}kg / trái</span>
                                             </div>
+                                            {product.harvest_start_date && (
+                                                <div className="flex justify-between py-3 border-b border-gray-200">
+                                                    <span className="font-semibold text-gray-700">Mùa vụ bắt đầu:</span>
+                                                    <span className="text-gray-900">{formatDate(product.harvest_start_date)}</span>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="space-y-4">
                                             <div className="flex justify-between py-3 border-b border-gray-200">
-                                                <span className="font-semibold text-gray-700">Tình trạng:</span>
-                                                <span className="text-green-600 font-semibold">Còn hàng</span>
+                                                <span className="font-semibold text-gray-700">Trạng thái:</span>
+                                                <span className="text-green-600 font-semibold">
+                                                    {product.status === 'active' ? 'Đang bán' : 'Ngừng bán'}
+                                                </span>
                                             </div>
                                             <div className="flex justify-between py-3 border-b border-gray-200">
-                                                <span className="font-semibold text-gray-700">Ngày đăng:</span>
-                                                <span className="text-gray-900">{formatDate(product.created_at)}</span>
+                                                <span className="font-semibold text-gray-700">Lượt xem:</span>
+                                                <span className="text-gray-900">{product.view_count}</span>
                                             </div>
                                             <div className="flex justify-between py-3 border-b border-gray-200">
-                                                <span className="font-semibold text-gray-700">Cập nhật:</span>
-                                                <span className="text-gray-900">{formatDate(product.updated_at)}</span>
+                                                <span className="font-semibold text-gray-700">Đánh giá:</span>
+                                                <span className="text-gray-900">{rating.toFixed(1)} / 5.0</span>
                                             </div>
+                                            {product.harvest_end_date && (
+                                                <div className="flex justify-between py-3 border-b border-gray-200">
+                                                    <span className="font-semibold text-gray-700">Mùa vụ kết thúc:</span>
+                                                    <span className="text-gray-900">{formatDate(product.harvest_end_date)}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}

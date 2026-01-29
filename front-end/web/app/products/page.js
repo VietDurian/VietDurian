@@ -137,29 +137,6 @@ export default function ProductsPage() {
         }).format(numericPrice);
     };
 
-    const calculateDiscountedPrice = (price, discount) => {
-        const numericPrice = typeof price === 'object' && price.$numberDecimal
-            ? parseFloat(price.$numberDecimal)
-            : parseFloat(price);
-        const numericDiscount = typeof discount === 'object' && discount.$numberDecimal
-            ? parseFloat(discount.$numberDecimal)
-            : parseFloat(discount);
-
-        return numericPrice - numericDiscount;
-    };
-
-    const calculateDiscountPercent = (price, discount) => {
-        const numericPrice = typeof price === 'object' && price.$numberDecimal
-            ? parseFloat(price.$numberDecimal)
-            : parseFloat(price);
-        const numericDiscount = typeof discount === 'object' && discount.$numberDecimal
-            ? parseFloat(discount.$numberDecimal)
-            : parseFloat(discount);
-
-        if (numericDiscount === 0) return 0;
-        return Math.round((numericDiscount / numericPrice) * 100);
-    };
-
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.totalPages) {
             setPagination(prev => ({ ...prev, currentPage: newPage }));
@@ -361,114 +338,75 @@ export default function ProductsPage() {
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 {products.map((product) => {
-                                    const price = typeof product.price === 'object' && product.price.$numberDecimal
-                                        ? parseFloat(product.price.$numberDecimal)
-                                        : parseFloat(product.price);
-                                    const discount = typeof product.discount === 'object' && product.discount.$numberDecimal
-                                        ? parseFloat(product.discount.$numberDecimal)
-                                        : parseFloat(product.discount || 0);
                                     const rating = typeof product.rating === 'object' && product.rating.$numberDecimal
                                         ? parseFloat(product.rating.$numberDecimal)
                                         : parseFloat(product.rating || 0);
 
                                     return (
                                         <Link href={`/products/${product._id}`} key={product._id}>
-                                            <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 cursor-pointer group">
-                                                <div className="p-4">
-                                                    {/* Tăng chiều cao của hình từ h-48 lên h-64 */}
+                                            <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 cursor-pointer group">
+                                                <div className="p-5">
+                                                    {/* Hình ảnh không scale khi hover */}
                                                     <div className="relative h-64 rounded-xl overflow-hidden mb-4">
                                                         {product.images && product.images.length > 0 ? (
-                                                            <>
-                                                                <Image
-                                                                    src={imageErrors[product._id] ? "/images/Durian1.jpg" : product.images[0].url}
-                                                                    alt={product.name}
-                                                                    fill
-                                                                    unoptimized
-                                                                    className="object-cover group-hover:scale-110 transition-transform duration-300"
-                                                                    onError={() => handleImageError(product._id)}
-                                                                />
-                                                                {discount > 0 && (
-                                                                    <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-                                                                        -{calculateDiscountPercent(product.price, product.discount)}%
-                                                                    </div>
-                                                                )}
-                                                                {product.stock <= 20 && (
-                                                                    <div className="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
-                                                                        Sắp hết
-                                                                    </div>
-                                                                )}
-                                                            </>
+                                                            <Image
+                                                                src={imageErrors[product._id] ? "/images/Durian1.jpg" : product.images[0].url}
+                                                                alt={product.name}
+                                                                fill
+                                                                unoptimized
+                                                                className="object-cover"
+                                                                onError={() => handleImageError(product._id)}
+                                                            />
                                                         ) : (
-                                                            <>
-                                                                <Image
-                                                                    src="/images/Durian1.jpg"
-                                                                    alt={product.name}
-                                                                    fill
-                                                                    className="object-cover group-hover:scale-110 transition-transform duration-300"
-                                                                />
-                                                                {discount > 0 && (
-                                                                    <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-                                                                        -{calculateDiscountPercent(product.price, product.discount)}%
-                                                                    </div>
-                                                                )}
-                                                                {product.stock <= 20 && (
-                                                                    <div className="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
-                                                                        Sắp hết
-                                                                    </div>
-                                                                )}
-                                                            </>
+                                                            <Image
+                                                                src="/images/Durian1.jpg"
+                                                                alt={product.name}
+                                                                fill
+                                                                className="object-cover"
+                                                            />
                                                         )}
                                                     </div>
 
-                                                    <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors">
+                                                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors">
                                                         {product.name}
                                                     </h3>
 
-                                                    <p className="text-sm text-gray-600 mb-3 line-clamp-1">
+                                                    <p className="text-base text-gray-600 mb-4 line-clamp-1">
                                                         {product.description}
                                                     </p>
 
-                                                    <div className="flex items-center gap-4 mb-3 text-xs text-gray-600">
-                                                        <div className="flex items-center gap-1">
-                                                            <Eye className="w-4 h-4 text-gray-500" />
+                                                    <div className="flex items-center gap-5 mb-4 text-sm text-gray-600">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Eye className="w-4 h-4 text-emerald-600" />
                                                             <span>{product.view_count}</span>
                                                         </div>
-                                                        <div className="flex items-center gap-1">
+                                                        <div className="flex items-center gap-1.5">
                                                             <MapPin className="w-4 h-4 text-emerald-600" />
                                                             <span>{product.origin}</span>
                                                         </div>
-                                                        <div className="flex items-center gap-1">
+                                                        <div className="flex items-center gap-1.5">
                                                             <Weight className="w-4 h-4 text-emerald-600" />
                                                             <span>{product.weight}kg</span>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex items-baseline gap-2 mb-3">
-                                                        {discount > 0 ? (
-                                                            <>
-                                                                <span className="text-xl font-bold text-emerald-600">
-                                                                    {formatPrice(calculateDiscountedPrice(product.price, product.discount))}
-                                                                </span>
-                                                                <span className="text-xs text-gray-400 line-through">
-                                                                    {formatPrice(product.price)}
-                                                                </span>
-                                                            </>
-                                                        ) : (
-                                                            <span className="text-xl font-bold text-emerald-600">
-                                                                {formatPrice(product.price)}
-                                                            </span>
-                                                        )}
+                                                    <div className="mb-4">
+                                                        <p className="text-sm text-gray-500 mb-1">Giá tham khảo</p>
+                                                        <span className="text-2xl font-bold text-emerald-600">
+                                                            {formatPrice(product.price)}
+                                                        </span>
                                                     </div>
+
                                                     <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                                                            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                                                            <span>{rating.toFixed(1)}</span>
+                                                        <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                                                            <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                                                            <span className="font-medium">{rating.toFixed(1)}</span>
                                                         </div>
                                                         <button
                                                             onClick={(e) => e.preventDefault()}
-                                                            className="px-5 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm"
+                                                            className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors"
                                                         >
-                                                            Mua Ngay
+                                                            Liên Hệ
                                                         </button>
                                                     </div>
                                                 </div>
