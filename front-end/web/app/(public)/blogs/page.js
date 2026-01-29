@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { blogAPI } from "@/lib/api";
+import { Search, X, Calendar, Book, ChevronRight, AlertCircle, Frown } from "lucide-react";
 
 export default function BlogPage() {
     const [blogs, setBlogs] = useState([]);
@@ -81,22 +82,13 @@ export default function BlogPage() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full px-6 py-4 pl-14 rounded-2xl border-2 border-white/30 focus:border-white focus:outline-none text-gray-900 placeholder-gray-500 bg-white transition-all duration-300"
                             />
-                            <svg
-                                className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-600 group-focus-within:text-emerald-700 transition-colors"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-600 group-focus-within:text-emerald-700 transition-colors" />
                             {searchTerm && (
                                 <button
                                     onClick={() => setSearchTerm("")}
                                     className="absolute right-5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
                                 >
-                                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    <X className="w-4 h-4 text-gray-600" />
                                 </button>
                             )}
                         </div>
@@ -116,9 +108,7 @@ export default function BlogPage() {
                         <div className="flex flex-col justify-center items-center py-20">
                             <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                    <AlertCircle className="w-6 h-6 text-red-600" />
                                     <h3 className="text-lg font-semibold text-red-900">Lỗi</h3>
                                 </div>
                                 <p className="text-red-700 mb-4">{error}</p>
@@ -132,9 +122,7 @@ export default function BlogPage() {
                         </div>
                     ) : filteredBlogs.length === 0 ? (
                         <div className="text-center py-20">
-                            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                            <Frown className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                             <p className="text-gray-500 text-lg">Không tìm thấy bài viết nào</p>
                         </div>
                     ) : (
@@ -150,7 +138,6 @@ export default function BlogPage() {
                                         className="group"
                                     >
                                         <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                                            {/* Image Placeholder */}
                                             {/* Blog Image */}
                                             <div className="relative h-56 overflow-hidden">
                                                 {blog.image ? (
@@ -190,17 +177,13 @@ export default function BlogPage() {
                                                 {/* Meta Info */}
                                                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                                                     <div className="flex items-center gap-2 text-sm text-gray-500">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                        </svg>
+                                                        <Calendar className="w-4 h-4" />
                                                         <span>{formatDate(blog.created_at)}</span>
                                                     </div>
 
                                                     {blog.knowledgeBlocksCount > 0 && (
                                                         <div className="flex items-center gap-1 text-sm text-emerald-600 font-medium">
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                                                            </svg>
+                                                            <Book className="w-4 h-4" />
                                                             <span>{blog.knowledgeBlocksCount} chương</span>
                                                         </div>
                                                     )}
@@ -209,9 +192,7 @@ export default function BlogPage() {
                                                 {/* Read More Link */}
                                                 <div className="mt-4 flex items-center text-emerald-600 font-medium group-hover:text-emerald-700">
                                                     <span>Đọc thêm</span>
-                                                    <svg className="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                    </svg>
+                                                    <ChevronRight className="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
                                                 </div>
                                             </div>
                                         </div>

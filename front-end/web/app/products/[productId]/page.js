@@ -8,8 +8,19 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { productAPI } from "@/lib/api";
 import ProductRating from "@/components/ProductRating";
-
-
+import {
+    ChevronRight,
+    Eye,
+    MapPin,
+    Weight,
+    Package,
+    Tag,
+    Minus,
+    Plus,
+    MessageCircle,
+    Star,
+    AlertCircle
+} from "lucide-react";
 
 const getUserId = () => {
     if (typeof window === 'undefined') return null;
@@ -67,6 +78,7 @@ export default function ProductDetailPage() {
         const id = getUserId();
         setUserId(id);
     }, []);
+
     useEffect(() => {
         const fetchProduct = async () => {
             try {
@@ -166,9 +178,7 @@ export default function ProductDetailPage() {
                 <div className="flex flex-col justify-center items-center py-32">
                     <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
                         <div className="flex items-center gap-3 mb-3">
-                            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                            <AlertCircle className="w-6 h-6 text-red-600" />
                             <h3 className="text-lg font-semibold text-red-900">Lỗi</h3>
                         </div>
                         <p className="text-red-700 mb-4">{error || "Không tìm thấy sản phẩm"}</p>
@@ -203,13 +213,9 @@ export default function ProductDetailPage() {
                 <div className="max-w-[1400px] mx-auto">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Link href="/" className="hover:text-emerald-600 transition-colors">Trang chủ</Link>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                        <ChevronRight className="w-4 h-4" />
                         <Link href="/products" className="hover:text-emerald-600 transition-colors">Sản phẩm</Link>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                        <ChevronRight className="w-4 h-4" />
                         <span className="text-gray-900 font-medium">{product.name}</span>
                     </div>
                 </div>
@@ -295,25 +301,19 @@ export default function ProductDetailPage() {
                                         <div className="flex items-center gap-2">
                                             <div className="flex items-center gap-1">
                                                 {[1, 2, 3, 4, 5].map((star) => (
-                                                    <svg
+                                                    <Star
                                                         key={star}
                                                         className={`w-5 h-5 ${star <= Math.floor(rating)
-                                                            ? "text-yellow-400 fill-current"
+                                                            ? "text-yellow-400 fill-yellow-400"
                                                             : "text-gray-300"
                                                             }`}
-                                                        viewBox="0 0 20 20"
-                                                    >
-                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                    </svg>
+                                                    />
                                                 ))}
                                             </div>
                                             <span className="text-lg font-semibold text-gray-700">{rating.toFixed(1)}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-gray-600">
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
+                                            <Eye className="w-5 h-5" />
                                             <span>{product.view_count} lượt xem</span>
                                         </div>
                                     </div>
@@ -343,10 +343,7 @@ export default function ProductDetailPage() {
 
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                        <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
+                                        <MapPin className="w-6 h-6 text-emerald-600" />
                                         <div>
                                             <span className="text-sm text-gray-600">Xuất xứ:</span>
                                             <span className="ml-2 font-semibold text-gray-900">{product.origin}</span>
@@ -354,9 +351,7 @@ export default function ProductDetailPage() {
                                     </div>
 
                                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                        <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                                        </svg>
+                                        <Weight className="w-6 h-6 text-emerald-600" />
                                         <div>
                                             <span className="text-sm text-gray-600">Trọng lượng:</span>
                                             <span className="ml-2 font-semibold text-gray-900">{product.weight}kg / trái</span>
@@ -364,9 +359,7 @@ export default function ProductDetailPage() {
                                     </div>
 
                                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                        <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                        </svg>
+                                        <Package className="w-6 h-6 text-emerald-600" />
                                         <div>
                                             <span className="text-sm text-gray-600">Tình trạng kho:</span>
                                             <span className={`ml-2 font-semibold ${product.stock > 20 ? 'text-green-600' : 'text-orange-600'}`}>
@@ -377,9 +370,7 @@ export default function ProductDetailPage() {
 
                                     {product.type_id && (
                                         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                            <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                            </svg>
+                                            <Tag className="w-6 h-6 text-emerald-600" />
                                             <div>
                                                 <span className="text-sm text-gray-600">Loại sản phẩm:</span>
                                                 <span className="ml-2 font-semibold text-gray-900">{product.type_id.name}</span>
@@ -397,9 +388,7 @@ export default function ProductDetailPage() {
                                                 disabled={quantity <= 1}
                                                 className="px-4 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                             >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                                                </svg>
+                                                <Minus className="w-5 h-5" />
                                             </button>
                                             <input
                                                 type="number"
@@ -419,9 +408,7 @@ export default function ProductDetailPage() {
                                                 disabled={quantity >= product.stock}
                                                 className="px-4 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                             >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                                </svg>
+                                                <Plus className="w-5 h-5" />
                                             </button>
                                         </div>
                                         <span className="text-gray-600">{product.stock} sản phẩm có sẵn</span>
@@ -429,16 +416,25 @@ export default function ProductDetailPage() {
                                 </div>
 
                                 <div className="flex gap-4 pt-4">
-                                    <button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-2">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    <button
+                                        onClick={() => window.open(`https://zalo.me/${product.user_id?.phone || ''}`, '_blank')}
+                                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <svg className="w-6 h-6" viewBox="0 0 48 48" fill="currentColor">
+                                            <path d="M24 4C12.95 4 4 12.95 4 24c0 4.52 1.52 8.69 4.08 12.06L4.5 43.5l7.92-3.42C15.76 42.57 19.74 44 24 44c11.05 0 20-8.95 20-20S35.05 4 24 4zm0 36c-3.86 0-7.45-1.31-10.29-3.51l-.74-.57-5.66 2.44 2.5-5.45-.62-.79C6.65 29.16 5.5 26.67 5.5 24c0-10.22 8.28-18.5 18.5-18.5S42.5 13.78 42.5 24 34.22 42.5 24 42.5z" />
+                                            <path d="M32.5 27.5c-.41 0-.83-.1-1.21-.31l-5.54-3.07c-.68-.38-1.11-1.11-1.11-1.91v-6.46c0-1.19.97-2.16 2.16-2.16h.41c1.19 0 2.16.97 2.16 2.16v5.28l4.34 2.4c1.03.57 1.39 1.87.82 2.9-.39.7-1.12 1.17-1.93 1.17h-.1z" />
                                         </svg>
-                                        Thêm vào giỏ hàng
+                                        Liên hệ qua Zalo
                                     </button>
-                                    <button className="px-6 py-4 border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                        </svg>
+                                    <button
+                                        onClick={() => {
+                                            // Logic để mở chat với người bán
+                                            console.log('Open chat with seller:', product.user_id?._id);
+                                        }}
+                                        className="px-6 py-4 border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
+                                        title="Nhắn tin với người bán"
+                                    >
+                                        <MessageCircle className="w-6 h-6" />
                                     </button>
                                 </div>
 
