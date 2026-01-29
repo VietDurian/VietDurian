@@ -144,7 +144,13 @@ export function AdminProfilePage() {
 			if (err?.response?.status === 413) {
 				toast.error(t('err_payload_too_large'));
 			} else {
-				toast.error(err?.response?.data?.message || t('profile_update_failed'));
+				const data = err?.response?.data;
+				const serverMessage =
+					(typeof data === 'string' && data) ||
+					data?.message ||
+					data?.error ||
+					data?.msg;
+				toast.error(serverMessage || t('profile_update_failed'));
 			}
 		} finally {
 			setSavingProfile(false);
