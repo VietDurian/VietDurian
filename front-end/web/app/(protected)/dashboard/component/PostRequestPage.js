@@ -136,6 +136,9 @@ export function PostRequestPage() {
 	// snippet dung de hien thi noi dung rut gon
 	const snippet = (text = '', max = 80) =>
 		text.length > max ? `${text.slice(0, max)}...` : text;
+	
+	// set ngon ngu thay doi cho status 
+	
 
 	return (
 		<div className="p-4 md:p-8">

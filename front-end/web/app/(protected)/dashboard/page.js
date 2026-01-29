@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Menu } from 'lucide-react';
+import { Menu, LogOut } from 'lucide-react';
 import { Toaster } from 'sonner';
 
 import { useAuth } from '@/context/AuthContext';
@@ -14,11 +14,12 @@ import { PostRequestPage } from './component/PostRequestPage';
 import { ReportPage } from './component/ReportPage';
 import { ProductsPage } from './component/ProductManagement/ProductsPage';
 import { ReportCommentPage } from './component/ReportCommentPage';
+import { BlogPage } from './component/BlogPage';
 import { LanguageSwitcher } from './component/LanguageSwitcher';
 import PermissionPage from './component/PermissionPage';
 
 export default function App() {
-	const { user, loading } = useAuth();
+	const { user, loading, logout } = useAuth();
 	const router = useRouter();
 	const [currentPage, setCurrentPage] = useState('dashboard');
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -68,12 +69,7 @@ export default function App() {
 			case 'postRequests':
 				return <PostRequestPage />;
 			case 'blogs':
-				return (
-					<div className="p-8 text-center">
-						<h1 className="text-2xl font-bold text-[#1a4d2e]">Trang Blog</h1>
-						<p className="text-gray-600 mt-2">Đang phát triển...</p>
-					</div>
-				);
+				return <BlogPage />;
 			case 'moderation':
 				return (
 					<div className="p-8 text-center">
@@ -133,8 +129,17 @@ export default function App() {
 					</div>
 
 					{/* Desktop Header with Language Switcher */}
-					<div className="hidden lg:flex bg-white border-b border-gray-200 p-4 justify-end">
+					<div className="hidden lg:flex bg-white border-b border-gray-200 p-4 justify-between items-center gap-3">
 						<LanguageSwitcher />
+						<div className="flex items-center gap-3">
+							<button
+								onClick={() => logout('/login')}
+								className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer"
+							>
+								<LogOut className="w-4 h-4" />
+								Logout
+							</button>
+						</div>
 					</div>
 
 					{/* Page Content */}

@@ -15,6 +15,7 @@ import {
 
 import { useLanguage } from '../context/LanguageContext';
 import PermissionPage from '../../dashboard/component/PermissionPage.js';
+import { useAuth } from '@/context/AuthContext';
 
 export function AdminSidebar({
 	currentPage,
@@ -23,6 +24,7 @@ export function AdminSidebar({
 	onMobileClose,
 }) {
 	const { t } = useLanguage();
+	const {user} = useAuth();
 	const [isModerationOpen, setIsModerationOpen] = useState(false);
 	const [isReportsOpen, setIsReportsOpen] = useState(false);
 
@@ -210,8 +212,8 @@ export function AdminSidebar({
 							<span className="text-[#1a4d2e] font-bold">AD</span>
 						</div>
 						<div>
-							<p className="font-medium text-white">Admin</p>
-							<p className="text-xs text-[#a8d5ba]">admin@vietdurian.vn</p>
+							<p className="font-medium text-white">{user?.full_name}</p>
+							<p className="text-xs text-[#a8d5ba]">{user?.email}</p>
 						</div>
 					</div>
 				</div>

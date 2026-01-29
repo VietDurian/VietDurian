@@ -199,6 +199,17 @@ export const blogAPI = {
       throw error;
     }
   },
+
+  // Delete blog
+  async deleteBlog(blogId) {
+    try {
+      const response = await apiClient.delete(`/blog/knowledge/${blogId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting blog:", error);
+      throw error;
+    }
+  }
 };
 
 // Product API
