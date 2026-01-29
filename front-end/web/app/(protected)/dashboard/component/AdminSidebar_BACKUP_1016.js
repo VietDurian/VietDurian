@@ -245,6 +245,7 @@ export function AdminSidebar({
 								</span>
 							)}
 						</div>
+<<<<<<< HEAD
 						<div className="min-w-0">
 							<p className="font-medium text-white truncate">
 								{adminUser?.full_name || 'Admin'}
@@ -252,6 +253,11 @@ export function AdminSidebar({
 							<p className="text-xs text-[#a8d5ba] truncate">
 								{adminUser?.email || ''}
 							</p>
+=======
+						<div>
+							<p className="font-medium text-white">{user?.full_name}</p>
+							<p className="text-xs text-[#a8d5ba]">{user?.email}</p>
+>>>>>>> main
 						</div>
 					</div>
 				</button>
