@@ -34,9 +34,9 @@ export default function AiFloatingButton() {
 	const fileInputRef = useRef(null);
 
 	const suggestions = [
-		'Cách chăm sóc sầu riêng mùa hạn mặn',
-		'Sầu riêng có dễ trồng không?',
-		'Bí quyết xử lý cây sầu riêng bị vàng lá',
+		'Cách chăm sóc sầu riêng mùa hạn mặn ?',
+		'Sầu riêng có dễ trồng không ?',
+		'Bí quyết xử lý cây sầu riêng bị vàng lá ?',
 	];
 
 	useEffect(() => {
