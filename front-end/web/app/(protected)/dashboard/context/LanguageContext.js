@@ -59,10 +59,10 @@ const translations = {
 		settings: 'Cài đặt',
 
 		// Stats
-		total_farmers: 'Tổng số nông dân',
+		total_platform_users: 'Tổng số người dùng nền tảng',
 		experts: 'Chuyên gia',
-		durian_gardens: 'Tổng số bài Post',
-		growth: 'Tổng số bài Blog',
+		total_posts: 'Tổng số bài Post',
+		total_blogs: 'Tổng số bài Blog',
 		vs_last_month: 'so với tháng trước',
 
 		// Posts
@@ -288,10 +288,10 @@ const translations = {
 		settings: 'Settings',
 
 		// Stats
-		total_farmers: 'Total Farmers',
+		total_platform_users: 'Total number of platform users ',
 		experts: 'Experts',
-		durian_gardens: 'Total Posts',
-		growth: 'Total Blogs',
+		total_posts: 'Total Posts',
+		total_blogs: 'Total Blogs',
 		vs_last_month: 'vs last month',
 
 		// Posts
