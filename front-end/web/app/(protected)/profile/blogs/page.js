@@ -112,7 +112,7 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 
     if (!category || !content.trim() || !imageData || !contact.trim()) {
       setError(
-        "Vui lòng điền đủ danh mục, nội dung, ảnh và thông tin liên hệ."
+        "Vui lòng điền đủ danh mục, nội dung, ảnh và thông tin liên hệ.",
       );
       return;
     }
@@ -420,45 +420,7 @@ export default function ContentExpertProfileContent() {
   return (
     <div>
       <Navbar />
-      <AsideBar />
-      <main className="pt-18 p-5 lg:pt-20 flex flex-col justify-center items-center bg-white">
-        <div className="w-full max-w-2xl mt-5">
-          <PostComposer
-            onOpenModal={() => {
-              setIsPostModalOpen(true);
-            }}
-          />
-        </div>
-        <PostModal
-          isOpen={isPostModalOpen}
-          onClose={() => {
-            setIsPostModalOpen(false);
-          }}
-          user={user || {}}
-          onPostCreated={handlePostCreated}
-        />
-        <div className="w-full max-w-2xl mt-8">
-          {loadingPosts && (
-            <div className="text-gray-500 text-center py-4">
-              Đang tải bài viết...
-            </div>
-          )}
-
-          {postsError && (
-            <div className="text-red-600 text-center py-4">{postsError}</div>
-          )}
-
-          {!loadingPosts && !postsError && posts.length === 0 && (
-            <div className="text-gray-500 text-center py-6">
-              Bạn chưa có bài viết nào.
-            </div>
-          )}
-          {/* Posts */}
-          {posts.map((post) => (
-            <Post key={post.id || post._id || post.created_at} post={post} />
-          ))}
-        </div>
-      </main>
+      <main className="text-center mt-50">Details</main>
     </div>
   );
 }

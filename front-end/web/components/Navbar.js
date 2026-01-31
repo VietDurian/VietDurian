@@ -159,7 +159,7 @@ export default function Navbar() {
                     <div className="my-3 border border-gray-200" />
                     <div className="space-y-1">
                       <Link
-                        href={"/profile/posts"}
+                        href={"/profile/details"}
                         className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-900 cursor-pointer"
                       >
                         <User className="w-5 h-5" />
@@ -270,7 +270,7 @@ export default function Navbar() {
 
               <div className="mt-3 space-y-1">
                 <Link
-                  href={"/profile/posts"}
+                  href={"/profile/details"}
                   className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-800"
                 >
                   <User className="w-5 h-5" />
