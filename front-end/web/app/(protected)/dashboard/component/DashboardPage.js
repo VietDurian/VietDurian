@@ -135,14 +135,6 @@ export function DashboardPage({ onNavigate }) {
                 return blogDate <= previousMonthEnd;
             }).length;
 
-            console.log('Current stats:', { totalUsers, experts, posts, blogs });
-            console.log('Previous month stats:', {
-                totalUsers: usersAtEndOfPreviousMonth,
-                experts: expertsAtEndOfPreviousMonth,
-                posts: postsAtEndOfPreviousMonth,
-                blogs: blogsAtEndOfPreviousMonth
-            });
-
             // Update state
             setStats({
                 totalUsers,
