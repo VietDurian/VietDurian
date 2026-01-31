@@ -1,128 +1,149 @@
-import { GardenModel } from "../model/gardenModel.js";
-import createError from "http-errors";
+import { GardenModel } from '../model/gardenModel.js';
+import createError from 'http-errors';
+import { cloudinary } from '@/config/cloudinary';
 
 // Get all gardens (for map view)
 const getAllGardens = async () => {
-  try {
-    const gardens = await GardenModel.find()
-      .select("id user_id name location longitude latitude")
-      .populate("user_id", "full_name avatar");
-    return gardens;
-  } catch (error) {
-    throw error;
-  }
+	try {
+		const gardens = await GardenModel.find()
+			.select('id user_id name location longitude latitude image')
+			.populate('user_id', 'full_name avatar');
+		return gardens;
+	} catch (error) {
+		throw error;
+	}
 };
 
 // Get gardens by user ID
 const getGardensByUser = async (userId) => {
-  try {
-    const gardens = await GardenModel.find({ user_id: userId });
-    if (!gardens) {
-      throw createError(404, "Gardens not found");
-    }
-    return gardens;
-  } catch (error) {
-    throw error;
-  }
+	try {
+		const gardens = await GardenModel.find({ user_id: userId });
+		if (!gardens) {
+			throw createError(404, 'Gardens not found');
+		}
+		return gardens;
+	} catch (error) {
+		throw error;
+	}
 };
 
 // Get garden details by ID
 const getGardenById = async (gardenId) => {
-  try {
-    const garden = await GardenModel.findById(gardenId).populate(
-      "user_id",
-      "full_name email phone avatar"
-    );
-    if (!garden) {
-      throw createError(404, "Garden not found");
-    }
-    return garden;
-  } catch (error) {
-    throw error;
-  }
+	try {
+		const garden = await GardenModel.findById(gardenId);
+		if (!garden) {
+			throw createError(404, 'Garden not found');
+		}
+		return garden;
+	} catch (error) {
+		throw error;
+	}
 };
 
 const createGarden = async (userId, gardenData) => {
-  try {
-    const {
-      name,
-      crop_type,
-      area,
-      location,
-      longitude,
-      latitude,
-      description,
-    } = gardenData;
+	try {
+		const {
+			name,
+			crop_type,
+			area,
+			location,
+			longitude,
+			latitude,
+			description,
+			image,
+		} = gardenData;
 
-    // Validate required fields
-    if (!name || !crop_type || !area || !location) {
-      throw createError(
-        400,
-        "Missing required fields: name, crop_type, area, location"
-      );
-    }
+		// Validate required fields
+		if (
+			!name ||
+			!crop_type ||
+			!area ||
+			!location ||
+			area <= 0 ||
+			!description
+		) {
+			throw createError(400, 'Missing or invalid required fields');
+		}
 
-    const newGarden = new GardenModel({
-      user_id: userId,
-      name,
-      crop_type,
-      area,
-      location,
-      longitude,
-      latitude,
-      description,
-    });
+		let imageUrl = '';
+		if (image) {
+			try {
+				const result = await cloudinary.uploader.upload(image, {
+					folder: 'vietdurian',
+				});
+				imageUrl = result.secure_url;
+			} catch (error) {
+				throw new Error('Image upload failed');
+			}
+		}
+		const newGarden = new GardenModel({
+			user_id: userId,
+			name,
+			crop_type,
+			area,
+			location,
+			longitude,
+			latitude,
+			description,
+			image: imageUrl,
+		});
 
-    await newGarden.save();
-    return newGarden;
-  } catch (error) {
-    throw error;
-  }
+		await newGarden.save();
+		return newGarden;
+	} catch (error) {
+		throw error;
+	}
 };
 
 // Update garden record
 const updateGarden = async (gardenId, updateData) => {
-  try {
-    // Validate updateData - prevent updating user_id
-    const { user_id, ...allowedData } = updateData;
+	try {
+    if (updateData.image) {
+			try {
+				const result = await cloudinary.uploader.upload(updateData.image, {
+					folder: 'vietdurian',
+				});
+				updateData.image = result.secure_url;
+			} catch (error) {
+				throw new Error('Image upload failed');
+			}
+		}
+		const updatedGarden = await GardenModel.findByIdAndUpdate(
+			gardenId,
+			updateData,
+			{
+				new: true,
+			},
+		);
 
-    const updatedGarden = await GardenModel.findByIdAndUpdate(
-      gardenId,
-      allowedData,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+		if (!updatedGarden) {
+			throw createError(404, 'Garden not found');
+		}
 
-    if (!updatedGarden) {
-      throw createError(404, "Garden not found");
-    }
-
-    return updatedGarden;
-  } catch (error) {
-    throw error;
-  }
+		return updatedGarden;
+	} catch (error) {
+		throw error;
+	}
 };
 
 // Delete garden record
 const deleteGarden = async (gardenId) => {
-  try {
-    const deletedGarden = await GardenModel.findByIdAndDelete(gardenId);
-    if (!deletedGarden) {
-      throw createError(404, "Garden not found");
-    }
-    return deletedGarden;
-  } catch (error) {
-    throw error;
-  }
+	try {
+		const deletedGarden = await GardenModel.findByIdAndDelete(gardenId);
+		if (!deletedGarden) {
+			throw createError(404, 'Garden not found');
+		}
+		return deletedGarden;
+	} catch (error) {
+		throw error;
+	}
 };
 
 export const gardenService = {
-  getAllGardens,
-  getGardensByUser,
-  getGardenById,
-  createGarden,
-  updateGarden,
-  deleteGarden,
+	getAllGardens,
+	getGardensByUser,
+	getGardenById,
+	createGarden,
+	updateGarden,
+	deleteGarden,
 };

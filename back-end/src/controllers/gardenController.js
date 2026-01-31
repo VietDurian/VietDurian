@@ -19,7 +19,7 @@ const viewMap = async (req, res, next) => {
 // Get user's gardens
 const getUserGardens = async (req, res, next) => {
   try {
-    const userId = req.user?.id || req.user?._id;
+    const userId = req.params.user_id;
 
     if (!userId) {
       return res.status(401).json({
@@ -44,7 +44,7 @@ const getUserGardens = async (req, res, next) => {
 // Get garden details
 const getGardenDetails = async (req, res, next) => {
   try {
-    const { garden_id } = req.query;
+    const { garden_id } = req.params;
 
     if (!garden_id) {
       return res.status(400).json({
@@ -95,7 +95,7 @@ const registerGarden = async (req, res, next) => {
 // Edit Garden Records - Update existing garden
 const editGarden = async (req, res, next) => {
   try {
-    const { garden_id } = req.query;
+    const { garden_id } = req.params;
     const updateData = req.body;
 
     if (!garden_id) {
@@ -105,34 +105,9 @@ const editGarden = async (req, res, next) => {
       });
     }
 
-    // Validate update data
-    const allowedFields = [
-      "name",
-      "crop_type",
-      "area",
-      "location",
-      "longitude",
-      "latitude",
-      "description",
-    ];
-    const filteredData = {};
-
-    for (const field of allowedFields) {
-      if (updateData[field] !== undefined) {
-        filteredData[field] = updateData[field];
-      }
-    }
-
-    if (Object.keys(filteredData).length === 0) {
-      return res.status(400).json({
-        code: 400,
-        message: "No valid fields provided for update",
-      });
-    }
-
     const updatedGarden = await gardenService.updateGarden(
       garden_id,
-      filteredData
+      updateData
     );
 
     res.status(200).json({
@@ -149,7 +124,7 @@ const editGarden = async (req, res, next) => {
 // Delete garden record
 const deleteGarden = async (req, res, next) => {
   try {
-    const { garden_id } = req.query;
+    const { garden_id } = req.params;
 
     if (!garden_id) {
       return res.status(400).json({

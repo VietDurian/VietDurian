@@ -24,6 +24,17 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
+// chỉ farmer mới được đăng ký vườn
+const isFarmer = (req, res, next) => {
+  if (req.user.role !== "farmer") {
+    return res.status(403).json({
+      code: 403,
+      message: "Only farmers can perform this action",
+    });
+  }
+  next();
+};
+
 // Yêu cầu đúng một role cụ thể
 const hasRole = (requiredRole) => {
   return (req, res, next) => {
@@ -68,6 +79,7 @@ export const authorizationMiddleware = {
   hasRole,
   checkOwner,
   isUser,
+  isFarmer,
 };
 
 module.exports = { authorizationMiddleware };
