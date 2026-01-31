@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import { Home, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,13 +23,41 @@ const SidebarItem = ({ icon: Icon, label, href, active }) => (
   </Link>
 );
 
-export default function AsideBar() {
+export default function AsideBar({ role }) {
+  console.log("ROLE", role);
   const pathname = usePathname();
+  const getMenuItems = (role) => {
+    switch (role) {
+      case "trader":
+        return [
+          { icon: Home, label: "Details", href: "/profile/details" },
+          { icon: Search, label: "Posts", href: "/profile/posts" },
+        ];
+      case "farmer":
+        return [
+          { icon: Home, label: "Details", href: "/profile/details" },
+          { icon: Home, label: "Posts", href: "/profile/posts" },
+          { icon: Home, label: "Gardens", href: "/profile/gardens" },
+        ];
+      case "contentExpert":
+        return [
+          { icon: Home, label: "Details", href: "/profile/details" },
+          { icon: Home, label: "Posts", href: "/profile/posts" },
+          { icon: Home, label: "Blogs", href: "/profile/blogs" },
+        ];
+      case "serviceProvider":
+        return [
+          { icon: Home, label: "Details", href: "/profile/details" },
+          { icon: Home, label: "Posts", href: "/profile/posts" },
+          { icon: Home, label: "Resume", href: "/profile/resume" },
+          { icon: Home, label: "Services", href: "/profile/services" },
+        ];
+      default:
+        return [];
+    }
+  };
 
-  const menuItems = [
-    { icon: Home, label: "Posts", href: "/profile/posts" },
-    { icon: Search, label: "Blogs", href: "/profile/blogs" },
-  ];
+  const menuItems = getMenuItems(role);
 
   return (
     <aside className="w-64 h-[95vh] fixed top-10 border-r border-gray-100 bg-white flex flex-col p-5 pt-10">
@@ -40,6 +69,7 @@ export default function AsideBar() {
             icon={item.icon}
             label={item.label}
             href={item.href}
+            active={pathname === item.href}
           />
         ))}
       </nav>

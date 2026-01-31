@@ -113,7 +113,7 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 
     if (!category || !content.trim() || !imageData || !contact.trim()) {
       setError(
-        "Vui lòng điền đủ danh mục, nội dung, ảnh và thông tin liên hệ."
+        "Vui lòng điền đủ danh mục, nội dung, ảnh và thông tin liên hệ.",
       );
       return;
     }
@@ -352,7 +352,8 @@ const Post = ({ post }) => {
             className="flex items-center gap-2 hover:text-emerald-700 transition group"
           >
             <MessageCircle size={18} />
-            <span className="text-xs font-medium">{commentCount}</span> {/* ĐỔI TỪ {post.comments} THÀNH {commentCount} */}
+            <span className="text-xs font-medium">{commentCount}</span>{" "}
+            {/* ĐỔI TỪ {post.comments} THÀNH {commentCount} */}
           </button>
 
           <button className="flex items-center gap-2 hover:text-blue-600 transition group">
@@ -435,7 +436,6 @@ export default function ContentExpertProfileContent() {
   return (
     <div>
       <Navbar />
-      <AsideBar />
       <main className="pt-18 p-5 lg:pt-20 flex flex-col justify-center items-center bg-white">
         <div className="w-full max-w-2xl mt-5">
           <PostComposer
