@@ -100,8 +100,14 @@ export const permissionAPI = {
     });
     return response.data;
   },
+  async searchPermissions(keyword, params = {}) {
+    const response = await apiClient.get("permission/requests/search", {
+      params: { keyword, ...params },
+    });
+    return response.data;
+  },
   async sortPermissions(sortBy, sortOrder = "desc", params = {}) {
-    const response = await apiClient.get("permission/sort", {
+    const response = await apiClient.get("permission/requests/sort", {
       params: { sortBy, sortOrder, ...params },
     });
     return response.data;

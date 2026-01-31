@@ -38,12 +38,12 @@ const getPermissionRequestDetail = async (request_id) => {
 };
 
 const searchPermissionRequests = async ({
-    status = "pending",
-    search = "",
+    status = "",
+    keyword = "",
 }) => {
     try {
         const query = {};
-        if (status) query.status = status;
+        if (status !== "all") query.status = status;
 
         const pipeline = [
             { $match: query },
@@ -58,12 +58,12 @@ const searchPermissionRequests = async ({
             { $unwind: "$user" },
         ];
 
-        if (search) {
+        if (keyword) {
             pipeline.push({
                 $match: {
                     $or: [
-                        { "user.full_name": { $regex: search, $options: "i" } },
-                        { "user.email": { $regex: search, $options: "i" } },
+                        { "user.full_name": { $regex: keyword, $options: "i" } },
+                        { "user.email": { $regex: keyword, $options: "i" } },
                     ],
                 },
             });
