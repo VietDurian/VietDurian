@@ -435,7 +435,6 @@ export default function ContentExpertProfileContent() {
 
   return (
     <div>
-      <Navbar />
       <main className="pt-18 p-5 lg:pt-20 flex flex-col justify-center items-center bg-white">
         <div className="w-full max-w-2xl mt-5">
           <PostComposer
