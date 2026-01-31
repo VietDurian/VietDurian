@@ -183,19 +183,21 @@ export function ProductsPage() {
         const handler = setTimeout(async () => {
             setLoading(true);
             try {
+                // Build common params with server-side type filter
+                const params = {
+                    page,
+                    limit: LIMIT,
+                    ...(typeFilter !== 'all' ? { typeId: typeFilter } : {}),
+                };
+
                 if (term) {
-                    const res = await productsAdminAPI.searchProducts(term, { page, limit: LIMIT });
+                    const res = await productsAdminAPI.searchProducts(term, params);
                     const listRaw = Array.isArray(res?.data)
                         ? res.data
                         : Array.isArray(res?.data?.data)
                             ? res.data.data
                             : [];
-                    let list = listRaw.map(mapProduct);
-
-                    if (typeFilter !== "all") {
-                        list = list.filter(p => p.typeId === typeFilter);
-                    }
-
+                    const list = listRaw.map(mapProduct);
                     setProducts(list);
 
                     const pgn = res?.data?.pagination || res?.pagination || null;
@@ -211,20 +213,15 @@ export function ProductsPage() {
                         itemsPerPage: LIMIT,
                     });
                 } else {
-                    const res = await productsAdminAPI.getAllProducts({ page, limit: LIMIT });
+                    const res = await productsAdminAPI.getAllProducts(params);
                     const listRaw = Array.isArray(res?.data)
                         ? res.data
                         : Array.isArray(res?.data?.data)
                             ? res.data.data
                             : [];
                     const mapped = listRaw.map(mapProduct);
-
-                    const finalList = (typeFilter !== "all")
-                        ? mapped.filter(p => p.typeId === typeFilter)
-                        : mapped;
-
-                    setProducts(finalList);
-                    console.log("Products fetched:", finalList);
+                    setProducts(mapped);
+                    console.log("Products fetched:", mapped);
 
                     const pgn = res?.data?.pagination || res?.pagination || null;
                     setPagination(pgn ? {

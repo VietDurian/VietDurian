@@ -37,10 +37,10 @@ const getPermissionRequestDetail = async (req, res, next) => {
 
 const searchPermissionRequests = async (req, res, next) => {
     try {
-        const { status = "pending", search = "" } = req.query;
+        const { status = "", keyword = "" } = req.query;
         const requests = await permissionService.searchPermissionRequests({
             status,
-            search,
+            keyword,
         });
         res.status(200).json({
             code: 200,
