@@ -21,7 +21,6 @@ export default function FarmerProfileContent() {
 
   return (
     <div>
-      <Navbar />
       <main className="text-center mt-50">Details</main>
     </div>
   );
