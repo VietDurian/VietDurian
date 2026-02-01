@@ -14,26 +14,76 @@ export default function PermissionPage() {
     const [status, setStatus] = useState('all');
     const [showDetail, setShowDetail] = useState(false)
     const [selectedRequest, setSelectedRequest] = useState(null)
+    const [page, setPage] = useState(1)
+    const LIMIT = 10
+    const [pagination, setPagination] = useState({ totalItems: 0, totalPages: 0, currentPage: 1, itemsPerPage: LIMIT })
 
 
     useEffect(() => {
         const timer = setTimeout(async () => {
             try {
+                const params = {
+                    page,
+                    limit: LIMIT,
+                    ...(status !== 'all' ? { status } : {}),
+                }
+
                 if (!query.trim()) {
-                    const res = await permissionAPI.getAllPermissions()
-                    setPermission(res.data || [])
+                    const res = await permissionAPI.getAllPermissions(params)
+                    const listRaw = Array.isArray(res?.data)
+                        ? res.data
+                        : Array.isArray(res?.data?.data)
+                            ? res.data.data
+                            : []
+                    setPermission(listRaw)
+
+                    const pgn = res?.data?.pagination || res?.pagination || null
+                    setPagination(pgn ? {
+                        totalItems: Number(pgn.totalItems ?? 0),
+                        totalPages: Number(pgn.totalPages ?? 0),
+                        currentPage: Number(pgn.currentPage ?? page),
+                        itemsPerPage: Number(pgn.itemsPerPage ?? LIMIT),
+                    } : {
+                        totalItems: Number(res?.data?.totalItems ?? listRaw.length ?? 0),
+                        totalPages: Math.max(1, Number(res?.data?.totalPages ?? Math.ceil(listRaw.length / LIMIT))),
+                        currentPage: page,
+                        itemsPerPage: LIMIT,
+                    })
                     return
                 }
-                const res = await permissionAPI.searchPermissions(query.trim(), { status })
-                const listPermissions = Array.isArray(res.data) ? res.data : []
-                setPermission(listPermissions)
+
+                const res = await permissionAPI.searchPermissions(query.trim(), params)
+                const listRaw = Array.isArray(res?.data)
+                    ? res.data
+                    : Array.isArray(res?.data?.data)
+                        ? res.data.data
+                        : []
+                setPermission(listRaw)
+
+                const pgn = res?.data?.pagination || res?.pagination || null
+                setPagination(pgn ? {
+                    totalItems: Number(pgn.totalItems ?? 0),
+                    totalPages: Number(pgn.totalPages ?? 0),
+                    currentPage: Number(pgn.currentPage ?? page),
+                    itemsPerPage: Number(pgn.itemsPerPage ?? LIMIT),
+                } : {
+                    totalItems: Number(res?.data?.totalItems ?? listRaw.length ?? 0),
+                    totalPages: Math.max(1, Number(res?.data?.totalPages ?? Math.ceil(listRaw.length / LIMIT))),
+                    currentPage: page,
+                    itemsPerPage: LIMIT,
+                })
             } catch (error) {
                 console.error('Error searching permissions:', error)
             }
         }, 400);
 
         return () => clearTimeout(timer);
-    }, [query, status]);
+    }, [query, status, page]);
+
+    // Reset to first page when filters/search change
+    useEffect(() => {
+        setPage(1)
+    }, [query, status])
 
 
     const mappedPermissions = useMemo(() => {
@@ -55,6 +105,25 @@ export default function PermissionPage() {
         }))
     }, [permission])
 
+    const filteredPermissions = useMemo(() => {
+        const data = Array.isArray(mappedPermissions) ? mappedPermissions : []
+        if (status === 'all') return data
+        return data.filter((req) => String(req.status || '').toLowerCase() === String(status).toLowerCase())
+    }, [mappedPermissions, status])
+
+    const effectiveTotalPages = useMemo(() => {
+        const totalItems = Number(pagination.totalItems || filteredPermissions.length || 0)
+        const perPage = Number(pagination.itemsPerPage || LIMIT)
+        return Math.max(1, Math.ceil(totalItems / perPage))
+    }, [pagination, filteredPermissions])
+
+    const goToPage = (newPage) => {
+        const tp = Number(pagination.totalPages ?? 0) || effectiveTotalPages
+        if (newPage >= 1 && (tp === 0 || newPage <= tp)) {
+            setPage(newPage)
+        }
+    }
+
     const renderDocuments = (doc) => {
         if (!doc) return <span className="text-gray-400">No document</span>
         if (Array.isArray(doc)) {
@@ -74,6 +143,11 @@ export default function PermissionPage() {
                 View
             </a>
         )
+    }
+
+    const handleRequestUpdated = ({ id, status }) => {
+        setPermission((prev) => Array.isArray(prev) ? prev.map((item) => item?._id === id ? { ...item, status } : item) : prev)
+        setSelectedRequest((prev) => prev ? { ...prev, status } : prev)
     }
 
     return (
@@ -149,14 +223,14 @@ export default function PermissionPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {mappedPermissions.length === 0 ? (
+                                {filteredPermissions.length === 0 ? (
                                     <tr>
                                         <td className="px-6 py-6 text-center text-gray-500" colSpan={9}>
                                             No permission requests match your filters.
                                         </td>
                                     </tr>
                                 ) : (
-                                    mappedPermissions.map((req) => (
+                                    filteredPermissions.map((req) => (
                                         <tr key={req.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="font-medium text-gray-900">{req.user_name}</div>
@@ -197,13 +271,46 @@ export default function PermissionPage() {
                     </div>
                 </div>
 
-                {/* Results Info */}
-                <div className="mt-4 text-sm text-gray-500 text-center md:text-left">
-                    {lastSaved ? (
-                        <span>Last saved: {lastSaved.toLocaleString()}</span>
-                    ) : (
-                        <span>Data fetched from server. Save button is mock.</span>
-                    )}
+                {/* Results Info & Pagination Controls (aligned with ProductPage) */}
+                <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div className="text-sm text-gray-600 text-center md:text-left">
+                        {(() => {
+                            const total = Number(pagination.totalItems ?? filteredPermissions.length ?? 0)
+                            const perPage = Number(pagination.itemsPerPage ?? LIMIT)
+                            const cur = Number(page ?? 1)
+                            const start = total === 0 ? 0 : (cur - 1) * perPage + 1
+                            const end = Math.min(cur * perPage, total)
+                            return `Showing ${start}–${end} of ${total} requests`
+                        })()}
+                    </div>
+
+                    <div className="flex items-center justify-center md:justify-end gap-2">
+                        <button
+                            onClick={() => goToPage(page - 1)}
+                            disabled={page <= 1}
+                            className={`px-3 py-1.5 text-sm rounded-md border ${page <= 1 ? 'text-gray-400 border-gray-200 bg-white cursor-not-allowed' : 'text-[#1a4d2e] border-gray-300 hover:bg-gray-50'}`}
+                        >
+                            Previous
+                        </button>
+
+                        {Array.from({ length: Number(pagination.totalPages ?? 0) || effectiveTotalPages }, (_, i) => i + 1).map((n) => (
+                            <button
+                                key={n}
+                                onClick={() => goToPage(n)}
+                                className={`px-3 py-1.5 text-sm rounded-md border ${n === page ? 'bg-[#1a4d2e] text-white border-[#1a4d2e]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                            >
+                                {n}
+                            </button>
+                        ))}
+
+                        <button
+                            onClick={() => goToPage(page + 1)}
+                            disabled={page >= (Number(pagination.totalPages ?? 0) || effectiveTotalPages)}
+                            className={`px-3 py-1.5 text-sm rounded-md border ${page >= (Number(pagination.totalPages ?? 0) || effectiveTotalPages) ? 'text-gray-400 border-gray-200 bg-white cursor-not-allowed' : 'text-[#1a4d2e] border-gray-300 hover:bg-gray-50'}`}
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
             {showDetail && (
@@ -211,7 +318,7 @@ export default function PermissionPage() {
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" onClick={() => setShowDetail(false)} />
                     <div className="absolute inset-0 flex items-center justify-center p-4">
                         <div className="relative z-10 bg-white rounded-xl shadow-2xl border border-gray-100 p-6 w-full max-w-4xl max-h-[85vh] overflow-y-auto">
-                            <PermissionRequestDetail request={selectedRequest} onClose={() => setShowDetail(false)} />
+                            <PermissionRequestDetail request={selectedRequest} onClose={() => setShowDetail(false)} onUpdated={handleRequestUpdated} />
                         </div>
                     </div>
                 </div>
