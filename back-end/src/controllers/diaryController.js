@@ -3,7 +3,11 @@ import { diaryService } from '@/services/diaryService';
 // Get all diaries
 const getDiariesByUser = async (req, res, next) => {
 	try {
-		const diaries = await diaryService.getDiariesByUser(req.query);
+		const filter = { ...req.query, ...(req.body?.filter || {}) };
+		const diaries = await diaryService.getDiariesByUser({
+			garden_id: filter.garden_id,
+			year: filter.year,
+		});
 		res.status(200).json({
 			code: 200,
 			message: 'Diaries retrieved successfully',
@@ -17,17 +21,19 @@ const getDiariesByUser = async (req, res, next) => {
 // Create diary
 const createDiary = async (req, res, next) => {
 	try {
-		const { title, description, crop_type } = req.body;
+		const { title, description, crop_type, garden_id } = req.body;
 		// Validate required fields
-		if (!title || !crop_type || !description) {
+		if (!title || !crop_type || !description || !garden_id) {
 			return res.status(400).json({
 				code: 400,
-				message: 'Title, crop_type, and description are required fields',
+				message:
+					'Title, crop_type, description, and garden_id are required fields',
 			});
 		}
 		const userId = req.user.id;
 		const newDiary = await diaryService.createDiary({
 			user_id: userId,
+			garden_id,
 			title,
 			description,
 			crop_type,
@@ -55,6 +61,25 @@ const updateDiary = async (req, res, next) => {
 		res.status(200).json({
 			code: 200,
 			message: 'Diary updated successfully',
+			data: updatedDiary,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
+// Finish diary
+const finishDiary = async (req, res, next) => {
+	try {
+		const { diaryId } = req.params;
+		const { weight_durian, price } = req.body;
+		const updatedDiary = await diaryService.finishDiary(diaryId, {
+			weight_durian,
+			price,
+		});
+		res.status(200).json({
+			code: 200,
+			message: 'Diary marked as completed successfully',
 			data: updatedDiary,
 		});
 	} catch (error) {
@@ -179,14 +204,30 @@ const deleteDiaryStep = async (req, res, next) => {
 	}
 };
 
+const statisticsDiary = async (req, res, next) => {
+	try {
+		const { diaryId } = req.params;
+		const stats = await diaryService.statisticsDiary(diaryId);
+		res.status(200).json({
+			code: 200,
+			message: 'Diary statistics retrieved successfully',
+			data: stats,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
 export const diaryController = {
 	getDiariesByUser,
 	createDiary,
 	updateDiary,
+	finishDiary,
 	getDiaryDetails,
 	deleteDiary,
 	getStepsByDiaryId,
 	updateDiaryStep,
 	addDiaryStep,
 	deleteDiaryStep,
+	statisticsDiary,
 };
