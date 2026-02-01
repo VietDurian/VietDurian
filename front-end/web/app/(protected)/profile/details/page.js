@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   User,
   Mail,
@@ -13,7 +13,10 @@ import {
   XCircle,
   Crown,
   Sparkles,
+  X,
+  Loader2,
 } from "lucide-react";
+import { profileAPI } from "@/lib/api";
 
 const TabButton = ({ icon: Icon, label, active, onClick }) => (
   <button
@@ -71,19 +74,101 @@ const RoleBadge = ({ role }) => {
 
 export default function ProfileDetails() {
   const [activeTab, setActiveTab] = useState("profile");
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: "",
+    phone: "",
+    avatar: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Dummy data for UI preview
-  const profileData = {
-    full_name: "Nguyễn Văn A",
-    email: "nguyenvana@example.com",
-    phone: "0901234567",
-    avatar: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg",
-    role: "farmer",
-    is_verified: true,
-    is_banned: false,
-    created_at: "2025-01-15T10:30:00.000Z",
-    updated_at: "2026-02-01T08:20:00.000Z",
+  // Fetch profile data
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const response = await profileAPI.getMe();
+      if (response.success) {
+        setProfileData(response.data);
+        setEditForm({
+          full_name: response.data.full_name,
+          phone: response.data.phone,
+          avatar: response.data.avatar,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleEditClick = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsEditModalOpen(false);
+    // Reset form to current profile data
+    setEditForm({
+      full_name: profileData.full_name,
+      phone: profileData.phone,
+      avatar: profileData.avatar,
+    });
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setIsSaving(true);
+      const response = await profileAPI.update(editForm);
+      if (response.success) {
+        // Refresh profile data
+        await fetchProfile();
+        setIsEditModalOpen(false);
+        alert("Cập nhật thông tin thành công!");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Có lỗi xảy ra khi cập nhật thông tin!");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
+          <p className="text-gray-600 font-medium">Đang tải thông tin...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profileData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Không thể tải thông tin người dùng</p>
+        </div>
+      </div>
+    );
+  }
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("vi-VN", {
@@ -128,7 +213,10 @@ export default function ProfileDetails() {
               </div>
 
               {/* Edit Button */}
-              <button className="group relative px-6 py-3 bg-white text-emerald-600 rounded-xl font-semibold hover:bg-emerald-50 transition-all duration-300">
+              <button
+                onClick={handleEditClick}
+                className="group relative px-6 py-3 bg-white text-emerald-600 rounded-xl font-semibold hover:bg-emerald-50 transition-all duration-300"
+              >
                 <div className="flex items-center gap-2">
                   <Edit2 size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform duration-300" />
                   <span>Chỉnh sửa</span>
@@ -247,6 +335,107 @@ export default function ProfileDetails() {
           )}
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full">
+            {/* Modal Header */}
+            <div className="bg-emerald-500 text-white p-6 flex items-center justify-between rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <Edit2 size={24} strokeWidth={2.5} />
+                <h2 className="text-2xl font-bold">Chỉnh sửa thông tin</h2>
+              </div>
+              <button
+                onClick={handleCloseModal}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X size={24} strokeWidth={2.5} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              {/* Avatar Preview */}
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative">
+                  <img
+                    src={editForm.avatar || profileData.avatar}
+                    alt="Avatar preview"
+                    className="w-32 h-32 rounded-full border-4 border-emerald-500 object-cover"
+                  />
+                </div>
+              </div>
+
+              {/* Form Fields */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Họ và tên <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="full_name"
+                    value={editForm.full_name}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
+                    placeholder="Nhập họ và tên"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Số điện thoại <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={editForm.phone}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
+                    placeholder="Nhập số điện thoại"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    URL Avatar
+                  </label>
+                  <input
+                    type="url"
+                    name="avatar"
+                    value={editForm.avatar}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
+                    placeholder="https://example.com/avatar.jpg"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-gray-50 p-6 flex justify-center rounded-b-2xl border-t border-gray-200">
+              <button
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+                className="px-8 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    Đang lưu...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={20} />
+                    Lưu thay đổi
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes fadeIn {
