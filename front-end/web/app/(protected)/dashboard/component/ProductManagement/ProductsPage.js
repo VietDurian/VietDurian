@@ -388,7 +388,7 @@ export function ProductsPage() {
                     <table className="w-full ">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('name')}</th>
+                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('Name')}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('type') || 'Type'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('price') || 'Price'}</th>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('status') || 'Status'}</th>

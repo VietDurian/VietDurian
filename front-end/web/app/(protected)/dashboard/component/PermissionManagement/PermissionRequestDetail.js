@@ -1,11 +1,13 @@
 "use client"
 
-import React from 'react'
+import React, { useState } from 'react'
+import { permissionAPI } from '@/lib/api'
 
-export default function PermissionRequestDetail({ request, onClose }) {
+export default function PermissionRequestDetail({ request, onClose, onUpdated }) {
     if (!request) return null
 
     const {
+        id,
         user_name,
         email,
         phone,
@@ -18,6 +20,11 @@ export default function PermissionRequestDetail({ request, onClose }) {
         created_at,
         updated_at
     } = request
+
+    const [submitting, setSubmitting] = useState(false)
+    const [currentStatus, setCurrentStatus] = useState(status)
+    const [showRejectReason, setShowRejectReason] = useState(false)
+    const [rejectReason, setRejectReason] = useState("")
 
     const renderDocuments = (doc) => {
         if (!doc) return <span className="text-gray-400">No document</span>
@@ -77,15 +84,88 @@ export default function PermissionRequestDetail({ request, onClose }) {
                         </div>
                     </div>
 
-                    <button
-                        onClick={onClose}
-                        className="ml-auto inline-flex items-center justify-center h-9 w-9 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
-                        aria-label="Close"
-                    >
-                        <span className="text-lg">×</span>
-                    </button>
+                    <div className="ml-auto flex items-center gap-2">
+                        {currentStatus === 'pending' && (
+                            <>
+                                <button
+                                    disabled={submitting}
+                                    onClick={async () => {
+                                        try {
+                                            setSubmitting(true)
+                                            const res = await permissionAPI.approvePermissionRequest(id)
+                                            const ok = res && (res.data || res.code === 200)
+                                            setCurrentStatus('approved')
+                                            if (onUpdated) onUpdated({ id, status: 'approved', raw: res?.data })
+                                        } catch (e) {
+                                            console.error('Approve failed:', e)
+                                        } finally {
+                                            setSubmitting(false)
+                                        }
+                                    }}
+                                    className="inline-flex items-center justify-center h-9 px-4 rounded-lg border border-emerald-200 bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                                >
+                                    Approve
+                                </button>
+                                <button
+                                    disabled={submitting}
+                                    onClick={() => setShowRejectReason((v) => !v)}
+                                    className="inline-flex items-center justify-center h-9 px-4 rounded-lg border border-red-200 bg-white text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                >
+                                    Reject
+                                </button>
+                            </>
+                        )}
+                        <button
+                            onClick={onClose}
+                            className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
+                            aria-label="Close"
+                        >
+                            <span className="text-lg">×</span>
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {showRejectReason && currentStatus === 'pending' && (
+                <div className="rounded-xl border border-red-200 bg-red-50 p-4 mb-4">
+                    <label className="block text-sm font-medium text-red-800 mb-2">Reject reason (optional)</label>
+                    <textarea
+                        rows={3}
+                        value={rejectReason}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-400"
+                        placeholder="Enter reason..."
+                    />
+                    <div className="mt-3 flex gap-2">
+                        <button
+                            disabled={submitting}
+                            onClick={async () => {
+                                try {
+                                    setSubmitting(true)
+                                    const res = await permissionAPI.rejectPermissionRequest(id, rejectReason)
+                                    setCurrentStatus('rejected')
+                                    if (onUpdated) onUpdated({ id, status: 'rejected', raw: res?.data })
+                                    setShowRejectReason(false)
+                                } catch (e) {
+                                    console.error('Reject failed:', e)
+                                } finally {
+                                    setSubmitting(false)
+                                }
+                            }}
+                            className="inline-flex items-center justify-center h-9 px-4 rounded-lg border border-red-300 bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                        >
+                            Confirm Reject
+                        </button>
+                        <button
+                            disabled={submitting}
+                            onClick={() => setShowRejectReason(false)}
+                            className="inline-flex items-center justify-center h-9 px-4 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
@@ -100,14 +180,14 @@ export default function PermissionRequestDetail({ request, onClose }) {
                     <div className="text-xs uppercase tracking-wide text-gray-500">Status</div>
                     <div className="mt-2">
                         <span
-                            className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium ${status === 'approved'
+                            className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium ${currentStatus === 'approved'
                                 ? 'bg-green-100 text-green-700'
-                                : status === 'rejected'
+                                : currentStatus === 'rejected'
                                     ? 'bg-red-100 text-red-700'
                                     : 'bg-yellow-100 text-yellow-700'
                                 }`}
                         >
-                            {status || 'pending'}
+                            {currentStatus || 'pending'}
                         </span>
                     </div>
                 </div>

@@ -267,7 +267,7 @@ Router.get(
     authorizationMiddleware.isAdmin,
     permissionController.sortPermissionRequests
 );
-Router.post(
+Router.patch(
     "/requests/:request_id/confirm",
     authMiddleware.protect,
     authorizationMiddleware.isAdmin,
@@ -279,7 +279,7 @@ Router.get(
     authorizationMiddleware.isAdmin,
     permissionController.getPermissionRequestDetail
 );
-Router.post(
+Router.patch(
     "/requests/:request_id/reject",
     authMiddleware.protect,
     authorizationMiddleware.isAdmin,

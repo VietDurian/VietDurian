@@ -49,8 +49,20 @@ export default function LoginPage() {
 				router.push('/');
 			}
 		} catch (err) {
-			setError(err?.message || 'Có lỗi xảy ra, vui lòng thử lại.');
-		} finally {
+			const status = err?.response?.status;
+
+			const backendMessage =
+				err?.response?.data?.message ||
+				err?.response?.data?.error?.message ||
+				err?.response?.data?.errors?.[0]?.message;
+
+			if (status === 401) {
+				setError(backendMessage || 'Email hoặc mật khẩu không đúng');
+			} else {
+				setError(backendMessage || 'Có lỗi xảy ra, vui lòng thử lại.');
+			}
+		}
+		finally {
 			setLoading(false);
 		}
 	};
