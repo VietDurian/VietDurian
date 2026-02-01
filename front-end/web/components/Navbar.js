@@ -63,11 +63,10 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
-        isScrolled
-          ? "bg-white/80 backdrop-blur-md shadow-sm py-1"
-          : "bg-white/80 backdrop-blur-md shadow-sm py-1"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${isScrolled
+        ? "bg-white backdrop-blur-md shadow-sm py-1"
+        : "bg-white backdrop-blur-md shadow-sm py-1"
+        }`}
     >
       <div className="mx-auto px-4 sm:px-6 lg:px-5">
         <div className="flex items-center h-full justify-between">
@@ -88,11 +87,10 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`px-3 py-2 rounded-md text-sm transition-colors duration-200 ${
-                    pathname === link.href
-                      ? "text-emerald-700 font-bold"
-                      : "text-gray-600 hover:text-emerald-600"
-                  }`}
+                  className={`px-3 py-2 rounded-md text-sm transition-colors duration-200 ${pathname === link.href
+                    ? "text-emerald-700 font-bold"
+                    : "text-gray-600 hover:text-emerald-600"
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -127,10 +125,9 @@ export default function Navbar() {
                 {openProfile && (
                   <div
                     className={`absolute right-0  w-auto bg-white rounded-2xl border-2 border-gray-200 shadow-xs p-2
-                      ${
-                        isScrolled
-                          ? "top-15 transition-all duration-300"
-                          : "top-15 transition-all duration-300"
+                      ${isScrolled
+                        ? "top-15 transition-all duration-300"
+                        : "top-15 transition-all duration-300"
                       }
                       `}
                   >
@@ -224,9 +221,8 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       <div
-        className={`md:hidden bg-white/10 ${
-          isOpen ? " opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`md:hidden bg-white/10 ${isOpen ? " opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         <div className="space-y-1 p-5">
           {NAV_LINKS.map((link) => (
@@ -234,11 +230,10 @@ export default function Navbar() {
               key={link.label}
               href={link.href}
               onClick={closeMenu}
-              className={` hover:bg-gray-50 block px-3 py-2.5 rounded-md text-base  transition-all ${
-                pathname === link.href
-                  ? "text-emerald-700 font-bold"
-                  : "text-gray-600 hover:text-emerald-600"
-              }`}
+              className={` hover:bg-gray-50 block px-3 py-2.5 rounded-md text-base  transition-all ${pathname === link.href
+                ? "text-emerald-700 font-bold"
+                : "text-gray-600 hover:text-emerald-600"
+                }`}
             >
               {link.label}
             </Link>
