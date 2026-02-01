@@ -7,6 +7,11 @@ const DiarySchema = new mongoose.Schema(
 			ref: 'User',
 			required: true,
 		},
+		garden_id: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Garden',
+			required: true,
+		},
 		title: {
 			type: String,
 			required: true,
@@ -30,7 +35,7 @@ const DiarySchema = new mongoose.Schema(
 		end_date: {
 			type: Date,
 		},
-		quantity_durian: {
+		weight_durian: {
 			type: Number,
 			default: 0,
 		},
