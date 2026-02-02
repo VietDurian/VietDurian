@@ -17,8 +17,9 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  Lightbulb,
 } from "lucide-react";
-import { profileAPI } from "@/lib/api";
+import { profileAPI, authAPI } from "@/lib/api";
 
 const TabButton = ({ icon: Icon, label, active, onClick }) => (
   <button
@@ -114,6 +115,7 @@ export default function ProfileDetails() {
     new: false,
     confirm: false,
   });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const passwordRules = [
     { id: "length", test: (pwd) => pwd.length >= 12, label: "Ít nhất 12 ký tự" },
@@ -224,16 +226,51 @@ export default function ProfileDetails() {
   const handleChangePassword = async () => {
     if (!canChangePassword) return;
 
-    // Add your password change API call here
-    console.log("Changing password...");
-    alert("Đổi mật khẩu thành công!");
+    try {
+      setIsChangingPassword(true);
 
-    // Reset form
-    setPasswordForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+      const payload = {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      };
+
+      const response = await authAPI.changePassword(payload);
+
+      if (response.success) {
+        alert("Đổi mật khẩu thành công!");
+
+        // Reset form
+        setPasswordForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+
+      // Xử lý các loại lỗi khác nhau
+      let errorMessage = "Có lỗi xảy ra khi đổi mật khẩu!";
+
+      if (error?.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if (status === 401) {
+          errorMessage = "Mật khẩu hiện tại không đúng!";
+        } else if (status === 400) {
+          errorMessage = data?.message || "Mật khẩu mới không hợp lệ!";
+        } else if (status === 500) {
+          errorMessage = "Lỗi server! Vui lòng thử lại sau.";
+        } else {
+          errorMessage = data?.message || errorMessage;
+        }
+      }
+
+      alert(errorMessage);
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   if (loading) {
@@ -524,13 +561,20 @@ export default function ProfileDetails() {
                   </div>
                   <button
                     onClick={handleChangePassword}
-                    disabled={!canChangePassword}
-                    className={`px-8 py-3 font-semibold rounded-xl transition-all duration-300 ${canChangePassword
-                      ? "bg-emerald-500 text-white hover:bg-emerald-600 cursor-pointer"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    disabled={!canChangePassword || isChangingPassword}
+                    className={`px-8 py-3 font-semibold rounded-xl transition-all duration-300 flex items-center gap-2 ${canChangePassword && !isChangingPassword
+                        ? "bg-emerald-500 text-white hover:bg-emerald-600 cursor-pointer"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
                   >
-                    Cập nhật mật khẩu
+                    {isChangingPassword ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Cập nhật mật khẩu"
+                    )}
                   </button>
 
                   {/* Password Rules - Moved below button */}
@@ -548,7 +592,7 @@ export default function ProfileDetails() {
               {/* Security Tips */}
               <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
                 <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <Sparkles className="text-amber-600" size={20} strokeWidth={2.5} />
+                  <Lightbulb className="text-amber-600" size={20} strokeWidth={2.5} />
                   Mẹo bảo mật
                 </h4>
                 <ul className="space-y-2 text-sm text-gray-700">
