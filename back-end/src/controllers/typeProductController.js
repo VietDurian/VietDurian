@@ -29,14 +29,12 @@ const createTypeProduct = async (req, res, next) => {
 		// check if name is provided
 		if (
 			!name ||
-			name.empty ||
-			typeof name !== 'string' ||
-			!description ||
-			typeof description !== 'string'
+			name.trim() === '' ||
+			typeof name !== 'string'
 		) {
 			return res.status(400).json({
 				code: 400,
-				message: 'Invalid type product name or description',
+				message: 'Product type name is required',
 			});
 		}
 		const newTypeProduct = await typeProductService.createTypeProduct({
@@ -64,13 +62,12 @@ const updateTypeProduct = async (req, res, next) => {
 			!id ||
 			typeof id !== 'string' ||
 			!name ||
-			typeof name !== 'string' ||
-			!description ||
-			typeof description !== 'string'
+			name.trim() === '' ||
+			typeof name !== 'string'
 		) {
 			return res.status(400).json({
 				code: 400,
-				message: 'Invalid input data',
+				message: 'Product type name is required',
 			});
 		}
 		const updatedTypeProduct = await typeProductService.updateTypeProduct({

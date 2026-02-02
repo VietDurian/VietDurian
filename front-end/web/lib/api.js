@@ -145,6 +145,18 @@ export const productTypesAPI = {
     const response = await apiClient.get(`type-product/${id}`);
     return response.data;
   },
+  async createProductType(data) {
+    const response = await apiClient.post("type-product", data);
+    return response.data;
+  },
+  async updateProductType(id, data) {
+    const response = await apiClient.patch(`type-product/${id}`, data);
+    return response.data;
+  },
+  async deleteProductType(id) {
+    const response = await apiClient.delete(`type-product/${id}`);
+    return response.data;
+  },
   async filterProductTypes(filters = {}) {
     const response = await apiClient.get("type-product/filter", {
       params: filters,

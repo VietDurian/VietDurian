@@ -22,6 +22,13 @@ export function ReportPage() {
 	const [actionLoading, setActionLoading] = useState(null); // report id being acted on
 	const [sortBy, setSortBy] = useState('date');
 	const [sortOrder, setSortOrder] = useState('desc');
+	
+	// Pagination state
+	const [currentPage, setCurrentPage] = useState(1);
+	const [totalPages, setTotalPages] = useState(1);
+	const [totalItems, setTotalItems] = useState(0);
+	const [itemsPerPage] = useState(10);
+	
 	// Image modal state
 	const [imageModalOpen, setImageModalOpen] = useState(false);
 	const [modalImageSrc, setModalImageSrc] = useState(null);
@@ -42,15 +49,34 @@ export function ReportPage() {
 	useEffect(() => {
 		fetchReports();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [searchTerm]);
+	}, [currentPage]);
 
 	const fetchReports = async () => {
 		setLoading(true);
 		try {
-			const data = await getAllReport({ search: searchTerm });
-			console.log('Fetched reports:', data);
-			// Expect array of reports
-			setReports(Array.isArray(data) ? data : []);
+			const response = await getAllReport({ 
+				page: currentPage,
+				limit: itemsPerPage
+			});
+			console.log('Fetched reports:', response);
+			
+			// Handle both direct array and paginated response
+			if (Array.isArray(response)) {
+				// Direct array response (no pagination from API)
+				setReports(response);
+				setTotalItems(response.length);
+				setTotalPages(Math.ceil(response.length / itemsPerPage));
+			} else if (response?.data) {
+				// Paginated response
+				setReports(Array.isArray(response.data) ? response.data : []);
+				const pagination = response.pagination || {};
+				setTotalPages(pagination.totalPages || 1);
+				setTotalItems(pagination.totalItems || response.data.length);
+			} else {
+				setReports([]);
+				setTotalItems(0);
+				setTotalPages(1);
+			}
 		} catch (error) {
 			console.error(error);
 			toast.error(error.message || 'Lấy báo cáo thất bại');
@@ -84,6 +110,19 @@ export function ReportPage() {
   const cmp = aName.localeCompare(bName, 'vi', { sensitivity: 'base' });
   return sortOrder === 'asc' ? cmp : -cmp;
 });
+
+	// Handle search
+	const handleSearchChange = (value) => {
+		setSearchTerm(value);
+		// Keep current page for page-specific search
+	};
+
+	// Handle page change
+	const handlePageChange = (page) => {
+		if (page >= 1 && page <= totalPages) {
+			setCurrentPage(page);
+		}
+	};
 
 	const getStatusColor = (status) => {
 		const s = (status || '').toString().toLowerCase();
@@ -137,21 +176,16 @@ export function ReportPage() {
 	const handleResolve = async (reportId) => {
   		setActionLoading(reportId);
   		try {
-    		const updated = await updateReport(reportId);
-
-    		setReports((prev) =>
-      		prev.map((r) =>
-        	(r._id === reportId || r.id === reportId) ? { ...r, ...updated } : r
-    		)
-    		);
-
-    	toast.success('Đã xử lý báo cáo thành công');
+    		await updateReport(reportId);
+    		toast.success('Đã xử lý báo cáo thành công');
+    		// Refetch data to maintain pagination state
+    		await fetchReports();
   		} catch (error) {
-    	toast.error(error.message || 'Xử lý báo cáo thất bại');
-  } finally {
-    setActionLoading(null);
-  }
-};
+    		toast.error(error.message || 'Xử lý báo cáo thất bại');
+  		} finally {
+    		setActionLoading(null);
+  		}
+	};
 
 	const handleDelete = async () => {
   if (!selectedReportId) return;
@@ -159,13 +193,10 @@ export function ReportPage() {
   setActionLoading(selectedReportId);
   try {
     await deleteReport(selectedReportId);
-
-    setReports((prev) =>
-      prev.filter((r) => r._id !== selectedReportId && r.id !== selectedReportId),
-    );
-
     toast.success(t('Xóa báo cáo thành công') || 'Delete report successful');
     closeDeleteConfirm();
+    // Refetch data to maintain pagination state
+    await fetchReports();
   } catch (error) {
     toast.error(error.message || 'Xóa báo cáo thất bại');
   } finally {
@@ -195,7 +226,7 @@ export function ReportPage() {
 							type="text"
 							placeholder={t('search_reports') || 'Tìm theo tên người báo cáo / lý do / trạng thái…'}
 							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
+							onChange={(e) => handleSearchChange(e.target.value)}
 							className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-gray-500 font-medium placeholder:text-gray-500 placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
 						/>
 					</div>
@@ -271,7 +302,20 @@ export function ReportPage() {
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-gray-200">
-							{filteredReports.map((report) => (
+						{loading ? (
+							<tr>
+								<td colSpan="6" className="px-6 py-8 text-center">
+									<div className="text-gray-500">{t('loading') || 'Đang tải...'}</div>
+								</td>
+							</tr>
+						) : filteredReports.length === 0 ? (
+							<tr>
+								<td colSpan="6" className="px-6 py-8 text-center">
+									<div className="text-gray-500">{t('no_reports_found') || 'Không tìm thấy báo cáo nào'}</div>
+								</td>
+							</tr>
+						) : (
+							filteredReports.map((report) => (
 								<tr
 									key={report._id || report._id || report.id}
 									className={`hover:bg-gray-50 transition-colors ${report.status === 'resolved' ? 'bg-green-50/30' : ''}`}
@@ -302,7 +346,7 @@ export function ReportPage() {
 											</div>
 											<div className="ml-3">
 												<p className="font-medium text-gray-900">
-													{report.user_id.full_name}
+													{report.user_id?.full_name || report.reporter?.name || t('unknown') || 'Unknown'}
 												</p>
 											</div>
 										</div>
@@ -385,7 +429,8 @@ export function ReportPage() {
 										)}
 									</td>
 								</tr>
-							))}
+								))
+							)}
 						</tbody>
 					</table>
 				</div>
@@ -393,14 +438,23 @@ export function ReportPage() {
 
 			{/* Reports Cards - Mobile */}
 			<div className="md:hidden space-y-4">
-				{filteredReports.map((report) => (
-					<div
-						key={report._id || report.id}
-						className={`bg-white rounded-xl p-4 shadow-sm border border-gray-100 ${
-							report.status === 'resolved'
-								? 'border-green-200 bg-green-50/30'
-								: ''
-						}`}
+				{loading ? (
+					<div className="text-center py-8 text-gray-500">
+						{t('loading') || 'Đang tải...'}
+					</div>
+				) : filteredReports.length === 0 ? (
+					<div className="text-center py-8 text-gray-500">
+						{t('no_reports_found') || 'Không tìm thấy báo cáo nào'}
+					</div>
+				) : (
+					filteredReports.map((report) => (
+						<div
+							key={report._id || report.id}
+							className={`bg-white rounded-xl p-4 shadow-sm border border-gray-100 ${
+								report.status === 'resolved'
+									? 'border-green-200 bg-green-50/30'
+									: ''
+							}`}
 					>
 						<div className="flex items-start gap-3 mb-3">
 							<div
@@ -413,7 +467,7 @@ export function ReportPage() {
 								{report.user_id?.avatar ? (
 									<Image
 										src={report.user_id.avatar}
-										alt={report.user_id.full_name || 'Avatar'}
+										alt={(report.user_id?.full_name || report.reporter?.name || 'Avatar')}
 										width={48}
 										height={48}
 										className="w-full h-full rounded-full object-cover"
@@ -502,7 +556,7 @@ export function ReportPage() {
 							</button>
 						</div>
 					</div>
-				))}
+				)))}
 			</div>
 
 			{/* Image Modal */}
@@ -536,9 +590,40 @@ export function ReportPage() {
 				</div>
 			)}
 
-			{/* Results Info */}
-			<div className="mt-4 text-sm text-gray-500 text-center md:text-left">
-				{t('total')}: {filteredReports.length} {t('reports').toLowerCase()}
+			{/* Pagination */}
+			<div className="mt-6 flex items-center justify-end gap-2">
+				{/* Previous button */}
+				<button
+					onClick={() => handlePageChange(currentPage - 1)}
+					disabled={currentPage === 1}
+					className="px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+				>
+					{t('previous') || 'Previous'}
+				</button>
+
+				{/* Page numbers */}
+				{Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+					<button
+						key={num}
+						onClick={() => handlePageChange(num)}
+						className={`w-10 h-9 rounded-md border text-sm transition-colors ${
+							num === currentPage
+								? 'bg-[#1a4d2e] text-white border-[#1a4d2e]'
+								: 'border-gray-200 text-gray-700 hover:bg-gray-50'
+						}`}
+					>
+						{num}
+					</button>
+				))}
+
+				{/* Next button */}
+				<button
+					onClick={() => handlePageChange(currentPage + 1)}
+					disabled={currentPage === totalPages}
+					className="px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+				>
+					{t('next') || 'Next'}
+				</button>
 			</div>
 
 			{/* Delete Modal */}
