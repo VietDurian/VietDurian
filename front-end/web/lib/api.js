@@ -112,6 +112,14 @@ export const permissionAPI = {
     });
     return response.data;
   },
+  async rejectPermissionRequest(id, reason) {
+    const response = await apiClient.patch(`permission/requests/${id}/reject`, { reason });
+    return response.data;
+  },
+  async approvePermissionRequest(id) {
+    const response = await apiClient.patch(`permission/requests/${id}/confirm`);
+    return response.data;
+  },
 };
 
 // Profile API
@@ -229,6 +237,14 @@ export const blogAPI = {
   async searchBlogs(searchTerm) {
     try {
       const response = await apiClient.get("/blog/knowledge", {
+        async confirmPermission(id) {
+          const response = await apiClient.post(`permission/requests/${id}/confirm`);
+          return response.data;
+        },
+        async rejectPermission(id, reason = "") {
+          const response = await apiClient.post(`permission/requests/${id}/reject`, { reason });
+          return response.data;
+        },
         params: { search: searchTerm },
       });
       return response.data;

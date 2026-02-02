@@ -21,6 +21,9 @@ export function UsersPage() {
 	const [statusFilter, setStatusFilter] = useState('all');
 	const [blockModalOpen, setBlockModalOpen] = useState(false);
 	const [selectedUser, setSelectedUser] = useState(null);
+	const [page, setPage] = useState(1);
+	const LIMIT = 10;
+	const [pagination, setPagination] = useState({ totalItems: 0, totalPages: 0, currentPage: 1, itemsPerPage: LIMIT });
 
 	const toIsBannedParam = (status) => {
 		if (status === "blocked") return true;
@@ -44,8 +47,21 @@ export function UsersPage() {
 		setLoading(true);
 		try {
 			const res = await usersAPI.filterUsers(params);
-			const list = Array.isArray(res?.data) ? res.data : [];
-			setUsers(list.map(mapUser));
+			const listRaw = Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.data) ? res.data.data : [];
+			setUsers(listRaw.map(mapUser));
+
+			const pgn = res?.data?.pagination || res?.pagination || null;
+			setPagination(pgn ? {
+				totalItems: Number(pgn.totalItems ?? 0),
+				totalPages: Number(pgn.totalPages ?? 0),
+				currentPage: Number(pgn.currentPage ?? page),
+				itemsPerPage: Number(pgn.itemsPerPage ?? LIMIT),
+			} : {
+				totalItems: Number(res?.data?.totalItems ?? listRaw.length ?? 0),
+				totalPages: Math.max(1, Number(res?.data?.totalPages ?? Math.ceil(listRaw.length / LIMIT))),
+				currentPage: page,
+				itemsPerPage: LIMIT,
+			});
 		} catch (error) {
 			console.error("Error fetching users:", error);
 			toast.error(t("error_fetching_users"));
@@ -64,25 +80,33 @@ export function UsersPage() {
 				const role = roleFilter !== "all" ? roleFilter : undefined;
 				const is_banned = toIsBannedParam(statusFilter);
 
-				if (term) {
-					const res = await usersAPI.searchUsers(term, { page: 1, limit: 10 });
-					let list = Array.isArray(res?.data) ? res.data.map(mapUser) : [];
-
-					if (role) list = list.filter(u => u.role === role);
-					if (is_banned !== undefined) {
-						list = list.filter(u => (is_banned ? u.status === "blocked" : u.status === "active"));
-					}
-					setUsers(list);
-					return;
-				}
-				const params = {
+				const commonParams = {
+					page,
+					limit: LIMIT,
 					...(role ? { role } : {}),
 					...(is_banned !== undefined ? { is_banned } : {}),
 				};
-				console.log("Calling filter API with:", params);
 
-				await fetchUsers(params);
+				if (term) {
+					const res = await usersAPI.searchUsers(term, commonParams);
+					const listRaw = Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.data) ? res.data.data : [];
+					setUsers(listRaw.map(mapUser));
 
+					const pgn = res?.data?.pagination || res?.pagination || null;
+					setPagination(pgn ? {
+						totalItems: Number(pgn.totalItems ?? 0),
+						totalPages: Number(pgn.totalPages ?? 0),
+						currentPage: Number(pgn.currentPage ?? page),
+						itemsPerPage: Number(pgn.itemsPerPage ?? LIMIT),
+					} : {
+						totalItems: Number(res?.data?.totalItems ?? listRaw.length ?? 0),
+						totalPages: Math.max(1, Number(res?.data?.totalPages ?? Math.ceil(listRaw.length / LIMIT))),
+						currentPage: page,
+						itemsPerPage: LIMIT,
+					});
+				} else {
+					await fetchUsers(commonParams);
+				}
 			} catch (error) {
 				console.error("Error:", error);
 				toast.error(t("error_fetching_users"));
@@ -92,7 +116,19 @@ export function UsersPage() {
 		}, 500);
 
 		return () => clearTimeout(handler);
+	}, [searchTerm, roleFilter, statusFilter, page]);
+
+	// Reset to first page when filters/search change
+	useEffect(() => {
+		setPage(1);
 	}, [searchTerm, roleFilter, statusFilter]);
+
+	const goToPage = (newPage) => {
+		const tp = Number(pagination.totalPages ?? 0);
+		if (newPage >= 1 && (tp === 0 || newPage <= tp)) {
+			setPage(newPage);
+		}
+	};
 	const handleBlockUnblock = (user) => {
 		setSelectedUser(user);
 		setBlockModalOpen(true);
@@ -380,9 +416,46 @@ export function UsersPage() {
 				))}
 			</div>
 
-			{/* Results Info */}
-			<div className="mt-4 text-sm text-gray-500 text-center md:text-left">
-				{t('total')}: {users.length} {t('users').toLowerCase()}
+			{/* Results Info & Pagination Controls */}
+			<div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+				<div className="text-sm text-gray-600 text-center md:text-left">
+					{(() => {
+						const total = Number(pagination.totalItems ?? users.length ?? 0);
+						const perPage = Number(pagination.itemsPerPage ?? LIMIT);
+						const cur = Number(page ?? 1);
+						const start = total === 0 ? 0 : (cur - 1) * perPage + 1;
+						const end = Math.min(cur * perPage, total);
+						return `${t('Showing') || 'Showing'} ${start}–${end} ${t('of') || 'of'} ${total} ${(t('users') || 'users').toLowerCase()}`;
+					})()}
+				</div>
+
+				<div className="flex items-center justify-center md:justify-end gap-2">
+					<button
+						onClick={() => goToPage(page - 1)}
+						disabled={page <= 1}
+						className={`px-3 py-1.5 text-sm rounded-md border ${page <= 1 ? 'text-gray-400 border-gray-200 bg-white cursor-not-allowed' : 'text-[#1a4d2e] border-gray-300 hover:bg-gray-50'}`}
+					>
+						{t('Previous') || 'Previous'}
+					</button>
+
+					{Array.from({ length: Number(pagination.totalPages ?? 0) || Math.max(1, Math.ceil((pagination.totalItems || 0) / (pagination.itemsPerPage || LIMIT))) }, (_, i) => i + 1).map((n) => (
+						<button
+							key={n}
+							onClick={() => goToPage(n)}
+							className={`px-3 py-1.5 text-sm rounded-md border ${n === page ? 'bg-[#1a4d2e] text-white border-[#1a4d2e]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+						>
+							{n}
+						</button>
+					))}
+
+					<button
+						onClick={() => goToPage(page + 1)}
+						disabled={page >= (pagination.totalPages || Math.max(1, Math.ceil((pagination.totalItems || 0) / (pagination.itemsPerPage || LIMIT))))}
+						className={`px-3 py-1.5 text-sm rounded-md border ${page >= (pagination.totalPages || Math.max(1, Math.ceil((pagination.totalItems || 0) / (pagination.itemsPerPage || LIMIT)))) ? 'text-gray-400 border-gray-200 bg-white cursor-not-allowed' : 'text-[#1a4d2e] border-gray-300 hover:bg-gray-50'}`}
+					>
+						{t('Next') || 'Next'}
+					</button>
+				</div>
 			</div>
 
 			{/* Block/Unblock Modal */}

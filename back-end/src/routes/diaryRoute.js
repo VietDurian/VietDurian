@@ -7,90 +7,6 @@ const Router = express.Router();
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     Diary:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *           description: The auto-generated id of the diary
- *         user_id:
- *           type: string
- *           description: The user id
- *         title:
- *           type: string
- *           description: The title of the diary
- *         description:
- *           type: string
- *           description: The description of the diary
- *         crop_type:
- *           type: string
- *           description: The crop type
- *         status:
- *           type: string
- *           enum: [In progressing, Completed]
- *           description: The status of the diary
- *         start_date:
- *           type: string
- *           format: date-time
- *           description: The start date of the diary
- *         end_date:
- *           type: string
- *           format: date-time
- *           description: The end date of the diary
- *         quatity_durian:
- *           type: number
- *           description: The quantity of durian
- *         price:
- *           type: number
- *           description: The price
- *         created_at:
- *           type: string
- *           format: date-time
- *           description: The date the diary was created
- *         updated_at:
- *           type: string
- *           format: date-time
- *           description: The date the diary was updated
- *     DiaryStep:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *           description: The auto-generated id of the diary step
- *         diary_id:
- *           type: string
- *           description: The id of the diary
- *         stage_id:
- *           type: string
- *           description: The id of the stage (step template)
- *         step_name:
- *           type: string
- *           description: The name of the step
- *         description:
- *           type: string
- *           description: The description of the step
- *         cost:
- *           type: number
- *           description: The cost associated with this step
- *         image:
- *           type: string
- *           description: Image URL for this step
- *         action_date:
- *           type: string
- *           format: date-time
- *           description: The date this step was performed
- *         created_at:
- *           type: string
- *           format: date-time
- *         updated_at:
- *           type: string
- *           format: date-time
- */
-
-/**
- * @swagger
  * /diary:
  *   get:
  *     summary: Get all diaries by user
@@ -99,10 +15,17 @@ const Router = express.Router();
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: user_id
+ *         name: garden_id
  *         schema:
  *           type: string
- *         description: Filter by user ID
+ *           description: Filter by garden ID
+ *           example: 66a002222222222222222222
+ *       - in: query
+ *         name: year
+ *         schema:
+ *           type: integer
+ *         description: Filter by start_date year (e.g. 2024)
+ *         example: 2025
  *     responses:
  *       200:
  *         description: Diaries retrieved successfully
@@ -141,13 +64,21 @@ const Router = express.Router();
  *             required:
  *               - title
  *               - crop_type
+ *               - description
+ *               - garden_id
  *             properties:
  *               title:
  *                 type: string
+ *                 example: Vụ sầu riêng Dona 2025
  *               description:
  *                 type: string
+ *                 example: Mô tả về vụ sầu riêng Dona 2025
  *               crop_type:
  *                 type: string
+ *                 example: Sầu riêng Ri6
+ *               garden_id:
+ *                 type: string
+ *                 example: 66a002222222222222222222
  *     responses:
  *       201:
  *         description: Diary created successfully
@@ -225,7 +156,7 @@ const Router = express.Router();
  * @swagger
  * /diary/{diaryId}:
  *   patch:
- *     summary: Update a diary
+ *     summary: Update a diary (general info)
  *     tags: [diary]
  *     security:
  *       - bearerAuth: []
@@ -245,10 +176,13 @@ const Router = express.Router();
  *             properties:
  *               title:
  *                 type: string
+ *                 example: Vụ sầu riêng Dona 2025 - Cập nhật
  *               description:
  *                 type: string
+ *                 example: Mô tả về vụ sầu riêng Dona 2025 - Cập nhật
  *               crop_type:
  *                 type: string
+ *                 example: Sầu riêng Ri6 - Cập nhật
  *     responses:
  *       200:
  *         description: Diary updated successfully
@@ -316,14 +250,19 @@ const Router = express.Router();
  *               stage_id:
  *                 type: string
  *                 description: The ID of the stage (step template)
+ *                 example: 6965ea23a28794347e5a459c
  *               step_name:
  *                 type: string
+ *                 example: Mua 24 bao phân NPK
  *               description:
  *                 type: string
+ *                 example: Mô tả về bước nhật ký
  *               cost:
  *                 type: number
+ *                 example: 500000
  *               image:
  *                 type: string
+ *                 example: https://res.cloudinary.com/di6lwnmsm/image/upload/v1769954669/bao-pp-phan-bon-3_vued15.jpg
  *     responses:
  *       201:
  *         description: Diary step added successfully
@@ -364,12 +303,18 @@ const Router = express.Router();
  *           schema:
  *             type: object
  *             properties:
+ *               step_name:
+ *                 type: string
+ *                 example: Cập nhật tên bước nhật ký
  *               description:
  *                 type: string
+ *                 example: Cập nhật mô tả về bước nhật ký
  *               cost:
  *                 type: number
+ *                 example: 600000
  *               image:
  *                 type: string
+ *                 example: https://res.cloudinary.com/di6lwnmsm/image/upload/v1769954669/bao-pp-phan-bon-3_vued15.jpg
  *     responses:
  *       200:
  *         description: Diary step updated successfully
@@ -407,31 +352,218 @@ const Router = express.Router();
  *       200:
  *         description: Diary step deleted successfully
  */
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Diary:
+ *       type: object
+ *       required:
+ *         - user_id
+ *         - garden_id
+ *         - title
+ *         - crop_type
+ *       properties:
+ *         _id:
+ *           type: string
+ *         user_id:
+ *           type: string
+ *         garden_id:
+ *           type: string
+ *         title:
+ *           type: string
+ *         description:
+ *           type: string
+ *         crop_type:
+ *           type: string
+ *         status:
+ *           type: string
+ *           enum: [In progressing, Completed]
+ *         start_date:
+ *           type: string
+ *           format: date-time
+ *         end_date:
+ *           type: string
+ *           format: date-time
+ *         weight_durian:
+ *           type: number
+ *         price:
+ *           type: number
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *     DiaryStep:
+ *       type: object
+ *       required:
+ *         - diary_id
+ *         - step_name
+ *       properties:
+ *         _id:
+ *           type: string
+ *         diary_id:
+ *           type: string
+ *         stage_id:
+ *           type: string
+ *         step_name:
+ *           type: string
+ *         description:
+ *           type: string
+ *         cost:
+ *           type: number
+ *         image:
+ *           type: string
+ *         action_date:
+ *           type: string
+ *           format: date-time
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ */
 Router.post(
 	'/:diaryId/step',
 	authMiddleware.protect,
-	diaryController.addDiaryStep
+	diaryController.addDiaryStep,
 );
 
-Router.get('/', authMiddleware.protect, diaryController.getDiariesByUser);
+Router.get(
+	'/',
+	authMiddleware.protect,
+	authorizationMiddleware.isFarmer,
+	diaryController.getDiariesByUser,
+);
+
 Router.post('/', authMiddleware.protect, diaryController.createDiary);
+
 Router.get(
 	'/:diaryId',
 	authMiddleware.protect,
-	diaryController.getDiaryDetails
+	diaryController.getDiaryDetails,
 );
+
 Router.patch(
 	'/step/:stepId',
 	authMiddleware.protect,
-	diaryController.updateDiaryStep
+	diaryController.updateDiaryStep,
 );
 
 Router.patch('/:diaryId', authMiddleware.protect, diaryController.updateDiary);
+
+/**
+ * @swagger
+ * /diary/{diaryId}/finish:
+ *   patch:
+ *     summary: Mark a diary as completed (requires weight and price)
+ *     tags: [diary]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: diaryId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Diary ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - weight_durian
+ *               - price
+ *             properties:
+ *               weight_durian:
+ *                 type: number
+ *                 example: 1200
+ *               price:
+ *                 type: number
+ *                 example: 45000
+ *     responses:
+ *       200:
+ *         description: Diary marked as completed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Diary marked as completed successfully
+ *                 data:
+ *                   $ref: '#/components/schemas/Diary'
+ */
+Router.patch(
+	'/:diaryId/finish',
+	authMiddleware.protect,
+	diaryController.finishDiary,
+);
+
 Router.delete('/:diaryId', authMiddleware.protect, diaryController.deleteDiary);
 Router.delete(
 	'/step/:stepId',
 	authMiddleware.protect,
-	diaryController.deleteDiaryStep
+	diaryController.deleteDiaryStep,
+);
+
+Router.get(
+	'/:diaryId/statistics',
+	authMiddleware.protect,
+	diaryController.statisticsDiary,
 );
 
 export { Router as diaryRoute };
+
+/**
+ * @swagger
+ * /diary/{diaryId}/statistics:
+ *   get:
+ *     summary: Get diary statistics (revenue, cost, profit)
+ *     tags: [diary]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: diaryId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Diary ID
+ *     responses:
+ *       200:
+ *         description: Diary statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Diary statistics retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     diary_id:
+ *                       type: string
+ *                     total_cost:
+ *                       type: number
+ *                       example: 1500000
+ *                     total_revenue:
+ *                       type: number
+ *                       example: 54000000
+ *                     profit:
+ *                       type: number
+ *                       example: 52500000
+ */
