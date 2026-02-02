@@ -1,0 +1,162 @@
+@startuml ProductManagement
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+left to right direction
+
+title Product Management Class Diagram (from 13.x sequences)
+
+class ProductPage <<boundary>> {
+  +validateInput(): void
+  +showError(message): void
+  +showSuccess(message): void
+  +displayProduct(p: ProductDTO): void
+  +displayProductList(list: ProductListDTO): void
+}
+
+class ProductRoute <<control>> {
+  +postAdd(req, res): void
+  +getAll(req, res): void
+  +getById(productId, req, res): void
+  +putUpdate(productId, req, res): void
+  +deleteById(productId, req, res): void
+  +filter(params, req, res): void
+  +search(keyword, page, size, sort, req, res): void
+  +sort(sort, page, size, req, res): void
+  +postContactToBuy(req, res): void
+}
+
+class AuthMiddleware <<control>> {
+  +authenticateUser(req): UserInfo
+  +authorizeRole(roles): void
+}
+
+class ProductController <<control>> {
+  +handleCreateProduct(userInfo, data): void
+  +handleViewProductList(userInfo, query): void
+  +handleViewProductDetail(userInfo, productId): void
+  +handleUpdateProduct(userInfo, productId, data): void
+  +handleDeleteProduct(userInfo, productId): void
+  +handleFilterProducts(userInfo, params): void
+  +handleSearchProducts(userInfo, keyword, page, size, sort): void
+  +handleSortProducts(userInfo, sort, page, size): void
+}
+
+class ContactController <<control>> {
+  +handleContactToBuy(userInfo, data): void
+}
+
+class ProductService <<service>> {
+  +createProduct(data, userId): ProductDTO
+  +listProducts(query): ProductListDTO
+  +getProduct(productId): ProductDTO
+  +updateProduct(productId, data): ProductDTO
+  +deleteProduct(productId): boolean
+  +filterProducts(params): ProductListDTO
+  +searchProducts(keyword, page, size, sort): ProductListDTO
+  +sortProducts(sort, page, size): ProductListDTO
+  +checkDatabaseError(error): void
+  +checkNotFound(entity): void
+  +checkConflict(exists): void
+  +mapToProductDTO(p: Product): ProductDTO
+  +mapToProductListDTO(items: Product[], total: int, page: int, size: int): ProductListDTO
+}
+
+class ContactService <<service>> {
+  +contactToBuy(data): ContactDTO
+  +checkDatabaseError(error): void
+}
+
+class ProductModel <<model>> {
+  +checkConflict(data): boolean
+  +create(productData): Product
+  +findById(productId): Product
+  +update(productId, updateData): Product
+  +delete(productId): boolean
+  +find(query): Product[]
+  +count(query): int
+  +applyFilters(params): Product[]
+  +searchByKeyword(keyword, page, size, sort): Product[]
+  +findWithSort(sort, page, size): Product[]
+}
+
+class ContactModel <<model>> {
+  +createContact(data): ContactRequest
+  +checkProductAvailability(productId): boolean
+}
+
+class Product <<entity>> {
+  +id: string
+  +name: string
+  +price: number
+  +categoryId: string
+  +description: string
+  +images: string[]
+  +available: boolean
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+class ContactRequest <<entity>> {
+  +id: string
+  +productId: string
+  +name: string
+  +phone: string
+  +message: string
+  +quantity: int
+  +createdAt: Date
+}
+
+class ProductDTO <<datatype>> {
+  +id: string
+  +name: string
+  +price: number
+  +categoryId: string
+  +description: string
+  +thumbnailUrl: string
+  +available: boolean
+}
+
+class ProductListDTO <<datatype>> {
+  +items: ProductDTO[]
+  +total: int
+  +page: int
+  +size: int
+}
+
+class ContactDTO <<datatype>> {
+  +productId: string
+  +name: string
+  +phone: string
+  +message: string
+  +quantity: int
+  +status: string
+}
+
+class Database <<database>>
+
+ProductPage --> ProductRoute : uses
+ProductRoute --> AuthMiddleware : uses
+
+AuthMiddleware --> ProductController : forwards userInfo
+AuthMiddleware --> ContactController : forwards userInfo
+ProductRoute --> ProductController : calls handlers
+ProductRoute --> ContactController : calls handlers
+
+ProductController --> ProductService : orchestration
+ContactController --> ContactService : orchestration
+
+ProductService --> ProductModel : persistence
+ContactService --> ContactModel : persistence
+
+ProductModel --> Database : queries
+ContactModel --> Database : queries
+
+ProductService --> ProductDTO : returns
+ProductService --> ProductListDTO : returns
+ContactService --> ContactDTO : returns
+
+ProductModel --> Product : entity
+ContactModel --> ContactRequest : entity
+
+@enduml
