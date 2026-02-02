@@ -132,7 +132,12 @@ export const profileAPI = {
     const response = await apiClient.put('/profile/update', payload);
     return response.data;
   },
-};
+
+  async getPublicProfile(userId) {
+    const response = await apiClient.get(`/profile/public/${userId}`);
+    return response.data;
+  },
+}
 
 // Auth API
 export const authAPI = {

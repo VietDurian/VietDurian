@@ -94,21 +94,21 @@ const updateProfile = async (req, res, next) => {
 
 const getPublicProfile = async (req, res, next) => {
   try {
-    const { user_id } = req.query;
+    const { userId } = req.params;
 
-    if (!user_id) {
+    if (!userId) {
       return res.status(400).json({
         code: 400,
         message: "User ID is required",
       });
     }
 
-    const publicProfile = await profileService.getPublicProfile(user_id);
+    const publicProfile = await profileService.getPublicProfile(userId);
 
     res.status(200).json({
       code: 200,
       success: true,
-      message: "Public profile retrieved successfully",
+      message: `You have successfully retrieved the profile of ${publicProfile.full_name}`,
       data: publicProfile,
     });
   } catch (error) {
