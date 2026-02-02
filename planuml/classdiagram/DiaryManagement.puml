@@ -1,0 +1,201 @@
+@startuml
+skinparam classAttributeIconSize 0
+left to right direction
+
+title Diary Class Diagram
+
+' =======================
+' ======= ENTITIES ======
+' =======================
+
+class User {
+  +UserId: string
+  +Email: string
+  +Name: string
+}
+
+class Diary {
+  +DiaryId: string
+  +UserId: string
+  +Title: string
+  +Date: DateTime
+  +Notes: string
+  +CreatedAt: DateTime
+  +UpdatedAt: DateTime
+}
+
+class DiaryEntry {
+  +EntryId: string
+  +DiaryId: string
+  +Type: DiaryEntryType
+  +Category: string
+  +Amount: decimal
+  +Description: string
+  +CreatedAt: DateTime
+  +UpdatedAt: DateTime
+}
+
+class DiaryFilter {
+  +UserId: string
+  +DateFrom: DateTime
+  +DateTo: DateTime
+  +Type: DiaryEntryType
+  +Category: string
+  +MinAmount: decimal
+  +MaxAmount: decimal
+}
+
+class Pagination {
+  +Page: int
+  +PageSize: int
+}
+
+class DiaryListResult {
+  +Items: List<Diary>
+  +Total: int
+  +Page: int
+  +PageSize: int
+}
+
+class DiaryStatistics {
+  +TotalCost: decimal
+  +TotalRevenue: decimal
+  +Profit: decimal
+  +ByCategory: List<StatItem>
+}
+
+class StatItem {
+  +Category: string
+  +TotalAmount: decimal
+}
+
+enum DiaryEntryType {
+  COST
+  REVENUE
+}
+
+' =======================
+' ======= SERVICES ======
+' =======================
+
+interface IDiaryService {
+  +CreateDiaryAsync(userId: string, diary: Diary): Diary
+  +UpdateDiaryAsync(diaryId: string, diary: Diary): bool
+  +DeleteDiaryAsync(diaryId: string): bool
+  +GetDiaryListAsync(filter: DiaryFilter, pagination: Pagination): DiaryListResult
+  +GetDiaryDetailAsync(diaryId: string): Diary
+  +AddEntryAsync(diaryId: string, entry: DiaryEntry): DiaryEntry
+  +UpdateEntryAsync(entryId: string, entry: DiaryEntry): bool
+  +DeleteEntryAsync(entryId: string): bool
+}
+
+class DiaryService {
+  -_diaryRepo: IDiaryRepo
+  -_diaryEntryRepo: IDiaryEntryRepo
+  +CreateDiaryAsync(userId: string, diary: Diary): Diary
+  +UpdateDiaryAsync(diaryId: string, diary: Diary): bool
+  +DeleteDiaryAsync(diaryId: string): bool
+  +GetDiaryListAsync(filter: DiaryFilter, pagination: Pagination): DiaryListResult
+  +GetDiaryDetailAsync(diaryId: string): Diary
+  +AddEntryAsync(diaryId: string, entry: DiaryEntry): DiaryEntry
+  +UpdateEntryAsync(entryId: string, entry: DiaryEntry): bool
+  +DeleteEntryAsync(entryId: string): bool
+}
+
+IDiaryService <|.. DiaryService
+
+interface IStatisticsService {
+  +GetDiaryStatisticsAsync(filter: DiaryFilter): DiaryStatistics
+}
+
+class StatisticsService {
+  -_diaryRepo: IDiaryRepo
+  -_diaryEntryRepo: IDiaryEntryRepo
+  +GetDiaryStatisticsAsync(filter: DiaryFilter): DiaryStatistics
+}
+
+IStatisticsService <|.. StatisticsService
+
+class DiaryController {
+  +CreateDiaryAsync(req, res): void
+  +ViewDiaryListAsync(req, res): void
+  +ViewDiaryDetailAsync(req, res): void
+  +UpdateDiaryAsync(req, res): void
+  +DeleteDiaryAsync(req, res): void
+  +FilterDiaryAsync(req, res): void
+  +DetailedStatisticsAsync(req, res): void
+}
+
+' =======================
+' ===== REPOSITORIES ====
+' =======================
+
+interface IDiaryRepo {
+  +CreateAsync(diary: Diary): Diary
+  +UpdateAsync(diary: Diary): bool
+  +DeleteAsync(diaryId: string): bool
+  +GetByIdAsync(diaryId: string): Diary
+  +GetListAsync(filter: DiaryFilter, pagination: Pagination): DiaryListResult
+}
+
+class DiaryRepo {
+  -_context: DiaryContext
+  +CreateAsync(diary: Diary): Diary
+  +UpdateAsync(diary: Diary): bool
+  +DeleteAsync(diaryId: string): bool
+  +GetByIdAsync(diaryId: string): Diary
+  +GetListAsync(filter: DiaryFilter, pagination: Pagination): DiaryListResult
+}
+
+IDiaryRepo <|.. DiaryRepo
+
+interface IDiaryEntryRepo {
+  +CreateAsync(entry: DiaryEntry): DiaryEntry
+  +UpdateAsync(entry: DiaryEntry): bool
+  +DeleteAsync(entryId: string): bool
+  +GetByDiaryIdAsync(diaryId: string): List<DiaryEntry>
+}
+
+class DiaryEntryRepo {
+  -_context: DiaryContext
+  +CreateAsync(entry: DiaryEntry): DiaryEntry
+  +UpdateAsync(entry: DiaryEntry): bool
+  +DeleteAsync(entryId: string): bool
+  +GetByDiaryIdAsync(diaryId: string): List<DiaryEntry>
+}
+
+IDiaryEntryRepo <|.. DiaryEntryRepo
+
+class DiaryContext
+
+' =======================
+' ===== RELATIONSHIPS ===
+' =======================
+
+DiaryController --> IDiaryService
+DiaryController --> IStatisticsService
+
+DiaryService --> IDiaryRepo
+DiaryService --> IDiaryEntryRepo
+
+StatisticsService --> IDiaryRepo
+StatisticsService --> IDiaryEntryRepo
+
+DiaryRepo --> DiaryContext
+DiaryEntryRepo --> DiaryContext
+
+Diary "1" o-- "many" DiaryEntry
+Diary "1" --> "1" User
+
+note right of DiaryController
+  Methods map to sequences:
+  - 10.1_createDiary.puml -> CreateDiaryAsync()
+  - 10.2_viewDiary.puml -> ViewDiaryListAsync(), ViewDiaryDetailAsync(), FilterDiaryAsync()
+  - 10.3_updateDiary.puml -> UpdateDiaryAsync()
+  - 10.4_deleteDiary.puml -> DeleteDiaryAsync()
+  - 11.1_costStatistics.puml -> DetailedStatisticsAsync()
+  - 11.2_RevenueStatistics.puml -> DetailedStatisticsAsync()
+  - 11.3_profitStatistics.puml -> DetailedStatisticsAsync()
+end note
+
+@enduml
