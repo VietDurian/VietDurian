@@ -1,21 +1,91 @@
-@startuml
+@startuml UserManagement
+skinparam monochrome true
+skinparam shadowing false
 skinparam classAttributeIconSize 0
 left to right direction
 
-title User Management Class Diagram
+title User Management Class Diagram (from sequences)
 
-' =======================
-' ======= ENTITIES ======
-' =======================
+class UserManagementPage <<boundary>> {
+  +validateInput(): void
+  +showError(message): void
+  +showSuccess(message): void
+  +displayUserList(list: List<UserDTO>): void
+  +displayUserDetail(user: UserDetailDTO): void
+}
 
-class User {
-  +UserId: string
-  +Email: string
-  +Name: string
-  +Role: Role
-  +Status: Status
-  +CreatedAt: DateTime
-  +UpdatedAt: DateTime
+class UserManagementRoute <<control>> {
+  +getList(req, res): void
+  +getDetail(userId, req, res): void
+  +putBlockStatus(userId, status, req, res): void
+  +search(keyword, req, res): void
+  +filter(filters, req, res): void
+  +sort(field, order, req, res): void
+}
+
+class AuthMiddleware <<control>> {
+  +authenticateUser(req): UserInfo
+  +authorizeRole(roles): void
+}
+
+class UserManagementController <<control>> {
+  +handleGetUserList(userInfo): void
+  +handleGetUserDetail(userInfo, userId): void
+  +handleBlockUnblockUser(userInfo, userId, status): void
+  +handleSearchUser(userInfo, keyword): void
+  +handleFilterUser(userInfo, filters): void
+  +handleSortUser(userInfo, field, order): void
+}
+
+class UserManagementService <<service>> {
+  +getUserList(): List<UserDTO>
+  +getUserDetail(userId): UserDetailDTO
+  +blockUnblockUser(userId, status): UserDTO
+  +searchUser(keyword): List<UserDTO>
+  +filterUser(filters): List<UserDTO>
+  +sortUser(field, order): List<UserDTO>
+  +checkDatabaseError(error): void
+  +checkNotFound(entity): void
+  +mapToUserDTO(user: User): UserDTO
+  +mapToUserDTOList(users: List<User>): List<UserDTO>
+  +mapToUserDetailDTO(user: User): UserDetailDTO
+}
+
+class UserManagementModel <<model>> {
+  +findAllUsers(): List<User>
+  +findById(userId): User
+  +updateBlockStatus(userId, status): User
+  +findByKeyword(keyword): List<User>
+  +findByFilters(filters): List<User>
+  +findWithSort(field, order): List<User>
+}
+
+class User <<entity>> {
+  +id: string
+  +email: string
+  +name: string
+  +role: Role
+  +status: Status
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+class UserDTO <<datatype>> {
+  +id: string
+  +email: string
+  +name: string
+  +role: Role
+  +status: Status
+}
+
+class UserDetailDTO <<datatype>> {
+  +id: string
+  +email: string
+  +name: string
+  +role: Role
+  +status: Status
+  +createdAt: Date
+  +updatedAt: Date
 }
 
 enum Role {
@@ -29,104 +99,17 @@ enum Status {
   PENDING
 }
 
-class UserFilter {
-  +Role: Role
-  +Status: Status
-  +CreatedFrom: DateTime
-  +CreatedTo: DateTime
-}
+database DB as Database
 
-class SortOption {
-  +Field: string
-  +Direction: string
-}
-
-class SearchQuery {
-  +Keywords: string
-}
-
-class Pagination {
-  +Page: int
-  +PageSize: int
-}
-
-class UserListResult {
-  +Items: List<User>
-  +Total: int
-  +Page: int
-  +PageSize: int
-}
-
-' =======================
-' ======= SERVICES ======
-' =======================
-
-interface IUserManagementService {
-  +GetUserListAsync(filter: UserFilter, pagination: Pagination, sort: SortOption, search: SearchQuery): UserListResult
-  +GetUserDetailAsync(userId: string): User
-  +BlockUserAsync(userId: string, reason: string): bool
-  +UnblockUserAsync(userId: string): bool
-}
-
-class UserManagementService {
-  -_userRepo: IUserRepo
-  +GetUserListAsync(filter: UserFilter, pagination: Pagination, sort: SortOption, search: SearchQuery): UserListResult
-  +GetUserDetailAsync(userId: string): User
-  +BlockUserAsync(userId: string, reason: string): bool
-  +UnblockUserAsync(userId: string): bool
-}
-
-IUserManagementService <|.. UserManagementService
-
-class UserManagementController {
-  +ViewUserListAsync(req, res): void
-  +ViewUserDetailAsync(req, res): void
-  +BlockUserAsync(req, res): void
-  +UnblockUserAsync(req, res): void
-  +SearchUsersAsync(req, res): void
-  +SortUsersAsync(req, res): void
-  +FilterUsersAsync(req, res): void
-}
-
-' =======================
-' ===== REPOSITORIES ====
-' =======================
-
-interface IUserRepo {
-  +GetListAsync(filter: UserFilter, pagination: Pagination, sort: SortOption, search: SearchQuery): UserListResult
-  +GetByIdAsync(userId: string): User
-  +UpdateStatusAsync(userId: string, status: Status): bool
-}
-
-class UserRepo {
-  -_context: UserContext
-  +GetListAsync(filter: UserFilter, pagination: Pagination, sort: SortOption, search: SearchQuery): UserListResult
-  +GetByIdAsync(userId: string): User
-  +UpdateStatusAsync(userId: string, status: Status): bool
-}
-
-IUserRepo <|.. UserRepo
-
-class UserContext
-
-' =======================
-' ===== RELATIONSHIPS ===
-' =======================
-
-UserManagementController --> IUserManagementService
-UserManagementService --> IUserRepo
-UserRepo --> UserContext
-
-UserRepo "1" o-- "many" User
-
-note right of UserManagementController
-  Methods map to sequences:
-  - 12.1_viewUserList.puml -> ViewUserListAsync()
-  - 12.1.1_viewUserDetail.puml -> ViewUserDetailAsync()
-  - 12.1.2_BlockUnblockUser.puml -> BlockUserAsync(), UnblockUserAsync()
-  - 12.2_searchUser.puml -> SearchUsersAsync()
-  - 12.3_filterUser.puml -> FilterUsersAsync()
-  - 12.4_sortUser.puml -> SortUsersAsync()
-end note
+UserManagementPage --> UserManagementRoute : uses
+UserManagementRoute --> AuthMiddleware : uses
+AuthMiddleware --> UserManagementController : forwards userInfo
+UserManagementRoute --> UserManagementController : calls handlers
+UserManagementController --> UserManagementService : orchestration
+UserManagementService --> UserManagementModel : persistence
+UserManagementModel --> DB : queries
+UserManagementService --> UserDTO : returns
+UserManagementService --> UserDetailDTO : returns
+UserManagementModel --> User : entity
 
 @enduml

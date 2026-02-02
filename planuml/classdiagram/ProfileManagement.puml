@@ -1,236 +1,185 @@
-@startuml
+@startuml ProfileManagement
+skinparam monochrome true
+skinparam shadowing false
 skinparam classAttributeIconSize 0
 left to right direction
 
-title Profile & Capability Class Diagram
+title Profile Management Class Diagram (from 9.x sequences)
 
-' =======================
-' ======= ENTITIES ======
-' =======================
-
-class User {
-  +UserId: string
-  +Email: string
-  +Name: string
-  +AvatarUrl: string
-  +Role: string
-  +Status: string
+class ProfilePage <<boundary>> {
+  +validateInput(): void
+  +showError(message): void
+  +showSuccess(message): void
+  +displayProfile(u: UserDTO): void
+  +displayPublicProfile(p: PublicProfileDTO): void
+  +displayMap(m: MapDTO): void
 }
 
-class UserProfile {
-  +ProfileId: string
-  +UserId: string
-  +FullName: string
-  +AvatarUrl: string
-  +Bio: string
-  +Phone: string
-  +Address: string
-  +LocationLat: decimal
-  +LocationLng: decimal
-  +Visibility: string
-  +UpdatedAt: DateTime
+class ProfileRoute <<control>> {
+  +getMe(req, res): void
+  +postEditProfile(req, res): void
+  +getPublic(userId, req, res): void
+  +getMap(req, res): void
 }
 
-class PublicProfileView {
-  +UserId: string
-  +FullName: string
-  +AvatarUrl: string
-  +Bio: string
+class AuthMiddleware <<control>> {
+  +authenticateUser(req): UserInfo
+  +authorizeRole(roles): void
 }
 
-class MapLocation {
-  +UserId: string
-  +Latitude: decimal
-  +Longitude: decimal
-  +UpdatedAt: DateTime
+class ProfileController <<control>> {
+  +handleViewProfile(userInfo): void
+  +handleEditProfile(userInfo, profileData): void
+  +handleGetPublicProfile(userId): void
 }
 
-class CapabilityProfile {
-  +CapabilityProfileId: string
-  +UserId: string
-  +Title: string
-  +Summary: string
-  +UpdatedAt: DateTime
+class MapController <<control>> {
+  +handleGetMap(userInfo): void
 }
 
-class CapabilityItem {
-  +CapabilityItemId: string
-  +CapabilityProfileId: string
-  +Name: string
-  +Level: int
-  +YearsExperience: int
-  +Description: string
+class CapabilityProfileController <<control>> {
+  +handleViewCapabilityProfile(userInfo): void
+  +handleCreateCapabilityProfile(userInfo, data): void
+  +handleUpdateCapabilityProfile(userInfo, data): void
 }
 
-' =======================
-' ======= SERVICES ======
-' =======================
-
-interface IProfileService {
-  +GetProfileAsync(userId: string): UserProfile
-  +UpdateProfileAsync(userId: string, profile: UserProfile): bool
-  +GetPublicProfileAsync(userId: string): PublicProfileView
+class ProfileService <<service>> {
+  +getProfile(userId): UserDTO
+  +updateProfile(userId, profileData): UserDTO
+  +getPublicProfile(userId): PublicProfileDTO
+  +checkNotFound(entity): void
+  +checkDatabaseError(error): void
+  +mapToUserDTO(user: User): UserDTO
+  +mapToPublicProfileDTO(user: User): PublicProfileDTO
 }
 
-class ProfileService {
-  -_userRepo: IUserRepo
-  -_profileRepo: IProfileRepo
-  -_storageService: StorageService
-  +GetProfileAsync(userId: string): UserProfile
-  +UpdateProfileAsync(userId: string, profile: UserProfile): bool
-  +GetPublicProfileAsync(userId: string): PublicProfileView
+class MapService <<service>> {
+  +getMapData(userId): MapDTO
+  +checkDatabaseError(error): void
 }
 
-IProfileService <|.. ProfileService
-
-interface IMapService {
-  +GetUserLocationAsync(userId: string): MapLocation
-  +UpdateUserLocationAsync(userId: string, lat: decimal, lng: decimal): bool
+class CapabilityProfileService <<service>> {
+  +getCapabilityProfile(userId): CapabilityProfileDTO
+  +createCapabilityProfile(userId, data): CapabilityProfileDTO
+  +updateCapabilityProfile(userId, data): CapabilityProfileDTO
+  +checkDatabaseError(error): void
+  +mapToCapabilityProfileDTO(p: CapabilityProfile, items: List<CapabilityItem>): CapabilityProfileDTO
 }
 
-class MapService {
-  -_profileRepo: IProfileRepo
-  +GetUserLocationAsync(userId: string): MapLocation
-  +UpdateUserLocationAsync(userId: string, lat: decimal, lng: decimal): bool
+class UserModel <<model>> {
+  +findOne(userId): User
+  +editUserById(userId, profileData): User
+  +find(): List<User>  
 }
 
-interface ICapabilityProfileService {
-  +GetCapabilityProfileAsync(userId: string): CapabilityProfile
-  +CreateCapabilityProfileAsync(userId: string, profile: CapabilityProfile): CapabilityProfile
-  +UpdateCapabilityProfileAsync(userId: string, profile: CapabilityProfile): bool
+class CapabilityProfileModel <<model>> {
+  +getByUserId(userId): CapabilityProfile
+  +create(userId, data): CapabilityProfile
+  +update(userId, data): CapabilityProfile
 }
 
-class CapabilityProfileService {
-  -_capabilityProfileRepo: ICapabilityProfileRepo
-  -_capabilityItemRepo: ICapabilityItemRepo
-  +GetCapabilityProfileAsync(userId: string): CapabilityProfile
-  +CreateCapabilityProfileAsync(userId: string, profile: CapabilityProfile): CapabilityProfile
-  +UpdateCapabilityProfileAsync(userId: string, profile: CapabilityProfile): bool
+class CapabilityItemModel <<model>> {
+  +getByCapabilityProfileId(capabilityProfileId): List<CapabilityItem>
+  +create(itemData): CapabilityItem
+  +update(itemData): CapabilityItem
 }
 
-ICapabilityProfileService <|.. CapabilityProfileService
-
-class StorageService {
-  +UploadAvatarAsync(userId: string, filePath: string): string
+class User <<entity>> {
+  +id: string
+  +email: string
+  +name: string
+  +avatarUrl: string
+  +role: string
+  +status: string
 }
 
-class ProfileController {
-  +ViewProfileAsync(req, res): void
-  +EditProfileAsync(req, res): void
-  +ViewPublicProfileAsync(req, res): void
+class CapabilityProfile <<entity>> {
+  +id: string
+  +userId: string
+  +title: string
+  +summary: string
+  +updatedAt: Date
 }
 
-class MapController {
-  +ViewMapAsync(req, res): void
+class CapabilityItem <<entity>> {
+  +id: string
+  +capabilityProfileId: string
+  +name: string
+  +level: int
+  +yearsExperience: int
+  +description: string
 }
 
-class CapabilityProfileController {
-  +ViewCapabilityProfileAsync(req, res): void
-  +CreateCapabilityProfileAsync(req, res): void
-  +UpdateCapabilityProfileAsync(req, res): void
+class UserDTO <<datatype>> {
+  +id: string
+  +email: string
+  +name: string
+  +avatarUrl: string
+  +role: string
+  +status: string
 }
 
-' =======================
-' ===== REPOSITORIES ====
-' =======================
-
-interface IUserRepo {
-  +FindByIdAsync(userId: string): User
+class PublicProfileDTO <<datatype>> {
+  +userId: string
+  +fullName: string
+  +avatarUrl: string
+  +bio: string
 }
 
-class UserRepo {
-  -_context: ProfileContext
-  +FindByIdAsync(userId: string): User
+class MapDTO <<datatype>> {
+  +userId: string
+  +markers: List<MapMarkerDTO>
 }
 
-IUserRepo <|.. UserRepo
-
-interface IProfileRepo {
-  +GetByUserIdAsync(userId: string): UserProfile
-  +UpdateAsync(profile: UserProfile): bool
+class MapMarkerDTO <<datatype>> {
+  +lat: number
+  +lng: number
+  +label: string
 }
 
-class ProfileRepo {
-  -_context: ProfileContext
-  +GetByUserIdAsync(userId: string): UserProfile
-  +UpdateAsync(profile: UserProfile): bool
+class CapabilityProfileDTO <<datatype>> {
+  +userId: string
+  +title: string
+  +summary: string
+  +items: List<CapabilityItemDTO>
 }
 
-IProfileRepo <|.. ProfileRepo
-
-interface ICapabilityProfileRepo {
-  +GetByUserIdAsync(userId: string): CapabilityProfile
-  +CreateAsync(profile: CapabilityProfile): CapabilityProfile
-  +UpdateAsync(profile: CapabilityProfile): bool
+class CapabilityItemDTO <<datatype>> {
+  +name: string
+  +level: int
+  +yearsExperience: int
+  +description: string
 }
 
-class CapabilityProfileRepo {
-  -_context: ProfileContext
-  +GetByUserIdAsync(userId: string): CapabilityProfile
-  +CreateAsync(profile: CapabilityProfile): CapabilityProfile
-  +UpdateAsync(profile: CapabilityProfile): bool
-}
+database "Database" as DB
 
-ICapabilityProfileRepo <|.. CapabilityProfileRepo
+ProfilePage --> ProfileRoute : uses
+ProfileRoute --> AuthMiddleware : uses
+AuthMiddleware --> ProfileController : forwards userInfo
+AuthMiddleware --> MapController : forwards userInfo
+AuthMiddleware --> CapabilityProfileController : forwards userInfo
+ProfileRoute --> ProfileController : calls handlers
+ProfileRoute --> MapController : calls handlers
+ProfileRoute --> CapabilityProfileController : calls handlers
 
-interface ICapabilityItemRepo {
-  +GetByCapabilityProfileIdAsync(capabilityProfileId: string): List<CapabilityItem>
-  +CreateAsync(item: CapabilityItem): CapabilityItem
-  +UpdateAsync(item: CapabilityItem): bool
-}
+ProfileController --> ProfileService : orchestration
+MapController --> MapService : orchestration
+CapabilityProfileController --> CapabilityProfileService : orchestration
 
-class CapabilityItemRepo {
-  -_context: ProfileContext
-  +GetByCapabilityProfileIdAsync(capabilityProfileId: string): List<CapabilityItem>
-  +CreateAsync(item: CapabilityItem): CapabilityItem
-  +UpdateAsync(item: CapabilityItem): bool
-}
+ProfileService --> UserModel : persistence
+MapService --> UserModel : persistence
+CapabilityProfileService --> CapabilityProfileModel : persistence
+CapabilityProfileService --> CapabilityItemModel : persistence
 
-ICapabilityItemRepo <|.. CapabilityItemRepo
+UserModel --> DB : queries
+CapabilityProfileModel --> DB : queries
+CapabilityItemModel --> DB : queries
 
-class ProfileContext
+ProfileService --> UserDTO : returns
+ProfileService --> PublicProfileDTO : returns
+MapService --> MapDTO : returns
+CapabilityProfileService --> CapabilityProfileDTO : returns
 
-' =======================
-' ===== RELATIONSHIPS ===
-' =======================
-
-ProfileController --> IProfileService
-ProfileController --> IMapService
-MapController --> IMapService
-CapabilityProfileController --> ICapabilityProfileService
-
-ProfileService --> IUserRepo
-ProfileService --> IProfileRepo
-ProfileService --> StorageService
-
-MapService --> IProfileRepo
-
-CapabilityProfileService --> ICapabilityProfileRepo
-CapabilityProfileService --> ICapabilityItemRepo
-
-UserRepo --> ProfileContext
-ProfileRepo --> ProfileContext
-CapabilityProfileRepo --> ProfileContext
-CapabilityItemRepo --> ProfileContext
-
-User "1" o-- "many" UserProfile
-CapabilityProfile "1" o-- "many" CapabilityItem
-UserProfile "1" --> "1" User
-MapLocation "1" --> "1" User
-
-note right of ProfileController
-  Methods map to sequences:
-  - 9.1_viewProfile.puml -> ViewProfileAsync()
-  - 9.2_editProfile.puml -> EditProfileAsync()
-  - 9.3_viewPublicProfile.puml -> ViewPublicProfileAsync()
-  - 9.4_viewMap.puml -> ViewMapAsync()
-end note
-
-note right of CapabilityProfileController
-  Methods map to sequences:
-  - ViewCapabilityProfile -> ViewCapabilityProfileAsync()
-  - CreateCapabilityProfile -> CreateCapabilityProfileAsync()
-  - UpdateCapabilityProfile -> UpdateCapabilityProfileAsync()
-end note
+CapabilityProfileDTO --> CapabilityItemDTO
 
 @enduml
