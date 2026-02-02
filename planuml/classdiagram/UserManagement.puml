@@ -1,0 +1,132 @@
+@startuml
+skinparam classAttributeIconSize 0
+left to right direction
+
+title User Management Class Diagram
+
+' =======================
+' ======= ENTITIES ======
+' =======================
+
+class User {
+  +UserId: string
+  +Email: string
+  +Name: string
+  +Role: Role
+  +Status: Status
+  +CreatedAt: DateTime
+  +UpdatedAt: DateTime
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Status {
+  ACTIVE
+  BLOCKED
+  PENDING
+}
+
+class UserFilter {
+  +Role: Role
+  +Status: Status
+  +CreatedFrom: DateTime
+  +CreatedTo: DateTime
+}
+
+class SortOption {
+  +Field: string
+  +Direction: string
+}
+
+class SearchQuery {
+  +Keywords: string
+}
+
+class Pagination {
+  +Page: int
+  +PageSize: int
+}
+
+class UserListResult {
+  +Items: List<User>
+  +Total: int
+  +Page: int
+  +PageSize: int
+}
+
+' =======================
+' ======= SERVICES ======
+' =======================
+
+interface IUserManagementService {
+  +GetUserListAsync(filter: UserFilter, pagination: Pagination, sort: SortOption, search: SearchQuery): UserListResult
+  +GetUserDetailAsync(userId: string): User
+  +BlockUserAsync(userId: string, reason: string): bool
+  +UnblockUserAsync(userId: string): bool
+}
+
+class UserManagementService {
+  -_userRepo: IUserRepo
+  +GetUserListAsync(filter: UserFilter, pagination: Pagination, sort: SortOption, search: SearchQuery): UserListResult
+  +GetUserDetailAsync(userId: string): User
+  +BlockUserAsync(userId: string, reason: string): bool
+  +UnblockUserAsync(userId: string): bool
+}
+
+IUserManagementService <|.. UserManagementService
+
+class UserManagementController {
+  +ViewUserListAsync(req, res): void
+  +ViewUserDetailAsync(req, res): void
+  +BlockUserAsync(req, res): void
+  +UnblockUserAsync(req, res): void
+  +SearchUsersAsync(req, res): void
+  +SortUsersAsync(req, res): void
+  +FilterUsersAsync(req, res): void
+}
+
+' =======================
+' ===== REPOSITORIES ====
+' =======================
+
+interface IUserRepo {
+  +GetListAsync(filter: UserFilter, pagination: Pagination, sort: SortOption, search: SearchQuery): UserListResult
+  +GetByIdAsync(userId: string): User
+  +UpdateStatusAsync(userId: string, status: Status): bool
+}
+
+class UserRepo {
+  -_context: UserContext
+  +GetListAsync(filter: UserFilter, pagination: Pagination, sort: SortOption, search: SearchQuery): UserListResult
+  +GetByIdAsync(userId: string): User
+  +UpdateStatusAsync(userId: string, status: Status): bool
+}
+
+IUserRepo <|.. UserRepo
+
+class UserContext
+
+' =======================
+' ===== RELATIONSHIPS ===
+' =======================
+
+UserManagementController --> IUserManagementService
+UserManagementService --> IUserRepo
+UserRepo --> UserContext
+
+UserRepo "1" o-- "many" User
+
+note right of UserManagementController
+  Methods map to sequences:
+  - 12.1_viewUserList.puml -> ViewUserListAsync()
+  - 12.1.1_viewUserDetail.puml -> ViewUserDetailAsync()
+  - 12.1.2_BlockUnblockUser.puml -> BlockUserAsync(), UnblockUserAsync()
+  - 12.2_searchUser.puml -> SearchUsersAsync()
+  - 12.3_filterUser.puml -> FilterUsersAsync()
+  - 12.4_sortUser.puml -> SortUsersAsync()
+end note
+
+@enduml

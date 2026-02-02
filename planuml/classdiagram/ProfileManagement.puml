@@ -1,0 +1,236 @@
+@startuml
+skinparam classAttributeIconSize 0
+left to right direction
+
+title Profile & Capability Class Diagram
+
+' =======================
+' ======= ENTITIES ======
+' =======================
+
+class User {
+  +UserId: string
+  +Email: string
+  +Name: string
+  +AvatarUrl: string
+  +Role: string
+  +Status: string
+}
+
+class UserProfile {
+  +ProfileId: string
+  +UserId: string
+  +FullName: string
+  +AvatarUrl: string
+  +Bio: string
+  +Phone: string
+  +Address: string
+  +LocationLat: decimal
+  +LocationLng: decimal
+  +Visibility: string
+  +UpdatedAt: DateTime
+}
+
+class PublicProfileView {
+  +UserId: string
+  +FullName: string
+  +AvatarUrl: string
+  +Bio: string
+}
+
+class MapLocation {
+  +UserId: string
+  +Latitude: decimal
+  +Longitude: decimal
+  +UpdatedAt: DateTime
+}
+
+class CapabilityProfile {
+  +CapabilityProfileId: string
+  +UserId: string
+  +Title: string
+  +Summary: string
+  +UpdatedAt: DateTime
+}
+
+class CapabilityItem {
+  +CapabilityItemId: string
+  +CapabilityProfileId: string
+  +Name: string
+  +Level: int
+  +YearsExperience: int
+  +Description: string
+}
+
+' =======================
+' ======= SERVICES ======
+' =======================
+
+interface IProfileService {
+  +GetProfileAsync(userId: string): UserProfile
+  +UpdateProfileAsync(userId: string, profile: UserProfile): bool
+  +GetPublicProfileAsync(userId: string): PublicProfileView
+}
+
+class ProfileService {
+  -_userRepo: IUserRepo
+  -_profileRepo: IProfileRepo
+  -_storageService: StorageService
+  +GetProfileAsync(userId: string): UserProfile
+  +UpdateProfileAsync(userId: string, profile: UserProfile): bool
+  +GetPublicProfileAsync(userId: string): PublicProfileView
+}
+
+IProfileService <|.. ProfileService
+
+interface IMapService {
+  +GetUserLocationAsync(userId: string): MapLocation
+  +UpdateUserLocationAsync(userId: string, lat: decimal, lng: decimal): bool
+}
+
+class MapService {
+  -_profileRepo: IProfileRepo
+  +GetUserLocationAsync(userId: string): MapLocation
+  +UpdateUserLocationAsync(userId: string, lat: decimal, lng: decimal): bool
+}
+
+interface ICapabilityProfileService {
+  +GetCapabilityProfileAsync(userId: string): CapabilityProfile
+  +CreateCapabilityProfileAsync(userId: string, profile: CapabilityProfile): CapabilityProfile
+  +UpdateCapabilityProfileAsync(userId: string, profile: CapabilityProfile): bool
+}
+
+class CapabilityProfileService {
+  -_capabilityProfileRepo: ICapabilityProfileRepo
+  -_capabilityItemRepo: ICapabilityItemRepo
+  +GetCapabilityProfileAsync(userId: string): CapabilityProfile
+  +CreateCapabilityProfileAsync(userId: string, profile: CapabilityProfile): CapabilityProfile
+  +UpdateCapabilityProfileAsync(userId: string, profile: CapabilityProfile): bool
+}
+
+ICapabilityProfileService <|.. CapabilityProfileService
+
+class StorageService {
+  +UploadAvatarAsync(userId: string, filePath: string): string
+}
+
+class ProfileController {
+  +ViewProfileAsync(req, res): void
+  +EditProfileAsync(req, res): void
+  +ViewPublicProfileAsync(req, res): void
+}
+
+class MapController {
+  +ViewMapAsync(req, res): void
+}
+
+class CapabilityProfileController {
+  +ViewCapabilityProfileAsync(req, res): void
+  +CreateCapabilityProfileAsync(req, res): void
+  +UpdateCapabilityProfileAsync(req, res): void
+}
+
+' =======================
+' ===== REPOSITORIES ====
+' =======================
+
+interface IUserRepo {
+  +FindByIdAsync(userId: string): User
+}
+
+class UserRepo {
+  -_context: ProfileContext
+  +FindByIdAsync(userId: string): User
+}
+
+IUserRepo <|.. UserRepo
+
+interface IProfileRepo {
+  +GetByUserIdAsync(userId: string): UserProfile
+  +UpdateAsync(profile: UserProfile): bool
+}
+
+class ProfileRepo {
+  -_context: ProfileContext
+  +GetByUserIdAsync(userId: string): UserProfile
+  +UpdateAsync(profile: UserProfile): bool
+}
+
+IProfileRepo <|.. ProfileRepo
+
+interface ICapabilityProfileRepo {
+  +GetByUserIdAsync(userId: string): CapabilityProfile
+  +CreateAsync(profile: CapabilityProfile): CapabilityProfile
+  +UpdateAsync(profile: CapabilityProfile): bool
+}
+
+class CapabilityProfileRepo {
+  -_context: ProfileContext
+  +GetByUserIdAsync(userId: string): CapabilityProfile
+  +CreateAsync(profile: CapabilityProfile): CapabilityProfile
+  +UpdateAsync(profile: CapabilityProfile): bool
+}
+
+ICapabilityProfileRepo <|.. CapabilityProfileRepo
+
+interface ICapabilityItemRepo {
+  +GetByCapabilityProfileIdAsync(capabilityProfileId: string): List<CapabilityItem>
+  +CreateAsync(item: CapabilityItem): CapabilityItem
+  +UpdateAsync(item: CapabilityItem): bool
+}
+
+class CapabilityItemRepo {
+  -_context: ProfileContext
+  +GetByCapabilityProfileIdAsync(capabilityProfileId: string): List<CapabilityItem>
+  +CreateAsync(item: CapabilityItem): CapabilityItem
+  +UpdateAsync(item: CapabilityItem): bool
+}
+
+ICapabilityItemRepo <|.. CapabilityItemRepo
+
+class ProfileContext
+
+' =======================
+' ===== RELATIONSHIPS ===
+' =======================
+
+ProfileController --> IProfileService
+ProfileController --> IMapService
+MapController --> IMapService
+CapabilityProfileController --> ICapabilityProfileService
+
+ProfileService --> IUserRepo
+ProfileService --> IProfileRepo
+ProfileService --> StorageService
+
+MapService --> IProfileRepo
+
+CapabilityProfileService --> ICapabilityProfileRepo
+CapabilityProfileService --> ICapabilityItemRepo
+
+UserRepo --> ProfileContext
+ProfileRepo --> ProfileContext
+CapabilityProfileRepo --> ProfileContext
+CapabilityItemRepo --> ProfileContext
+
+User "1" o-- "many" UserProfile
+CapabilityProfile "1" o-- "many" CapabilityItem
+UserProfile "1" --> "1" User
+MapLocation "1" --> "1" User
+
+note right of ProfileController
+  Methods map to sequences:
+  - 9.1_viewProfile.puml -> ViewProfileAsync()
+  - 9.2_editProfile.puml -> EditProfileAsync()
+  - 9.3_viewPublicProfile.puml -> ViewPublicProfileAsync()
+  - 9.4_viewMap.puml -> ViewMapAsync()
+end note
+
+note right of CapabilityProfileController
+  Methods map to sequences:
+  - ViewCapabilityProfile -> ViewCapabilityProfileAsync()
+  - CreateCapabilityProfile -> CreateCapabilityProfileAsync()
+  - UpdateCapabilityProfile -> UpdateCapabilityProfileAsync()
+end note
+
+@enduml
