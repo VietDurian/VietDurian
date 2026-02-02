@@ -140,5 +140,5 @@ const Router = express.Router();
  */
 Router.get("/me", authMiddleware.protect, profileController.getProfile);
 Router.put("/update", authMiddleware.protect, profileController.updateProfile);
-Router.get("/public", profileController.getPublicProfile);
+Router.get("/public/:userId", profileController.getPublicProfile);
 export const profileRoute = Router;
