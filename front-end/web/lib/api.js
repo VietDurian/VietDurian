@@ -287,7 +287,7 @@ export const productAPI = {
   // Lấy dữ liệu sản phẩm cho market trend chart
   async getProductsForChart() {
     try {
-      const response = await apiClient.get("/products", { 
+      const response = await apiClient.get("/products", {
         params: { limit: 1000 } // Lấy nhiều data để tính toán
       });
       return response.data;
@@ -489,6 +489,21 @@ export async function deletePost(postId) {
       error?.response?.data?.message ||
       error?.message ||
       "Failed to delete post";
+    throw new Error(message);
+  }
+}
+
+// Update post
+export async function updatePost(postId, { category, content, image, contact }) {
+  try {
+    const params = { category, content, image, contact };
+    const response = await apiClient.patch(`/post/${postId}/general`, params);
+    return response?.data?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to update post";
     throw new Error(message);
   }
 }

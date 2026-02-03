@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { createPost, getOwnPosts } from "@/lib/api";
+import { createPost, getOwnPosts, updatePost, deletePost } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 
 const POST_CATEGORIES = [
@@ -225,7 +225,7 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white text-black w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
         <div className="relative flex items-center justify-center p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold">Tạo Bài Viết</h2>
+          <h2 className="text-xl font-bold">Tạo bài viết</h2>
           <button
             onClick={onClose}
             className="absolute right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition"
@@ -284,8 +284,8 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                       document.getElementById('category-dropdown').classList.add('hidden');
                     }}
                     className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item
-                      ? 'bg-emerald-600 text-white font-medium'
-                      : 'text-gray-900 hover:bg-emerald-500 hover:text-white'
+                        ? 'bg-emerald-600 text-white font-medium'
+                        : 'text-gray-900 hover:bg-emerald-500 hover:text-white'
                       }`}
                   >
                     {item}
@@ -467,21 +467,43 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
 
     setIsSubmitting(true);
 
-    // TODO: Call API here - updatePost(post.id, {...})
-    // For now, just simulate success
     try {
-      const updatedPost = {
-        ...post,
+      const updated = await updatePost(post.id, {
         category,
         content: content.trim(),
-        link: contact.trim(),
-        image: imagePreview,
+        image: imageData,
+        contact: contact.trim(),
+      });
+
+      const normalizedPost = {
+        id: updated?._id || post.id,
+        userName:
+          user?.full_name ||
+          user?.name ||
+          user?.username ||
+          user?.email ||
+          "Bạn",
+        userHandle: user?.username || user?.email || "",
+        userAvatar: user?.avatar || "/images/avatar.jpg",
+        timestamp: updated?.updated_at
+          ? new Date(updated.updated_at).toLocaleString("vi-VN")
+          : post.timestamp,
+        content: updated?.content || content.trim(),
+        link: updated?.contact || contact.trim(),
+        image: updated?.image || imagePreview,
+        category: updated?.category || category,
+        likes: post.likes || 0,
+        comments: post.comments || 0,
+        shares: post.shares || 0,
+        status: updated?.status || post.status,
+        isLiked: post.isLiked || false,
       };
 
-      onPostUpdated?.(updatedPost);
+      onPostUpdated?.(normalizedPost);
       onClose();
     } catch (submitError) {
-      setError("Không thể cập nhật bài viết");
+      const message = submitError?.message || "Không thể cập nhật bài viết";
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -552,8 +574,8 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
                       document.getElementById('edit-category-dropdown').classList.add('hidden');
                     }}
                     className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item
-                      ? 'bg-emerald-600 text-white font-medium'
-                      : 'text-gray-900 hover:bg-emerald-500 hover:text-white'
+                        ? 'bg-emerald-600 text-white font-medium'
+                        : 'text-gray-900 hover:bg-emerald-500 hover:text-white'
                       }`}
                   >
                     {item}
@@ -930,9 +952,13 @@ export default function ContentExpertProfileContent() {
   };
 
   const handleDelete = async (postId) => {
-    // TODO: Call delete API here
-    // For now, just remove from state
-    setPosts((prev) => prev.filter((post) => post.id !== postId));
+    try {
+      await deletePost(postId);
+      setPosts((prev) => prev.filter((post) => post.id !== postId));
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      alert(error?.message || "Không thể xóa bài viết");
+    }
   };
 
   return (
