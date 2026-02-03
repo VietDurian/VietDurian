@@ -534,6 +534,6 @@ Router.post(
   authController.changePassword,
 );
 
-Router.get("/check", authController.checkAuth);
+Router.get("/check", authMiddleware.protect, authController.checkAuth);
 
 export const authRoute = Router;
