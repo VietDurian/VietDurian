@@ -1,16 +1,16 @@
 "use client";
 import AsideBar from "@/components/AsideBar";
 import Navbar from "@/components/Navbar";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function ProfileLayout({ children }) {
-  const { user } = useAuth();
+  const { authUser } = useAuthStore();
 
   return (
     <html lang="en">
       <body suppressHydrationWarning>
         <Navbar />
-        <AsideBar role={user?.role} />
+        <AsideBar role={authUser?.role} />
         <main className="mt-14 ml-64 overflow-y-auto bg-gray-100">
           {children}
         </main>
