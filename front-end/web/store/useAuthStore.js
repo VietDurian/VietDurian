@@ -18,8 +18,12 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get("/auth/check");
 
-      set({ authUser: res.data });
-      get().connectSocket();
+      const user = res?.data;
+      if (user) {
+        localStorage.setItem("auth_user", JSON.stringify(user));
+        set({ authUser: user });
+        get().connectSocket();
+      }
     } catch (error) {
       console.log("Error in checkAuth: ", error);
       set({ authUser: null });
@@ -46,11 +50,24 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
-      set({ authUser: res.data });
+      const { user, token } = res?.data?.data || {};
+
+      if (!user || !token) {
+        throw new Error("Invalid login response");
+      }
+
+      localStorage.setItem("auth_user", JSON.stringify(user));
+      localStorage.setItem("auth_token", token);
+
+      set({ authUser: user });
       toast.success("Logged in successfully");
       get().connectSocket();
+
+      return { user, token };
     } catch (error) {
-      toast.error(error.response.data.message);
+      const message = error?.response?.data?.message || "Login failed";
+      toast.error(message);
+      return null;
     } finally {
       set({ isLoggingIn: false });
     }
@@ -60,6 +77,8 @@ export const useAuthStore = create((set, get) => ({
     console.log("logout");
     try {
       await axiosInstance.post("/auth/logout");
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("auth_token");
       set({ authUser: null });
       toast.success("Logged out successfully");
       get().disconnectSocket();

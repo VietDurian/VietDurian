@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function LoginPage() {
     password: "",
   });
   const { authUser, login, isLoggingIn } = useAuthStore();
+  const { login: loginContext } = useAuth();
 
   useEffect(() => {
     if (!authUser) return;
@@ -27,8 +29,12 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await login(formData);
-    router.refresh();
+    const result = await login(formData);
+
+    if (result?.user && result?.token) {
+      loginContext(result.user, result.token);
+      router.refresh();
+    }
   };
 
   return (

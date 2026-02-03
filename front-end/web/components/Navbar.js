@@ -116,7 +116,7 @@ export default function Navbar() {
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-xl bg-white shadow-lg border p-3">
+                  <div className="absolute right-0 mt-5 w-64 rounded-xl bg-white shadow-lg border border-gray-300 p-3">
                     <div className="flex items-center gap-3">
                       <div className="relative h-10 w-10 overflow-hidden rounded-full">
                         <Image
@@ -134,7 +134,7 @@ export default function Navbar() {
                       </div>
                     </div>
 
-                    <div className="my-3 border-t" />
+                    <div className="my-3 border-t border-gray-200" />
 
                     <Link
                       href="/profile/details"
@@ -143,15 +143,15 @@ export default function Navbar() {
                       <User className="w-4 h-4" /> Trang cá nhân
                     </Link>
 
-                    <button className="flex w-full items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100">
+                    <button className="flex w-full items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer">
                       <Settings className="w-4 h-4" /> Settings
                     </button>
 
-                    <div className="my-2 border-t" />
+                    <div className="my-2 border-t border-gray-200" />
 
                     <button
                       onClick={handleLogout}
-                      className="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50"
+                      className="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"
                     >
                       <LogOut className="w-4 h-4" /> Đăng xuất
                     </button>

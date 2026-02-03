@@ -5,6 +5,8 @@ import AiFloatingButton from "@/components/AiFloatingButton";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,8 +37,11 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        {!hideAiButton && <AiFloatingButton />}
+        <Toaster />
+        <AuthProvider>
+          {children}
+          {!hideAiButton && <AiFloatingButton />}
+        </AuthProvider>
       </body>
     </html>
   );
