@@ -1,0 +1,109 @@
+@startuml DiaryManagement
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+left to right direction
+
+title Diary Management Class Diagram (from 10.1–10.4 sequences)
+
+class DiaryPage <<boundary>> {
+  +validateInput(): void
+  +showError(message): void
+  +showSuccess(message): void
+  +displayDiary(d: DiaryDTO): void
+  +displayDiaryList(list: DiaryDTO[]): void
+}
+
+class DiaryRoute <<control>> {
+  +postEntry(req, res): void
+  +getEntry(diaryId, req, res): void
+  +putEntry(diaryId, req, res): void
+  +deleteEntry(diaryId, req, res): void
+  +getEntries(filter, req, res): void
+  +getStats(criteria, req, res): void
+}
+
+class AuthMiddleware <<control>> {
+  +authenticateUser(req): UserInfo
+  +authorizeRole(roles): void
+}
+
+class DiaryController <<control>> {
+  +handleCreateDiary(userInfo, data): void
+  +handleViewDiary(diaryId): void
+  +handleUpdateDiary(userInfo, diaryId, data): void
+  +handleDeleteDiary(userInfo, diaryId): void
+  +handleListDiaries(filter, page, limit): DiaryDTO[]
+  +handleStatistics(criteria): DiaryStatsDTO
+  +handleFilterDiaries(filter): DiaryDTO[]
+}
+
+class DiaryService <<service>> {
+  +createDiary(data, userId): DiaryDTO
+  +getDiary(diaryId): DiaryDTO
+  +updateDiary(diaryId, data): DiaryDTO
+  +deleteDiary(diaryId): boolean
+  +listDiaries(filter, page, limit): DiaryDTO[]
+  +getDiaryStats(criteria): DiaryStatsDTO
+  +checkDatabaseError(error): void
+  +checkNotFound(entity): void
+  +mapToDiaryDTO(diary: Diary): DiaryDTO
+}
+
+class DiaryModel <<model>> {
+  +create(diaryData): Diary
+  +findById(diaryId): Diary
+  +update(diaryId, updateData): Diary
+  +delete(diaryId): boolean
+  +find(filter, page, limit): Diary[]
+  +aggregateStats(criteria): DiaryStats
+}
+
+class Diary <<entity>> {
+  +id: string
+  +userId: string
+  +title: string
+  +content: string
+  +date: Date
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+class DiaryDTO <<datatype>> {
+  +id: string
+  +userId: string
+  +title: string
+  +content: string
+  +date: Date
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+class DiaryStats <<datatype>> {
+  +totalCount: int
+  +totalCost: number
+  +totalRevenue: number
+  +profit: number
+}
+
+class DiaryStatsDTO <<datatype>> {
+  +totalCount: int
+  +totalCost: number
+  +totalRevenue: number
+  +profit: number
+}
+
+class Database <<database>>
+
+DiaryPage --> DiaryRoute : uses
+DiaryRoute --> AuthMiddleware : uses
+AuthMiddleware --> DiaryController : forwards userInfo
+DiaryRoute --> DiaryController : calls handlers
+DiaryController --> DiaryService : orchestration
+DiaryService --> DiaryModel : persistence
+DiaryModel --> Database : queries
+DiaryService --> DiaryDTO : returns
+DiaryService --> DiaryStatsDTO : returns
+DiaryModel --> Diary : entity
+
+@enduml

@@ -1,0 +1,185 @@
+@startuml ProfileManagement
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+left to right direction
+
+title Profile Management Class Diagram (from 9.x sequences)
+
+class ProfilePage <<boundary>> {
+  +validateInput(): void
+  +showError(message): void
+  +showSuccess(message): void
+  +displayProfile(u: UserDTO): void
+  +displayPublicProfile(p: PublicProfileDTO): void
+  +displayMap(m: MapDTO): void
+}
+
+class ProfileRoute <<control>> {
+  +getMe(req, res): void
+  +postEditProfile(req, res): void
+  +getPublic(userId, req, res): void
+  +getMap(req, res): void
+}
+
+class AuthMiddleware <<control>> {
+  +authenticateUser(req): UserInfo
+  +authorizeRole(roles): void
+}
+
+class ProfileController <<control>> {
+  +handleViewProfile(userInfo): void
+  +handleEditProfile(userInfo, profileData): void
+  +handleGetPublicProfile(userId): void
+}
+
+class MapController <<control>> {
+  +handleGetMap(userInfo): void
+}
+
+class CapabilityProfileController <<control>> {
+  +handleViewCapabilityProfile(userInfo): void
+  +handleCreateCapabilityProfile(userInfo, data): void
+  +handleUpdateCapabilityProfile(userInfo, data): void
+}
+
+class ProfileService <<service>> {
+  +getProfile(userId): UserDTO
+  +updateProfile(userId, profileData): UserDTO
+  +getPublicProfile(userId): PublicProfileDTO
+  +checkNotFound(entity): void
+  +checkDatabaseError(error): void
+  +mapToUserDTO(user: User): UserDTO
+  +mapToPublicProfileDTO(user: User): PublicProfileDTO
+}
+
+class MapService <<service>> {
+  +getMapData(userId): MapDTO
+  +checkDatabaseError(error): void
+}
+
+class CapabilityProfileService <<service>> {
+  +getCapabilityProfile(userId): CapabilityProfileDTO
+  +createCapabilityProfile(userId, data): CapabilityProfileDTO
+  +updateCapabilityProfile(userId, data): CapabilityProfileDTO
+  +checkDatabaseError(error): void
+  +mapToCapabilityProfileDTO(p: CapabilityProfile, items: List<CapabilityItem>): CapabilityProfileDTO
+}
+
+class UserModel <<model>> {
+  +findOne(userId): User
+  +editUserById(userId, profileData): User
+  +find(): List<User>  
+}
+
+class CapabilityProfileModel <<model>> {
+  +getByUserId(userId): CapabilityProfile
+  +create(userId, data): CapabilityProfile
+  +update(userId, data): CapabilityProfile
+}
+
+class CapabilityItemModel <<model>> {
+  +getByCapabilityProfileId(capabilityProfileId): List<CapabilityItem>
+  +create(itemData): CapabilityItem
+  +update(itemData): CapabilityItem
+}
+
+class User <<entity>> {
+  +id: string
+  +email: string
+  +name: string
+  +avatarUrl: string
+  +role: string
+  +status: string
+}
+
+class CapabilityProfile <<entity>> {
+  +id: string
+  +userId: string
+  +title: string
+  +summary: string
+  +updatedAt: Date
+}
+
+class CapabilityItem <<entity>> {
+  +id: string
+  +capabilityProfileId: string
+  +name: string
+  +level: int
+  +yearsExperience: int
+  +description: string
+}
+
+class UserDTO <<datatype>> {
+  +id: string
+  +email: string
+  +name: string
+  +avatarUrl: string
+  +role: string
+  +status: string
+}
+
+class PublicProfileDTO <<datatype>> {
+  +userId: string
+  +fullName: string
+  +avatarUrl: string
+  +bio: string
+}
+
+class MapDTO <<datatype>> {
+  +userId: string
+  +markers: List<MapMarkerDTO>
+}
+
+class MapMarkerDTO <<datatype>> {
+  +lat: number
+  +lng: number
+  +label: string
+}
+
+class CapabilityProfileDTO <<datatype>> {
+  +userId: string
+  +title: string
+  +summary: string
+  +items: List<CapabilityItemDTO>
+}
+
+class CapabilityItemDTO <<datatype>> {
+  +name: string
+  +level: int
+  +yearsExperience: int
+  +description: string
+}
+
+database "Database" as DB
+
+ProfilePage --> ProfileRoute : uses
+ProfileRoute --> AuthMiddleware : uses
+AuthMiddleware --> ProfileController : forwards userInfo
+AuthMiddleware --> MapController : forwards userInfo
+AuthMiddleware --> CapabilityProfileController : forwards userInfo
+ProfileRoute --> ProfileController : calls handlers
+ProfileRoute --> MapController : calls handlers
+ProfileRoute --> CapabilityProfileController : calls handlers
+
+ProfileController --> ProfileService : orchestration
+MapController --> MapService : orchestration
+CapabilityProfileController --> CapabilityProfileService : orchestration
+
+ProfileService --> UserModel : persistence
+MapService --> UserModel : persistence
+CapabilityProfileService --> CapabilityProfileModel : persistence
+CapabilityProfileService --> CapabilityItemModel : persistence
+
+UserModel --> DB : queries
+CapabilityProfileModel --> DB : queries
+CapabilityItemModel --> DB : queries
+
+ProfileService --> UserDTO : returns
+ProfileService --> PublicProfileDTO : returns
+MapService --> MapDTO : returns
+CapabilityProfileService --> CapabilityProfileDTO : returns
+
+CapabilityProfileDTO --> CapabilityItemDTO
+
+@enduml

@@ -422,12 +422,12 @@ const Router = express.Router();
  * @swagger
  * /auth/change-password:
  *   post:
- *     summary: Change Password
- *     description: Change user password with authentication required
+ *     summary: Change password
+ *     description: Change current user's password (requires JWT Bearer token)
  *     tags:
  *       - Authentication
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -441,13 +441,11 @@ const Router = express.Router();
  *               currentPassword:
  *                 type: string
  *                 format: password
- *                 example: "OldPassword123!"
- *                 description: User's current password
+ *                 example: "Password123!"
  *               newPassword:
  *                 type: string
  *                 format: password
  *                 example: "NewPassword123!"
- *                 description: New password to set
  *     responses:
  *       200:
  *         description: Password changed successfully
@@ -456,6 +454,9 @@ const Router = express.Router();
  *             schema:
  *               type: object
  *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 200
  *                 success:
  *                   type: boolean
  *                   example: true
@@ -463,11 +464,53 @@ const Router = express.Router();
  *                   type: string
  *                   example: "Password changed successfully"
  *       400:
- *         description: Invalid input data
+ *         description: Bad request (missing/invalid fields)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 400
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid input data"
  *       401:
- *         description: Unauthorized - Token not provided, invalid token, or incorrect current password
+ *         description: Unauthorized (missing/invalid token OR wrong current password)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 401
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Not authorized to access this route"
  *       404:
  *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 404
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "User not found"
  *       500:
  *         description: Server error
  */

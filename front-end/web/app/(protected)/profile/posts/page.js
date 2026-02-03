@@ -1,18 +1,19 @@
 "use client";
-import AsideBar from "@/components/AsideBar";
-import Navbar from "@/components/Navbar";
 import {
   Camera,
-  Gift,
   Heart,
   ImageIcon,
-  MapPin,
   MessageCircle,
   MoreHorizontal,
-  Share2,
-  Smile,
-  Users,
   X,
+  CheckCircle,
+  Clock,
+  XCircle,
+  AlertCircle,
+  Tag,
+  Phone,
+  Mail,
+  Share2,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -27,47 +28,90 @@ const POST_CATEGORIES = [
   "Khác",
 ];
 
+// Status Badge Component
+const StatusBadge = ({ status }) => {
+  const statusConfig = {
+    pending: {
+      icon: Clock,
+      text: "Đang chờ duyệt",
+      bgColor: "bg-amber-50",
+      textColor: "text-amber-700",
+      iconColor: "text-amber-500",
+      borderColor: "border-amber-200",
+    },
+    active: {
+      icon: CheckCircle,
+      text: "Đã duyệt",
+      bgColor: "bg-emerald-50",
+      textColor: "text-emerald-700",
+      iconColor: "text-emerald-500",
+      borderColor: "border-emerald-200",
+    },
+    rejected: {
+      icon: XCircle,
+      text: "Bị từ chối",
+      bgColor: "bg-red-50",
+      textColor: "text-red-700",
+      iconColor: "text-red-500",
+      borderColor: "border-red-200",
+    },
+    inactive: {
+      icon: AlertCircle,
+      text: "Ngưng hoạt động",
+      bgColor: "bg-gray-50",
+      textColor: "text-gray-700",
+      iconColor: "text-gray-500",
+      borderColor: "border-gray-200",
+    },
+  };
+
+  const config = statusConfig[status] || statusConfig.pending;
+  const Icon = config.icon;
+
+  return (
+    <div
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${config.bgColor} ${config.borderColor} ${config.textColor} text-xs font-medium`}
+    >
+      <Icon size={14} className={config.iconColor} />
+      <span>{config.text}</span>
+    </div>
+  );
+};
+
+// Post Composer Component - PROMINENT INPUT STYLE
 const PostComposer = ({ onOpenModal, user }) => {
   return (
-    <div className="bg-white border-2 border-gray-200 rounded-xl p-4 w-full max-w-4xl">
-      <div className="flex items-center gap-3">
-        {/* Avatar */}
-        <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-5 w-full">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-emerald-100 shadow-sm">
           <img
-            src={user?.avatar}
+            src={user?.avatar || "/images/avatar.jpg"}
             alt="User profile"
             className="w-full h-full object-cover"
           />
         </div>
 
-        {/* Clicking this area opens the Post modal */}
         <div
           onClick={onOpenModal}
-          className="flex-1 bg-gray-100 hover:bg-gray-200 rounded-full px-5 py-2.5 text-gray-500 cursor-pointer transition"
+          className="flex-1 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-emerald-50 hover:to-teal-50 border-2 border-gray-300 hover:border-emerald-400 rounded-full px-5 py-3.5 text-gray-600 cursor-pointer transition-all shadow-sm hover:shadow-md"
         >
-          What&apos;s on your mind?
+          <span className="text-sm font-medium">Bạn đang nghĩ gì?</span>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center justify-end gap-5 mt-4 px-2">
-        <button className="text-slate-500 hover:text-emerald-700 transition">
-          <Camera size={24} />
-        </button>
-        <button className="text-slate-500 hover:text-emerald-700 transition">
-          <ImageIcon size={24} />
-        </button>
+      <div className="flex justify-end">
         <button
           onClick={onOpenModal}
-          className="bg-[#064e3b] text-white px-8 py-2 rounded-lg font-bold hover:bg-[#053f30] transition shadow-sm"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors shadow-sm hover:shadow-md"
         >
-          Post
+          Đăng bài
         </button>
       </div>
     </div>
   );
 };
 
+// Post Modal Component
 const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const fileInputRef = useRef(null);
   const [category, setCategory] = useState(POST_CATEGORIES[0]);
@@ -94,9 +138,25 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
   const handleImageChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Ảnh quá lớn. Tối đa 5MB");
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -112,9 +172,7 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     setError("");
 
     if (!category || !content.trim() || !imageData || !contact.trim()) {
-      setError(
-        "Vui lòng điền đủ danh mục, nội dung, ảnh và thông tin liên hệ.",
-      );
+      setError("Vui lòng điền đủ danh mục, nội dung, ảnh và thông tin liên hệ.");
       return;
     }
 
@@ -138,7 +196,7 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
         userHandle: user?.username || user?.email || "",
         userAvatar: user?.avatar || "/images/avatar.jpg",
         timestamp: created?.created_at
-          ? new Date(created.created_at).toLocaleString()
+          ? new Date(created.created_at).toLocaleString("vi-VN")
           : "Vừa xong",
         content: created?.content || content.trim(),
         link: created?.contact || contact.trim(),
@@ -147,6 +205,8 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
         likes: created?.likes_count || 0,
         comments: created?.comments_count || 0,
         shares: created?.shares_count || 0,
+        status: created?.status || "pending",
+        isLiked: false,
       };
 
       onPostCreated?.(normalizedPost);
@@ -162,28 +222,31 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white text-black w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
         <div className="relative flex items-center justify-center p-4 border-b border-gray-200">
           <h2 className="text-xl font-bold">Tạo Post</h2>
           <button
             onClick={onClose}
-            className="absolute right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition cursor-pointer"
+            className="absolute right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition"
             aria-label="Đóng"
           >
-            <X size={20} color="gray" />
+            <X size={20} className="text-gray-600" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 p-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 p-4 max-h-[calc(100vh-200px)] overflow-y-auto"
+        >
           <div className="flex items-center gap-3">
             <img
               src={user?.avatar || "/images/avatar.jpg"}
               className="w-11 h-11 rounded-full border border-gray-200"
-              alt="Ảnh đại diện"
+              alt="Avatar"
             />
             <div>
-              <p className="font-semibold">
+              <p className="font-semibold text-gray-800">
                 {user?.full_name || user?.name || user?.username || "Bạn"}
               </p>
               <div className="text-xs text-gray-500">Công khai</div>
@@ -194,17 +257,42 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
             <label className="text-sm font-semibold text-gray-700">
               Danh mục
             </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-600"
-            >
-              {POST_CATEGORIES.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  const dropdown = document.getElementById('category-dropdown');
+                  dropdown.classList.toggle('hidden');
+                }}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white transition-all cursor-pointer text-left flex justify-between items-center"
+              >
+                <span>{category}</span>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <div
+                id="category-dropdown"
+                className="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+              >
+                {POST_CATEGORIES.map((item) => (
+                  <div
+                    key={item}
+                    onClick={() => {
+                      setCategory(item);
+                      document.getElementById('category-dropdown').classList.add('hidden');
+                    }}
+                    className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item
+                        ? 'bg-emerald-600 text-white font-medium'
+                        : 'text-gray-900 hover:bg-emerald-500 hover:text-white'
+                      }`}
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -216,122 +304,173 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
               onChange={(e) => setContent(e.target.value)}
               autoFocus
               placeholder="Bạn đang nghĩ gì?"
-              className="w-full bg-transparent text-base resize-none outline-none min-h-[120px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-600"
+              className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-600"
+              maxLength={1000}
             />
+            <div className="text-xs text-gray-500 text-right">
+              {content.length}/1000
+            </div>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">
-              Liên hệ
+              Thông tin liên hệ
             </label>
             <input
               type="text"
               value={contact}
               onChange={(e) => setContact(e.target.value)}
               placeholder="Số điện thoại hoặc email"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white"
             />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Ảnh</label>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
+
+            {!imagePreview ? (
+              <div
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all"
               >
-                <ImageIcon className="text-green-600" size={18} />
-                Chọn ảnh
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageChange}
-              />
-              <span className="text-xs text-gray-500">Chỉ chọn 1 ảnh</span>
-            </div>
-            {imagePreview && (
-              <div className="rounded-lg overflow-hidden border border-gray-200 max-h-80">
+                <ImageIcon
+                  className="mx-auto text-gray-400 mb-2"
+                  size={32}
+                />
+                <p className="text-sm font-medium text-gray-600">
+                  Nhấp để chọn ảnh
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  PNG, JPG, GIF tối đa 5MB
+                </p>
+              </div>
+            ) : (
+              <div className="relative rounded-lg overflow-hidden border border-gray-200">
                 <img
                   src={imagePreview}
-                  alt="Ảnh đã chọn"
-                  className="w-full h-full object-contain bg-gray-50"
+                  alt="Preview"
+                  className="w-full h-auto object-contain bg-gray-50 max-h-80"
                 />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImagePreview("");
+                    setImageData("");
+                  }}
+                  className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                >
+                  <X size={16} />
+                </button>
               </div>
             )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageChange}
+            />
           </div>
 
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-              {error}
+            <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <AlertCircle size={18} />
+              <span>{error}</span>
             </div>
           )}
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={!canSubmit || isSubmitting}
-              className="w-full bg-emerald-700 text-white font-bold py-2 rounded-lg mt-1 hover:bg-emerald-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? "Đang đăng..." : "Đăng"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={!canSubmit || isSubmitting}
+            className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Đang đăng...
+              </span>
+            ) : (
+              "Đăng bài viết"
+            )}
+          </button>
         </form>
       </div>
     </div>
   );
 };
 
-const Post = ({ post }) => {
+// Post Component - FIXED LIKE & SIMPLIFIED CONTACT
+const Post = ({ post, onLikeUpdate }) => {
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments || 0);
+  const [isLiked, setIsLiked] = useState(post.isLiked || false);
+  const [likeCount, setLikeCount] = useState(post.likes || 0);
+
+  const handleLike = () => {
+    const newLikedState = !isLiked;
+    setIsLiked(newLikedState);
+    // Không cộng/trừ nữa, giữ nguyên số like
+    onLikeUpdate?.(post.id, newLikedState);
+  };
+
+  // Xác định icon cho contact
+  const isEmail = post.link?.includes("@");
+  const ContactIcon = isEmail ? Mail : Phone;
 
   return (
     <>
-      <article className="bg-white border border-gray-100 rounded-xl p-4 mb-4 shadow-sm w-full">
-        {/* Header: Avatar, Name, and Menu */}
+      <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-shadow w-full">
         <div className="flex justify-between items-start mb-4">
           <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+            <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100">
               <img
                 src={post.userAvatar || "/images/avatar.jpg"}
                 alt={post.userName}
                 className="w-full h-full object-cover"
               />
             </div>
-            <div>
-              <h4 className="font-bold text-gray-900 leading-tight">
-                {post.userName}
-              </h4>
-              <p className="text-gray-400 text-xs mt-0.5">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <h4 className="font-bold text-gray-900 text-base">{post.userName}</h4>
+                <StatusBadge status={post.status} />
+              </div>
+              <p className="text-gray-500 text-sm">
                 @{post.userHandle} • {post.timestamp}
               </p>
             </div>
           </div>
-          <button className="text-gray-400 hover:bg-gray-50 p-1 rounded-full transition">
+          <button className="text-gray-400 hover:bg-gray-100 p-2 rounded-full transition">
             <MoreHorizontal size={20} />
           </button>
         </div>
 
-        {/* Post Content */}
-        <div className="text-sm text-gray-700 leading-relaxed mb-4">
-          <p>{post.content}</p>
-          {post.link && (
-            <a
-              href={post.link}
-              className="text-blue-500 hover:underline block mt-2"
-            >
-              {post.link}
-            </a>
-          )}
+        {/* SIMPLE CATEGORY BADGE */}
+        {post.category && (
+          <div className="mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-200">
+              <Tag size={16} className="text-teal-600" />
+              <span className="text-sm font-semibold text-teal-700">{post.category}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="text-base text-gray-800 leading-relaxed mb-4">
+          <p className="whitespace-pre-wrap">{post.content}</p>
         </div>
 
-        {/* Post Image (Optional) */}
+        {/* SIMPLE CONTACT INFO - ICON + TEXT INLINE */}
+        {post.link && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 text-emerald-700">
+              <ContactIcon size={18} className="text-emerald-600" />
+              <span className="text-sm font-semibold">{post.link}</span>
+            </div>
+          </div>
+        )}
+
         {post.image && (
-          <div className="rounded-xl overflow-hidden mb-4 border border-gray-100">
+          <div className="rounded-xl overflow-hidden mb-4 border border-gray-200">
             <img
               src={post.image}
               alt="Post content"
@@ -340,30 +479,34 @@ const Post = ({ post }) => {
           </div>
         )}
 
-        {/* Footer: Interaction Buttons */}
-        <div className="pt-3 border-t border-gray-50 flex items-center justify-between px-2 text-gray-400">
-          <button className="flex items-center gap-2 hover:text-red-500 transition group">
-            <Heart size={18} className="group-hover:fill-current" />
-            <span className="text-xs font-medium">{post.likes} Thích</span>
+        <div className="pt-3 border-t border-gray-200 flex items-center justify-between px-1">
+          <button
+            onClick={handleLike}
+            className={`flex items-center gap-2 transition px-3 py-1.5 rounded-lg ${isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500 hover:bg-red-50"
+              }`}
+          >
+            <Heart
+              size={20}
+              className={`${isLiked ? "fill-current" : ""}`}
+            />
+            {likeCount > 0 && <span className="text-sm font-medium">{likeCount}</span>}
           </button>
 
           <button
             onClick={() => setIsCommentModalOpen(true)}
-            className="flex items-center gap-2 hover:text-emerald-700 transition group"
+            className="flex items-center gap-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition px-3 py-1.5 rounded-lg"
           >
-            <MessageCircle size={18} />
-            <span className="text-xs font-medium">{commentCount}</span>{" "}
-            {/* ĐỔI TỪ {post.comments} THÀNH {commentCount} */}
+            <MessageCircle size={20} />
+            {commentCount > 0 && <span className="text-sm font-medium">{commentCount}</span>}
           </button>
 
-          <button className="flex items-center gap-2 hover:text-blue-600 transition group">
-            <Share2 size={18} />
-            <span className="text-xs font-medium">{post.shares}</span>
+          <button className="flex items-center gap-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition px-3 py-1.5 rounded-lg">
+            <Share2 size={20} />
+            {post.shares > 0 && <span className="text-sm font-medium">{post.shares}</span>}
           </button>
         </div>
       </article>
 
-      {/* MỚI THÊM: CommentModal */}
       <CommentModal
         isOpen={isCommentModalOpen}
         onClose={() => setIsCommentModalOpen(false)}
@@ -373,13 +516,14 @@ const Post = ({ post }) => {
     </>
   );
 };
+
+// Main Component
 export default function ContentExpertProfileContent() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState(null);
-  // Get User's posts
 
   useEffect(() => {
     let isCancelled = false;
@@ -401,7 +545,7 @@ export default function ContentExpertProfileContent() {
           userHandle: user?.username || user?.email || "",
           userAvatar: user?.avatar || "/images/avatar.jpg",
           timestamp: post.created_at
-            ? new Date(post.created_at).toLocaleString()
+            ? new Date(post.created_at).toLocaleString("vi-VN")
             : "Vừa xong",
           content: post.content,
           link: post.contact,
@@ -410,6 +554,8 @@ export default function ContentExpertProfileContent() {
           likes: post.likes_count || 0,
           comments: post.comments_count || 0,
           shares: post.shares_count || 0,
+          status: post.status || "pending",
+          isLiked: post.is_liked || false,
         }));
 
         setPosts(normalizedPosts);
@@ -433,44 +579,78 @@ export default function ContentExpertProfileContent() {
     setPosts((prev) => [newPost, ...prev]);
   };
 
+  const handleLikeUpdate = (postId, isLiked) => {
+    setPosts((prev) =>
+      prev.map((post) =>
+        post.id === postId
+          ? {
+            ...post,
+            isLiked,
+            likes: isLiked ? post.likes + 1 : post.likes - 1,
+          }
+          : post
+      )
+    );
+  };
+
   return (
-    <div>
-      <main className="pt-18 p-5 lg:pt-20 flex flex-col justify-center items-center bg-white">
-        <div className="w-full max-w-2xl mt-5">
+    <div className="min-h-screen bg-white">
+      <main className="pt-18 p-5 lg:pt-20 flex flex-col justify-center items-center">
+        <div className="w-full max-w-4xl mt-5">
           <PostComposer
-            onOpenModal={() => {
-              setIsPostModalOpen(true);
-            }}
+            onOpenModal={() => setIsPostModalOpen(true)}
             user={user}
           />
         </div>
+
         <PostModal
           isOpen={isPostModalOpen}
-          onClose={() => {
-            setIsPostModalOpen(false);
-          }}
+          onClose={() => setIsPostModalOpen(false)}
           user={user || {}}
           onPostCreated={handlePostCreated}
         />
-        <div className="w-full max-w-2xl mt-8">
+
+        <div className="w-full max-w-4xl mt-8">
           {loadingPosts && (
-            <div className="text-gray-500 text-center py-4">
-              Đang tải bài viết...
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
+              <p className="text-gray-500 font-medium">Đang tải bài viết...</p>
             </div>
           )}
 
           {postsError && (
-            <div className="text-red-600 text-center py-4">{postsError}</div>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+              <AlertCircle className="mx-auto text-red-500 mb-3" size={32} />
+              <p className="text-red-600 font-medium">{postsError}</p>
+            </div>
           )}
 
           {!loadingPosts && !postsError && posts.length === 0 && (
-            <div className="text-gray-500 text-center py-6">
-              Bạn chưa có bài viết nào.
+            <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ImageIcon className="text-gray-400" size={28} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">
+                Chưa có bài viết
+              </h3>
+              <p className="text-gray-500 mb-4">
+                Hãy chia sẻ khoảnh khắc đầu tiên của bạn!
+              </p>
+              <button
+                onClick={() => setIsPostModalOpen(true)}
+                className="bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-800 transition"
+              >
+                Tạo bài viết
+              </button>
             </div>
           )}
-          {/* Posts */}
+
           {posts.map((post) => (
-            <Post key={post.id || post._id || post.created_at} post={post} />
+            <Post
+              key={post.id || post._id}
+              post={post}
+              onLikeUpdate={handleLikeUpdate}
+            />
           ))}
         </div>
       </main>

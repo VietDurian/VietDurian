@@ -1,0 +1,100 @@
+@startuml StepManagement
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+left to right direction
+
+title Step Management Class Diagram (from 15.x sequences)
+
+class StepPage <<boundary>> {
+  +validateInput(): void
+  +showError(message): void
+  +showSuccess(message): void
+  +displayStep(s: StepDTO): void
+  +displayStepList(list: StepDTO[]): void
+}
+
+class StepRoute <<control>> {
+  +postAdd(req, res): void
+  +getById(stepId, req, res): void
+  +putUpdate(stepId, req, res): void
+  +deleteById(stepId, req, res): void
+  +search(keyword, req, res): void
+  +sort(field, order, req, res): void
+}
+
+class AuthMiddleware <<control>> {
+  +authenticateUser(req): UserInfo
+  +authorizeRole(roles): void
+}
+
+class StepController <<control>> {
+  +handleCreateStep(userInfo, data): void
+  +handleViewStep(userInfo, stepId): void
+  +handleUpdateStep(userInfo, stepId, data): void
+  +handleDeleteStep(userInfo, stepId): void
+  +handleSearchSteps(userInfo, keyword): void
+  +handleSortSteps(userInfo, field, order): void
+}
+
+class StepService <<service>> {
+  +createStep(data, userId): StepDTO
+  +getStep(stepId): StepDTO
+  +updateStep(stepId, data): StepDTO
+  +deleteStep(stepId): boolean
+  +searchSteps(keyword): StepDTO[]
+  +sortSteps(field, order): StepDTO[]
+  +checkDatabaseError(error): void
+  +checkNotFound(entity): void
+  +mapToStepDTO(step: Step): StepDTO
+  +mapToStepDTOList(steps: Step[]): StepDTO[]
+}
+
+class StepModel <<model>> {
+  +checkConflict(data): boolean
+  +create(stepData): Step
+  +findById(stepId): Step
+  +update(stepId, updateData): Step
+  +delete(stepId): boolean
+  +findByKeyword(keyword): Step[]
+  +findWithSort(field, order): Step[]
+}
+
+class Step <<entity>> {
+  +id: string
+  +name: string
+  +description: string
+  +order: int
+  +status: StepStatus
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+class StepDTO <<datatype>> {
+  +id: string
+  +name: string
+  +description: string
+  +order: int
+  +status: StepStatus
+  +createdAt: Date
+  +updatedAt: Date
+}
+
+enum StepStatus {
+  ACTIVE
+  INACTIVE
+}
+
+class Database <<database>>
+
+StepPage --> StepRoute : uses
+StepRoute --> AuthMiddleware : uses
+AuthMiddleware --> StepController : forwards userInfo
+StepRoute --> StepController : calls handlers
+StepController --> StepService : orchestration
+StepService --> StepModel : persistence
+StepModel --> Database : queries
+StepService --> StepDTO : returns
+StepModel --> Step : entity
+
+@enduml

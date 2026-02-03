@@ -1,0 +1,190 @@
+@startuml
+skinparam classAttributeIconSize 0
+left to right direction
+title Auth Class Diagram
+
+' =======================
+' ======= ENTITIES ======
+' =======================
+
+class User {
+  +Id: string
+  +Email: string
+  +PasswordHash: string
+  +Name: string
+  +Role: Role
+  +Status: Status
+  +Provider: Provider
+  +CreatedAt: DateTime
+  +UpdatedAt: DateTime
+}
+
+class ResetToken {
+  +Token: string
+  +UserId: string
+  +ExpiresAt: DateTime
+  +UsedAt: DateTime
+}
+
+class Session {
+  +RefreshToken: string
+  +UserId: string
+  +ExpiresAt: DateTime
+  +RevokedAt: DateTime
+}
+
+class AuthResponse {
+  +AccessToken: string
+  +RefreshToken: string
+  +User: User
+}
+
+class GoogleProfile {
+  +Id: string
+  +Email: string
+  +Name: string
+  +Picture: string
+  +Verified: bool
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+enum Status {
+  ACTIVE
+  BLOCKED
+  PENDING
+}
+enum Provider {
+  LOCAL
+  GOOGLE
+}
+
+' =======================
+' ======= SERVICES ======
+' =======================
+
+interface IAuthService {
+  +RegisterAsync(dto: User): AuthResponse
+  +AuthenticateAsync(email: string, password: string): AuthResponse
+  +GenerateResetTokenAsync(email: string): bool
+  +ResetPasswordAsync(token: string, newPassword: string): bool
+  +LogoutAsync(userId: string, refreshToken: string): bool
+  +ChangePasswordAsync(userId: string, oldPwd: string, newPwd: string): bool
+  +LoginWithGoogleAsync(idToken: string): AuthResponse
+}
+
+class AuthService {
+  -_userRepo: IUserRepo
+  -_resetTokenRepo: IResetTokenRepo
+  -_hasher: PasswordHasher
+  -_tokenService: TokenService
+  -_emailService: EmailService
+  -_googleOAuth: GoogleOAuthService
+  +RegisterAsync(dto: User): AuthResponse
+  +AuthenticateAsync(email: string, password: string): AuthResponse
+  +GenerateResetTokenAsync(email: string): bool
+  +ResetPasswordAsync(token: string, newPassword: string): bool
+  +LogoutAsync(userId: string, refreshToken: string): bool
+  +ChangePasswordAsync(userId: string, oldPwd: string, newPwd: string): bool
+  +LoginWithGoogleAsync(idToken: string): AuthResponse
+}
+
+IAuthService <|.. AuthService
+
+class PasswordHasher {
+  +Hash(plain: string): string
+  +Compare(plain: string, hash: string): bool
+}
+
+class TokenService {
+  +CreateAccessToken(userId: string): string
+  +CreateRefreshToken(userId: string): string
+  +VerifyRefreshToken(token: string): bool
+  +RevokeRefreshToken(token: string): bool
+}
+
+class EmailService {
+  +SendWelcome(email: string): bool
+  +SendPasswordReset(email: string, token: string): bool
+}
+
+class GoogleOAuthService {
+  +VerifyIdToken(idToken: string): GoogleProfile
+  +GetProfile(code: string): GoogleProfile
+}
+
+class AuthController {
+  +RegisterAsync(req, res): void
+  +LoginAsync(req, res): void
+  +ForgotPasswordAsync(req, res): void
+  +ResetPasswordAsync(req, res): void
+  +LogoutAsync(req, res): void
+  +ChangePasswordAsync(req, res): void
+  +LoginWithGoogleAsync(req, res): void
+}
+
+' =======================
+' ===== REPOSITORIES ====
+' =======================
+
+interface IUserRepo {
+  +FindByEmailAsync(email: string): User
+  +FindByIdAsync(id: string): User
+  +CreateAsync(user: User): User
+  +UpdateAsync(user: User): User
+  +UpdatePasswordAsync(id: string, hash: string): bool
+}
+
+class UserRepo {
+  -_context: AuthContext
+  +FindByEmailAsync(email: string): User
+  +FindByIdAsync(id: string): User
+  +CreateAsync(user: User): User
+  +UpdateAsync(user: User): User
+  +UpdatePasswordAsync(id: string, hash: string): bool
+}
+
+IUserRepo <|.. UserRepo
+
+interface IResetTokenRepo {
+  +CreateAsync(userId: string, token: string, expiresAt: DateTime): ResetToken
+  +FindByTokenAsync(token: string): ResetToken
+  +InvalidateAsync(token: string): bool
+}
+
+class ResetTokenRepo {
+  -_context: AuthContext
+  +CreateAsync(userId: string, token: string, expiresAt: DateTime): ResetToken
+  +FindByTokenAsync(token: string): ResetToken
+  +InvalidateAsync(token: string): bool
+}
+
+IResetTokenRepo <|.. ResetTokenRepo
+
+class AuthContext
+
+' =======================
+' ===== RELATIONSHIPS ===
+' =======================
+
+AuthController --> IAuthService
+AuthService --> IUserRepo
+AuthService --> IResetTokenRepo
+AuthService --> PasswordHasher
+AuthService --> TokenService
+AuthService --> EmailService
+AuthService --> GoogleOAuthService
+
+UserRepo --> AuthContext
+ResetTokenRepo --> AuthContext
+
+UserRepo "1" o-- "many" User
+ResetTokenRepo "1" o-- "many" ResetToken
+TokenService "1" o-- "many" Session
+
+AuthResponse "many" --> "1" User
+GoogleOAuthService --> GoogleProfile
+
+@enduml

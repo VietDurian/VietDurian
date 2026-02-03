@@ -15,8 +15,11 @@ import {
   Sparkles,
   X,
   Loader2,
+  Eye,
+  EyeOff,
+  Lightbulb,
 } from "lucide-react";
-import { profileAPI } from "@/lib/api";
+import { profileAPI, authAPI } from "@/lib/api";
 
 const TabButton = ({ icon: Icon, label, active, onClick }) => (
   <button
@@ -72,6 +75,23 @@ const RoleBadge = ({ role }) => {
   );
 };
 
+const PasswordRule = ({ rule, password }) => {
+  const isValid = rule.test(password);
+
+  return (
+    <div className="flex items-center gap-2">
+      {isValid ? (
+        <CheckCircle size={16} className="text-emerald-500 flex-shrink-0" strokeWidth={2.5} />
+      ) : (
+        <XCircle size={16} className="text-gray-300 flex-shrink-0" strokeWidth={2.5} />
+      )}
+      <span className={`text-sm ${isValid ? "text-emerald-600" : "text-gray-500"}`}>
+        {rule.label}
+      </span>
+    </div>
+  );
+};
+
 export default function ProfileDetails() {
   const [activeTab, setActiveTab] = useState("profile");
   const [profileData, setProfileData] = useState(null);
@@ -83,6 +103,43 @@ export default function ProfileDetails() {
     avatar: "",
   });
   const [isSaving, setIsSaving] = useState(false);
+
+  // Password change state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const passwordRules = [
+    { id: "length", test: (pwd) => pwd.length >= 12, label: "Ít nhất 12 ký tự" },
+    {
+      id: "uppercase",
+      test: (pwd) => /[A-Z]/.test(pwd),
+      label: "Có chữ in hoa",
+    },
+    {
+      id: "lowercase",
+      test: (pwd) => /[a-z]/.test(pwd),
+      label: "Có chữ thường",
+    },
+    {
+      id: "number",
+      test: (pwd) => /\d/.test(pwd),
+      label: "Có ít nhất một số",
+    },
+    {
+      id: "special",
+      test: (pwd) => /[!@#$%^&*(),.?":{}|<>[\]\\';`~+=\-_/]/.test(pwd),
+      label: "Có ký tự đặc biệt (ví dụ: @, #, $)",
+    },
+  ];
 
   // Fetch profile data
   useEffect(() => {
@@ -145,6 +202,74 @@ export default function ProfileDetails() {
       alert("Có lỗi xảy ra khi cập nhật thông tin!");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handlePasswordChange = (field, value) => {
+    setPasswordForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
+
+  const allRulesPassed = passwordRules.every((rule) => rule.test(passwordForm.newPassword));
+  const passwordsMatch = passwordForm.newPassword === passwordForm.confirmPassword && passwordForm.confirmPassword !== "";
+  const canChangePassword = allRulesPassed && passwordsMatch && passwordForm.currentPassword !== "";
+
+  const handleChangePassword = async () => {
+    if (!canChangePassword) return;
+
+    try {
+      setIsChangingPassword(true);
+
+      const payload = {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      };
+
+      const response = await authAPI.changePassword(payload);
+
+      if (response.success) {
+        alert("Đổi mật khẩu thành công!");
+
+        // Reset form
+        setPasswordForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+
+      // Xử lý các loại lỗi khác nhau
+      let errorMessage = "Có lỗi xảy ra khi đổi mật khẩu!";
+
+      if (error?.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if (status === 401) {
+          errorMessage = "Mật khẩu hiện tại không đúng!";
+        } else if (status === 400) {
+          errorMessage = data?.message || "Mật khẩu mới không hợp lệ!";
+        } else if (status === 500) {
+          errorMessage = "Lỗi server! Vui lòng thử lại sau.";
+        } else {
+          errorMessage = data?.message || errorMessage;
+        }
+      }
+
+      alert(errorMessage);
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -330,6 +455,164 @@ export default function ProfileDetails() {
                 <p className="text-gray-600">
                   Các bài viết bạn yêu thích sẽ xuất hiện ở đây. Hãy bắt đầu khám phá và lưu lại những nội dung bạn yêu thích!
                 </p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "security" && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <Shield className="text-emerald-600" size={22} strokeWidth={2.5} />
+                  Đổi mật khẩu
+                </h3>
+                <div className="space-y-4 max-w-2xl">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Mật khẩu hiện tại
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.current ? "text" : "password"}
+                        value={passwordForm.currentPassword}
+                        onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
+                        className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
+                        placeholder="Nhập mật khẩu hiện tại"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility("current")}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                      >
+                        {showPasswords.current ? (
+                          <EyeOff size={20} strokeWidth={2} />
+                        ) : (
+                          <Eye size={20} strokeWidth={2} />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Mật khẩu mới
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.new ? "text" : "password"}
+                        value={passwordForm.newPassword}
+                        onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
+                        className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
+                        placeholder="Nhập mật khẩu mới"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility("new")}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                      >
+                        {showPasswords.new ? (
+                          <EyeOff size={20} strokeWidth={2} />
+                        ) : (
+                          <Eye size={20} strokeWidth={2} />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Xác nhận mật khẩu mới
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPasswords.confirm ? "text" : "password"}
+                        value={passwordForm.confirmPassword}
+                        onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
+                        className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
+                        placeholder="Nhập lại mật khẩu mới"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility("confirm")}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                      >
+                        {showPasswords.confirm ? (
+                          <EyeOff size={20} strokeWidth={2} />
+                        ) : (
+                          <Eye size={20} strokeWidth={2} />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Password Match Indicator */}
+                    {passwordForm.confirmPassword && (
+                      <div className="mt-2 flex items-center gap-2">
+                        {passwordsMatch ? (
+                          <>
+                            <CheckCircle size={16} className="text-emerald-500" strokeWidth={2.5} />
+                            <span className="text-sm text-emerald-600">Mật khẩu khớp</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle size={16} className="text-red-500" strokeWidth={2.5} />
+                            <span className="text-sm text-red-600">Mật khẩu không khớp</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={!canChangePassword || isChangingPassword}
+                    className={`px-8 py-3 font-semibold rounded-xl transition-all duration-300 flex items-center gap-2 ${canChangePassword && !isChangingPassword
+                        ? "bg-emerald-500 text-white hover:bg-emerald-600 cursor-pointer"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
+                  >
+                    {isChangingPassword ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Cập nhật mật khẩu"
+                    )}
+                  </button>
+
+                  {/* Password Rules - Moved below button */}
+                  {passwordForm.newPassword && (
+                    <div className="p-4 bg-gray-50 rounded-xl space-y-2">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">Yêu cầu mật khẩu:</p>
+                      {passwordRules.map((rule) => (
+                        <PasswordRule key={rule.id} rule={rule} password={passwordForm.newPassword} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Security Tips */}
+              <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
+                <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Lightbulb className="text-amber-600" size={20} strokeWidth={2.5} />
+                  Mẹo bảo mật
+                </h4>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-600 mt-0.5">•</span>
+                    <span>Sử dụng mật khẩu mạnh với ít nhất 12 ký tự</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-600 mt-0.5">•</span>
+                    <span>Kết hợp chữ hoa, chữ thường, số và ký tự đặc biệt</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-600 mt-0.5">•</span>
+                    <span>Không sử dụng thông tin cá nhân dễ đoán</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-600 mt-0.5">•</span>
+                    <span>Thay đổi mật khẩu định kỳ để bảo vệ tài khoản</span>
+                  </li>
+                </ul>
               </div>
             </div>
           )}
