@@ -531,7 +531,9 @@ Router.post("/google-login", authController.googleLogin);
 Router.post(
   "/change-password",
   authMiddleware.protect,
-  authController.changePassword
+  authController.changePassword,
 );
+
+Router.get("/check", authController.checkAuth);
 
 export const authRoute = Router;
