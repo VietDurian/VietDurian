@@ -41,11 +41,10 @@ Router.use("/reaction", reactionCommentRoute);
 Router.use("/diary", diaryRoute);
 Router.use("/favorite", favoriteRoute);
 Router.use("/garden", gardenRoute);
-Router.use("/chat", chatRoute);
 Router.use("/notification", notificationRouter);
 Router.use("/permission", permissionRoute);
 Router.use("/capability-profile", serviceProviderProfileRoute);
 Router.use("/report-comment", reportCommentRoute);
-Router.use("/message", messageRoute);
+Router.use("/messages", messageRoute);
 
 export const API_v1 = Router;

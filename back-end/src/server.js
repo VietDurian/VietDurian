@@ -5,13 +5,22 @@ import swaggerSpec from "@/config/swagger";
 import { API_v1 } from "@/routes/index";
 import connectDB from "@/config/mongoose";
 import { app, server } from "./lib/socket";
+import cookieParser from "cookie-parser";
 require("dotenv").config();
 
 // Connect to MongoDB
 connectDB();
 
 // Cors
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  }),
+);
+
+// Cookie Parser
+app.use(cookieParser());
 
 // Body parser
 app.use(express.json({ limit: "20mb" }));
