@@ -38,6 +38,10 @@ export function TypePage() {
 		description: '',
 	});
 
+	// Form validation state
+	const [nameError, setNameError] = useState('');
+	const [checkingName, setCheckingName] = useState(false);
+
 	useEffect(() => {
 		fetchProductTypes();
 	}, [currentPage]); // Only depend on page changes, not search
@@ -120,6 +124,46 @@ export function TypePage() {
 	// Handle form change
 	const handleFormChange = (field, value) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
+		
+		// Clear error when user starts typing
+		if (field === 'name' && nameError) {
+			setNameError('');
+		}
+	};
+
+	// Check duplicate name
+	const checkDuplicateName = async (name, excludeId = null) => {
+		if (!name.trim()) return false;
+		
+		const normalizedInput = name.replace(/\s+/g, '').toLowerCase();
+		return productTypes.some(type => {
+			const shouldExclude = excludeId && (type._id === excludeId || type.id === excludeId);
+			if (shouldExclude) return false;
+			
+			const normalizedExisting = (type.name || '').replace(/\s+/g, '').toLowerCase();
+			return normalizedExisting === normalizedInput;
+		});
+	};
+
+	// Validate name on blur
+	const handleNameBlur = async () => {
+		if (!formData.name.trim()) {
+			setNameError(t('type_name_required') || 'Tên loại sản phẩm không được để trống');
+			return;
+		}
+
+		setCheckingName(true);
+		const isDuplicate = await checkDuplicateName(
+			formData.name, 
+			selectedType?._id || selectedType?.id
+		);
+		
+		if (isDuplicate) {
+			setNameError(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
+		} else {
+			setNameError('');
+		}
+		setCheckingName(false);
 	};
 
 
@@ -128,6 +172,8 @@ export function TypePage() {
 	const resetForm = () => {
 		setFormData({ name: '', description: '' });
 		setSelectedType(null);
+		setNameError('');
+		setCheckingName(false);
 	};
 
 	// Open create modal
@@ -167,6 +213,25 @@ export function TypePage() {
 			return;
 		}
 
+		if (!formData.description.trim()) {
+			toast.error(t('type_description_required') || 'Mô tả không được để trống');
+			return;
+		}
+
+		// Kiểm tra lỗi tên trùng lặp trước khi submit
+		if (nameError) {
+			toast.error(nameError);
+			return;
+		}
+
+		// Kiểm tra lại lần cuối
+		const isDuplicate = await checkDuplicateName(formData.name);
+		if (isDuplicate) {
+			setNameError(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
+			toast.error(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
+			return;
+		}
+
 		setActionLoading('create');
 		try {
 			const createData = {
@@ -180,7 +245,13 @@ export function TypePage() {
 			// Fetch lại data để đảm bảo hiển thị đúng
 			await fetchProductTypes();
 		} catch (error) {
-			toast.error(error.message || t('create_type_failed') || 'Tạo loại sản phẩm thất bại');
+			// Xử lý lỗi trùng tên
+			if (error.message === 'Type product name already exists' || 
+				error.response?.status === 400) {
+				toast.error(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
+			} else {
+				toast.error(error.message || t('create_type_failed') || 'Tạo loại sản phẩm thất bại');
+			}
 		} finally {
 			setActionLoading(null);
 		}
@@ -190,6 +261,28 @@ export function TypePage() {
 	const handleUpdate = async () => {
 		if (!selectedType || !formData.name.trim()) {
 			toast.error(t('type_name_required') || 'Tên loại sản phẩm không được để trống');
+			return;
+		}
+
+		if (!formData.description.trim()) {
+			toast.error(t('type_description_required') || 'Mô tả không được để trống');
+			return;
+		}
+
+		// Kiểm tra lỗi tên trùng lặp trước khi submit
+		if (nameError) {
+			toast.error(nameError);
+			return;
+		}
+
+		// Kiểm tra lại lần cuối
+		const isDuplicate = await checkDuplicateName(
+			formData.name, 
+			selectedType._id || selectedType.id
+		);
+		if (isDuplicate) {
+			setNameError(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
+			toast.error(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
 			return;
 		}
 
@@ -206,7 +299,13 @@ export function TypePage() {
 			// Fetch lại data để đảm bảo hiển thị đúng
 			await fetchProductTypes();
 		} catch (error) {
-			toast.error(error.message || t('update_type_failed') || 'Cập nhật loại sản phẩm thất bại');
+			// Xử lý lỗi trùng tên
+			if (error.message === 'Type product name already exists' || 
+				error.response?.status === 400) {
+				toast.error(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
+			} else {
+				toast.error(error.message || t('update_type_failed') || 'Cập nhật loại sản phẩm thất bại');
+			}
 		} finally {
 			setActionLoading(null);
 		}
@@ -556,13 +655,27 @@ export function TypePage() {
 								type="text"
 								value={formData.name}
 								onChange={(e) => handleFormChange('name', e.target.value)}
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] bg-white text-gray-900"
-									placeholder={t('enter_product_type_name') || 'Nhập tên loại sản phẩm'}
-								/>
+							onBlur={handleNameBlur}
+							className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] bg-white text-gray-900 ${
+								nameError ? 'border-red-500' : 'border-gray-300'
+							}`}
+							placeholder={t('enter_product_type_name') || 'Nhập tên loại sản phẩm'}
+							disabled={checkingName}
+						/>
+						{checkingName && (
+							<p className="mt-1 text-xs text-blue-500">
+								{t('checking') || 'Đang kiểm tra...'}
+							</p>
+						)}
+						{nameError && (
+							<p className="mt-1 text-xs text-red-500">
+								{nameError}
+							</p>
+						)}
 							</div>
 							<div>
 							<label className="block text-sm font-medium text-gray-900 mb-1">
-								{t('description') || 'Mô tả'}
+							{t('description') || 'Mô tả'} *
 							</label>
 							<textarea
 								value={formData.description}
@@ -631,12 +744,26 @@ export function TypePage() {
 								type="text"
 								value={formData.name}
 								onChange={(e) => handleFormChange('name', e.target.value)}
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] bg-white text-gray-900"
-								/>
+							onBlur={handleNameBlur}
+							className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] bg-white text-gray-900 ${
+								nameError ? 'border-red-500' : 'border-gray-300'
+							}`}
+							disabled={checkingName}
+							/>
+						{checkingName && (
+							<p className="mt-1 text-xs text-blue-500">
+								{t('checking') || 'Đang kiểm tra...'}
+							</p>
+						)}
+						{nameError && (
+							<p className="mt-1 text-xs text-red-500">
+								{nameError}
+							</p>
+						)}
 							</div>
 							<div>
 							<label className="block text-sm font-medium text-gray-900 mb-1">
-								{t('description') || 'Mô tả'}
+							{t('description') || 'Mô tả'} *
 							</label>
 							<textarea
 								value={formData.description}

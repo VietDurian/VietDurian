@@ -228,6 +228,7 @@ const translations = {
 		stage_title_required: 'Vui lòng nhập tiêu đề giai đoạn',
 		stage_description_required: 'Vui lòng nhập mô tả giai đoạn',
 		loading: 'Đang tải...',
+		checking: 'Đang kiểm tra...',
 		no_data: 'Không có dữ liệu',
 
 		//type
@@ -254,6 +255,8 @@ const translations = {
 		unknown_date: 'Chưa có thông tin',
 		invalid_date: 'Ngày không hợp lệ',
 		type_name_required: 'Tên loại sản phẩm không được để trống',
+		type_name_duplicate: 'Tên loại sản phẩm đã tồn tại',
+		type_description_required: 'Mô tả không được để trống',
 		create_type_success: 'Tạo loại sản phẩm thành công',
 		create_type_failed: 'Tạo loại sản phẩm thất bại',
 		update_type_success: 'Cập nhật loại sản phẩm thành công',
@@ -489,6 +492,7 @@ const translations = {
 		stage_title_required: 'Please enter a stage title',
 		stage_description_required: 'Please enter a stage description',
 		loading: 'Loading...',
+		checking: 'Checking...',
 		no_data: 'No data',
 
 		// type
@@ -516,6 +520,8 @@ const translations = {
 		invalid_date: 'Invalid date',
 		// Toast messages
 		type_name_required: 'Product type name is required',
+		type_name_duplicate: 'Product type name already exists',
+		type_description_required: 'Description is required',
 		create_type_success: 'Product type created successfully',
 		create_type_failed: 'Failed to create product type',
 		update_type_success: 'Product type updated successfully',

@@ -8,7 +8,7 @@ const typeProductSchema = new mongoose.Schema(
 		},
 		description: {
 			type: String,
-			default: '',
+			required: true,
 		}
 	},
 	{

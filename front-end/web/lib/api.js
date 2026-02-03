@@ -279,6 +279,19 @@ export const productAPI = {
     }
   },
 
+  // Lấy dữ liệu sản phẩm cho market trend chart
+  async getProductsForChart() {
+    try {
+      const response = await apiClient.get("/products", { 
+        params: { limit: 1000 } // Lấy nhiều data để tính toán
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching products for chart:", error);
+      throw error;
+    }
+  },
+
   // Lấy chi tiết sản phẩm theo ID
   async getProductById(id) {
     try {
