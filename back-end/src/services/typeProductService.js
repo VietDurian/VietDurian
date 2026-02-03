@@ -68,6 +68,20 @@ const createTypeProduct = async ({ name, description }) => {
 // Update a type product
 const updateTypeProduct = async ({ id, name, description }) => {
     try {
+        // Kiểm tra name đã tồn tại chưa (không kể chính nó)
+        // Chuẩn hóa tên: bỏ khoảng trắng và chuyển về chữ thường
+        const normalizedInput = name.replace(/\s+/g, '').toLowerCase();
+        // Lấy tất cả type products khác (không kể đãng update) và so sánh tên đã chuẩn hóa
+        const allTypes = await TypeProductModel.find({ _id: { $ne: id } });
+        const isDuplicate = allTypes.some(tp =>
+            tp.name && tp.name.replace(/\s+/g, '').toLowerCase() === normalizedInput
+        );
+        if (isDuplicate) {
+            const error = new Error('Type product name already exists');
+            error.status = 400;
+            throw error;
+        }
+        
         const updatedTypeProduct = await TypeProductModel.findByIdAndUpdate(
             id,
             { name, description },

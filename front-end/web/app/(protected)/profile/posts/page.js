@@ -1,6 +1,5 @@
 "use client";
 import {
-  Camera,
   Heart,
   ImageIcon,
   MessageCircle,
@@ -16,8 +15,9 @@ import {
   Share2,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { createPost, getOwnPosts } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const POST_CATEGORIES = [
   "Dịch vụ",
@@ -78,13 +78,13 @@ const StatusBadge = ({ status }) => {
 };
 
 // Post Composer Component - PROMINENT INPUT STYLE
-const PostComposer = ({ onOpenModal, user }) => {
+const PostComposer = ({ onOpenModal, authUser }) => {
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-5 w-full">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-emerald-100 shadow-sm">
           <img
-            src={user?.avatar || "/images/avatar.jpg"}
+            src={authUser?.avatar || "/images/avatar.jpg"}
             alt="User profile"
             className="w-full h-full object-cover"
           />
@@ -111,7 +111,7 @@ const PostComposer = ({ onOpenModal, user }) => {
 };
 
 // Post Modal Component
-const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
+const PostModal = ({ isOpen, onClose, authUser, onPostCreated }) => {
   const fileInputRef = useRef(null);
   const [category, setCategory] = useState(POST_CATEGORIES[0]);
   const [content, setContent] = useState("");
@@ -171,40 +171,50 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     setError("");
 
     if (!category || !content.trim() || !imageData || !contact.trim()) {
-      setError("Vui lòng điền đủ danh mục, nội dung, ảnh và thông tin liên hệ.");
+      setError(
+        "Vui lòng điền đủ danh mục, nội dung, ảnh và thông tin liên hệ.",
+      );
       return;
     }
 
     setIsSubmitting(true);
-
-    // UI-ONLY: Tạo mock post để hiển thị ngay
     try {
-      const mockPost = {
-        id: `mock_${Date.now()}`,
-        userName:
-          user?.full_name ||
-          user?.name ||
-          user?.username ||
-          user?.email ||
-          "Bạn",
-        userHandle: user?.username || user?.email || "",
-        userAvatar: user?.avatar || "/images/avatar.jpg",
-        timestamp: "Vừa xong",
+      const created = await createPost({
+        category,
         content: content.trim(),
-        link: contact.trim(),
-        image: imagePreview,
-        category: category,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        status: "pending",
+        image: imageData,
+        contact: contact.trim(),
+      });
+
+      const normalizedPost = {
+        id: created?._id || `${Date.now()}`,
+        userName:
+          authUser?.full_name ||
+          authUser?.name ||
+          authUser?.username ||
+          authUser?.email ||
+          "Bạn",
+        userHandle: authUser?.username || authUser?.email || "",
+        userAvatar: authUser?.avatar || "/images/avatar.jpg",
+        timestamp: created?.created_at
+          ? new Date(created.created_at).toLocaleString("vi-VN")
+          : "Vừa xong",
+        content: created?.content || content.trim(),
+        link: created?.contact || contact.trim(),
+        image: created?.image || imagePreview,
+        category: created?.category || category,
+        likes: created?.likes_count || 0,
+        comments: created?.comments_count || 0,
+        shares: created?.shares_count || 0,
+        status: created?.status || "pending",
         isLiked: false,
       };
 
-      onPostCreated?.(mockPost);
+      onPostCreated?.(normalizedPost);
       onClose();
     } catch (submitError) {
-      setError("Không thể tạo bài viết");
+      const message = submitError?.message || "Không thể tạo bài viết";
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -216,7 +226,7 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white text-black w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
         <div className="relative flex items-center justify-center p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold">Tạo Bài Viết</h2>
+          <h2 className="text-xl font-bold">Tạo Post</h2>
           <button
             onClick={onClose}
             className="absolute right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition"
@@ -232,13 +242,16 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
         >
           <div className="flex items-center gap-3">
             <img
-              src={user?.avatar || "/images/avatar.jpg"}
+              src={authUser?.avatar || "/images/avatar.jpg"}
               className="w-11 h-11 rounded-full border border-gray-200"
               alt="Avatar"
             />
             <div>
               <p className="font-semibold text-gray-800">
-                {user?.full_name || user?.name || user?.username || "Bạn"}
+                {authUser?.full_name ||
+                  authUser?.name ||
+                  authUser?.username ||
+                  "Bạn"}
               </p>
               <div className="text-xs text-gray-500">Công khai</div>
             </div>
@@ -252,14 +265,24 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
               <button
                 type="button"
                 onClick={() => {
-                  const dropdown = document.getElementById('category-dropdown');
-                  dropdown.classList.toggle('hidden');
+                  const dropdown = document.getElementById("category-dropdown");
+                  dropdown.classList.toggle("hidden");
                 }}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white transition-all cursor-pointer text-left flex justify-between items-center"
               >
                 <span>{category}</span>
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
 
@@ -272,12 +295,15 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                     key={item}
                     onClick={() => {
                       setCategory(item);
-                      document.getElementById('category-dropdown').classList.add('hidden');
+                      document
+                        .getElementById("category-dropdown")
+                        .classList.add("hidden");
                     }}
-                    className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item
-                      ? 'bg-emerald-600 text-white font-medium'
-                      : 'text-gray-900 hover:bg-emerald-500 hover:text-white'
-                      }`}
+                    className={`px-3 py-2 cursor-pointer transition-colors text-sm ${
+                      category === item
+                        ? "bg-emerald-600 text-white font-medium"
+                        : "text-gray-900 hover:bg-emerald-500 hover:text-white"
+                    }`}
                   >
                     {item}
                   </div>
@@ -324,10 +350,7 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                 onClick={() => fileInputRef.current?.click()}
                 className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all"
               >
-                <ImageIcon
-                  className="mx-auto text-gray-400 mb-2"
-                  size={32}
-                />
+                <ImageIcon className="mx-auto text-gray-400 mb-2" size={32} />
                 <p className="text-sm font-medium text-gray-600">
                   Nhấp để chọn ảnh
                 </p>
@@ -423,7 +446,9 @@ const Post = ({ post, onLikeUpdate }) => {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h4 className="font-bold text-gray-900 text-base">{post.userName}</h4>
+                <h4 className="font-bold text-gray-900 text-base">
+                  {post.userName}
+                </h4>
                 <StatusBadge status={post.status} />
               </div>
               <p className="text-gray-500 text-sm">
@@ -441,7 +466,9 @@ const Post = ({ post, onLikeUpdate }) => {
           <div className="mb-4">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-200">
               <Tag size={16} className="text-teal-600" />
-              <span className="text-sm font-semibold text-teal-700">{post.category}</span>
+              <span className="text-sm font-semibold text-teal-700">
+                {post.category}
+              </span>
             </div>
           </div>
         )}
@@ -473,14 +500,16 @@ const Post = ({ post, onLikeUpdate }) => {
         <div className="pt-3 border-t border-gray-200 flex items-center justify-between px-1">
           <button
             onClick={handleLike}
-            className={`flex items-center gap-2 transition px-3 py-1.5 rounded-lg ${isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500 hover:bg-red-50"
-              }`}
+            className={`flex items-center gap-2 transition px-3 py-1.5 rounded-lg ${
+              isLiked
+                ? "text-red-500"
+                : "text-gray-500 hover:text-red-500 hover:bg-red-50"
+            }`}
           >
-            <Heart
-              size={20}
-              className={`${isLiked ? "fill-current" : ""}`}
-            />
-            {likeCount > 0 && <span className="text-sm font-medium">{likeCount}</span>}
+            <Heart size={20} className={`${isLiked ? "fill-current" : ""}`} />
+            {likeCount > 0 && (
+              <span className="text-sm font-medium">{likeCount}</span>
+            )}
           </button>
 
           <button
@@ -488,12 +517,16 @@ const Post = ({ post, onLikeUpdate }) => {
             className="flex items-center gap-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition px-3 py-1.5 rounded-lg"
           >
             <MessageCircle size={20} />
-            {commentCount > 0 && <span className="text-sm font-medium">{commentCount}</span>}
+            {commentCount > 0 && (
+              <span className="text-sm font-medium">{commentCount}</span>
+            )}
           </button>
 
           <button className="flex items-center gap-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition px-3 py-1.5 rounded-lg">
             <Share2 size={20} />
-            {post.shares > 0 && <span className="text-sm font-medium">{post.shares}</span>}
+            {post.shares > 0 && (
+              <span className="text-sm font-medium">{post.shares}</span>
+            )}
           </button>
         </div>
       </article>
@@ -511,18 +544,66 @@ const Post = ({ post, onLikeUpdate }) => {
 // Main Component
 export default function ContentExpertProfileContent() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const { user } = useAuth();
+  const { authUser } = useAuthStore();
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState(null);
 
-  // UI-ONLY: Load mock data instead of API
   useEffect(() => {
-    // Mock empty state for now
-    setLoadingPosts(false);
-    setPosts([]);
-  }, [user]);
+    let isCancelled = false;
 
+    const loadPosts = async () => {
+      if (!authUser?._id && !authUser?.id) return;
+
+      setLoadingPosts(true);
+      setPostsError(null);
+
+      try {
+        const data = await getOwnPosts({
+          author_id: authUser._id || authUser.id,
+        });
+
+        if (isCancelled) return;
+
+        const normalizedPosts = (data || []).map((post) => ({
+          id: post._id,
+          userName:
+            authUser?.full_name ||
+            authUser?.name ||
+            authUser?.username ||
+            "Bạn",
+          userHandle: authUser?.username || authUser?.email || "",
+          userAvatar: authUser?.avatar || "/images/avatar.jpg",
+          timestamp: post.created_at
+            ? new Date(post.created_at).toLocaleString("vi-VN")
+            : "Vừa xong",
+          content: post.content,
+          link: post.contact,
+          image: post.image,
+          category: post.category,
+          likes: post.likes_count || 0,
+          comments: post.comments_count || 0,
+          shares: post.shares_count || 0,
+          status: post.status || "pending",
+          isLiked: post.is_liked || false,
+        }));
+
+        setPosts(normalizedPosts);
+      } catch (error) {
+        if (isCancelled) return;
+        setPostsError(error?.message || "Không thể tải bài viết");
+      } finally {
+        if (isCancelled) return;
+        setLoadingPosts(false);
+      }
+    };
+
+    loadPosts();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [authUser]);
 
   const handlePostCreated = (newPost) => {
     setPosts((prev) => [newPost, ...prev]);
@@ -533,12 +614,12 @@ export default function ContentExpertProfileContent() {
       prev.map((post) =>
         post.id === postId
           ? {
-            ...post,
-            isLiked,
-            likes: isLiked ? post.likes + 1 : post.likes - 1,
-          }
-          : post
-      )
+              ...post,
+              isLiked,
+              likes: isLiked ? post.likes + 1 : post.likes - 1,
+            }
+          : post,
+      ),
     );
   };
 
@@ -548,14 +629,14 @@ export default function ContentExpertProfileContent() {
         <div className="w-full max-w-4xl mt-5">
           <PostComposer
             onOpenModal={() => setIsPostModalOpen(true)}
-            user={user}
+            authUser={authUser}
           />
         </div>
 
         <PostModal
           isOpen={isPostModalOpen}
           onClose={() => setIsPostModalOpen(false)}
-          user={user || {}}
+          authUser={authUser || {}}
           onPostCreated={handlePostCreated}
         />
 

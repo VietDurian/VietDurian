@@ -15,8 +15,8 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import { useAuth } from "@/context/AuthContext";
 import { createPost, getOwnPosts } from "@/lib/api";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const POST_CATEGORIES = [
   "Dịch vụ",
@@ -358,7 +358,7 @@ const Post = ({ post }) => {
 
 export default function ContentExpertProfileContent() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const { user } = useAuth();
+  const { authUser } = useAuthStore();
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState(null);

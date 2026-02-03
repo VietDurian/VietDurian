@@ -24,6 +24,7 @@ const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 // Interceptor để tự động thêm token vào mỗi request
@@ -83,7 +84,7 @@ export const usersAPI = {
     });
     return response.data;
   },
-}
+};
 //Permission API
 export const permissionAPI = {
   async getAllPermissions(params = {}) {
@@ -113,7 +114,9 @@ export const permissionAPI = {
     return response.data;
   },
   async rejectPermissionRequest(id, reason) {
-    const response = await apiClient.patch(`permission/requests/${id}/reject`, { reason });
+    const response = await apiClient.patch(`permission/requests/${id}/reject`, {
+      reason,
+    });
     return response.data;
   },
   async approvePermissionRequest(id) {
@@ -125,11 +128,11 @@ export const permissionAPI = {
 // Profile API
 export const profileAPI = {
   async getMe() {
-    const response = await apiClient.get('/profile/me');
+    const response = await apiClient.get("/profile/me");
     return response.data;
   },
   async update(payload) {
-    const response = await apiClient.put('/profile/update', payload);
+    const response = await apiClient.put("/profile/update", payload);
     return response.data;
   },
 
@@ -137,16 +140,15 @@ export const profileAPI = {
     const response = await apiClient.get(`/profile/public/${userId}`);
     return response.data;
   },
-}
+};
 
 // Auth API
 export const authAPI = {
   async changePassword(payload) {
-    const response = await apiClient.post('/auth/change-password', payload);
+    const response = await apiClient.post("/auth/change-password", payload);
     return response.data;
   },
 };
-
 
 //Product Type of Admin management API
 export const productTypesAPI = {
@@ -158,6 +160,18 @@ export const productTypesAPI = {
     const response = await apiClient.get(`type-product/${id}`);
     return response.data;
   },
+  async createProductType(data) {
+    const response = await apiClient.post("type-product", data);
+    return response.data;
+  },
+  async updateProductType(id, data) {
+    const response = await apiClient.patch(`type-product/${id}`, data);
+    return response.data;
+  },
+  async deleteProductType(id) {
+    const response = await apiClient.delete(`type-product/${id}`);
+    return response.data;
+  },
   async filterProductTypes(filters = {}) {
     const response = await apiClient.get("type-product/filter", {
       params: filters,
@@ -165,7 +179,6 @@ export const productTypesAPI = {
     return response.data;
   },
 };
-
 
 //Product of Admin management API
 export const productsAdminAPI = {
@@ -198,8 +211,7 @@ export const productsAdminAPI = {
       params: { sortBy, sortOrder, ...params },
     });
     return response.data;
-  }
-
+  },
 };
 
 // Blog API
@@ -231,11 +243,16 @@ export const blogAPI = {
     try {
       const response = await apiClient.get("/blog/knowledge", {
         async confirmPermission(id) {
-          const response = await apiClient.post(`permission/requests/${id}/confirm`);
+          const response = await apiClient.post(
+            `permission/requests/${id}/confirm`,
+          );
           return response.data;
         },
         async rejectPermission(id, reason = "") {
-          const response = await apiClient.post(`permission/requests/${id}/reject`, { reason });
+          const response = await apiClient.post(
+            `permission/requests/${id}/reject`,
+            { reason },
+          );
           return response.data;
         },
         params: { search: searchTerm },
@@ -256,7 +273,7 @@ export const blogAPI = {
       console.error("Error deleting blog:", error);
       throw error;
     }
-  }
+  },
 };
 
 // Product API
@@ -268,6 +285,19 @@ export const productAPI = {
       return response.data;
     } catch (error) {
       console.error("Error fetching products:", error);
+      throw error;
+    }
+  },
+
+  // Lấy dữ liệu sản phẩm cho market trend chart
+  async getProductsForChart() {
+    try {
+      const response = await apiClient.get("/products", {
+        params: { limit: 1000 } // Lấy nhiều data để tính toán
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching products for chart:", error);
       throw error;
     }
   },
@@ -424,8 +454,9 @@ export async function getOwnPosts(filters = {}) {
   if (search) params.append("search", search);
   if (author_id) params.append("author_id", author_id);
 
-  const url = `/post/general${params.toString() ? `?${params.toString()}` : ""
-    }`;
+  const url = `/post/general${
+    params.toString() ? `?${params.toString()}` : ""
+  }`;
 
   try {
     const response = await apiClient.get(url);
@@ -468,6 +499,21 @@ export async function deletePost(postId) {
   }
 }
 
+// Update post
+export async function updatePost(postId, { category, content, image, contact }) {
+  try {
+    const params = { category, content, image, contact };
+    const response = await apiClient.patch(`/post/${postId}/general`, params);
+    return response?.data?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to update post";
+    throw new Error(message);
+  }
+}
+
 // Update post status become inactive
 export async function setPostInactive(postId) {
   try {
@@ -502,7 +548,10 @@ export async function setPostActive(postId) {
 export async function approvePost(postId, status, reason) {
   try {
     const param = { status, reason };
-    const response = await apiClient.patch(`/post/${postId}/approve-general`, param);
+    const response = await apiClient.patch(
+      `/post/${postId}/approve-general`,
+      param,
+    );
     return response?.data?.data;
   } catch (error) {
     const message =
@@ -516,7 +565,7 @@ export async function approvePost(postId, status, reason) {
 // Report post
 export async function getAllReport(params) {
   try {
-    const response = await apiClient.get('/report', params);
+    const response = await apiClient.get("/report", params);
     return response?.data?.data || [];
   } catch (error) {
     const message =
@@ -558,7 +607,7 @@ export async function deleteReport(reportId) {
 // get all report comment
 export async function getAllReportComment(params) {
   try {
-    const response = await apiClient.get('/report-comment', { params });
+    const response = await apiClient.get("/report-comment", { params });
     // backend returns either an array or an object { data: [] }
     return response?.data?.data ?? response?.data ?? [];
   } catch (error) {
@@ -573,7 +622,9 @@ export async function getAllReportComment(params) {
 // update report comment
 export async function updateReportComment(reportId, status) {
   try {
-    const response = await apiClient.patch(`/report-comment/${reportId}`, { status });
+    const response = await apiClient.patch(`/report-comment/${reportId}`, {
+      status,
+    });
     return response?.data?.data;
   } catch (error) {
     const message =
@@ -639,7 +690,7 @@ export const commentAPI = {
   async updateComment(commentId, content) {
     try {
       const response = await apiClient.patch(`/comment/${commentId}`, {
-        content
+        content,
       });
       return response.data;
     } catch (error) {
@@ -699,7 +750,7 @@ export const reactionCommentAPI = {
   async updateReaction(reactionId, type) {
     try {
       const response = await apiClient.patch(`/reaction/${reactionId}`, {
-        type
+        type,
       });
       return response.data;
     } catch (error) {
@@ -736,12 +787,15 @@ export const stepAPI = {
     return response.data;
   },
   async updateStage(id, title, description) {
-    const response = await apiClient.patch(`/step/${id}`, { title, description });
+    const response = await apiClient.patch(`/step/${id}`, {
+      title,
+      description,
+    });
     return response.data;
   },
   async deleteStage(id) {
     const response = await apiClient.delete(`/step/${id}`);
     return response.data;
-  }
-}
+  },
+};
 export default apiClient;

@@ -229,6 +229,15 @@ const changePassword = async (req, res, next) => {
   }
 };
 
+const checkAuth = (req, res) => {
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    console.log("Error in checkAuth controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 export const authController = {
   register,
   verifyEmail,
@@ -239,6 +248,7 @@ export const authController = {
   resetPassword,
   googleLogin,
   changePassword,
+  checkAuth,
 };
 
 module.exports = { authController };
@@ -252,3 +262,4 @@ module.exports.verifyResetOtp = verifyResetOtp;
 module.exports.resetPassword = resetPassword;
 module.exports.googleLogin = googleLogin;
 module.exports.changePassword = changePassword;
+module.exports.checkAuth = checkAuth;
