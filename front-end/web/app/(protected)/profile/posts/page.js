@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { createPost, getOwnPosts } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 
 const POST_CATEGORIES = [
@@ -176,11 +177,16 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     }
 
     setIsSubmitting(true);
-
-    // UI-ONLY: Tạo mock post để hiển thị ngay
     try {
-      const mockPost = {
-        id: `mock_${Date.now()}`,
+      const created = await createPost({
+        category,
+        content: content.trim(),
+        image: imageData,
+        contact: contact.trim(),
+      });
+
+      const normalizedPost = {
+        id: created?._id || `${Date.now()}`,
         userName:
           user?.full_name ||
           user?.name ||
@@ -189,22 +195,25 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
           "Bạn",
         userHandle: user?.username || user?.email || "",
         userAvatar: user?.avatar || "/images/avatar.jpg",
-        timestamp: "Vừa xong",
-        content: content.trim(),
-        link: contact.trim(),
-        image: imagePreview,
-        category: category,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        status: "pending",
+        timestamp: created?.created_at
+          ? new Date(created.created_at).toLocaleString("vi-VN")
+          : "Vừa xong",
+        content: created?.content || content.trim(),
+        link: created?.contact || contact.trim(),
+        image: created?.image || imagePreview,
+        category: created?.category || category,
+        likes: created?.likes_count || 0,
+        comments: created?.comments_count || 0,
+        shares: created?.shares_count || 0,
+        status: created?.status || "pending",
         isLiked: false,
       };
 
-      onPostCreated?.(mockPost);
+      onPostCreated?.(normalizedPost);
       onClose();
     } catch (submitError) {
-      setError("Không thể tạo bài viết");
+      const message = submitError?.message || "Không thể tạo bài viết";
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -216,7 +225,7 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white text-black w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
         <div className="relative flex items-center justify-center p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold">Tạo Bài Viết</h2>
+          <h2 className="text-xl font-bold">Tạo Post</h2>
           <button
             onClick={onClose}
             className="absolute right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition"
@@ -275,8 +284,8 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                       document.getElementById('category-dropdown').classList.add('hidden');
                     }}
                     className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item
-                      ? 'bg-emerald-600 text-white font-medium'
-                      : 'text-gray-900 hover:bg-emerald-500 hover:text-white'
+                        ? 'bg-emerald-600 text-white font-medium'
+                        : 'text-gray-900 hover:bg-emerald-500 hover:text-white'
                       }`}
                   >
                     {item}
@@ -516,13 +525,55 @@ export default function ContentExpertProfileContent() {
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState(null);
 
-  // UI-ONLY: Load mock data instead of API
   useEffect(() => {
-    // Mock empty state for now
-    setLoadingPosts(false);
-    setPosts([]);
-  }, [user]);
+    let isCancelled = false;
 
+    const loadPosts = async () => {
+      if (!user?._id && !user?.id) return;
+
+      setLoadingPosts(true);
+      setPostsError(null);
+
+      try {
+        const data = await getOwnPosts({ author_id: user._id || user.id });
+
+        if (isCancelled) return;
+
+        const normalizedPosts = (data || []).map((post) => ({
+          id: post._id,
+          userName: user?.full_name || user?.name || user?.username || "Bạn",
+          userHandle: user?.username || user?.email || "",
+          userAvatar: user?.avatar || "/images/avatar.jpg",
+          timestamp: post.created_at
+            ? new Date(post.created_at).toLocaleString("vi-VN")
+            : "Vừa xong",
+          content: post.content,
+          link: post.contact,
+          image: post.image,
+          category: post.category,
+          likes: post.likes_count || 0,
+          comments: post.comments_count || 0,
+          shares: post.shares_count || 0,
+          status: post.status || "pending",
+          isLiked: post.is_liked || false,
+        }));
+
+        setPosts(normalizedPosts);
+      } catch (error) {
+        if (isCancelled) return;
+        setPostsError(error?.message || "Không thể tải bài viết");
+      } finally {
+        if (isCancelled) return;
+        setLoadingPosts(false);
+      }
+    };
+
+    loadPosts();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [user]);
 
   const handlePostCreated = (newPost) => {
     setPosts((prev) => [newPost, ...prev]);
