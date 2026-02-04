@@ -1,0 +1,94 @@
+@startuml 85_viewPostList
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor Farmer as "Admin"
+boundary PostRequestPage as UI 
+control postController as Controller 
+participant ":postService" as Service 
+participant ":notificationService" as Service1
+participant ":postModel" as Model 
+participant "notificationModel" as Model1
+database Database as DB 
+
+activate Farmer
+activate UI
+
+' ===== Search / Filter =====
+Farmer -> UI : 1.Click post in request management.
+Farmer -> UI : 2.Click "Confirm/Reject" icon.
+
+alt Confirm action
+UI -> Controller : 2.1. approveGeneralPost(postData)
+activate Controller
+
+Controller -> Service : 2.1.1. approveGeneralPost(postData)
+activate Service
+Service -> Model : 2.1.2. findIdAndUpdate(postData)
+activate Model
+Model -> DB : 2.1.3. Execute query
+activate DB
+DB --> Model : 2.1.4. Return result
+deactivate DB
+Model --> Service : 2.1.5. Return post list
+deactivate Model
+
+
+    Service -> Service1 : 2.1.6. createNotification(data)
+    activate Service1
+    Service1 -> Model1 : 2.1.7. save(notificationData)
+    activate Model1
+    Model1 -> DB : 2.1.8. Execute query
+    activate DB
+    DB --> Model1 : 2.1.9. Return result
+    deactivate DB
+    Model1 --> Service1 : 2.1.10. Notification saved
+    deactivate Model1
+    Service1 --> Service : 2.1.11. Notification created
+    deactivate Service1
+    Service --> Controller : 2.1.12. Return post approved
+    Controller --> UI : 2.1.13. Display "Post approved successfully"
+    UI --> Farmer : 2.1.14. Show confirmation message
+
+else Reject action
+    UI -> Farmer : 2.2. Prompt for rejection reason
+    Farmer -> UI : 2.2.1. Enter rejection reason
+    UI -> UI : Validate reason
+    activate UI
+    deactivate UI
+    opt Invalid Input or fields left empty
+        UI --> Farmer : 2.2.1.1. Display error message
+    end
+    UI -> Controller : 2.2.2. approveGeneralPost(postData, reason)
+    Controller -> Service : 2.2.3. approveGeneralPost(postData, reason)
+    Service -> Service1 : 2.2.4. createNotification(data)
+    activate Service1
+    Service1 -> Model1 : 2.2.5. save(notificationData)
+    activate Model1
+    Model1 -> DB : 2.2.6. Execute query
+    activate DB
+    DB --> Model1 : 2.2.7. Return result
+    deactivate DB
+    Model1 --> Service1 : 2.2.8. Notification saved
+    deactivate Model1
+    Service1 --> Service : 2.2.9. Notification created
+    deactivate Service1
+    Service -> Model : 2.2.10. findIdAndUpdate(postData)
+    activate Model
+    Model -> DB : 2.2.11. Execute query
+    activate DB
+    DB --> Model : 2.2.12. Return result
+    deactivate DB
+    Model --> Service : 2.2.13. Return post list
+    deactivate Model
+    Service --> Controller : 2.2.14. Return post rejected with reason
+    deactivate Service
+    Controller --> UI : 2.2.15. Display "Post rejected" with reason
+    deactivate Controller
+    UI --> Farmer : 2.2.16. Show rejection message and reason
+    deactivate UI
+    deactivate Farmer
+end
+
+@enduml
