@@ -13,57 +13,57 @@ User -> View : 1. Enter name, description & submit
 activate View
 activate User
 View -> View : 2. Validate input
+activate View
+deactivate View
 opt Invalid Input or fields left empty
     View --> User : 2.1. Display errors message
 end
 
-User -> View : 3. Click "Cancel" icon
-View -> View : 4. Return to previous page
-activate View
-deactivate View
-opt Cancel creation
-    View --> User : 4.1 Return to previous page
-end
-
-View -> Controller : 5. createTypeProduct(typeData)
+View -> Controller : 3. createTypeProduct(typeData)
 activate Controller
 
-Controller -> Service : 6. createTypeProduct(typeData)
+Controller -> Service : 4. createTypeProduct(typeData)
 activate Service
 
 alt Type exists
-    Service -> Model : 6.1. Check conflicts
-    activate Model
-
-    Model -> Database : 6.1.1. Check existing type
-    activate Database
-    Database --> Model : 6.1.2. Conflict result
-    deactivate Database
-
-    Model --> Service : 6.1.3. Return conflict state
-    deactivate Model
-
-        Service --> Controller : 6.1.4. Return type already exists
-        Controller --> View : 6.1.5. Show error
-else Type is valid
-        Service -> Model : 6.2. save(typeData)
+        Service -> Model : 4.1. Check conflicts
         activate Model
 
-        Model -> Database : 6.2.1. save new type
+        Model -> Database : 4.1.1. Check existing type
         activate Database
-        Database --> Model : 6.2.2. Return result
+        Database --> Model : 4.1.2. Conflict result
         deactivate Database
 
-        Model --> Service : 6.2.3. Return created entity
+        Model --> Service : 4.1.3. Return conflict state
         deactivate Model
 
-        Service --> Controller : 6.2.4. Return TypeResponse
-        deactivate Service
-        Controller --> View : 6.2.5. Show success
-        deactivate Controller
-end
+        Service --> Controller : 4.1.4. Return type already exists
+        Controller --> View : 4.1.5. Show error message
+        View --> User : 4.1.6. Display "Type already exists" message
+else Type is valid
+        Service -> Model : 4.2. save(typeData)
+        activate Model
 
-View --> User : 7. Display form result (success or error)
-deactivate View
-deactivate User
+        Model -> Database : 4.2.1. save new type
+        activate Database
+        Database --> Model : 4.2.2. Return result
+        deactivate Database
+
+        Model --> Service : 4.2.3. Return created entity
+        deactivate Model
+
+                alt Create type successful
+                        Service --> Controller : 4.2.3.1. Return create type successful
+                        Controller --> View : 4.2.3.2. Show success message "Create type successful."
+                        View --> User : 4.2.3.3. Display success message
+                else Create type failed
+                        Service --> Controller : 4.2.3.a. Return TypeResponse
+                        deactivate Service
+                        Controller --> View : 4.2.3.b. Show error message
+                        deactivate Controller
+                        View --> User : 4.2.3.c. Display "Create type failed" message
+                        deactivate View
+                        deactivate User
+                end
+end
 @enduml

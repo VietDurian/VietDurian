@@ -36,9 +36,9 @@ alt Garden list not empty
     UI --> Farmer : 8.1.2 Display garden list
 else Garden list empty
     Service --> Controller : 8.2 Return empty list
-    deactivate Controller
-    Controller --> UI : 8.2.1 Show empty message
     deactivate Service
+    Controller --> UI : 8.2.1 Show empty message
+    deactivate Controller
     UI --> Farmer : 8.2.2 Display 'No gardens found'
     deactivate UI
     deactivate Farmer

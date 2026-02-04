@@ -1,0 +1,60 @@
+@startuml 84_createPost
+hide footbox
+
+actor User as "Users" 
+boundary PostPage as View
+control "PostController" as Controller
+participant ":PostService" as Service
+entity "PostModel" as Model
+database Database as Database
+
+
+User -> View : 1. Enter category, content, image, contact & submit
+activate View
+activate User
+View -> View : 2. Validate input
+activate View
+deactivate View
+opt Invalid Input or fields left empty
+    View --> User : 2.1. Display errors message
+end
+
+View -> Controller : 3. createGeneralPost(postData)
+activate Controller
+
+Controller -> Service : 4. createGeneralPost(postData)
+activate Service
+
+Service -> Model : 5. save(postData)
+activate Model
+
+Model -> Database : 6. save new post
+activate Database
+Database --> Model : 7. Return result
+deactivate Database
+
+Model --> Service : 8. Return created entity
+deactivate Model
+
+Service -> Service : 9. check post creation status
+activate Service
+deactivate Service
+
+alt Post creation successful
+    Service --> Controller : 10.1. Return PostResponse
+
+    Controller --> View : 10.1.1. Show success message
+
+    View --> User : 10.1.2. Display 'Post created successfully'
+else Post creation failed
+    Service --> Controller : 10.2. Return failure
+    deactivate Service
+
+    Controller --> View : 10.2.1. Show error message
+    deactivate Controller
+
+    View --> User : 10.2.2. Display 'Post creation failed'
+    deactivate View
+    deactivate User
+end
+@enduml
