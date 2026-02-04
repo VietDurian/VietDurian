@@ -14,10 +14,11 @@ import {
   Phone,
   Mail,
   Share2,
+  Loader2,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { createPost, getOwnPosts, updatePost, deletePost } from "@/lib/api";
+import { createPost, getOwnPosts, updatePost, deletePost, favoriteAPI } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 
 const POST_CATEGORIES = [
@@ -78,7 +79,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// Post Composer Component - PROMINENT INPUT STYLE
+// Post Composer Component
 const PostComposer = ({ onOpenModal, user }) => {
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-5 w-full">
@@ -111,7 +112,7 @@ const PostComposer = ({ onOpenModal, user }) => {
   );
 };
 
-// Post Modal Component
+// Post Modal Component (giữ nguyên như cũ)
 const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const fileInputRef = useRef(null);
   const [category, setCategory] = useState(POST_CATEGORIES[0]);
@@ -400,7 +401,7 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   );
 };
 
-// Edit Post Modal Component
+// Edit Post Modal Component (giữ nguyên)
 const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const fileInputRef = useRef(null);
   const [category, setCategory] = useState(post?.category || POST_CATEGORIES[0]);
@@ -689,19 +690,53 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   );
 };
 
-// Post Component - FIXED LIKE & SIMPLIFIED CONTACT
+// Post Component - FIXED LIKE
 const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments || 0);
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(post.likes || 0);
   const [showMenu, setShowMenu] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
-  const handleLike = () => {
+  // Sync isLiked state when post.isLiked changes (e.g., after page reload)
+  useEffect(() => {
+    setIsLiked(post.isLiked || false);
+  }, [post.isLiked]);
+
+  const handleLike = async () => {
+    if (isTogglingFavorite) return; // Prevent double-click
+
     const newLikedState = !isLiked;
+    const previousLikedState = isLiked;
+
+    // Optimistically update UI
     setIsLiked(newLikedState);
-    // Không cộng/trừ nữa, giữ nguyên số like
-    onLikeUpdate?.(post.id, newLikedState);
+    setIsTogglingFavorite(true);
+
+    try {
+      if (newLikedState) {
+        // Add to favorites
+        await favoriteAPI.addFavorite(post.id);
+      } else {
+        // Remove from favorites
+        await favoriteAPI.removeFavorite(post.id);
+      }
+
+      // Notify parent component
+      onLikeUpdate?.(post.id, newLikedState);
+    } catch (error) {
+      console.error("Error updating favorite:", error);
+
+      // Revert optimistic update on error
+      setIsLiked(previousLikedState);
+
+      // Show error to user
+      const errorMessage = error?.response?.data?.message || error?.message || "Không thể cập nhật yêu thích";
+      alert(errorMessage);
+    } finally {
+      setIsTogglingFavorite(false);
+    }
   };
 
   // Xác định icon cho contact
@@ -825,13 +860,18 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
         <div className="pt-3 border-t border-gray-200 flex items-center justify-between px-1">
           <button
             onClick={handleLike}
+            disabled={isTogglingFavorite}
             className={`flex items-center gap-2 transition px-3 py-1.5 rounded-lg ${isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500 hover:bg-red-50"
-              }`}
+              } ${isTogglingFavorite ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            <Heart
-              size={20}
-              className={`${isLiked ? "fill-current" : ""}`}
-            />
+            {isTogglingFavorite ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : (
+              <Heart
+                size={20}
+                className={`${isLiked ? "fill-current" : ""}`}
+              />
+            )}
             {likeCount > 0 && <span className="text-sm font-medium">{likeCount}</span>}
           </button>
 
@@ -860,7 +900,7 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
   );
 };
 
-// Main Component
+// Main Component - FIXED LOADING FAVORITE STATE
 export default function ContentExpertProfileContent() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -870,42 +910,75 @@ export default function ContentExpertProfileContent() {
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState(null);
 
+  // ===== LOAD POSTS WITH FAVORITE STATUS =====
   useEffect(() => {
     let isCancelled = false;
 
-    const loadPosts = async () => {
+    const loadPostsWithFavorites = async () => {
       if (!user?._id && !user?.id) return;
 
       setLoadingPosts(true);
       setPostsError(null);
 
       try {
-        const data = await getOwnPosts({ author_id: user._id || user.id });
+        // Load posts và favorites SONG SONG để nhanh hơn
+        const [postsData, favoritesResponse] = await Promise.all([
+          getOwnPosts({ author_id: user._id || user.id }),
+          favoriteAPI.getFavorites().catch(err => {
+            console.error("Error loading favorites:", err);
+            return { data: [] }; // Fallback nếu lỗi
+          })
+        ]);
 
         if (isCancelled) return;
 
-        const normalizedPosts = (data || []).map((post) => ({
-          id: post._id,
-          userName: user?.full_name || user?.name || user?.username || "Bạn",
-          userHandle: user?.username || user?.email || "",
-          userAvatar: user?.avatar || "/images/avatar.jpg",
-          timestamp: post.created_at
-            ? new Date(post.created_at).toLocaleString("vi-VN")
-            : "Vừa xong",
-          content: post.content,
-          link: post.contact,
-          image: post.image,
-          category: post.category,
-          likes: post.likes_count || 0,
-          comments: post.comments_count || 0,
-          shares: post.shares_count || 0,
-          status: post.status || "pending",
-          isLiked: post.is_liked || false,
-        }));
+        // Tạo Set để lookup nhanh hơn
+        const favoritePostIds = new Set(
+          (favoritesResponse.data || [])
+            .map(fav => fav.post_id?._id || fav.post_id)
+            .filter(Boolean)
+        );
+
+        console.log('=== DEBUG FAVORITES ===');
+        console.log('Total favorites loaded:', favoritePostIds.size);
+        console.log('Favorite post IDs:', Array.from(favoritePostIds));
+
+        // Normalize posts
+        const normalizedPosts = (postsData || []).map((post) => {
+          const postId = post._id;
+          const isLiked = favoritePostIds.has(postId);
+
+          console.log(`Post ${postId}: isLiked = ${isLiked}`);
+
+          return {
+            id: postId,
+            userName: user?.full_name || user?.name || user?.username || "Bạn",
+            userHandle: user?.username || user?.email || "",
+            userAvatar: user?.avatar || "/images/avatar.jpg",
+            timestamp: post.created_at
+              ? new Date(post.created_at).toLocaleString("vi-VN")
+              : "Vừa xong",
+            content: post.content,
+            link: post.contact,
+            image: post.image,
+            category: post.category,
+            likes: post.likes_count || 0,
+            comments: post.comments_count || 0,
+            shares: post.shares_count || 0,
+            status: post.status || "pending",
+            isLiked: isLiked, // ← SET ĐÚNG TỪ FAVORITES
+          };
+        });
+
+        console.log('Normalized posts:', normalizedPosts.map(p => ({
+          id: p.id,
+          isLiked: p.isLiked
+        })));
 
         setPosts(normalizedPosts);
       } catch (error) {
         if (isCancelled) return;
+        console.error("Error loading posts:", error);
         setPostsError(error?.message || "Không thể tải bài viết");
       } finally {
         if (isCancelled) return;
@@ -913,7 +986,7 @@ export default function ContentExpertProfileContent() {
       }
     };
 
-    loadPosts();
+    loadPostsWithFavorites();
 
     return () => {
       isCancelled = true;
