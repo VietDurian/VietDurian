@@ -46,6 +46,7 @@ const deleteFromFavorites = async (user_id, post_id) => {
 const viewFavorites = async (user_id) => {
 	const favorites = await FavoriteModel.find({ user_id })
 		.populate('post_id')
+		.populate('user_id', 'full_name email avatar')
 		.sort({ created_at: -1 });
 	return favorites;
 };
