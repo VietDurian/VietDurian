@@ -20,6 +20,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { profileAPI, authAPI } from "@/lib/api";
+import FavoritePostsModal from "@/components/FavoritePostsModal"
 
 const TabButton = ({ icon: Icon, label, active, onClick }) => (
   <button
@@ -443,21 +444,7 @@ export default function ProfileDetails() {
             </div>
           )}
 
-          {activeTab === "favorites" && (
-            <div className="bg-white rounded-2xl p-12 border border-gray-200 text-center">
-              <div className="max-w-md mx-auto">
-                <div className="inline-flex p-6 rounded-full bg-pink-50 mb-6">
-                  <Heart className="text-pink-500" size={48} strokeWidth={2} />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  Bài viết yêu thích
-                </h3>
-                <p className="text-gray-600">
-                  Các bài viết bạn yêu thích sẽ xuất hiện ở đây. Hãy bắt đầu khám phá và lưu lại những nội dung bạn yêu thích!
-                </p>
-              </div>
-            </div>
-          )}
+          {activeTab === "favorites" && <FavoritePostsModal />}
 
           {activeTab === "security" && (
             <div className="space-y-6">
@@ -563,8 +550,8 @@ export default function ProfileDetails() {
                     onClick={handleChangePassword}
                     disabled={!canChangePassword || isChangingPassword}
                     className={`px-8 py-3 font-semibold rounded-xl transition-all duration-300 flex items-center gap-2 ${canChangePassword && !isChangingPassword
-                        ? "bg-emerald-500 text-white hover:bg-emerald-600 cursor-pointer"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      ? "bg-emerald-500 text-white hover:bg-emerald-600 cursor-pointer"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
                   >
                     {isChangingPassword ? (
