@@ -454,9 +454,8 @@ export async function getOwnPosts(filters = {}) {
   if (search) params.append("search", search);
   if (author_id) params.append("author_id", author_id);
 
-  const url = `/post/general${
-    params.toString() ? `?${params.toString()}` : ""
-  }`;
+  const url = `/post/general${params.toString() ? `?${params.toString()}` : ""
+    }`;
 
   try {
     const response = await apiClient.get(url);
@@ -796,6 +795,41 @@ export const stepAPI = {
   async deleteStage(id) {
     const response = await apiClient.delete(`/step/${id}`);
     return response.data;
+  },
+};
+
+export const favoriteAPI = {
+  // Get all favorite posts
+  async getFavorites() {
+    try {
+      const response = await apiClient.get("/favorite");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching favorites:", error);
+      throw error;
+    }
+  },
+
+  // Add a post to favorites
+  async addFavorite(postId) {
+    try {
+      const response = await apiClient.post("/favorite", { post_id: postId });
+      return response.data;
+    } catch (error) {
+      console.error("Error adding favorite:", error);
+      throw error;
+    }
+  },
+
+  // Remove a post from favorites
+  async removeFavorite(postId) {
+    try {
+      const response = await apiClient.delete(`/favorite/${postId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error removing favorite:", error);
+      throw error;
+    }
   },
 };
 export default apiClient;
