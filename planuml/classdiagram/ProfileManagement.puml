@@ -4,151 +4,88 @@ skinparam shadowing false
 skinparam classAttributeIconSize 0
 left to right direction
 
-title Profile Management Class Diagram (from 9.x sequences)
+title Profile Management Class Diagram (backend aligned)
 
 class ProfilePage <<boundary>> {
   +validateInput(): void
   +showError(message): void
   +showSuccess(message): void
-  +displayProfile(u: UserDTO): void
-  +displayPublicProfile(p: PublicProfileDTO): void
-  +displayMap(m: MapDTO): void
+  +displayProfile(u: User): void
+  +displayPublicProfile(u: User): void
+  +displayServiceProviderProfile(p: ServiceProviderProfile): void
 }
 
 class ProfileRoute <<control>> {
   +getMe(req, res): void
-  +postEditProfile(req, res): void
+  +putUpdate(req, res): void
   +getPublic(userId, req, res): void
-  +getMap(req, res): void
 }
 
 class AuthMiddleware <<control>> {
-  +authenticateUser(req): UserInfo
-  +authorizeRole(roles): void
+  +protect(req): UserInfo
+}
+
+class AuthorizationMiddleware <<control>> {
+  +hasRole(role): void
 }
 
 class ProfileController <<control>> {
-  +handleViewProfile(userInfo): void
-  +handleEditProfile(userInfo, profileData): void
-  +handleGetPublicProfile(userId): void
+  +getProfile(req, res): void
+  +updateProfile(req, res): void
+  +getPublicProfile(req, res): void
 }
 
-class MapController <<control>> {
-  +handleGetMap(userInfo): void
-}
-
-class CapabilityProfileController <<control>> {
-  +handleViewCapabilityProfile(userInfo): void
-  +handleCreateCapabilityProfile(userInfo, data): void
-  +handleUpdateCapabilityProfile(userInfo, data): void
+class ServiceProviderProfileController <<control>> {
+  +addCapabilityProfile(req, res): void
+  +updateCapabilityProfile(req, res): void
 }
 
 class ProfileService <<service>> {
-  +getProfile(userId): UserDTO
-  +updateProfile(userId, profileData): UserDTO
-  +getPublicProfile(userId): PublicProfileDTO
-  +checkNotFound(entity): void
-  +checkDatabaseError(error): void
-  +mapToUserDTO(user: User): UserDTO
-  +mapToPublicProfileDTO(user: User): PublicProfileDTO
+  +getProfile(userId): User
+  +updateProfile(userId, profileData): User
+  +getPublicProfile(userId): User
 }
 
-class MapService <<service>> {
-  +getMapData(userId): MapDTO
-  +checkDatabaseError(error): void
-}
-
-class CapabilityProfileService <<service>> {
-  +getCapabilityProfile(userId): CapabilityProfileDTO
-  +createCapabilityProfile(userId, data): CapabilityProfileDTO
-  +updateCapabilityProfile(userId, data): CapabilityProfileDTO
-  +checkDatabaseError(error): void
-  +mapToCapabilityProfileDTO(p: CapabilityProfile, items: CapabilityItem[]): CapabilityProfileDTO
+class ServiceProviderProfileService <<service>> {
+  +addCapabilityProfile(userId, data): ServiceProviderProfile
+  +updateCapabilityProfile(userId, data): ServiceProviderProfile
 }
 
 class UserModel <<model>> {
-  +findOne(userId): User
-  +editUserById(userId, profileData): User
-  +find(): User[]
+  +findById(userId): User
+  +findByIdAndUpdate(userId, data): User
 }
 
-class CapabilityProfileModel <<model>> {
-  +getByUserId(userId): CapabilityProfile
-  +create(userId, data): CapabilityProfile
-  +update(userId, data): CapabilityProfile
-}
-
-class CapabilityItemModel <<model>> {
-  +getByCapabilityProfileId(capabilityProfileId): CapabilityItem[]
-  +create(itemData): CapabilityItem
-  +update(itemData): CapabilityItem
+class ServiceProviderProfileModel <<model>> {
+  +findOne(query): ServiceProviderProfile
+  +create(doc): ServiceProviderProfile
+  +findOneAndUpdate(query, update): ServiceProviderProfile
 }
 
 class User <<entity>> {
-  +id: string
+  +_id: ObjectId
+  +full_name: string
   +email: string
-  +name: string
-  +avatarUrl: string
+  +password: string
+  +phone: string
+  +avatar: string
   +role: string
-  +status: string
+  +is_banned: bool
+  +is_verified: bool
+  +created_at: Date
+  +updated_at: Date
 }
 
-class CapabilityProfile <<entity>> {
-  +id: string
-  +userId: string
-  +title: string
-  +summary: string
-  +updatedAt: Date
-}
-
-class CapabilityItem <<entity>> {
-  +id: string
-  +capabilityProfileId: string
-  +name: string
-  +level: int
-  +yearsExperience: int
+class ServiceProviderProfile <<entity>> {
+  +user_id: ObjectId
+  +business_name: string
+  +services: string
+  +service_areas: string
+  +experience_year: number
+  +contact_phone: string
   +description: string
-}
-
-class UserDTO <<datatype>> {
-  +id: string
-  +email: string
-  +name: string
-  +avatarUrl: string
-  +role: string
-  +status: string
-}
-
-class PublicProfileDTO <<datatype>> {
-  +userId: string
-  +fullName: string
-  +avatarUrl: string
-  +bio: string
-}
-
-class MapDTO <<datatype>> {
-  +userId: string
-  +markers: MapMarkerDTO[]
-}
-
-class MapMarkerDTO <<datatype>> {
-  +lat: number
-  +lng: number
-  +label: string
-}
-
-class CapabilityProfileDTO <<datatype>> {
-  +userId: string
-  +title: string
-  +summary: string
-  +items: CapabilityItemDTO[]
-}
-
-class CapabilityItemDTO <<datatype>> {
-  +name: string
-  +level: int
-  +yearsExperience: int
-  +description: string
+  +created_at: Date
+  +updated_at: Date
 }
 
 class Database <<database>>
@@ -157,31 +94,19 @@ ProfilePage --> ProfileRoute : uses
 ProfileRoute --> AuthMiddleware : uses
 
 AuthMiddleware --> ProfileController : forwards userInfo
-AuthMiddleware --> MapController : forwards userInfo
-AuthMiddleware --> CapabilityProfileController : forwards userInfo
+AuthMiddleware --> ServiceProviderProfileController : forwards userInfo
 
 ProfileRoute --> ProfileController : calls handlers
-ProfileRoute --> MapController : calls handlers
-ProfileRoute --> CapabilityProfileController : calls handlers
+
+ServiceProviderProfileController --> AuthorizationMiddleware : requires role
 
 ProfileController --> ProfileService : orchestration
-MapController --> MapService : orchestration
-CapabilityProfileController --> CapabilityProfileService : orchestration
+ServiceProviderProfileController --> ServiceProviderProfileService : orchestration
 
 ProfileService --> UserModel : persistence
-MapService --> UserModel : persistence
-CapabilityProfileService --> CapabilityProfileModel : persistence
-CapabilityProfileService --> CapabilityItemModel : persistence
+ServiceProviderProfileService --> ServiceProviderProfileModel : persistence
 
 UserModel --> Database : queries
-CapabilityProfileModel --> Database : queries
-CapabilityItemModel --> Database : queries
-
-ProfileService --> UserDTO : returns
-ProfileService --> PublicProfileDTO : returns
-MapService --> MapDTO : returns
-CapabilityProfileService --> CapabilityProfileDTO : returns
-
-CapabilityProfileDTO --> CapabilityItemDTO : contains
+ServiceProviderProfileModel --> Database : queries
 
 @enduml
