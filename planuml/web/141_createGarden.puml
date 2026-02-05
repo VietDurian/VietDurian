@@ -1,0 +1,52 @@
+@startuml 141 createGarden
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor Farmer 
+boundary CreateGardenPage as UI 
+control gardenController as Controller 
+participant ":gardenService" as Service 
+participant ":gardenModel" as Model 
+database Database as DB 
+
+activate Farmer
+activate UI
+Farmer -> UI : 1. Enter garden record details & submit
+UI -> UI : 2. Validate input
+activate UI
+deactivate UI
+opt Invalid input data
+    UI --> Farmer : 2.1. Display error message
+end
+
+UI -> Controller : 3. Create garden request
+activate Controller
+
+Controller -> Service : 4. createGarden(data)
+activate Service
+Service -> Model : 5. save(data)
+activate Model
+Model -> DB : 6. Execute save
+activate DB
+DB --> Model : 7. Return result
+deactivate DB
+Model --> Service : 8. Return garden entity
+deactivate Model
+Service -> Service : 9. checkSaveResult(result)
+activate Service
+deactivate Service
+alt Create garden success
+    Service --> Controller : 9.1 Return success
+    Controller --> UI : 9.1.1 Show success message
+    UI --> Farmer : 9.1.2 Display garden record created
+else Create garden failed
+    Service --> Controller : 9.2 Return error
+    deactivate Service
+    Controller --> UI : 9.2.1 Show error message
+    deactivate Controller
+    UI --> Farmer : 9.2.2 Display error message
+    deactivate UI
+    deactivate Farmer
+end
+@enduml

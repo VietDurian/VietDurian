@@ -1,0 +1,52 @@
+@startuml 16.1_createCommentBlog
+hide footbox
+actor User as "Users"
+boundary PostPage as View
+control "CommentPostController" as Controller
+participant ":CommentPostService" as Service
+participant ":CommentPostModel" as Model
+database Database as Database
+
+
+User -> View : 1. Click Rely on comment
+activate View
+activate User
+User -> View : 2. Input comment content
+View -> View : 3. Validate input
+activate View
+deactivate View
+
+opt Invalid Input or fields left empty
+    View --> User : 3.1. Show validation error
+end
+
+    View -> Controller : 4. Create comment request
+    activate Controller
+
+    Controller -> Service : 5. createComment(commentData, parentCommentId)
+    activate Service
+        Service -> Model : 6. save(commentData)
+        activate Model
+
+        Model -> Database : 7. Execute insert query
+        activate Database
+        Database --> Model : 8. Return result
+        deactivate Database
+
+        Model --> Service : 9. Return created entity
+        deactivate Model
+
+alt Create comment successful
+        Service --> Controller : 9.1. Return CommentPostResponse
+        Controller --> View : 9.1.1. Return response
+        View --> User : 9.1.2. Redirect to post page with new comment
+else Create comment failed
+        Service --> Controller : 9.2. Return error
+        deactivate Service
+        Controller --> View : 9.2.1. Return error response
+        deactivate Controller
+        View --> User : 9.2.2. Display error message
+        deactivate View
+        deactivate User
+end
+@enduml

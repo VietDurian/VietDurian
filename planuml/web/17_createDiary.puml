@@ -1,0 +1,56 @@
+@startuml 10.1_createDiary
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor User
+boundary CreateDiaryPage as UI
+ 
+control diaryController as Controller
+participant ":diaryService" as Service
+participant ":diaryModel" as Model
+database Database as DB
+
+
+User -> UI : 1. Enter title, description, crop_type belong garden
+activate User
+activate UI
+User -> UI : 2. Click submit button
+UI -> UI : 3. Validate input
+activate UI
+deactivate UI
+opt Invalid Input or fields left empty
+    UI --> User : 3.1 Display error message
+end
+UI -> Controller : 4. Create diary request
+activate Controller
+Controller -> Service : 5. createDiary(data, userId)
+activate Service
+Service -> Model : 6. save(data)
+activate Model
+Model -> DB : 7. Execute insert query
+activate DB
+DB --> Model : 8. Return result
+deactivate DB
+Model --> Service : 9. Return insert result
+deactivate Model
+Service -> Service : 10. check insert result
+activate Service
+deactivate Service
+
+alt Create diary successful
+    Service --> Controller : 10.1 Return DiaryResponse
+    Controller --> UI : 10.1.1 Return response
+    UI --> User : 10.1.2 Redirect to diary page with new diary
+else Create diary failed
+    Service --> Controller : 11.2 Return error
+    deactivate Service
+    Controller --> UI : 11.2.1 Return error response
+    deactivate Controller
+    UI --> User : 11.2.2 Display error message
+    deactivate UI
+    deactivate User
+end
+
+@enduml

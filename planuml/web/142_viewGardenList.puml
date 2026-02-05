@@ -1,0 +1,46 @@
+@startuml 142_viewGardenList
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor Farmer as "Users"
+boundary GardenPage as UI 
+control gardenController as Controller 
+participant ":gardenService" as Service 
+participant ":gardenModel" as Model 
+database Database as DB 
+
+activate Farmer
+activate UI
+Farmer -> UI : 1. Users click "Garden" tab
+
+UI -> Controller : 2. Get garden list request
+activate Controller
+
+Controller -> Service : 3. getGardensByUser(userId)
+activate Service
+Service -> Model : 4. find(userId)
+activate Model
+Model -> DB : 5. Execute query
+activate DB
+DB --> Model : 6. Return result
+deactivate DB
+Model --> Service : 7. Return garden list
+deactivate Model
+    Service -> Service : 8. check garden list
+activate Service
+deactivate Service
+alt Garden list not empty
+    Service --> Controller : 8.1 Return garden list
+    Controller --> UI : 8.1.1 Show garden list
+    UI --> Farmer : 8.1.2 Display garden list
+else Garden list empty
+    Service --> Controller : 8.2 Return empty list
+    deactivate Service
+    Controller --> UI : 8.2.1 Show empty message
+    deactivate Controller
+    UI --> Farmer : 8.2.2 Display 'No gardens found'
+    deactivate UI
+    deactivate Farmer
+end
+@enduml

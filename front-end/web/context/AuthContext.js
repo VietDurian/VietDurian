@@ -1,6 +1,3 @@
-// context/AuthContext.js
-'use client';
-
 import {
   createContext,
   useContext,
@@ -10,7 +7,7 @@ import {
   useRef,
 } from "react";
 import { useRouter } from "next/navigation";
-import {profileAPI} from "@/lib/api";
+import { profileAPI } from "@/lib/api";
 import apiClient from "@/lib/api";
 
 const AuthContext = createContext();
@@ -20,30 +17,29 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null); // 👈 new
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-	const isHandling401 = useRef(false);
+  const isHandling401 = useRef(false);
 
   const setUserUnsafe = useCallback((nextUser) => {
-  localStorage.setItem("auth_user", JSON.stringify(nextUser));
-  setUser(nextUser);
-}, []);
+    localStorage.setItem("auth_user", JSON.stringify(nextUser));
+    setUser(nextUser);
+  }, []);
 
-const refreshProfile = useCallback(async () => {
-  try {
-    const res = await profileAPI.getMe();
-    const latestUser = res?.data ?? res?.user ?? res;
+  const refreshProfile = useCallback(async () => {
+    try {
+      const res = await profileAPI.getMe();
+      const latestUser = res?.data ?? res?.user ?? res;
 
-    if (latestUser && typeof latestUser === "object") {
-      localStorage.setItem("auth_user", JSON.stringify(latestUser));
-      setUser(latestUser);
+      if (latestUser && typeof latestUser === "object") {
+        localStorage.setItem("auth_user", JSON.stringify(latestUser));
+        setUser(latestUser);
+      }
+
+      return latestUser;
+    } catch (error) {
+      console.error("Failed to refresh profile", error);
+      return null;
     }
-
-    return latestUser;
-  } catch (error) {
-    console.error("Failed to refresh profile", error);
-    return null;
-  }
-}, []);
-
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("auth_user");
@@ -63,7 +59,7 @@ const refreshProfile = useCallback(async () => {
     } else {
       // No token: ensure we drop any stale user session
       setUser(null);
-      localStorage.removeItem('auth_user');
+      localStorage.removeItem("auth_user");
     }
 
     setLoading(false);
@@ -78,47 +74,57 @@ const refreshProfile = useCallback(async () => {
     setToken(authToken); // update state
   }, []);
 
-	const logout = useCallback(
-		(redirectTo = '/login') => {
-			const target = typeof redirectTo === 'string' ? redirectTo : '/login';
-			localStorage.removeItem('auth_user');
-			localStorage.removeItem('auth_token'); // clear token
+  const logout = useCallback(
+    (redirectTo = "/login") => {
+      const target = typeof redirectTo === "string" ? redirectTo : "/login";
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("auth_token"); // clear token
 
-    setUser(null);
-    setToken(null);
+      setUser(null);
+      setToken(null);
 
-			router.push(target);
-		},
-		[router],
-	);
+      router.push(target);
+    },
+    [router],
+  );
 
-	// Bắt 401 toàn cục cho dashboard
-	useEffect(() => {
-		const interceptorId = apiClient.interceptors.response.use(
-			(response) => response,
-			(error) => {
-				if (error?.response?.status === 401 && !isHandling401.current) {
-					isHandling401.current = true;
+  // Bắt 401 toàn cục cho dashboard
+  useEffect(() => {
+    const interceptorId = apiClient.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error?.response?.status === 401 && !isHandling401.current) {
+          isHandling401.current = true;
 
-					const redirectPath = `${window.location.pathname}${window.location.search}`;
-					const target =
-						redirectPath && redirectPath !== '/login'
-							? `/login?redirect=${encodeURIComponent(redirectPath)}`
-							: '/login';
+          const redirectPath = `${window.location.pathname}${window.location.search}`;
+          const target =
+            redirectPath && redirectPath !== "/login"
+              ? `/login?redirect=${encodeURIComponent(redirectPath)}`
+              : "/login";
 
-					logout(target);
-				}
-				return Promise.reject(error);
-			},
-		);
+          logout(target);
+        }
+        return Promise.reject(error);
+      },
+    );
 
-		return () => {
-			apiClient.interceptors.response.eject(interceptorId);
-		};
-	}, [logout]);
+    return () => {
+      apiClient.interceptors.response.eject(interceptorId);
+    };
+  }, [logout]);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, refreshProfile, setUserUnsafe}}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        logout,
+        refreshProfile,
+        setUserUnsafe,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

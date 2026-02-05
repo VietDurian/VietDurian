@@ -1,0 +1,46 @@
+@startuml 85_viewPostList
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor Farmer as "Users"
+boundary PostPage as UI 
+control postController as Controller 
+participant ":postService" as Service 
+participant ":postModel" as Model 
+database Database as DB 
+
+activate Farmer
+activate UI
+Farmer -> UI : 1. Users click "Post" tab
+
+UI -> Controller : 2. Get posts list request
+activate Controller
+
+Controller -> Service : 3. getGeneralPost(userId)
+activate Service
+Service -> Model : 4. find(query)
+activate Model
+Model -> DB : 5. Execute query
+activate DB
+DB --> Model : 6. Return result
+deactivate DB
+Model --> Service : 7. Return post list
+deactivate Model
+    Service -> Service : 8. check post list
+activate Service
+deactivate Service
+alt Post available:
+    Service --> Controller : 8.1 Return post list
+    Controller --> UI : 8.1.1 Show post list
+    UI --> Farmer : 8.1.2 Display post list
+else No posts available:
+    Service --> Controller : 8.2 Return empty list
+    deactivate Service
+    Controller --> UI : 8.2.1 Show empty message
+    deactivate Controller
+    UI --> Farmer : 8.2.2 Display 'No posts found'
+    deactivate UI
+    deactivate Farmer
+end
+@enduml

@@ -1,0 +1,105 @@
+@startuml PermissionManagement
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+left to right direction
+
+title Permission Management Class Diagram (backend aligned)
+
+' ===== Routes & Middleware =====
+class PermissionRoute <<control>> {
+	+getPermissionRequests(req, res): void
+	+searchPermissionRequests(req, res): void
+	+sortPermissionRequests(req, res): void
+	+getPermissionRequestDetail(req, res): void
+	+confirmAccount(req, res): void
+	+rejectAccount(req, res): void
+}
+
+class AuthMiddleware <<control>> {
+	+protect(req): UserInfo
+}
+
+class AuthorizationMiddleware <<control>> {
+	+isAdmin(req): void
+}
+
+' ===== Controller =====
+class PermissionController <<control>> {
+	+getPermissionRequests(req, res): void
+	+getPermissionRequestDetail(req, res): void
+	+searchPermissionRequests(req, res): void
+	+sortPermissionRequests(req, res): void
+	+confirmAccount(req, res): void
+	+rejectAccount(req, res): void
+}
+
+' ===== Service =====
+class PermissionService <<service>> {
+	+getPermissionRequests(): PermissionAccount[]
+	+getPermissionRequestDetail(request_id): PermissionAccount
+	+searchPermissionRequests(params): PermissionAccount[]
+	+sortPermissionRequests(params): PermissionAccount[]
+	+confirmPermissionRequest(request_id, adminId): PermissionAccount
+	+rejectPermissionRequest(request_id, adminId, reason): PermissionAccount
+}
+
+' ===== Models =====
+class PermissionAccountModel <<model>> {
+	+aggregate(pipeline): PermissionAccount[]
+	+findById(id): PermissionAccount
+	+save(): void
+}
+
+class UserModel <<model>> {
+	+findById(id): User
+	+save(): void
+}
+
+class EmailService <<external>> {
+	+sendPermissionStatusEmail(payload): bool
+}
+
+' ===== Entities =====
+class PermissionAccount <<entity>> {
+	+_id: ObjectId
+	+user_id: ObjectId
+	+requested_role: string
+	+description: string
+	+document: string
+	+status: string
+	+created_at: Date
+	+updated_at: Date
+}
+
+class User <<entity>> {
+	+_id: ObjectId
+	+full_name: string
+	+email: string
+	+avatar: string
+	+role: string
+	+is_verified: bool
+	+is_banned: bool
+	+created_at: Date
+	+updated_at: Date
+}
+
+class Database <<database>>
+
+' ===== Relationships =====
+PermissionRoute --> AuthMiddleware : uses
+PermissionRoute --> AuthorizationMiddleware : uses
+PermissionRoute --> PermissionController : calls handlers
+
+PermissionController --> PermissionService : orchestration
+
+PermissionService --> PermissionAccountModel : persistence
+PermissionService --> UserModel : update user role
+PermissionService --> EmailService : notify user
+
+PermissionAccountModel --> Database : queries
+UserModel --> Database : queries
+
+PermissionAccount "many" o-- "1" User
+
+@enduml

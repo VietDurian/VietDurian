@@ -1,7 +1,12 @@
+"use client";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext";
 import AiFloatingButton from "@/components/AiFloatingButton";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,21 +18,29 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
-  title: "VietDurian",
-  description: "Durian farming and marketplace platform",
-};
-
 export default function RootLayout({ children }) {
+  const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Check user's authentication
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  //  Hide on chat routes
+  const hideAiButton = pathname.startsWith("/chat");
+
   return (
     <html lang="en">
       <body
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Toaster />
         <AuthProvider>
           {children}
-          <AiFloatingButton />
+          {!hideAiButton && <AiFloatingButton />}
         </AuthProvider>
       </body>
     </html>

@@ -43,9 +43,17 @@ const deleteFromFavorites = async (user_id, post_id) => {
 	return deletedFavorite;
 };
 
+// Delete all favorites for a post (cleanup when post is removed)
+const deleteFavoritesByPostId = async (post_id) => {
+	if (!post_id) return;
+	await FavoriteModel.deleteMany({ post_id });
+};
+ 
+
 const viewFavorites = async (user_id) => {
 	const favorites = await FavoriteModel.find({ user_id })
 		.populate('post_id')
+		.populate('user_id', 'full_name email avatar')
 		.sort({ created_at: -1 });
 	return favorites;
 };
@@ -54,4 +62,5 @@ export const favoriteService = {
 	addToFavorites,
 	deleteFromFavorites,
 	viewFavorites,
+	deleteFavoritesByPostId,
 };

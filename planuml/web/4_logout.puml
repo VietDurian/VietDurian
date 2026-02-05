@@ -4,25 +4,23 @@ skinparam shadowing false
 skinparam sequenceArrowThickness 1
 hide footbox
 
-actor User
+actor Users
 boundary authLogoutPage as UI
 boundary localStorage as Storage
-control authRoute as Route
 control authController as Controller
 participant ":authService" as AuthService
 participant ":blacklistModel" as BlacklistModel
 database Database as DB
 
-activate User
-User -> UI : 1. Click logout button
+activate Users
+Users -> UI : 1. Click logout button
 activate UI
-UI -> Route : 2. POST /auth/logout
-activate Route
-Route -> Controller : 3. handleLogout()
+UI -> Controller : 2. POST /auth/logout
 activate Controller
-Controller -> AuthService : 4. logout(token)
+Controller -> Controller : 3. Process logout request
+Controller -> AuthService : 4. handleLogout()
 activate AuthService
-AuthService -> BlacklistModel : 5. addTokenToBlacklist(token)
+AuthService -> BlacklistModel : 5. addToBlacklist()
 activate BlacklistModel
 BlacklistModel -> DB : 6. insertOne()
 activate DB
@@ -30,27 +28,24 @@ DB --> BlacklistModel : 7. Return inserted document
 deactivate DB
 BlacklistModel --> AuthService : 8. Return result
 deactivate BlacklistModel
-AuthService -> AuthService : 9. checkDatabaseError()
+AuthService -> AuthService : 9. validatePersistenceResult()
 activate AuthService
 deactivate AuthService
-opt database error
+opt Persistence error
     AuthService --> Controller : 9.1 Return error
-    Controller --> Route : 9.2 Return error
-    Route --> UI : 9.3 Return error
-    UI --> User : 9.4 Display error message
+    Controller --> UI : 9.2 Return error
+    UI --> Users : 9.4 Display error message
 end
 AuthService --> Controller : 10. Return success
 deactivate AuthService
-Controller --> Route : 11. Return success
+Controller --> UI : 11. Return success
 deactivate Controller
-Route --> UI : 12. Return success
-deactivate Route
-UI -> Storage : 13. Clear local storage
+UI -> Storage : 12. Clear local storage
 activate Storage
 
-Storage --> UI : 14. Message cleared
+Storage --> UI : 13. Confirm cleared
 deactivate Storage
-UI --> User : 15. Redirect to login page
+UI --> Users : 14. Redirect to login page
 deactivate UI
-deactivate User
+deactivate Users
 @enduml

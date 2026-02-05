@@ -1,6 +1,5 @@
 @startuml 1_register
 hide footbox
-title Register
 
 actor User as "Users"
 boundary "RegisterPage" as View
@@ -12,120 +11,129 @@ entity "UserModel" as Model
 database Database as Database
 participant ":SmsAPI" as SmsAPI
 
-User -> View : 1. Input register fields\n(email, password, confirmPassword, name)
+User -> View : 1. Input register fields
 activate User
 activate View
+User -> View : 2. Submit register form
 
 
-View -> View : 2. Validate input
+View -> View : 3. Validate input
 activate View
 deactivate View
 
 opt Empty or mailformed information
-    View --> User : 2.1. Show validation error 
+    View --> User : 2.1. Return message
 end
 
-View -> Controller : 3. Forward RegisterRequest
+View -> Controller : 3. POST /auth/register
 activate Controller
 
-Controller -> Service : 4. Process user registration
+Controller -> Service : 4. register()
 activate Service
 
 
-Service -> Model : 5. Get User by email
+Service -> Model : 5. findByEmail()
 activate Model
 
-Model -> Database : 6. Query User by email
+Model -> Database : 6. findOne()
 activate Database
-Database --> Model : 7. Return result
+Database --> Model : 7. Return user (or null)
 deactivate Database
 
-Model --> Service : 8. Return result
+Model --> Service : 8. Return user (or null)
 deactivate Model
 
-Service -> Service : 9. Check email/phone uniqueness
+Service -> Service : 9. checkEmailUnique()
 activate Service
 deactivate Service
 
 alt User already exists
-    Service --> Controller : 9.1. Return error message
-    
-
-    Controller --> View : 9.1.1. Show register error
-
-    View --> User : 9.1.2. Display error message
+    Service --> Controller : 9.1. Return error: email already exists
+    Controller --> View : 9.1.1. Return error
+    View --> User : 9.1.2. Display error: email already exists
 
 else User does not exist
-    Service -> Controller : 9.2. Successful registration
+    Service -> Model : 9.2.2. createAccount(is_verified=false)
+    activate Model
+    Model -> Database : 9.2.3. insertOne()
+    activate Database
+    Database --> Model : 9.2.4. Return insert result
+    deactivate Database
+    Model --> Service : 9.2.5. Return account created
+    deactivate Model
+    Service --> Controller : 9.2.6. Return success
     deactivate Service
-    Controller --> View : 9.2.1. Return status success
-    deactivate Controller
 
-    View -> OtpController : 9.2.2. Otp Request
+    Controller -> OtpController : 9.2.8. sendOtp()
+
     activate OtpController
 
-    OtpController -> SmsService : 9.2.3. SendOtpRequest
+    OtpController -> SmsService : 9.2.9. sendOtp()
     activate SmsService
 
-    SmsService -> SmsService: 9.2.4. Generate random OTP code
+    SmsService -> SmsService: 9.2.10. generateOtp()
     activate SmsService
     deactivate SmsService    
 
-    SmsService -> SmsAPI: 9.2.5. Call API to send SMS
+    SmsService -> SmsAPI: 9.2.11. sendSms()
     activate SmsAPI
-    SmsAPI --> SmsService: 9.2.6. Send OTP message
+    SmsAPI --> SmsService: 9.2.12. Return SMS API response
     deactivate SmsAPI
-    SmsService -> SmsService: 9.2.7. Save OTP in cache
+    SmsService -> SmsService: 9.2.13. saveOtpToCache()
     activate SmsService
     deactivate SmsService
-    SmsService --> OtpController: 9.2.8. Return OTP
-    OtpController --> View: 9.2.9. Return OTP
+    SmsService --> OtpController: 9.2.14. Return OTP
+    OtpController --> Controller: 9.2.15. Return OTP
+    deactivate OtpController
+        Controller --> View: 9.2.15. Return OTP
+    deactivate Controller
 
-    View --> User: 9.2.10. Display OTP authentication modal
-    User -> View: 9.2.11. Enter OTP code
-    View -> View: 9.2.12. Check form valid
+    View --> User: 9.2.16. Display OTP modal
+    User -> View: 9.2.17. inputOtp()
+    View -> View: 9.2.18. Check form valid
     activate View
     deactivate View
 
     opt Empty or mailformed information
-    View --> User : 9.2.12.1. Display error message 
+    View --> User : 9.2.18.1. Display validation error
     end
 
-    View -> OtpController: 9.2.13. Submit OTP verification request
-    OtpController -> SmsService: 9.2.14. VerifyOtpRequest
-    SmsService -> SmsService: 9.2.15. Check OTP in cache
+    View -> OtpController: 9.2.19. POST /otp/verify
+    activate OtpController
+    OtpController -> SmsService: 9.2.20. verifyOtp()
+    SmsService -> SmsService: 9.2.21. checkOtpInCache()
     activate SmsService
     deactivate SmsService
 
 alt Otp does not match
-    SmsService --> OtpController : 9.2.16.1. Return false
-    OtpController --> View : 9.2.16.1.1. Return error message
-    View --> User : 9.2.16.1.2. Display error message
+    SmsService --> OtpController : 9.2.22. Return false
+    OtpController --> View : 9.2.22.1. Return error: OTP mismatch
+    View --> User : 9.2.22.2. Display error: OTP mismatch
 
 else Otp match
-    SmsService --> OtpController : 9.2.16.2. Return true
+    SmsService --> OtpController : 9.2.23. Return true
     deactivate SmsService
-    OtpController --> View : 9.2.16.2.1. Return true
-    deactivate Controller
-end
-    View -> OtpController : 9.2.17. Register user
-    OtpController -> Service : 9.2.18. RegisterUser
+    OtpController --> View : 9.2.23.1. Return verified
+    OtpController -> Service : 9.2.23.2. updateVerificationStatus()
     activate Service
-    Service -> Model : 9.2.19. Create a new account
+    Service -> Model : 9.2.23.3. setIsVerifiedTrue()
     activate Model
-    Model -> Database : 9.2.20. Execute query
+    Model -> Database : 9.2.23.4. updateOne()
     activate Database
-    Database --> Model : 9.2.21. Return result
+    Database --> Model : 9.2.23.5. Return update result
     deactivate Database
-    Model --> Service : 9.2.22. Confirm account creation
+    Model --> Service : 9.2.23.6. Return updated
     deactivate Model
-    Service --> OtpController : 9.2.23. Return success message
+    Service --> OtpController : 9.2.23.7. Return success
     deactivate Service
-    OtpController --> View : 9.2.24. Return success message
+
+
+    OtpController --> View : 9.2.23.8. Return success
     deactivate OtpController
-    View --> User : 9.2.25. Display a success message
-    deactivate View
+    View --> User : 9.2.24. Redirect to login page
+        deactivate View
     deactivate User
+end
 end
 
 @enduml

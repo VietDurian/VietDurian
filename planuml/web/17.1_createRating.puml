@@ -1,11 +1,8 @@
 @startuml 17.1_createRating
 hide footbox
-title Create Rating
 
 actor User as "Users"
 boundary RatingPage as View
-participant ":RatingRoute" as Route
-control "AuthMiddleware" as Middleware
 control "RatingController" as Controller
 participant ":RatingService" as Service
 entity "RatingModel" as Model
@@ -15,61 +12,54 @@ database Database as Database
 User -> View : 1. Input rating fields
 activate View
 activate User
-View -> View : 2. Validate input
+User -> View : 2. Submit rating form
+View -> View : 3. Validate input
 
 opt Check validation
-    View --> User : 2.1. Show validation error
+    View --> User : 3.1. Show validation error
 end
 
-    View -> Route : 3. POST /ratings/add
-    activate Route
-
-    Route -> Middleware : 4. AuthenticateUser(req, res, next)
-    activate Middleware
-    ref over User, Database : Verifies token
-    Middleware -> Controller : 5. Forward CreateRatingRequest
-    deactivate Middleware
+    View -> Controller : 4. POST /ratings/add
     activate Controller
 
-    Controller -> Service : 6. Process rating creation
+    Controller -> Service : 5. createRating()
     activate Service
 
 alt Rating exists
-    Service -> Model : 7.1. Check conflicts
+    Service -> Model : 6.1. checkExistingRating()
     activate Model
 
-    Model -> Database : 7.1.1. Check existing rating
+    Model -> Database : 6.1.1. findOne()
     activate Database
-    Database --> Model : 7.1.2. Conflict result\n(true / false)
+    Database --> Model : 6.1.2. Return result (true/false)
     deactivate Database
 
-    Model --> Service : 7.1.3. Return conflict state
+    Model --> Service : 6.1.3. Return conflict state
     deactivate Model
 
-        Service --> Controller : 7.1.4. Return rating already exists
-        Controller --> Route : 7.1.5. Return error response
-        Route --> View : 7.1.6. Show error
+        Service --> Controller : 6.1.4. Return error: rating already exists
+        Controller --> View : 6.1.5. Return error response
+        View --> User : 6.1.6. Show error
 else Rating is valid
-        Service -> Model : 7.2. Save new rating
+        Service -> Model : 6.2. Save new rating
         activate Model
 
-        Model -> Database : 7.2.1. Persist rating data
+        Model -> Database : 6.2.1. insertOne()
         activate Database
-        Database --> Model : 7.2.2. Created
+        Database --> Model : 6.2.2. Created
         deactivate Database
 
-        Model --> Service : 7.2.3. Return created entity
+        Model --> Service : 6.2.3. Return created entity
         deactivate Model
 
-        Service --> Controller : 7.2.4. Return RatingResponse
+        Service --> Controller : 6.2.4. Return rating data
         deactivate Service
-        Controller --> Route : 7.2.5. Return 200 OK + rating data
+        Controller --> View : 6.2.5. Return 200 OK + rating data
         deactivate Controller
-        Route --> View : 7.2.6. Show success
-        deactivate Route
+        View --> User : 6.2.6. Show success
 end
 
-View --> User : 8. Display form result (success or error)
+View --> User : 7. Display form result (success or error)
 deactivate View
 deactivate User
 @enduml
