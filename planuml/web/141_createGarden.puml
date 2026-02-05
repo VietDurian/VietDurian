@@ -20,7 +20,7 @@ opt Invalid input data
     UI --> Farmer : 2.1. Display error message
 end
 
-UI -> Controller : 3. registerGarden(data)
+UI -> Controller : 3. Create garden request
 activate Controller
 
 Controller -> Service : 4. createGarden(data)

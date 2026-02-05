@@ -14,7 +14,7 @@ activate Farmer
 activate UI
 Farmer -> UI : 1. Users click "Post" tab
 
-UI -> Controller : 2. getUserPosts(userId)
+UI -> Controller : 2. Get posts list request
 activate Controller
 
 Controller -> Service : 3. getGeneralPost(userId)

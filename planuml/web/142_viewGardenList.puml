@@ -14,7 +14,7 @@ activate Farmer
 activate UI
 Farmer -> UI : 1. Users click "Garden" tab
 
-UI -> Controller : 2. getUserGardens(userId)
+UI -> Controller : 2. Get garden list request
 activate Controller
 
 Controller -> Service : 3. getGardensByUser(userId)
