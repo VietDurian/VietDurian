@@ -1,186 +1,170 @@
-import { MapPin } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { StatsCard } from './StatsCard';
+import { Package, Crown, Layers } from 'lucide-react';
 
-import { useLanguage } from '../context/LanguageContext';
+// ===== Mock data cứng theo tháng =====
+const MARKET_BY_MONTH = {
+	'T1/2026': {
+		label: 'Tháng 1',
+		totalText: '1,456 kg',
+		totalSub: 'Tổng sản lượng',
+		changePct: 25,
+		changeText: 'so với tháng trước',
+		segments: [
+			{ name: 'Ri6', value: 65, color: '#F59E0B' },
+			{ name: 'Monthong', value: 20, color: '#3B82F6' },
+			{ name: 'Chuồng bò', value: 10, color: '#22C55E' },
+			{ name: 'Khác', value: 5, color: '#EF4444' },
+		],
+	},
+	'T12/2025': {
+		label: 'Tháng 12',
+		totalText: '1,280 kg',
+		totalSub: 'Tổng sản lượng',
+		changePct: -8,
+		changeText: 'so với tháng trước',
+		segments: [
+			{ name: 'Ri6', value: 58, color: '#F59E0B' },
+			{ name: 'Monthong', value: 25, color: '#3B82F6' },
+			{ name: 'Chuồng bò', value: 12, color: '#22C55E' },
+			{ name: 'Khác', value: 5, color: '#EF4444' },
+		],
+	},
+	'T11/2025': {
+		label: 'Tháng 11',
+		totalText: '1,390 kg',
+		totalSub: 'Tổng sản lượng',
+		changePct: 6,
+		changeText: 'so với tháng trước',
+		segments: [
+			{ name: 'Ri6', value: 62, color: '#F59E0B' },
+			{ name: 'Monthong', value: 22, color: '#3B82F6' },
+			{ name: 'Chuồng bò', value: 11, color: '#22C55E' },
+			{ name: 'Khác', value: 5, color: '#EF4444' },
+		],
+	},
+};
 
-// Mock data: Vườn sầu riêng với tọa độ latitude/longitude
-const gardenLocations = [
-	{
-		id: 1,
-		name: 'Vườn Đồng Tháp',
-		lat: 10.493,
-		lng: 105.688,
-		area: 5.2,
-		region: 'Đồng bằng sông Cửu Long',
-	},
-	{
-		id: 2,
-		name: 'Vườn Bến Tre',
-		lat: 10.242,
-		lng: 106.376,
-		area: 3.8,
-		region: 'Đồng bằng sông Cửu Long',
-	},
-	{
-		id: 3,
-		name: 'Vườn Tiền Giang',
-		lat: 10.449,
-		lng: 106.342,
-		area: 4.5,
-		region: 'Đồng bằng sông Cửu Long',
-	},
-	{
-		id: 4,
-		name: 'Vườn Đắk Lắk',
-		lat: 12.667,
-		lng: 108.038,
-		area: 7.2,
-		region: 'Tây Nguyên',
-	},
-	{
-		id: 5,
-		name: 'Vườn Lâm Đồng',
-		lat: 11.941,
-		lng: 108.441,
-		area: 6.1,
-		region: 'Tây Nguyên',
-	},
-	{
-		id: 6,
-		name: 'Vườn Đồng Nai',
-		lat: 11.068,
-		lng: 107.188,
-		area: 4.9,
-		region: 'Đông Nam Bộ',
-	},
-	{
-		id: 7,
-		name: 'Vườn Bình Phước',
-		lat: 11.751,
-		lng: 106.723,
-		area: 5.8,
-		region: 'Đông Nam Bộ',
-	},
-	{
-		id: 8,
-		name: 'Vườn Cần Thơ',
-		lat: 10.034,
-		lng: 105.723,
-		area: 3.2,
-		region: 'Đồng bằng sông Cửu Long',
-	},
-];
+function buildConicGradient(segments) {
+	let start = 0;
+	const parts = segments.map((s) => {
+		const end = start + s.value;
+		const part = `${s.color} ${start}% ${end}%`;
+		start = end;
+		return part;
+	});
+	return `conic-gradient(${parts.join(', ')})`;
+}
 
+// ✅ Component chính
 export function GardenHeatmap() {
-	const { t } = useLanguage();
+	const monthKeys = Object.keys(MARKET_BY_MONTH);
+	const [month, setMonth] = useState(monthKeys[0]);
 
-	// Tính toán phạm vi của bản đồ
-	const latMin = Math.min(...gardenLocations.map((g) => g.lat));
-	const latMax = Math.max(...gardenLocations.map((g) => g.lat));
-	const lngMin = Math.min(...gardenLocations.map((g) => g.lng));
-	const lngMax = Math.max(...gardenLocations.map((g) => g.lng));
+	const data = useMemo(() => MARKET_BY_MONTH[month], [month]);
+	const donutBg = useMemo(() => buildConicGradient(data.segments), [data.segments]);
 
-	const getHeatColor = (area) => {
-		if (area >= 7) return 'bg-[#1a4d2e]';
-		if (area >= 5) return 'bg-[#2d7a4f]';
-		if (area >= 3) return 'bg-[#4a9d6a]';
-		return 'bg-[#7ac99c]';
-	};
-
-	const getPosition = (lat, lng) => {
-		const x = ((lng - lngMin) / (lngMax - lngMin)) * 100;
-		const y = ((latMax - lat) / (latMax - latMin)) * 100;
-		return { x, y };
-	};
+	const isUp = data.changePct >= 0;
+	const topSegment = useMemo(() => {
+		const segments = data?.segments || [];
+		return [...segments].sort((a, b) => b.value - a.value)[0];
+	}, [data]);
 
 	return (
-		<div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100">
-			<div className="mb-4 md:mb-6">
-				<h2 className="text-base md:text-lg font-bold text-[#1a4d2e]">
-					{t('garden_distribution')}
-				</h2>
-				<p className="text-xs md:text-sm text-gray-500">
-					{t('track_coordinates')}
-				</p>
-			</div>
-
-			{/* Heatmap Container */}
-			<div className="relative w-full h-64 md:h-80 bg-gradient-to-br from-[#f0f9f4] to-[#e8f5ec] rounded-lg border-2 border-[#1a4d2e]/10 overflow-hidden">
-				{/* Grid Background */}
-				<div className="absolute inset-0 opacity-10">
-					<div
-						className="w-full h-full"
-						style={{
-							backgroundImage:
-								'linear-gradient(#1a4d2e 1px, transparent 1px), linear-gradient(90deg, #1a4d2e 1px, transparent 1px)',
-							backgroundSize: '40px 40px',
-						}}
-					/>
+		<div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100 h-full flex flex-col">
+			{/* Header giữ nguyên */}
+			<div className="flex items-center justify-between mb-4">
+				<div>
+					<h2 className="text-base font-bold text-gray-900">Tổng sản lượng thu hoạch</h2>
+					<p className="text-xs text-gray-500">Phân bổ theo giống (dữ liệu demo)</p>
 				</div>
 
-				{/* Garden Markers */}
-				{gardenLocations.map((garden) => {
-					const { x, y } = getPosition(garden.lat, garden.lng);
-					return (
-						<div
-							key={garden.id}
-							className="absolute group cursor-pointer"
-							style={{
-								left: `${x}%`,
-								top: `${y}%`,
-								transform: 'translate(-50%, -50%)',
-							}}
-						>
-							{/* Heat Circle */}
-							<div
-								className={`w-8 h-8 md:w-12 md:h-12 rounded-full ${getHeatColor(garden.area)} opacity-40 animate-pulse`}
-							/>
+				<select
+					value={month}
+					onChange={(e) => setMonth(e.target.value)}
+					className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#1a4d2e]/20"
+				>
+					{monthKeys.map((k) => (
+						<option key={k} value={k}>
+							{MARKET_BY_MONTH[k].label}
+						</option>
+					))}
+				</select>
+			</div>
 
-							{/* Pin Icon */}
-							<div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-								<MapPin className="w-4 h-4 md:w-6 md:h-6 text-[#1a4d2e] fill-[#ffd93d]" />
-							</div>
+			{/* Nội dung trên giữ nguyên */}
+			<div className="flex-1 flex flex-col">
+				<div className="flex flex-col md:flex-row items-center md:items-start gap-5">
+				{/* Donut */}
+				<div className="relative w-44 h-44 md:w-48 md:h-48 shrink-0">
+					<div className="w-full h-full rounded-full" style={{ background: donutBg }} />
 
-							{/* Tooltip */}
-							<div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-								<div className="bg-[#1a4d2e] text-white px-3 py-2 rounded-lg shadow-lg text-xs whitespace-nowrap">
-									<p className="font-bold text-[#ffd93d]">{garden.name}</p>
-									<p className="text-[#a8d5ba]">
-										{t('area')}: {garden.area} ha
-									</p>
-									<p className="text-[#a8d5ba] text-[10px]">
-										{garden.lat.toFixed(3)}°N, {garden.lng.toFixed(3)}°E
-									</p>
+					<div className="absolute inset-0 m-auto w-24 h-24 md:w-28 md:h-28 rounded-full bg-white shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+						<p className="text-xl font-extrabold text-gray-900">{data.totalText}</p>
+						<p className="text-xs text-gray-500">{data.totalSub}</p>
+					</div>
+
+					{/* ❌ bỏ pill kiểu absolute dưới donut */}
+				</div>
+
+				{/* Legend */}
+				<div className="flex-1 w-full">
+					<div className="space-y-3 mt-2 md:mt-1">
+						{data.segments.map((s) => (
+							<div key={s.name} className="flex items-center justify-between">
+								<div className="flex items-center gap-2">
+									<span className="w-3 h-3 rounded-sm" style={{ backgroundColor: s.color }} />
+									<p className="text-sm text-gray-700">{s.name}</p>
+								</div>
+
+								<div className="flex items-center gap-3">
+									<p className="text-sm font-semibold text-gray-900">{s.value}%</p>
+									<div className="w-28 h-2 rounded-full bg-gray-100 overflow-hidden">
+										<div
+											className="h-full rounded-full"
+											style={{ width: `${s.value}%`, backgroundColor: s.color }}
+										/>
+									</div>
 								</div>
 							</div>
-						</div>
-					);
-				})}
-			</div>
-
-			{/* Legend */}
-			<div className="mt-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
-				<div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs">
-					<span className="text-gray-600">{t('area')}:</span>
-					<div className="flex items-center gap-1">
-						<div className="w-4 h-4 rounded-full bg-[#7ac99c]" />
-						<span className="text-gray-500">{'< 3 ha'}</span>
-					</div>
-					<div className="flex items-center gap-1">
-						<div className="w-4 h-4 rounded-full bg-[#4a9d6a]" />
-						<span className="text-gray-500">3-5 ha</span>
-					</div>
-					<div className="flex items-center gap-1">
-						<div className="w-4 h-4 rounded-full bg-[#2d7a4f]" />
-						<span className="text-gray-500">5-7 ha</span>
-					</div>
-					<div className="flex items-center gap-1">
-						<div className="w-4 h-4 rounded-full bg-[#1a4d2e]" />
-						<span className="text-gray-500">≥ 7 ha</span>
+						))}
 					</div>
 				</div>
-				<p className="text-xs text-gray-500">
-					{t('total')}: {gardenLocations.length}
-				</p>
+				</div>
+
+				{/* Fill the remaining space with StatsCards (to avoid empty bottom area) */}
+				<div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+					<StatsCard
+						size="sm"
+						title="Tổng sản lượng"
+						value={data.totalText}
+						change=""
+						changeType="neutral"
+						icon={Package}
+						showVsText={false}
+						className="bg-gray-50"
+					/>
+					<StatsCard
+						size="sm"
+						title="Giống phổ biến"
+						value={topSegment ? `${topSegment.name} (${topSegment.value}%)` : '—'}
+						change=""
+						changeType="neutral"
+						icon={Crown}
+						showVsText={false}
+						className="bg-gray-50"
+					/>
+					<StatsCard
+						size="sm"
+						title="Số giống"
+						value={String(data.segments.length)}
+						change=""
+						changeType="neutral"
+						icon={Layers}
+						showVsText={false}
+						className="bg-gray-50"
+					/>
+				</div>
 			</div>
 		</div>
 	);

@@ -79,13 +79,18 @@ const translations = {
 
 		// Charts
 		market_trend: 'Xu hướng thị trường sầu riêng',
-		price_volume: 'Giá và khối lượng giao dịch theo tháng',
+		price_volume: 'Giá trung bình và khối lượng trung bình',
+		role_distribution_title: 'Phân bố người dùng theo vai trò',
+		role_distribution_subtitle: 'Số lượng người dùng theo từng vai trò',
+		post_blog_trend_title: 'Xu hướng Post & Blog',
+		post_blog_trend_subtitle: 'Số lượng theo thời gian',
 		garden_distribution: 'Bản đồ phân bổ vườn sầu riêng',
 		track_coordinates: 'Theo dõi tọa độ và diện tích vườn trên toàn quốc',
 		avg_price: 'Giá trung bình',
 		volume: 'Khối lượng',
 		area: 'Diện tích',
 		total: 'Tổng',
+		count_users: 'Số người dùng',
 
 		// Control Center
 		permission_requests: 'Yêu cầu duyệt quyền',
@@ -101,6 +106,11 @@ const translations = {
 		all_roles: 'Tất cả vai trò',
 		all_status: 'Tất cả trạng thái',
 		farmer: 'Nông dân',
+		trader: 'Thương lái',
+		serviceProvider: 'Nhà cung cấp dịch vụ',
+		contentExpert: 'Chuyên gia nội dung',
+		admin: 'Quản trị viên',
+		unknown: 'Không xác định',
 		expert: 'Chuyên gia',
 		business: 'Doanh nghiệp',
 		active: 'Hoạt động',
@@ -344,13 +354,18 @@ const translations = {
 
 		// Charts
 		market_trend: 'Durian Market Trend',
-		price_volume: 'Price and volume by month',
+		price_volume: 'Average price and average kg',
+		role_distribution_title: 'User Distribution by Role',
+		role_distribution_subtitle: 'Number of users per role',
+		post_blog_trend_title: 'Posts & Blogs Trend',
+		post_blog_trend_subtitle: 'Count over time',
 		garden_distribution: 'Durian Garden Distribution Map',
 		track_coordinates: 'Track garden coordinates and area nationwide',
 		avg_price: 'Average Price',
 		volume: 'Volume',
 		area: 'Area',
 		total: 'Total',
+		count_users: 'Users',
 
 		// Control Center
 		permission_requests: 'Permission Requests',
@@ -366,6 +381,11 @@ const translations = {
 		all_roles: 'All roles',
 		all_status: 'All status',
 		farmer: 'Farmer',
+		trader: 'Trader',
+		serviceProvider: 'Service Provider',
+		contentExpert: 'Content Expert',
+		admin: 'Admin',
+		unknown: 'Unknown',
 		expert: 'Expert',
 		business: 'Business',
 		active: 'Active',
