@@ -15,7 +15,7 @@ import {
     Clock,
     XCircle,
 } from "lucide-react";
-import { favoriteAPI } from "@/lib/api";
+import { favoriteAPI, deletePost } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 import { useAuth } from "@/context/AuthContext";
 
@@ -365,14 +365,11 @@ export default function FavoritePostsModal() {
 
             const response = await favoriteAPI.getFavorites();
 
-            console.log('=== FAVORITES DEBUG ===');
-            console.log('Sample favorite:', response.data?.[0]);
-            console.log('author_id type:', typeof response.data?.[0]?.post_id?.author_id);
-            console.log('Is author_id populated?',
-                typeof response.data?.[0]?.post_id?.author_id === 'object'
-            );
+            // Chỉ lấy favorite hợp lệ (có post_id)
+            // Không xóa favorite bị hỏng vì API removeFavorite cần postId (không có _id endpoint)
+            const validFavorites = (response.data || []).filter(fav => fav.post_id);
 
-            setFavorites(response.data || []);
+            setFavorites(validFavorites);
         } catch (err) {
             console.error("Error loading favorites:", err);
             setError(err?.response?.data?.message || err?.message || "Không thể tải danh sách yêu thích");
@@ -428,11 +425,25 @@ export default function FavoritePostsModal() {
         );
     };
 
+    // Xóa vĩnh viễn post
     const handleDelete = async (postId) => {
         try {
-            const { deletePost } = await import("@/lib/api");
+            // Bước 1: Xóa favorite trước (nếu có)
+            try {
+                await favoriteAPI.removeFavorite(postId);
+            } catch (favError) {
+                // Không sao nếu không có trong favorites
+            }
+
+            // Bước 2: Xóa post khỏi backend
             await deletePost(postId);
-            setFavorites((prev) => prev.filter((fav) => fav.post_id._id !== postId));
+
+            // Bước 3: Xóa khỏi UI
+            setFavorites((prev) => prev.filter((fav) => {
+                const favPostId = fav.post_id?._id || fav.post_id;
+                return favPostId !== postId;
+            }));
+
         } catch (error) {
             console.error("Error deleting post:", error);
             alert(error?.message || "Không thể xóa bài viết");
