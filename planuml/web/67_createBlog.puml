@@ -1,11 +1,12 @@
-@startuml 84_createPost
+@startuml 67_createBlog
 hide footbox
 
-actor User as "Users" 
-boundary PostPage as View
-control "PostController" as Controller
-participant ":PostService" as Service
-entity "PostModel" as Model
+actor User as "Content Expert" 
+boundary BlogPage as View
+control "BlogController" as Controller
+participant ":BlogService" as Service
+entity "KnowledgeBlogModel" as Model
+entity "KnowledgeBlockModel" as Model
 database Database as Database
 
 

@@ -1,7 +1,7 @@
-@startuml 84_createPost
+@startuml 80_createBlock
 hide footbox
 
-actor User as "Users" 
+actor User as "Content Expert" 
 boundary PostPage as View
 control "PostController" as Controller
 participant ":PostService" as Service
@@ -20,7 +20,6 @@ opt Invalid Input or fields left empty
 end
 
 View -> Controller : 3. Create post request
-activate Controller
 
 Controller -> Service : 4. createGeneralPost(postData)
 activate Service
