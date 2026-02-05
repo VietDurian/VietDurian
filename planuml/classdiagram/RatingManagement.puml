@@ -1,0 +1,99 @@
+@startuml RatingManagement
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+left to right direction
+
+
+' ===== Routes & Middleware =====
+class RatingRoute <<control>> {
+	+createRating(req, res): void
+	+getProductRatings(req, res): void
+	+getUserProductRating(req, res): void
+	+updateRating(req, res): void
+	+deleteRating(req, res): void
+	+getUserRatings(req, res): void
+}
+
+class AuthMiddleware <<control>> {
+	+protect(req): UserInfo
+}
+
+class AuthorizationMiddleware <<control>> {
+	+restrictTo(...roles): void
+	+isUser(req): void
+}
+
+' ===== Controller =====
+class RatingController <<control>> {
+	+createRating(req, res): void
+	+getProductRatings(req, res): void
+	+getUserProductRating(req, res): void
+	+updateRating(req, res): void
+	+deleteRating(req, res): void
+	+getUserRatings(req, res): void
+}
+
+' ===== Service =====
+class RatingService <<service>> {
+	+createRating(data): Rating
+	+getProductRatings(params): { data: Rating[], statistics, pagination }
+	+getUserProductRating(params): Rating
+	+updateRating(params): Rating
+	+deleteRating(params): { message: string }
+	+getUserRatings(params): { data: Rating[], pagination }
+}
+
+' ===== Model =====
+class RatingModel <<model>> {
+	+find(filter): Rating[]
+	+findOne(filter): Rating
+	+findById(id): Rating
+	+findByIdAndDelete(id): Rating
+	+countDocuments(filter): number
+}
+
+' ===== Entities =====
+class Rating <<entity>> {
+	+_id: ObjectId
+	+user_id: ObjectId
+	+product_id: ObjectId
+	+stars: number  ' 1..5
+	+content: string
+	+created_at: Date
+	+updated_at: Date
+}
+
+class User <<entity>> {
+	+_id: ObjectId
+	+full_name: string
+	+avatar: string
+}
+
+class Product <<entity>> {
+	+_id: ObjectId
+	+name: string
+}
+
+class RatingStatistics <<datatype>> {
+	+totalRatings: number
+	+averageRating: number
+	+ratingDistribution: Map<int, {count: number, percentage: number}>
+}
+
+class Database <<database>>
+
+' ===== Relationships =====
+RatingRoute --> AuthMiddleware : uses
+RatingRoute --> AuthorizationMiddleware : uses
+RatingRoute --> RatingController : calls handlers
+
+RatingController --> RatingService : orchestration
+RatingService --> RatingModel : persistence
+
+RatingModel --> Database : queries
+
+Rating "many" o-- "1" User
+Rating "many" o-- "1" Product
+
+@enduml

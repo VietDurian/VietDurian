@@ -2,177 +2,129 @@
 skinparam classAttributeIconSize 0
 left to right direction
 
+' =======================
+' ======= ENTITIES ======
+' =======================
 
 class User {
-  +Id: string
-  +Email: string
-  +PasswordHash: string
-  +Verified: bool
+  +_id: ObjectId
+  +full_name: string
+  +email: string
+  +password: string  ' hashed via pre-save
+  +phone: string
+  +avatar: string
+  +role: string  ' trader | admin | serviceProvider | contentExpert | farmer
+  +is_banned: bool
+  +is_verified: bool
+  +created_at: DateTime
+  +updated_at: DateTime
 }
 
-class ResetToken {
-  +Token: string
-  +UserId: string
-  +ExpiresAt: DateTime
-  +UsedAt: DateTime
-}
+ ' ResetToken not implemented in backend (uses OTP + short-lived JWT)
 
 class OtpCode {
-  +Code: string
-  +UserId: string
-  +ExpiresAt: DateTime
-  +UsedAt: DateTime
+  +code: string
+  +user_id: ObjectId
+  +purpose: string  ' verify_account | forgot_password
+  +is_used: bool
+  +expires_at: DateTime
+  +created_at: DateTime
 }
 
-class Session {
-  +RefreshToken: string
-  +UserId: string
-  +ExpiresAt: DateTime
-  +RevokedAt: DateTime
-}
+ ' Session/refresh tokens not implemented in backend
 
 class LogoutToken {
-  +Token: string
-  +UserId: string
-  +CreatedAt: DateTime
+  +token: string
+  +user_id: ObjectId
+  +expires_at: DateTime
+  +created_at: DateTime
 }
 
-// Simplified: omit AuthResponse
+class PermissionAccount {
+  +user_id: ObjectId
+  +requested_role: string
+  +description: string
+  +document: string
+  +status: string  ' pending | approved | rejected
+  +created_at: DateTime
+}
 
-// Simplified: omit GoogleProfile details
+' =======================
+' ===== CONTROLLERS =====
+' =======================
 
-// Simplified: omit enums for Role/Status/Provider
+class AuthController {
+  +Register()
+  +VerifyEmail()
+  +Login()
+  +Logout()
+  +ForgotPassword()
+  +VerifyResetOtp()
+  +ResetPassword()
+  +GoogleLogin()
+  +ChangePassword()
+  +CheckAuth()
+}
 
 ' =======================
 ' ======= SERVICES ======
 ' =======================
 
 interface IAuthService {
-  +RegisterAsync(dto: User)
-  +LoginAsync(email: string, password: string)
-  +ForgotPasswordAsync(email: string)
-  +VerifyOtpAsync(userId: string, code: string)
-  +ChangePasswordAsync(userId: string, oldPwd: string, newPwd: string)
-  +LogoutAsync(userId: string, refreshToken: string)
-  +LoginWithGoogleAsync(idToken: string)
+  +register(userData): { user, token, otp }
+  +verifyEmail(email: string, otp: string): { user }
+  +login(email: string, password: string): { user, token }
+  +logout(userId: ObjectId, token: string): bool
+  +forgotPassword(email: string): { message }
+  +verifyResetOtp(email: string, otp: string): { resetToken }
+  +resetPasswordWithToken(token: string, newPassword: string): { message }
+  +googleLogin(idToken: string): { user, token }
+  +changePassword(userId: ObjectId, currentPassword: string, newPassword: string): bool
 }
 
 class AuthService {
-  -_userRepo: IUserRepo
-  -_resetTokenRepo: IResetTokenRepo
-  -_logoutTokenRepo: ILogoutTokenRepo
-  -_hasher: PasswordHasher
-  -_tokenService: TokenService
-  -_emailService: EmailService
-  -_googleOAuth: GoogleOAuthService
-  // Methods omitted for brevity
+  -_userModel: User
+  -_otpModel: OtpCode
+  -_logoutTokenModel: LogoutToken
+  -_permissionAccountModel: PermissionAccount
+  -_jwtService: TokenService
+  -_googleClient: GoogleOAuthService
 }
 
 IAuthService <|.. AuthService
 
-class PasswordHasher {
-  +Hash(plain: string): string
-  +Compare(plain: string, hash: string): bool
-}
+ ' Password hashing handled in User model pre-save
 
 class TokenService {
-  +CreateAccessToken(userId: string): string
-  +CreateRefreshToken(userId: string): string
-  +VerifyRefreshToken(token: string): bool
-  +RevokeRefreshToken(token: string): bool
+  +generateToken(userId: ObjectId): string
+  +verifyToken(token: string): any
 }
 
-class EmailService {
-  +SendWelcome(email: string): bool
-  +SendPasswordReset(email: string, token: string): bool
-}
-
-// Simplified: handle OTP via AuthService + EmailService (no separate OtpService)
+ ' AuthService sends verification/reset emails internally via nodemailer
 
 class GoogleOAuthService {
-  +VerifyIdToken(idToken: string): GoogleProfile
-  +GetProfile(code: string): GoogleProfile
+  +VerifyIdToken(idToken: string): string
 }
 
-class AuthController {
-  // Methods omitted for brevity
-}
-
-' =======================
-' ===== REPOSITORIES ====
-' =======================
-
-interface IUserRepo {
-  +FindByEmailAsync(email: string): User
-  +FindByIdAsync(id: string): User
-  +CreateAsync(user: User): User
-  +UpdateAsync(user: User): User
-  +UpdatePasswordAsync(id: string, hash: string): bool
-}
-
-class UserRepo {
-  -_context: AuthContext
-  +FindByEmailAsync(email: string): User
-  +FindByIdAsync(id: string): User
-  +CreateAsync(user: User): User
-  +UpdateAsync(user: User): User
-  +UpdatePasswordAsync(id: string, hash: string): bool
-}
-
-IUserRepo <|.. UserRepo
-
-interface IResetTokenRepo {
-  +CreateAsync(userId: string, token: string, expiresAt: DateTime): ResetToken
-  +FindByTokenAsync(token: string): ResetToken
-  +InvalidateAsync(token: string): bool
-}
-
-class ResetTokenRepo {
-  -_context: AuthContext
-  +CreateAsync(userId: string, token: string, expiresAt: DateTime): ResetToken
-  +FindByTokenAsync(token: string): ResetToken
-  +InvalidateAsync(token: string): bool
-}
-
-IResetTokenRepo <|.. ResetTokenRepo
-
-// Simplified: omit dedicated OTP repo; keep OtpCode entity only
-
-interface ILogoutTokenRepo {
-  +AddAsync(token: string, userId: string): LogoutToken
-}
-
-class LogoutTokenRepo {
-  -_context: AuthContext
-  +AddAsync(token: string, userId: string): LogoutToken
-}
-
-ILogoutTokenRepo <|.. LogoutTokenRepo
-
-class AuthContext
+ ' Backend uses Mongoose models directly (no repository pattern)
 
 ' =======================
 ' ===== RELATIONSHIPS ===
 ' =======================
 
+User "1" o-- "0..*" OtpCode
+User "1" o-- "0..*" LogoutToken
+User "1" o-- "0..*" PermissionAccount
+
 AuthController --> IAuthService
-AuthService --> IUserRepo
-AuthService --> IResetTokenRepo
-AuthService --> ILogoutTokenRepo
-AuthService --> PasswordHasher
+
 AuthService --> TokenService
-AuthService --> EmailService
 AuthService --> GoogleOAuthService
+AuthService --> User
+AuthService --> OtpCode
+AuthService --> LogoutToken
+AuthService --> PermissionAccount
 
-UserRepo --> AuthContext
-ResetTokenRepo --> AuthContext
-LogoutTokenRepo --> AuthContext
-
-UserRepo "1" o-- "many" User
-ResetTokenRepo "1" o-- "many" ResetToken
-TokenService "1" o-- "many" Session
-LogoutTokenRepo "1" o-- "many" LogoutToken
-
-// Simplified relationships: omit DTO links
+ ' (no repository context)
 
 @enduml
