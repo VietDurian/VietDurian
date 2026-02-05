@@ -1,11 +1,8 @@
 @startuml 13.3_updateProduct
 hide footbox
-title Update Product
 
 actor User as "Users"
 boundary EditProductPage as View
-participant ":ProductRoute" as Route
-control "AuthMiddleware" as Middleware
 control "ProductController" as Controller
 participant ":ProductService" as Service
 entity "ProductModel" as Model
@@ -22,14 +19,7 @@ opt Check validation
     View --> User : 3.1. Show validation error
 end
 
-    View -> Route : 4. PUT /products/{id}
-    activate Route
-
-    Route -> Middleware : 5. AuthenticateUser(req, res, next)
-    activate Middleware
-    ref over User, Database : Verifies token
-    Middleware -> Controller : 6. Forward UpdateProductRequest(id, payload)
-    deactivate Middleware
+    View -> Controller : 4. PUT /products/{id}
     activate Controller
 
     Controller -> Service : 7. Process product update
@@ -48,8 +38,8 @@ alt Product not found
     deactivate Model
 
         Service --> Controller : 8.1.4. Return not found result
-        Controller --> Route : 8.1.5. Return 404 Not Found + message
-        Route --> View : 8.1.6. Show error: "Product not found"
+        Controller --> View : 8.1.5. Return 404 Not Found + message
+        View --> User : 8.1.6. Show error: "Product not found"
 else Product exists
         Service -> Model : 8.2. Update product fields
         activate Model
@@ -64,10 +54,9 @@ else Product exists
 
         Service --> Controller : 8.2.4. Return UpdateProductResponse
         deactivate Service
-        Controller --> Route : 8.2.5. Return 200 OK + updated product data
+        Controller --> View : 8.2.5. Return 200 OK + updated product data
         deactivate Controller
-        Route --> View : 8.2.6. Show success message
-        deactivate Route
+        View --> User : 8.2.6. Show success message
 end
 
 View --> User : 9. Display result (success or error)

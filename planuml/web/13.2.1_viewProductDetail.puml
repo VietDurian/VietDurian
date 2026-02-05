@@ -1,11 +1,8 @@
 @startuml 13.2.1_viewProductDetail
 hide footbox
-title View Product Detail
 
 actor User as "Users"
 boundary ProductDetailPage as View
-participant ":ProductRoute" as Route
-control "AuthMiddleware" as Middleware
 control "ProductController" as Controller
 participant ":ProductService" as Service
 entity "ProductModel" as Model
@@ -15,14 +12,7 @@ User -> View : 1. Open product detail page
 activate View
 activate User
 
-    View -> Route : 2. GET /products/{id}
-    activate Route
-
-    Route -> Middleware : 3. AuthenticateUser(req, res, next)
-    activate Middleware
-    ref over User, Database : Verifies token
-    Middleware -> Controller : 4. Forward ViewProductDetailRequest(productId)
-    deactivate Middleware
+    View -> Controller : 2. GET /products/{id}
     activate Controller
 
     Controller -> Service : 5. Process product detail retrieval
@@ -41,8 +31,8 @@ alt Product not found
     deactivate Model
 
         Service --> Controller : 6.1.4. Return not found result
-        Controller --> Route : 6.1.5. Return 404 Not Found + message
-        Route --> View : 6.1.6. Show "Product not found"
+        Controller --> View : 6.1.5. Return 404 Not Found + message
+        View --> User : 6.1.6. Show "Product not found"
 else Product found
         Service -> Model : 6.2. Find product by ID
         activate Model
@@ -57,10 +47,9 @@ else Product found
 
         Service --> Controller : 6.2.4. Return ProductDetailResponse
         deactivate Service
-        Controller --> Route : 6.2.5. Return 200 OK + product data
+        Controller --> View : 6.2.5. Return 200 OK + product data
         deactivate Controller
-        Route --> View : 6.2.6. Render product detail
-        deactivate Route
+        View -> View : 6.2.6. Render product detail
 end
 
 View --> User : 7. Display detail page content (detail or error)

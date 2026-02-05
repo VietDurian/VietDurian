@@ -7,8 +7,6 @@ hide footbox
 
 actor User as "Users"
 boundary "ProfileViewPage" as UI
-participant ":profileRoute" as Route
-control ":authMiddleware" as AuthMiddleware
 control "profileController" as Controller
 participant ":profileService" as ProfileService
 participant ":userService" as UserService
@@ -18,14 +16,7 @@ database "MongoDB" as DB
 activate User
 User -> UI : 1. Click view profile
 activate UI
-UI -> Route : 2. GET /profile/me
-activate Route
-Route -> AuthMiddleware : 3. authenticateUser(req, res, next)
-activate AuthMiddleware
-
-ref over User, DB: Verifies token
-AuthMiddleware -> Controller : 4. next(req)
-deactivate AuthMiddleware
+UI -> Controller : 2. GET /profile/me
 activate Controller
 Controller -> ProfileService : 5. getProfile(userId)
 activate ProfileService
@@ -42,22 +33,19 @@ deactivate UserModel
 UserService -> UserService : 12. checkNotFound()
 activate UserService
 deactivate UserService
-alt user not found (null document)
+alt user not found 
     UserService --> ProfileService : 13.1 Return notfound
     ProfileService --> Controller : 13.1.1 Return error response
-    Controller --> Route : 13.1.2 Return error response
-    Route --> UI : 13.1.3 Return error response
-    UI -> User : 13.1.4 Display user not found
-else
+    Controller --> UI : 13.1.2 Return error response
+    UI -> User : 13.1.3 Display user not found
+else user found
     UserService --> ProfileService : 13.2 Return user entity
     deactivate UserService
     ProfileService --> Controller : 13.2.1 Return success + user data
     deactivate ProfileService
-    Controller --> Route : 13.2.2 Return success + user data 
+    Controller --> UI : 13.2.2 Return success + user data 
     deactivate Controller
-    Route --> UI : 13.2.3 Return success + user data 
-    deactivate Route
-    UI --> User : 13.2.4 Display profile
+    UI --> User : 13.2.3 Display profile
     deactivate UI
     deactivate User
 end

@@ -6,8 +6,6 @@ hide footbox
 
 actor User
 boundary dashboardPage as UI
-control userManagementRoute as Route
-participant ":authMiddleware" as Middleware
 control userManagementController as Controller
 participant ":userManagementService" as Service
 participant ":userManagementModel" as Model
@@ -16,13 +14,7 @@ database Database as DB
 activate User
 User -> UI : 1. Open user list page
 activate UI
-UI -> Route : 2. GET /user/list
-activate Route
-Route -> Middleware : 3. authenticateUser(req) & authorizeRole()
-activate Middleware
-ref over User, DB: Verify Token
-Middleware -> Controller : 4. handleGetUserList(userInfo)
-deactivate Middleware
+UI -> Controller : 2. GET /user/list
 activate Controller
 Controller -> Service : 5. getUserList()
 activate Service
@@ -39,19 +31,16 @@ activate Service
 deactivate Service
 opt database error
     Service --> Controller : 10.1 Return error
-    Controller --> Route : 10.2 Return error info
-    Route --> UI : 10.3 Show error message
-    UI --> User : 10.4 Display error message
+    Controller --> UI : 10.2 Return error info
+    UI --> User : 10.3 Display error message
 end
 Service -> Service : 11. mapToUserDTO()
 activate Service
 deactivate Service
 Service --> Controller : 12. Return success
 deactivate Service
-Controller --> Route : 13. Return success
+Controller --> UI : 13. Return success
 deactivate Controller
-Route --> UI : 14. Return success
-deactivate Route
 
 UI --> User : 15. Display user list
 deactivate UI

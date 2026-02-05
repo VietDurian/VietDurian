@@ -1,26 +1,24 @@
 @startuml
 skinparam classAttributeIconSize 0
 left to right direction
-title Auth Class Diagram
 
-' =======================
-' ======= ENTITIES ======
-' =======================
 
 class User {
   +Id: string
   +Email: string
   +PasswordHash: string
-  +Name: string
-  +Role: Role
-  +Status: Status
-  +Provider: Provider
-  +CreatedAt: DateTime
-  +UpdatedAt: DateTime
+  +Verified: bool
 }
 
 class ResetToken {
   +Token: string
+  +UserId: string
+  +ExpiresAt: DateTime
+  +UsedAt: DateTime
+}
+
+class OtpCode {
+  +Code: string
   +UserId: string
   +ExpiresAt: DateTime
   +UsedAt: DateTime
@@ -33,62 +31,41 @@ class Session {
   +RevokedAt: DateTime
 }
 
-class AuthResponse {
-  +AccessToken: string
-  +RefreshToken: string
-  +User: User
+class LogoutToken {
+  +Token: string
+  +UserId: string
+  +CreatedAt: DateTime
 }
 
-class GoogleProfile {
-  +Id: string
-  +Email: string
-  +Name: string
-  +Picture: string
-  +Verified: bool
-}
+// Simplified: omit AuthResponse
 
-enum Role {
-  ADMIN
-  USER
-}
-enum Status {
-  ACTIVE
-  BLOCKED
-  PENDING
-}
-enum Provider {
-  LOCAL
-  GOOGLE
-}
+// Simplified: omit GoogleProfile details
+
+// Simplified: omit enums for Role/Status/Provider
 
 ' =======================
 ' ======= SERVICES ======
 ' =======================
 
 interface IAuthService {
-  +RegisterAsync(dto: User): AuthResponse
-  +AuthenticateAsync(email: string, password: string): AuthResponse
-  +GenerateResetTokenAsync(email: string): bool
-  +ResetPasswordAsync(token: string, newPassword: string): bool
-  +LogoutAsync(userId: string, refreshToken: string): bool
-  +ChangePasswordAsync(userId: string, oldPwd: string, newPwd: string): bool
-  +LoginWithGoogleAsync(idToken: string): AuthResponse
+  +RegisterAsync(dto: User)
+  +LoginAsync(email: string, password: string)
+  +ForgotPasswordAsync(email: string)
+  +VerifyOtpAsync(userId: string, code: string)
+  +ChangePasswordAsync(userId: string, oldPwd: string, newPwd: string)
+  +LogoutAsync(userId: string, refreshToken: string)
+  +LoginWithGoogleAsync(idToken: string)
 }
 
 class AuthService {
   -_userRepo: IUserRepo
   -_resetTokenRepo: IResetTokenRepo
+  -_logoutTokenRepo: ILogoutTokenRepo
   -_hasher: PasswordHasher
   -_tokenService: TokenService
   -_emailService: EmailService
   -_googleOAuth: GoogleOAuthService
-  +RegisterAsync(dto: User): AuthResponse
-  +AuthenticateAsync(email: string, password: string): AuthResponse
-  +GenerateResetTokenAsync(email: string): bool
-  +ResetPasswordAsync(token: string, newPassword: string): bool
-  +LogoutAsync(userId: string, refreshToken: string): bool
-  +ChangePasswordAsync(userId: string, oldPwd: string, newPwd: string): bool
-  +LoginWithGoogleAsync(idToken: string): AuthResponse
+  // Methods omitted for brevity
 }
 
 IAuthService <|.. AuthService
@@ -110,19 +87,15 @@ class EmailService {
   +SendPasswordReset(email: string, token: string): bool
 }
 
+// Simplified: handle OTP via AuthService + EmailService (no separate OtpService)
+
 class GoogleOAuthService {
   +VerifyIdToken(idToken: string): GoogleProfile
   +GetProfile(code: string): GoogleProfile
 }
 
 class AuthController {
-  +RegisterAsync(req, res): void
-  +LoginAsync(req, res): void
-  +ForgotPasswordAsync(req, res): void
-  +ResetPasswordAsync(req, res): void
-  +LogoutAsync(req, res): void
-  +ChangePasswordAsync(req, res): void
-  +LoginWithGoogleAsync(req, res): void
+  // Methods omitted for brevity
 }
 
 ' =======================
@@ -163,6 +136,19 @@ class ResetTokenRepo {
 
 IResetTokenRepo <|.. ResetTokenRepo
 
+// Simplified: omit dedicated OTP repo; keep OtpCode entity only
+
+interface ILogoutTokenRepo {
+  +AddAsync(token: string, userId: string): LogoutToken
+}
+
+class LogoutTokenRepo {
+  -_context: AuthContext
+  +AddAsync(token: string, userId: string): LogoutToken
+}
+
+ILogoutTokenRepo <|.. LogoutTokenRepo
+
 class AuthContext
 
 ' =======================
@@ -172,6 +158,7 @@ class AuthContext
 AuthController --> IAuthService
 AuthService --> IUserRepo
 AuthService --> IResetTokenRepo
+AuthService --> ILogoutTokenRepo
 AuthService --> PasswordHasher
 AuthService --> TokenService
 AuthService --> EmailService
@@ -179,12 +166,13 @@ AuthService --> GoogleOAuthService
 
 UserRepo --> AuthContext
 ResetTokenRepo --> AuthContext
+LogoutTokenRepo --> AuthContext
 
 UserRepo "1" o-- "many" User
 ResetTokenRepo "1" o-- "many" ResetToken
 TokenService "1" o-- "many" Session
+LogoutTokenRepo "1" o-- "many" LogoutToken
 
-AuthResponse "many" --> "1" User
-GoogleOAuthService --> GoogleProfile
+// Simplified relationships: omit DTO links
 
 @enduml
