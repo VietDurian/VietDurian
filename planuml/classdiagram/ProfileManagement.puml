@@ -63,13 +63,13 @@ class CapabilityProfileService <<service>> {
   +createCapabilityProfile(userId, data): CapabilityProfileDTO
   +updateCapabilityProfile(userId, data): CapabilityProfileDTO
   +checkDatabaseError(error): void
-  +mapToCapabilityProfileDTO(p: CapabilityProfile, items: List<CapabilityItem>): CapabilityProfileDTO
+  +mapToCapabilityProfileDTO(p: CapabilityProfile, items: CapabilityItem[]): CapabilityProfileDTO
 }
 
 class UserModel <<model>> {
   +findOne(userId): User
   +editUserById(userId, profileData): User
-  +find(): List<User>  
+  +find(): User[]
 }
 
 class CapabilityProfileModel <<model>> {
@@ -79,7 +79,7 @@ class CapabilityProfileModel <<model>> {
 }
 
 class CapabilityItemModel <<model>> {
-  +getByCapabilityProfileId(capabilityProfileId): List<CapabilityItem>
+  +getByCapabilityProfileId(capabilityProfileId): CapabilityItem[]
   +create(itemData): CapabilityItem
   +update(itemData): CapabilityItem
 }
@@ -128,7 +128,7 @@ class PublicProfileDTO <<datatype>> {
 
 class MapDTO <<datatype>> {
   +userId: string
-  +markers: List<MapMarkerDTO>
+  +markers: MapMarkerDTO[]
 }
 
 class MapMarkerDTO <<datatype>> {
@@ -141,7 +141,7 @@ class CapabilityProfileDTO <<datatype>> {
   +userId: string
   +title: string
   +summary: string
-  +items: List<CapabilityItemDTO>
+  +items: CapabilityItemDTO[]
 }
 
 class CapabilityItemDTO <<datatype>> {
@@ -151,13 +151,15 @@ class CapabilityItemDTO <<datatype>> {
   +description: string
 }
 
-database "Database" as DB
+class Database <<database>>
 
 ProfilePage --> ProfileRoute : uses
 ProfileRoute --> AuthMiddleware : uses
+
 AuthMiddleware --> ProfileController : forwards userInfo
 AuthMiddleware --> MapController : forwards userInfo
 AuthMiddleware --> CapabilityProfileController : forwards userInfo
+
 ProfileRoute --> ProfileController : calls handlers
 ProfileRoute --> MapController : calls handlers
 ProfileRoute --> CapabilityProfileController : calls handlers
@@ -171,15 +173,15 @@ MapService --> UserModel : persistence
 CapabilityProfileService --> CapabilityProfileModel : persistence
 CapabilityProfileService --> CapabilityItemModel : persistence
 
-UserModel --> DB : queries
-CapabilityProfileModel --> DB : queries
-CapabilityItemModel --> DB : queries
+UserModel --> Database : queries
+CapabilityProfileModel --> Database : queries
+CapabilityItemModel --> Database : queries
 
 ProfileService --> UserDTO : returns
 ProfileService --> PublicProfileDTO : returns
 MapService --> MapDTO : returns
 CapabilityProfileService --> CapabilityProfileDTO : returns
 
-CapabilityProfileDTO --> CapabilityItemDTO
+CapabilityProfileDTO --> CapabilityItemDTO : contains
 
 @enduml

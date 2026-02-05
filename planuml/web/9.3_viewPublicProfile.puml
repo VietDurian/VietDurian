@@ -6,8 +6,6 @@ hide footbox
 
 actor User
 boundary profileViewPage as UI
-control profileRoute as Route
-participant ":authMiddleware" as AuthMiddleware
 control profileController as Controller
 participant ":profileService" as ProfileService
 participant ":userService" as UserService
@@ -17,13 +15,7 @@ database Database as DB
 activate User
 User -> UI : 1. Click view public profile
 activate UI
-UI -> Route : 2. GET /profile/public/:userId 
-activate Route
-Route -> AuthMiddleware : 3. authenticateUser(req) & authorizeRole()
-activate AuthMiddleware
-ref over User, DB: Verify Token
-AuthMiddleware -> Controller : 4. handleGetPublicProfile(userId)
-deactivate AuthMiddleware
+UI -> Controller : 2. GET /profile/public/:userId 
 activate Controller
 Controller -> ProfileService : 5. getPublicProfile(userId)
 activate ProfileService
@@ -43,9 +35,8 @@ deactivate UserService
 opt database error
     UserService --> ProfileService : 11.1 Return badrequest
     ProfileService --> Controller : 11.2 Return error response
-    Controller --> Route : 11.3 Return error response
-    Route --> UI : 11.4 Return error response
-    UI --> User : 11.5 Display error message
+    Controller --> UI : 11.3 Return error response
+    UI --> User : 11.4 Display error message
 end
 UserService --> ProfileService : 12. Return user entity
 deactivate UserService
@@ -57,14 +48,12 @@ activate ProfileService
 deactivate ProfileService
 ProfileService --> Controller : 15. Return success + public data
 deactivate ProfileService
-Controller --> Route : 16. Return success + public data (200)
+Controller --> UI : 16. Return success + public data (200)
 deactivate Controller
-Route --> UI : 17. Return success + public data (200)
-deactivate Route
-UI --> UI : 18. Render public profile
+UI --> UI : 17. Render public profile
 activate UI
 deactivate UI
-UI --> User : 19. Display public profile
+UI --> User : 18. Display public profile
 deactivate UI
 deactivate User
 

@@ -1,0 +1,76 @@
+@startuml 9.8_createCapabilityProfile
+skinparam monochrome true
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor Users
+boundary CapabilityProfileFormPage as UI
+control serviceProviderProfileController as Controller
+participant ":serviceProviderProfileService" as Service
+participant ":serviceProviderProfileModel" as Model
+database Database as DB
+
+activate Users
+Users -> UI : 1. Input capability + service areas
+activate UI
+Users -> UI : 2. Submit capability profile form
+UI -> UI : 3. Validate input
+activate UI
+deactivate UI
+opt Validation error
+    UI --> Users : 3.1 Display validation error
+end
+
+UI -> Controller : 4. POST /service-provider-profile/capability
+activate Controller
+Controller -> Service : 5. createCapabilityProfile(userId, payload)
+activate Service
+
+Service -> Model : 6. findByUserId(userId)
+activate Model
+Model -> DB : 7. findOne()
+activate DB
+DB --> Model : 8. Return profile document (or null)
+deactivate DB
+Model --> Service : 9. Return result
+deactivate Model
+
+Service -> Service : 11. checkExistingProfile()
+    activate Service
+    deactivate Service
+    alt profile already exists
+        Service --> Controller : 11.1 Return error: profile already exists
+        Controller --> UI : 11.1.1 Return error
+        UI --> Users : 11.1.2 Display error: profile already exists
+    else profile not found
+        Service -> Service : 12. validateCapabilityData()
+        activate Service
+        deactivate Service
+        opt domain validation error
+            Service --> Controller : 12.1 Return error: invalid data
+            Controller --> UI : 12.1.1 Return error
+            UI --> Users : 12.1.2 Display validation error
+        else data valid
+            Service -> Model : 13. createProfile()
+            activate Model
+            Model -> DB : 14. insertOne()
+            activate DB
+            DB --> Model : 15. Confirm inserted
+            deactivate DB
+            Model --> Service : 16. Return created profile
+            deactivate Model
+            Service -> Service : 17. mapToCapabilityDTO()
+            activate Service
+            deactivate Service
+            Service --> Controller : 18. Return success + capability data
+            deactivate Service
+            Controller --> UI : 19. Return success + capability data
+            deactivate Controller
+         
+            UI --> Users : 21. Display success + service areas
+            deactivate UI
+            deactivate Users
+        end
+    end
+@enduml

@@ -1,11 +1,8 @@
 @startuml 13.2_viewProductList
 hide footbox
-title View Product List
 
 actor User as "Users"
 boundary ProductPage as View
-participant ":ProductRoute" as Route
-control "AuthMiddleware" as Middleware
 control "ProductController" as Controller
 participant ":ProductService" as Service
 entity "ProductModel" as Model
@@ -14,20 +11,13 @@ database Database as Database
 User -> View : 1. Open products list page
 activate View
 activate User
-    View -> Route : 2. GET /products
-    activate Route
-
-    Route -> Middleware : 3. AuthenticateUser(req, res, next)
-    activate Middleware
-    ref over User, Database : Verifies token
-    Middleware -> Controller : 4. Forward ViewProductListRequest
-    deactivate Middleware
+    View -> Controller : 2. GET /products
     activate Controller
 
     Controller -> Service : 5. Process product list retrieval
     activate Service
 
-alt Products not found / empty
+alt Products not found
     Service -> Model : 6.1. Fetch products
     activate Model
 
@@ -40,8 +30,8 @@ alt Products not found / empty
     deactivate Model
 
         Service --> Controller : 6.1.4. Return empty result
-        Controller --> Route : 6.1.5. Return 200 OK + empty list/message
-        Route --> View : 6.1.6. Show "No products available"
+        Controller --> View : 6.1.5. Return 200 OK + empty list/message
+        View --> User : 6.1.6. Show "No products available"
 else Products found
         Service -> Model : 6.2. Fetch products
         activate Model
@@ -56,10 +46,8 @@ else Products found
 
         Service --> Controller : 6.2.4. Return ProductListResponse
         deactivate Service
-        Controller --> Route : 6.2.5. Return 200 OK + products data
-        deactivate Controller
-        Route --> View : 6.2.6. Render products list
-        deactivate Route
+        Controller --> View : 6.2.5. Return 200 OK + products data
+        View -> View : 6.2.6. Render products list
 end
 
 View --> User : 7. Display page content (list or empty state)
