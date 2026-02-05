@@ -20,7 +20,7 @@ Farmer -> UI : 1.Click post in request management.
 Farmer -> UI : 2.Click "Confirm/Reject" icon.
 
 alt Confirm action
-UI -> Controller : 2.1. approveGeneralPost(postData)
+UI -> Controller : 2.1. Approve post request
 activate Controller
 
 Controller -> Service : 2.1.1. approveGeneralPost(postData)

@@ -1,6 +1,7 @@
 import { GeneralPostModel } from '@/model/generalPostModel';
 import { cloudinary } from '@/config/cloudinary';
 import { notificationService } from '@/services/notificationService';
+import { favoriteService } from '@/services/favoriteService';
 
 const normalizeText = (text = '') =>
 	text
@@ -150,7 +151,11 @@ const updateGeneralPost = async (post_id, data) => {
 // Delete a general post
 const deleteGeneralPost = async (post_id) => {
 	try {
-		await GeneralPostModel.findByIdAndDelete(post_id);
+		const del = await GeneralPostModel.findByIdAndDelete(post_id);
+		if (del) {
+			// Also delete related favorites
+			await favoriteService.deleteFavoritesByPostId(post_id);
+		}
 	} catch (error) {
 		throw error;
 	}

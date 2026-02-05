@@ -15,7 +15,7 @@ activate UI
 
 ' ===== Search / Filter =====
 Farmer -> UI : 1. Enter search keywords / select filter
-UI -> Controller : 2. getPosts(search, filter)
+UI -> Controller : 2. Search/filter posts request
 activate Controller
 
 Controller -> Service : 3. searchPosts(search, filter)

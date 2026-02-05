@@ -5,72 +5,52 @@ skinparam sequenceArrowThickness 1
 hide footbox
 
 actor User
-boundary diaryPage as UI
-control diaryRoute as Route
-participant ":authMiddleware" as Middleware
+boundary CreateDiaryPage as UI
+ 
 control diaryController as Controller
 participant ":diaryService" as Service
 participant ":diaryModel" as Model
 database Database as DB
 
-activate User
-User -> UI : 1. Open diary create form
-activate UI
-User -> UI : 2. Enter diary entry details
-User -> UI : 3. Click submit button
-UI -> UI : 4. Validate input
-activate UI
-deactivate UI
-opt validation error
-    UI --> User : 4.1 Display error message
-end
-UI -> Route : 5. POST /diary/entry 
-activate Route
-Route -> Middleware : 6. authenticateUser(req) & authorizeRole()
-activate Middleware
-ref over User, DB: Verify Token
-Middleware -> Controller : 7. handleCreateDiary(userInfo)
-deactivate Middleware
-activate Controller
-Controller -> Controller : 8. Validate input
-activate Controller
-deactivate Controller
-opt validation error
-    Controller --> Route : 8.1 Return error
-    Route --> UI : 8.2 Show error message
-    UI --> User : 8.3 Display error message
-end
-Controller -> Service : 9. createDiary(data, userId)
-activate Service
-Service -> Model : 10. create(diaryData)
-activate Model
-Model -> DB : 11. execute query insertOne
-activate DB
-DB --> Model : 12. Return result
-deactivate DB
-Model --> Service : 13. Return insert result
-deactivate Model
-Service -> Service : 14. checkDatabaseError()
-activate Service
-deactivate Service
-opt database error
-    Service --> Controller : 14.1 Return error
-    Controller --> Route : 14.2 Return error info
-    Route --> UI : 14.3 Show error message
-    UI --> User : 14.4 Display error message
-end
-Service -> Service : 15. mapToDiaryDTO()
-activate Service
-deactivate Service
-Service --> Controller : 16. Return success
-deactivate Service
-Controller --> Route : 17. Return success
-deactivate Controller
-Route --> UI : 18. Return success
-deactivate Route
 
-UI --> User : 19. Display diary entry created
+User -> UI : 1. Enter title, description, crop_type belong garden
+activate User
+activate UI
+User -> UI : 2. Click submit button
+UI -> UI : 3. Validate input
+activate UI
 deactivate UI
-deactivate User
+opt Invalid Input or fields left empty
+    UI --> User : 3.1 Display error message
+end
+UI -> Controller : 4. Create diary request
+activate Controller
+Controller -> Service : 5. createDiary(data, userId)
+activate Service
+Service -> Model : 6. save(data)
+activate Model
+Model -> DB : 7. Execute insert query
+activate DB
+DB --> Model : 8. Return result
+deactivate DB
+Model --> Service : 9. Return insert result
+deactivate Model
+Service -> Service : 10. check insert result
+activate Service
+deactivate Service
+
+alt Create diary successful
+    Service --> Controller : 10.1 Return DiaryResponse
+    Controller --> UI : 10.1.1 Return response
+    UI --> User : 10.1.2 Redirect to diary page with new diary
+else Create diary failed
+    Service --> Controller : 11.2 Return error
+    deactivate Service
+    Controller --> UI : 11.2.1 Return error response
+    deactivate Controller
+    UI --> User : 11.2.2 Display error message
+    deactivate UI
+    deactivate User
+end
 
 @enduml
