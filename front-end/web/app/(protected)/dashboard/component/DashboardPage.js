@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Users, UserCheck, MessageSquareText, Newspaper, Loader2 } from 'lucide-react';
 
-import { ControlCenter } from './ControlCenter';
 import { GardenHeatmap } from './GardenHeatmap';
-import { MarketTrendChart } from './MarketTrendChart';
+import { UserChart } from './UserChart';
+import { PostBlogChart } from './PostBlogChart';
 import { StatsCard } from './StatsCard';
 import { useLanguage } from '../context/LanguageContext';
 import { usersAPI, blogAPI, getOwnPosts } from '../../../../lib/api';
@@ -21,7 +21,7 @@ export function DashboardPage({ onNavigate }) {
         error: null
     });
 
-    // State to store previous month data
+    // State to store previous month data (cumulative totals up to end of previous month)
     const [previousMonthStats, setPreviousMonthStats] = useState({
         totalUsers: 0,
         experts: 0,
@@ -34,39 +34,26 @@ export function DashboardPage({ onNavigate }) {
         if (previous === 0) {
             return current > 0 ? '+100%' : '0%';
         }
-        
+
         const change = ((current - previous) / previous) * 100;
-        
-        if (change > 0) {
-            return `+${change.toFixed(1)}%`;
-        } else if (change < 0) {
-            return `${change.toFixed(1)}%`;
-        } else {
-            return '0%';
-        }
+        if (change > 0) return `+${change.toFixed(1)}%`;
+        if (change < 0) return `${change.toFixed(1)}%`;
+        return '0%';
     };
 
-    // Function to get data for specific time period
-    const getStatsForPeriod = (data, startDate, endDate) => {
-        return data.filter(item => {
-            const itemDate = new Date(item.created_at || item.createdAt);
-            return itemDate >= startDate && itemDate <= endDate;
-        });
+    // Determine changeType based on change value
+    const getChangeType = (changeStr) => {
+        if (changeStr.startsWith('+')) return 'increase';
+        if (changeStr.startsWith('-')) return 'decrease';
+        return 'neutral';
     };
 
-    // Function to fetch data by month
+    // Function to fetch dashboard statistics
     const fetchMonthlyData = async () => {
         try {
-            // Calculate time periods
+            // Calculate end of previous month
             const now = new Date();
-            const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-            const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-            
-            const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
             const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-
-            console.log('Current month:', currentMonthStart, 'to', currentMonthEnd);
-            console.log('Previous month:', previousMonthStart, 'to', previousMonthEnd);
 
             // Fetch all data (without time filter from API)
             const [usersResponse, blogsResponse, postsResponse] = await Promise.all([
@@ -98,42 +85,24 @@ export function DashboardPage({ onNavigate }) {
             const postsData = Array.isArray(postsResponse) ? postsResponse : 
                              Array.isArray(postsResponse?.data) ? postsResponse.data : [];
 
-            // Filter data for current month
-            const currentMonthUsers = getStatsForPeriod(mappedUsers, currentMonthStart, currentMonthEnd);
-            const currentMonthBlogs = getStatsForPeriod(blogsData, currentMonthStart, currentMonthEnd);
-            const currentMonthPosts = getStatsForPeriod(postsData, currentMonthStart, currentMonthEnd);
-
-            // Filter data for previous month
-            const previousMonthUsers = getStatsForPeriod(mappedUsers, previousMonthStart, previousMonthEnd);
-            const previousMonthBlogs = getStatsForPeriod(blogsData, previousMonthStart, previousMonthEnd);
-            const previousMonthPosts = getStatsForPeriod(postsData, previousMonthStart, previousMonthEnd);
-
             // Calculate current month stats
-            const totalUsers = mappedUsers.length || 0; // Total all users
+            // Platform users should NOT include admins
+            const totalUsers = mappedUsers.filter(user => user.role !== 'admin').length || 0;
             const experts = mappedUsers.filter(user => user.role === 'contentExpert').length || 0;
             const posts = postsData.length || 0; // Total all posts
             const blogs = blogsData.length || 0; // Total all blogs
 
-            // Calculate previous month stats (cumulative total up to end of previous month)
-            const usersAtEndOfPreviousMonth = mappedUsers.filter(user => {
-                const userDate = new Date(user.created_at);
-                return userDate <= previousMonthEnd;
-            }).length;
+            // Previous month cumulative totals
+            const isOnOrBeforePrevMonthEnd = (dateValue) => {
+                if (!dateValue) return false;
+                const d = new Date(dateValue);
+                return !Number.isNaN(d.getTime()) && d <= previousMonthEnd;
+            };
 
-            const expertsAtEndOfPreviousMonth = mappedUsers.filter(user => {
-                const userDate = new Date(user.created_at);
-                return userDate <= previousMonthEnd && user.role === 'contentExpert';
-            }).length;
-
-            const postsAtEndOfPreviousMonth = postsData.filter(post => {
-                const postDate = new Date(post.created_at || post.createdAt);
-                return postDate <= previousMonthEnd;
-            }).length;
-
-            const blogsAtEndOfPreviousMonth = blogsData.filter(blog => {
-                const blogDate = new Date(blog.created_at || blog.createdAt);
-                return blogDate <= previousMonthEnd;
-            }).length;
+            const usersAtEndOfPreviousMonth = mappedUsers.filter((u) => isOnOrBeforePrevMonthEnd(u.created_at) && u.role !== 'admin').length;
+            const expertsAtEndOfPreviousMonth = mappedUsers.filter((u) => isOnOrBeforePrevMonthEnd(u.created_at) && u.role === 'contentExpert').length;
+            const postsAtEndOfPreviousMonth = postsData.filter((p) => isOnOrBeforePrevMonthEnd(p.created_at || p.createdAt)).length;
+            const blogsAtEndOfPreviousMonth = blogsData.filter((b) => isOnOrBeforePrevMonthEnd(b.created_at || b.createdAt)).length;
 
             // Update state
             setStats({
@@ -180,18 +149,11 @@ export function DashboardPage({ onNavigate }) {
         blogs: calculateChange(stats.blogs, previousMonthStats.blogs)
     };
 
-    // Determine changeType based on change value
-    const getChangeType = (changeStr) => {
-        if (changeStr.startsWith('+')) return 'increase';
-        if (changeStr.startsWith('-')) return 'decrease';
-        return 'neutral';
-    };
-
     // Loading state
     if (stats.loading) {
         return (
             <div className="p-4 md:p-8">
-                <div className="flex items-center justify-center min-h-[400px]">
+                <div className="flex items-center justify-center min-h-100">
                     <div className="flex flex-col items-center gap-4">
                         <Loader2 className="h-8 w-8 animate-spin text-[#1a4d2e]" />
                         <p className="text-gray-600">Loading data...</p>
@@ -205,7 +167,7 @@ export function DashboardPage({ onNavigate }) {
     if (stats.error) {
         return (
             <div className="p-4 md:p-8">
-                <div className="flex items-center justify-center min-h-[400px]">
+                <div className="flex items-center justify-center min-h-100">
                     <div className="text-center">
                         <p className="text-red-600 mb-2">Error loading data: {stats.error}</p>
                         <button 
@@ -267,7 +229,9 @@ export function DashboardPage({ onNavigate }) {
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-                <MarketTrendChart />
+                <UserChart />
+                <GardenHeatmap />
+                <PostBlogChart />
             </div>
         </div>
     );

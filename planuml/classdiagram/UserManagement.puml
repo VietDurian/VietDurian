@@ -4,112 +4,84 @@ skinparam shadowing false
 skinparam classAttributeIconSize 0
 left to right direction
 
-title User Management Class Diagram (from sequences)
 
-class UserManagementPage <<boundary>> {
-  +validateInput(): void
-  +showError(message): void
-  +showSuccess(message): void
-  +displayUserList(list: List<UserDTO>): void
-  +displayUserDetail(user: UserDetailDTO): void
-}
-
-class UserManagementRoute <<control>> {
-  +getList(req, res): void
-  +getDetail(userId, req, res): void
-  +putBlockStatus(userId, status, req, res): void
-  +search(keyword, req, res): void
-  +filter(filters, req, res): void
-  +sort(field, order, req, res): void
+' ===== Routes & Middleware =====
+class UserRoute <<control>> {
+  +getAllUsers(req, res): void
+  +getUserById(req, res): void
+  +toggleBan(req, res): void
+  +searchUser(req, res): void
+  +filterUsers(req, res): void
+  +sortUsers(req, res): void
 }
 
 class AuthMiddleware <<control>> {
-  +authenticateUser(req): UserInfo
-  +authorizeRole(roles): void
+  +protect(req): UserInfo
 }
 
-class UserManagementController <<control>> {
-  +handleGetUserList(userInfo): void
-  +handleGetUserDetail(userInfo, userId): void
-  +handleBlockUnblockUser(userInfo, userId, status): void
-  +handleSearchUser(userInfo, keyword): void
-  +handleFilterUser(userInfo, filters): void
-  +handleSortUser(userInfo, field, order): void
+class AuthorizationMiddleware <<control>> {
+  +isAdmin(req): void
 }
 
-class UserManagementService <<service>> {
-  +getUserList(): List<UserDTO>
-  +getUserDetail(userId): UserDetailDTO
-  +blockUnblockUser(userId, status): UserDTO
-  +searchUser(keyword): List<UserDTO>
-  +filterUser(filters): List<UserDTO>
-  +sortUser(field, order): List<UserDTO>
-  +checkDatabaseError(error): void
-  +checkNotFound(entity): void
-  +mapToUserDTO(user: User): UserDTO
-  +mapToUserDTOList(users: List<User>): List<UserDTO>
-  +mapToUserDetailDTO(user: User): UserDetailDTO
+' ===== Controller =====
+class UserController <<control>> {
+  +getAllUsers(req, res): void
+  +getUserById(req, res): void
+  +toggleBan(req, res): void
+  +searchUser(req, res): void
+  +filterUsers(req, res): void
+  +sortUsers(req, res): void
 }
 
-class UserManagementModel <<model>> {
-  +findAllUsers(): List<User>
-  +findById(userId): User
-  +updateBlockStatus(userId, status): User
-  +findByKeyword(keyword): List<User>
-  +findByFilters(filters): List<User>
-  +findWithSort(field, order): List<User>
+' ===== Service =====
+class UserService <<service>> {
+  +getAllUsers(page, limit): PaginatedUsers
+  +getUserById(id): User
+  +banUser(id, is_banned): User
+  +searchUsers(keyword): User[]
+  +filterUsers(filters): User[]
+  +sortUsers(sort): User[]
 }
 
+class PaginatedUsers <<datatype>> {
+  +users: User[]
+  +total: number
+  +page: number
+  +totalPages: number
+}
+
+' ===== Model =====
+class UserModel <<model>> {
+  +find(query): User[]
+  +findById(id): User
+  +findByIdAndUpdate(id, update, options): User
+  +countDocuments(): number
+}
+
+' ===== Entity =====
 class User <<entity>> {
-  +id: string
+  +_id: ObjectId
+  +full_name: string
   +email: string
-  +name: string
-  +role: Role
-  +status: Status
-  +createdAt: Date
-  +updatedAt: Date
+  +password: string
+  +phone: string
+  +avatar: string
+  +role: string
+  +is_banned: bool
+  +is_verified: bool
+  +created_at: Date
+  +updated_at: Date
 }
 
-class UserDTO <<datatype>> {
-  +id: string
-  +email: string
-  +name: string
-  +role: Role
-  +status: Status
-}
+class Database <<database>>
 
-class UserDetailDTO <<datatype>> {
-  +id: string
-  +email: string
-  +name: string
-  +role: Role
-  +status: Status
-  +createdAt: Date
-  +updatedAt: Date
-}
+' ===== Relationships =====
+UserRoute --> AuthMiddleware : uses
+UserRoute --> AuthorizationMiddleware : uses
+UserRoute --> UserController : calls handlers
 
-enum Role {
-  ADMIN
-  USER
-}
-
-enum Status {
-  ACTIVE
-  BLOCKED
-  PENDING
-}
-
-database DB as Database
-
-UserManagementPage --> UserManagementRoute : uses
-UserManagementRoute --> AuthMiddleware : uses
-AuthMiddleware --> UserManagementController : forwards userInfo
-UserManagementRoute --> UserManagementController : calls handlers
-UserManagementController --> UserManagementService : orchestration
-UserManagementService --> UserManagementModel : persistence
-UserManagementModel --> DB : queries
-UserManagementService --> UserDTO : returns
-UserManagementService --> UserDetailDTO : returns
-UserManagementModel --> User : entity
+UserController --> UserService : orchestration
+UserService --> UserModel : persistence
+UserModel --> Database : queries
 
 @enduml
