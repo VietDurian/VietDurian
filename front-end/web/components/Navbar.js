@@ -54,7 +54,7 @@ export default function Navbar() {
     router.push("/login"); // redirect
   };
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+    <nav className="fixed top-0 inset-x-0 z-50 bg-white backdrop-blur-md border-b border-gray-200">
       <div className=" mx-auto px-5">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -74,11 +74,10 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition ${
-                  pathname === link.href
-                    ? "text-emerald-700"
-                    : "text-gray-600 hover:text-emerald-600"
-                }`}
+                className={`text-sm font-medium transition ${pathname === link.href
+                  ? "text-emerald-700"
+                  : "text-gray-600 hover:text-emerald-600"
+                  }`}
               >
                 {link.label}
               </Link>
@@ -109,9 +108,8 @@ export default function Navbar() {
                   </div>
 
                   <ChevronDown
-                    className={`w-4 h-4 transition ${
-                      profileOpen ? "rotate-180" : ""
-                    }`}
+                    className={`w-4 h-4 transition ${profileOpen ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
 

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Heart,
     MessageCircle,
@@ -14,10 +14,19 @@ import {
     CheckCircle,
     Clock,
     XCircle,
+    X,
 } from "lucide-react";
-import { favoriteAPI, deletePost } from "@/lib/api";
+import { favoriteAPI, deletePost, updatePost } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 import { useAuth } from "@/context/AuthContext";
+
+const POST_CATEGORIES = [
+    "Dịch vụ",
+    "Kinh nghiệm",
+    "Sản phẩm",
+    "Thuê dịch vụ",
+    "Khác",
+];
 
 // Status Badge Component
 const StatusBadge = ({ status }) => {
@@ -56,7 +65,6 @@ const StatusBadge = ({ status }) => {
         },
     };
 
-
     const config = statusConfig[status] || statusConfig.pending;
     const Icon = config.icon;
 
@@ -66,6 +74,281 @@ const StatusBadge = ({ status }) => {
         >
             <Icon size={14} className={config.iconColor} />
             <span>{config.text}</span>
+        </div>
+    );
+};
+
+// Edit Post Modal Component
+const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
+    const fileInputRef = useRef(null);
+    const [category, setCategory] = useState(post?.category || POST_CATEGORIES[0]);
+    const [content, setContent] = useState(post?.content || "");
+    const [contact, setContact] = useState(post?.contact || "");
+    const [imagePreview, setImagePreview] = useState(post?.image || "");
+    const [imageData, setImageData] = useState(post?.image || "");
+    const [error, setError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const canSubmit =
+        Boolean(category) &&
+        Boolean(content.trim()) &&
+        Boolean(imageData) &&
+        Boolean(contact.trim());
+
+    useEffect(() => {
+        if (post) {
+            setCategory(post.category || POST_CATEGORIES[0]);
+            setContent(post.content || "");
+            setContact(post.contact || "");
+            setImagePreview(post.image || "");
+            setImageData(post.image || "");
+            setError("");
+        }
+    }, [post]);
+
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "unset";
+        }
+        return () => {
+            document.body.style.overflow = "unset";
+        };
+    }, [isOpen]);
+
+    const handleImageChange = (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            setError("Ảnh quá lớn. Tối đa 5MB");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result?.toString() || "";
+            setImageData(result);
+            setImagePreview(result);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setError("");
+
+        if (!category || !content.trim() || !imageData || !contact.trim()) {
+            setError("Vui lòng điền đủ danh mục, nội dung, ảnh và thông tin liên hệ.");
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const updated = await updatePost(post._id, {
+                category,
+                content: content.trim(),
+                image: imageData,
+                contact: contact.trim(),
+            });
+
+            const normalizedPost = {
+                ...post,
+                category: updated?.category || category,
+                content: updated?.content || content.trim(),
+                contact: updated?.contact || contact.trim(),
+                image: updated?.image || imagePreview,
+                updated_at: updated?.updated_at || new Date().toISOString(),
+            };
+
+            onPostUpdated?.(normalizedPost);
+            onClose();
+        } catch (submitError) {
+            const message = submitError?.message || "Không thể cập nhật bài viết";
+            setError(message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (!isOpen || !post) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white text-black w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
+                <div className="relative flex items-center justify-center p-4 border-b border-gray-200">
+                    <h2 className="text-xl font-bold">Chỉnh sửa bài viết</h2>
+                    <button
+                        onClick={onClose}
+                        className="absolute right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition"
+                        aria-label="Đóng"
+                    >
+                        <X size={20} className="text-gray-600" />
+                    </button>
+                </div>
+
+                <form
+                    onSubmit={handleSubmit}
+                    className="space-y-4 p-4 max-h-[calc(100vh-200px)] overflow-y-auto"
+                >
+                    <div className="flex items-center gap-3">
+                        <img
+                            src={user?.avatar || "/images/avatar.jpg"}
+                            className="w-11 h-11 rounded-full border border-gray-200"
+                            alt="Avatar"
+                        />
+                        <div>
+                            <p className="font-semibold text-gray-800">
+                                {user?.full_name || user?.name || user?.username || "Bạn"}
+                            </p>
+                            <div className="text-xs text-gray-500">Công khai</div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">
+                            Danh mục
+                        </label>
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const dropdown = document.getElementById('edit-category-dropdown');
+                                    dropdown.classList.toggle('hidden');
+                                }}
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white transition-all cursor-pointer text-left flex justify-between items-center"
+                            >
+                                <span>{category}</span>
+                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            <div
+                                id="edit-category-dropdown"
+                                className="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+                            >
+                                {POST_CATEGORIES.map((item) => (
+                                    <div
+                                        key={item}
+                                        onClick={() => {
+                                            setCategory(item);
+                                            document.getElementById('edit-category-dropdown').classList.add('hidden');
+                                        }}
+                                        className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item
+                                            ? 'bg-emerald-600 text-white font-medium'
+                                            : 'text-gray-900 hover:bg-emerald-500 hover:text-white'
+                                            }`}
+                                    >
+                                        {item}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">
+                            Nội dung
+                        </label>
+                        <textarea
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            placeholder="Bạn đang nghĩ gì?"
+                            className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-600"
+                            maxLength={1000}
+                        />
+                        <div className="text-xs text-gray-500 text-right">
+                            {content.length}/1000
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">
+                            Thông tin liên hệ
+                        </label>
+                        <input
+                            type="text"
+                            value={contact}
+                            onChange={(e) => setContact(e.target.value)}
+                            placeholder="Số điện thoại hoặc email"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Ảnh</label>
+
+                        {!imagePreview ? (
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all"
+                            >
+                                <ImageIcon
+                                    className="mx-auto text-gray-400 mb-2"
+                                    size={32}
+                                />
+                                <p className="text-sm font-medium text-gray-600">
+                                    Nhấp để chọn ảnh
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                    PNG, JPG, GIF tối đa 5MB
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                                <img
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    className="w-full h-auto object-contain bg-gray-50 max-h-80"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setImagePreview("");
+                                        setImageData("");
+                                    }}
+                                    className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        )}
+
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageChange}
+                        />
+                    </div>
+
+                    {error && (
+                        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                            <AlertCircle size={18} />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        disabled={!canSubmit || isSubmitting}
+                        className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        {isSubmitting ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Đang cập nhật...
+                            </span>
+                        ) : (
+                            "Cập nhật bài viết"
+                        )}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };
@@ -93,11 +376,9 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
         }
     };
 
-    // Determine contact icon
     const isEmail = post.post_id?.contact?.includes("@");
     const ContactIcon = isEmail ? Mail : Phone;
 
-    // Close menu when clicking outside
     useEffect(() => {
         const handleClickOutside = () => setShowMenu(false);
         if (showMenu) {
@@ -106,7 +387,6 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
         }
     }, [showMenu]);
 
-    // Format timestamp - ĐỒNG BỘ VỚI POST
     const formatTimestamp = (dateString) => {
         if (!dateString) return "Không rõ";
         try {
@@ -116,7 +396,6 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
         }
     };
 
-    // Get author info - XỬ LÝ CẢ 2 TRƯỜNG HỢP
     const getAuthorInfo = () => {
         const postData = post.post_id;
         if (!postData) {
@@ -128,48 +407,39 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
             };
         }
 
-        // CASE 1: Backend đã populate author_id (author_id là object)
         if (postData.author_id && typeof postData.author_id === 'object') {
             const email = postData.author_id.email || "";
             return {
                 name: postData.author_id.full_name || postData.author_id.name || "Người dùng",
                 avatar: postData.author_id.avatar || "/images/avatar.jpg",
                 email: email,
-                // GIỐNG POST: hiển thị full email, KHÔNG chỉ lấy phần trước @
                 handle: email || postData.author_id.username || ""
             };
         }
 
-        // CASE 2: Backend chưa populate author_id (author_id là string ID)
-        // → Check xem author_id có = user_id không
         const authorId = typeof postData.author_id === 'string' ? postData.author_id : postData.author_id?._id;
         const userId = typeof post.user_id === 'object' ? post.user_id._id : post.user_id;
 
-        // Nếu author = user (người favorite là tác giả) → dùng thông tin user_id
         if (authorId === userId && typeof post.user_id === 'object') {
             const email = post.user_id.email || "";
             return {
                 name: post.user_id.full_name || post.user_id.name || "Người dùng",
                 avatar: post.user_id.avatar || "/images/avatar.jpg",
                 email: email,
-                // GIỐNG POST: full email
                 handle: email || post.user_id.username || ""
             };
         }
 
-        // Nếu author = current logged in user
         if (authorId === user?._id || authorId === user?.id) {
             const email = user.email || "";
             return {
                 name: user.full_name || user.name || "Bạn",
                 avatar: user.avatar || "/images/avatar.jpg",
                 email: email,
-                // GIỐNG POST: full email
                 handle: email || user.username || ""
             };
         }
 
-        // Fallback
         return {
             name: "Người dùng",
             avatar: "/images/avatar.jpg",
@@ -183,7 +453,6 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
     return (
         <>
             <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-shadow w-full">
-                {/* Post Header - ĐỒNG BỘ VỚI POST */}
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex gap-3">
                         <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100">
@@ -198,10 +467,8 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
                                 <h4 className="font-bold text-gray-900 text-base">
                                     {authorInfo.name}
                                 </h4>
-                                {/* STATUS BADGE - ĐỒNG BỘ VỚI POST */}
                                 <StatusBadge status={post.post_id?.status} />
                             </div>
-                            {/* EMAIL HANDLE - ĐỒNG BỘ VỚI POST: hiển thị @email đầy đủ */}
                             <p className="text-gray-500 text-sm">
                                 {authorInfo.handle && `@${authorInfo.handle}`}
                                 {authorInfo.handle && post.post_id?.created_at && " • "}
@@ -210,7 +477,6 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
                         </div>
                     </div>
 
-                    {/* Three Dots Menu */}
                     <div className="relative">
                         <button
                             onClick={(e) => {
@@ -222,7 +488,6 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
                             <MoreHorizontal size={20} />
                         </button>
 
-                        {/* Dropdown Menu */}
                         {showMenu && (
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
                                 <button
@@ -258,7 +523,6 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
                     </div>
                 </div>
 
-                {/* Category Badge - ĐỒNG BỘ VỚI POST */}
                 {post.post_id?.category && (
                     <div className="mb-4">
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-200">
@@ -270,12 +534,10 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
                     </div>
                 )}
 
-                {/* Post Content - ĐỒNG BỘ VỚI POST */}
                 <div className="text-base text-gray-800 leading-relaxed mb-4">
                     <p className="whitespace-pre-wrap">{post.post_id?.content}</p>
                 </div>
 
-                {/* Contact Info - ĐỒNG BỘ VỚI POST */}
                 {post.post_id?.contact && (
                     <div className="mb-4">
                         <div className="flex items-center gap-2 text-emerald-700">
@@ -285,7 +547,6 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
                     </div>
                 )}
 
-                {/* Post Image - ĐỒNG BỘ VỚI POST */}
                 {post.post_id?.image && (
                     <div className="rounded-xl overflow-hidden mb-4 border border-gray-200">
                         <img
@@ -296,7 +557,6 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
                     </div>
                 )}
 
-                {/* Post Actions - ĐỒNG BỘ VỚI POST */}
                 <div className="pt-3 border-t border-gray-200 flex items-center justify-between px-1">
                     <button
                         onClick={handleToggleFavorite}
@@ -353,7 +613,6 @@ export default function FavoritePostsModal() {
     const [editingPost, setEditingPost] = useState(null);
     const { user } = useAuth();
 
-    // Load favorites on mount
     useEffect(() => {
         loadFavorites();
     }, []);
@@ -364,11 +623,7 @@ export default function FavoritePostsModal() {
             setError(null);
 
             const response = await favoriteAPI.getFavorites();
-
-            // Chỉ lấy favorite hợp lệ (có post_id)
-            // Không xóa favorite bị hỏng vì API removeFavorite cần postId (không có _id endpoint)
             const validFavorites = (response.data || []).filter(fav => fav.post_id);
-
             setFavorites(validFavorites);
         } catch (err) {
             console.error("Error loading favorites:", err);
@@ -390,34 +645,19 @@ export default function FavoritePostsModal() {
     };
 
     const handleEdit = (post) => {
-        const normalizedPost = {
-            id: post._id,
-            category: post.category,
-            content: post.content,
-            link: post.contact,
-            image: post.image,
-            likes: post.likes_count || 0,
-            comments: post.comments_count || 0,
-            shares: post.shares_count || 0,
-            status: post.status,
-            isLiked: true,
-        };
-        setEditingPost(normalizedPost);
+        setEditingPost(post);
         setIsEditModalOpen(true);
     };
 
     const handlePostUpdated = (updatedPost) => {
         setFavorites((prev) =>
             prev.map((fav) =>
-                fav.post_id._id === updatedPost.id
+                fav.post_id._id === updatedPost._id
                     ? {
                         ...fav,
                         post_id: {
                             ...fav.post_id,
-                            category: updatedPost.category,
-                            content: updatedPost.content,
-                            contact: updatedPost.link,
-                            image: updatedPost.image,
+                            ...updatedPost,
                         },
                     }
                     : fav
@@ -425,20 +665,16 @@ export default function FavoritePostsModal() {
         );
     };
 
-    // Xóa vĩnh viễn post
     const handleDelete = async (postId) => {
         try {
-            // Bước 1: Xóa favorite trước (nếu có)
             try {
                 await favoriteAPI.removeFavorite(postId);
             } catch (favError) {
-                // Không sao nếu không có trong favorites
+                // Ignore if not in favorites
             }
 
-            // Bước 2: Xóa post khỏi backend
             await deletePost(postId);
 
-            // Bước 3: Xóa khỏi UI
             setFavorites((prev) => prev.filter((fav) => {
                 const favPostId = fav.post_id?._id || fav.post_id;
                 return favPostId !== postId;
@@ -450,7 +686,6 @@ export default function FavoritePostsModal() {
         }
     };
 
-    // Loading state
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-12">
@@ -460,7 +695,6 @@ export default function FavoritePostsModal() {
         );
     }
 
-    // Error state
     if (error) {
         return (
             <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
@@ -476,7 +710,6 @@ export default function FavoritePostsModal() {
         );
     }
 
-    // Empty state
     if (favorites.length === 0) {
         return (
             <div className="bg-white rounded-2xl p-12 border border-gray-200 text-center">
@@ -496,7 +729,6 @@ export default function FavoritePostsModal() {
         );
     }
 
-    // List of favorites
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between mb-6">
@@ -506,7 +738,6 @@ export default function FavoritePostsModal() {
                 </h3>
             </div>
 
-            {/* Single column layout like Post feed */}
             <div className="w-full max-w-4xl mx-auto">
                 {favorites.map((favorite) => (
                     <FavoritePostCard
@@ -518,6 +749,18 @@ export default function FavoritePostsModal() {
                     />
                 ))}
             </div>
+
+            {/* Edit Post Modal */}
+            <EditPostModal
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    setEditingPost(null);
+                }}
+                post={editingPost}
+                user={user || {}}
+                onPostUpdated={handlePostUpdated}
+            />
         </div>
     );
 }

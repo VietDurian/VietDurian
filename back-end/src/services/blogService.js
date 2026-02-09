@@ -130,7 +130,10 @@ const getKnowledgeBlogDetails = async (blog_id) => {
 };
 
 // Update knowledge blog
-const updateKnowledgeBlog = async (blog_id, { title, content,image, status }) => {
+const updateKnowledgeBlog = async (
+	blog_id,
+	{ title, content, image, status },
+) => {
 	try {
 		const blog = await KnowledgeBlogModel.findById(blog_id);
 		if (!blog) {
@@ -139,6 +142,16 @@ const updateKnowledgeBlog = async (blog_id, { title, content,image, status }) =>
 		if (title) blog.title = title;
 		if (content) blog.content = content;
 		if (status) blog.status = status;
+		if (image) {
+			try {
+				const result = await cloudinary.uploader.upload(image, {
+					folder: 'vietdurian',
+				});
+				blog.image = result.secure_url;
+			} catch (error) {
+				throw new Error('Image upload failed');
+			}
+		}
 		await blog.save();
 		return blog;
 	} catch (error) {
