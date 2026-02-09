@@ -4,48 +4,50 @@ import { useChatStore } from "../store/useChatStore";
 
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeleton/SidebarSkeleton";
+import { Archive, Ellipsis } from "lucide-react";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } =
-    useChatStore();
+  const {
+    loadContacts,
+    users,
+    selectedUser,
+    setSelectedUser,
+    isUsersLoading,
+    removeContact,
+  } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
-  const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+
+  const [openChatOption, setOpenChatOption] = useState(false);
 
   useEffect(() => {
-    getUsers();
-  }, [getUsers]);
-
-  // Filtering online users
-  const filteredUsers = showOnlineOnly
-    ? users.filter((user) => onlineUsers.includes(user._id))
-    : users;
+    loadContacts();
+  }, [loadContacts]);
 
   if (isUsersLoading) return <SidebarSkeleton />;
   return (
     <aside className="h-full w-25 lg:w-90 border-r border-base-300 flex flex-col transition-all duration-200">
       <div className="hidden lg:flex flex-col border-b border-base-300 w-full p-5">
-        <div className="flex items-center gap-2">
+        <div className="relative flex justify-between items-center gap-2">
           <span className="font-bold text-2xl hidden lg:block">Đoạn chat</span>
-        </div>
-        {/* Online filter toggle */}
-        <div className="mt-3 hidden lg:flex items-center gap-2">
-          <label className="cursor-pointer flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={showOnlineOnly}
-              onChange={(e) => setShowOnlineOnly(e.target.checked)}
-              className="checkbox checkbox-sm"
-            />
-            <span className="text-sm">Show online only</span>
-          </label>
-          <span className="text-xs text-zinc-500">
-            ({onlineUsers.length - 1} online)
-          </span>
+          <Ellipsis
+            onClick={() => setOpenChatOption((prev) => !prev)}
+            size={32}
+            className="bg-gray-200 hover:bg-gray-300 rounded-full p-1 cursor-pointer"
+          />
+          {/* Chat Option Dropdown */}
+          {openChatOption && (
+            <div className="absolute top-10 -right-72 w-80 p-2 bg-white shadow-lg rounded-xl border border-gray-300 z-50 animate-fadeIn">
+              <button className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-gray-200 rounded-lg cursor-pointer">
+                <Archive />
+                Đoạn chat đã lưu trữ
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <div className="overflow-y-auto w-full p-2">
-        {filteredUsers.map((user) => (
+        {users.map((user) => (
           <button
             key={user._id}
             onClick={() => setSelectedUser(user)}
@@ -76,12 +78,20 @@ const Sidebar = () => {
                 {onlineUsers.includes(user._id) ? "Online" : "Offline"}
               </div>
             </div>
+
+            <div className="ml-auto hidden lg:flex">
+              <button
+                className="text-xs text-zinc-400 hover:text-red-500 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeContact(user._id);
+                }}
+              >
+                Gỡ
+              </button>
+            </div>
           </button>
         ))}
-
-        {filteredUsers.length === 0 && (
-          <div className="text-center text-zinc-500 py-4">No online users</div>
-        )}
       </div>
     </aside>
   );
