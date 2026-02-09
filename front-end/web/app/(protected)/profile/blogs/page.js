@@ -19,6 +19,7 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 import Link from "next/link";
+import { blogAPI } from "@/lib/api";
 
 // ==================== STEP INDICATOR ====================
 const StepIndicator = ({ currentStep }) => {
@@ -273,7 +274,7 @@ export default function BlogManagementContent() {
   const { user } = useAuth();
 
   // View state
-  const [view, setView] = useState("list"); // list | create | edit | addBlock
+  const [view, setView] = useState("list"); // list | create | edit | addBlock | detail
 
   // Blog list state
   const [blogs, setBlogs] = useState([]);
@@ -287,6 +288,7 @@ export default function BlogManagementContent() {
   const [blogContent, setBlogContent] = useState("");
   const [blogImage, setBlogImage] = useState("");
   const [blogImageData, setBlogImageData] = useState("");
+  const [blogImageChanged, setBlogImageChanged] = useState(false); // Track if image changed
 
   // Knowledge blocks state
   const [knowledgeBlocks, setKnowledgeBlocks] = useState([]);
@@ -298,10 +300,14 @@ export default function BlogManagementContent() {
   const [blockContent, setBlockContent] = useState("");
   const [blockImage, setBlockImage] = useState("");
   const [blockImageData, setBlockImageData] = useState("");
+  const [blockImageChanged, setBlockImageChanged] = useState(false); // Track if block image changed
 
   // Add block to existing blog state
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [newBlocks, setNewBlocks] = useState([]);
+
+  // Blog detail state
+  const [viewingBlog, setViewingBlog] = useState(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -314,64 +320,19 @@ export default function BlogManagementContent() {
         setLoading(true);
         setError("");
 
-        // TODO: Replace with actual API call
-        // const result = await blogAPI.getMyBlogs();
+        const userId = user._id || user.id;
 
-        // Mock data
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // Call real API with author_id filter to get only current user's blogs
+        const result = await blogAPI.getAllBlogs({
+          author_id: userId,
+          sort: "newest"
+        });
 
-        const mockBlogs = [
-          {
-            _id: "blog1",
-            title: "Kỹ thuật trồng sầu riêng Ri6 hiện đại",
-            content:
-              "Hướng dẫn chi tiết về cách trồng và chăm sóc sầu riêng Ri6 để cho năng suất cao và chất lượng tốt nhất",
-            image: "/images/durian-1.jpg",
-            created_at: "2024-01-15T10:00:00Z",
-            knowledgeBlocks: [
-              { title: "Chuẩn bị đất", content: "..." },
-              { title: "Chọn giống", content: "..." },
-            ],
-          },
-          {
-            _id: "blog1",
-            title: "Kỹ thuật trồng sầu riêng Ri6 hiện đại",
-            content:
-              "Hướng dẫn chi tiết về cách trồng và chăm sóc sầu riêng Ri6 để cho năng suất cao và chất lượng tốt nhất",
-            image: "/images/durian-1.jpg",
-            created_at: "2024-01-15T10:00:00Z",
-            knowledgeBlocks: [
-              { title: "Chuẩn bị đất", content: "..." },
-              { title: "Chọn giống", content: "..." },
-            ],
-          },
-          {
-            _id: "blog1",
-            title: "Kỹ thuật trồng sầu riêng Ri6 hiện đại",
-            content:
-              "Hướng dẫn chi tiết về cách trồng và chăm sóc sầu riêng Ri6 để cho năng suất cao và chất lượng tốt nhất",
-            image: "/images/durian-1.jpg",
-            created_at: "2024-01-15T10:00:00Z",
-            knowledgeBlocks: [
-              { title: "Chuẩn bị đất", content: "..." },
-              { title: "Chọn giống", content: "..." },
-            ],
-          },
-          {
-            _id: "blog1",
-            title: "Kỹ thuật trồng sầu riêng Ri6 hiện đại",
-            content:
-              "Hướng dẫn chi tiết về cách trồng và chăm sóc sầu riêng Ri6 để cho năng suất cao và chất lượng tốt nhất",
-            image: "/images/durian-1.jpg",
-            created_at: "2024-01-15T10:00:00Z",
-            knowledgeBlocks: [
-              { title: "Chuẩn bị đất", content: "..." },
-              { title: "Chọn giống", content: "..." },
-            ],
-          },
-        ];
-
-        setBlogs(mockBlogs);
+        if (result.code === 200 && result.data) {
+          setBlogs(result.data);
+        } else {
+          setError("Không thể tải danh sách blog");
+        }
       } catch (err) {
         console.error("Error fetching blogs:", err);
         setError("Không thể tải danh sách blog");
@@ -400,6 +361,7 @@ export default function BlogManagementContent() {
       const result = reader.result?.toString() || "";
       setBlogImageData(result);
       setBlogImage(result);
+      setBlogImageChanged(true); // Mark image as changed
     };
     reader.readAsDataURL(file);
   };
@@ -418,6 +380,7 @@ export default function BlogManagementContent() {
       const result = reader.result?.toString() || "";
       setBlockImageData(result);
       setBlockImage(result);
+      setBlockImageChanged(true); // Mark block image as changed
     };
     reader.readAsDataURL(file);
   };
@@ -451,12 +414,14 @@ export default function BlogManagementContent() {
     setBlogContent("");
     setBlogImage("");
     setBlogImageData("");
+    setBlogImageChanged(false);
     setKnowledgeBlocks([]);
     setNewBlocks([]);
     setBlockTitle("");
     setBlockContent("");
     setBlockImage("");
     setBlockImageData("");
+    setBlockImageChanged(false);
     setIsAddingBlock(false);
     setEditingBlockIndex(null);
     setEditingBlog(null);
@@ -475,6 +440,7 @@ export default function BlogManagementContent() {
       title: blockTitle.trim(),
       content: blockContent.trim(),
       image: blockImageData,
+      imageChanged: blockImageChanged, // Track if image changed for edit
     };
 
     if (view === "addBlock") {
@@ -488,9 +454,13 @@ export default function BlogManagementContent() {
         setNewBlocks([...newBlocks, newBlock]);
       }
     } else {
-      // Creating new blog
+      // Creating new blog or editing blog
       if (editingBlockIndex !== null) {
         const updatedBlocks = [...knowledgeBlocks];
+        // Preserve _id if editing existing block
+        if (updatedBlocks[editingBlockIndex]._id) {
+          newBlock._id = updatedBlocks[editingBlockIndex]._id;
+        }
         updatedBlocks[editingBlockIndex] = newBlock;
         setKnowledgeBlocks(updatedBlocks);
         setEditingBlockIndex(null);
@@ -503,6 +473,7 @@ export default function BlogManagementContent() {
     setBlockContent("");
     setBlockImage("");
     setBlockImageData("");
+    setBlockImageChanged(false);
     setIsAddingBlock(false);
     setError("");
   };
@@ -514,17 +485,46 @@ export default function BlogManagementContent() {
     setBlockContent(block.content);
     setBlockImage(block.image);
     setBlockImageData(block.image);
+    setBlockImageChanged(false); // Reset - user needs to upload new image to change
     setEditingBlockIndex(index);
     setIsAddingBlock(true);
   };
 
-  const handleDeleteBlock = (index) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa chương này?")) {
-      if (view === "addBlock") {
-        setNewBlocks(newBlocks.filter((_, i) => i !== index));
+  const handleDeleteBlock = async (index) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa chương này?")) {
+      return;
+    }
+
+    try {
+      const blocks = view === "addBlock" ? newBlocks : knowledgeBlocks;
+      const block = blocks[index];
+
+      // Nếu block đã tồn tại trên server (có _id), gọi API xóa
+      if (block._id) {
+        const result = await blogAPI.deleteKnowledgeBlock(block._id);
+
+        if (result.code === 200) {
+          // Xóa thành công trên server, cập nhật state local
+          if (view === "addBlock") {
+            setNewBlocks(newBlocks.filter((_, i) => i !== index));
+          } else {
+            setKnowledgeBlocks(knowledgeBlocks.filter((_, i) => i !== index));
+          }
+          alert("Xóa chương thành công!");
+        } else {
+          alert("Không thể xóa chương");
+        }
       } else {
-        setKnowledgeBlocks(knowledgeBlocks.filter((_, i) => i !== index));
+        // Block chưa lưu trên server, chỉ xóa trong state local
+        if (view === "addBlock") {
+          setNewBlocks(newBlocks.filter((_, i) => i !== index));
+        } else {
+          setKnowledgeBlocks(knowledgeBlocks.filter((_, i) => i !== index));
+        }
       }
+    } catch (error) {
+      console.error("Error deleting block:", error);
+      alert(error.message || "Không thể xóa chương");
     }
   };
 
@@ -533,6 +533,7 @@ export default function BlogManagementContent() {
     setBlockContent("");
     setBlockImage("");
     setBlockImageData("");
+    setBlockImageChanged(false);
     setIsAddingBlock(false);
     setEditingBlockIndex(null);
     setError("");
@@ -549,23 +550,96 @@ export default function BlogManagementContent() {
     setError("");
 
     try {
-      const blogData = {
-        title: blogTitle,
-        content: blogContent,
-        image: blogImageData,
-        knowledgeBlocks: knowledgeBlocks,
-      };
+      if (view === "edit" && editingBlog) {
+        // ============ UPDATE EXISTING BLOG ============
 
-      console.log("Creating blog:", blogData);
+        // 1. Update blog parent info (only if changed)
+        const blogUpdateData = {
+          title: blogTitle,
+          content: blogContent,
+        };
 
-      // TODO: Call API
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Only include image if it changed
+        if (blogImageChanged) {
+          blogUpdateData.image = blogImageData;
+        }
 
-      alert("Blog đã được tạo thành công!");
+        const blogResult = await blogAPI.updateBlog(editingBlog._id, blogUpdateData);
+
+        if (blogResult.code !== 200) {
+          throw new Error("Không thể cập nhật thông tin blog");
+        }
+
+        // 2. Handle knowledge blocks
+        const originalBlocks = editingBlog.knowledgeBlocks || [];
+        const currentBlocks = knowledgeBlocks;
+
+        // Update or create blocks
+        for (let i = 0; i < currentBlocks.length; i++) {
+          const block = currentBlocks[i];
+
+          if (block._id) {
+            // Existing block - update it
+            const blockUpdateData = {
+              title: block.title,
+              content: block.content,
+            };
+
+            // Only include image if it changed
+            if (block.imageChanged) {
+              blockUpdateData.image = block.image;
+            }
+
+            await blogAPI.updateKnowledgeBlock(block._id, blockUpdateData);
+          } else {
+            // New block - create it
+            await blogAPI.addKnowledgeBlock(editingBlog._id, {
+              title: block.title,
+              content: block.content,
+              image: block.image,
+            });
+          }
+        }
+
+        // Delete blocks that were removed
+        const currentBlockIds = currentBlocks
+          .filter(b => b._id)
+          .map(b => b._id);
+
+        for (const originalBlock of originalBlocks) {
+          if (!currentBlockIds.includes(originalBlock._id)) {
+            await blogAPI.deleteKnowledgeBlock(originalBlock._id);
+          }
+        }
+
+        alert("Blog đã được cập nhật thành công!");
+      } else {
+        // ============ CREATE NEW BLOG ============
+        const blogData = {
+          title: blogTitle,
+          content: blogContent,
+          image: blogImageData,
+          knowledgeBlocks: knowledgeBlocks.map(block => ({
+            title: block.title,
+            content: block.content,
+            image: block.image,
+          })),
+        };
+
+        const result = await blogAPI.createBlog(blogData);
+
+        if (result.code !== 201) {
+          throw new Error("Không thể tạo blog");
+        }
+
+        alert("Blog đã được tạo thành công!");
+      }
+
       setView("list");
       resetForm();
     } catch (err) {
-      setError("Có lỗi xảy ra khi tạo blog");
+      console.error("Error saving blog:", err);
+      setError(err.message || "Có lỗi xảy ra khi lưu blog");
     } finally {
       setIsSubmitting(false);
     }
@@ -581,20 +655,21 @@ export default function BlogManagementContent() {
     setError("");
 
     try {
-      console.log("Adding blocks to blog:", selectedBlog._id, newBlocks);
-
-      // TODO: Call API for each block
-      // await Promise.all(
-      //   newBlocks.map(block => blogAPI.addKnowledgeBlock(selectedBlog._id, block))
-      // );
-
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Add blocks one by one
+      for (const block of newBlocks) {
+        await blogAPI.addKnowledgeBlock(selectedBlog._id, {
+          title: block.title,
+          content: block.content,
+          image: block.image,
+        });
+      }
 
       alert(`Đã thêm ${newBlocks.length} chương mới vào blog!`);
       setView("list");
       resetForm();
     } catch (err) {
-      setError("Có lỗi xảy ra khi thêm chương");
+      console.error("Error adding blocks:", err);
+      setError(err.message || "Có lỗi xảy ra khi thêm chương");
     } finally {
       setIsSubmitting(false);
     }
@@ -607,6 +682,7 @@ export default function BlogManagementContent() {
     setBlogContent(blog.content);
     setBlogImage(blog.image);
     setBlogImageData(blog.image);
+    setBlogImageChanged(false); // Reset - existing image
     setKnowledgeBlocks(blog.knowledgeBlocks || []);
     setView("edit");
     setCurrentStep(2);
@@ -614,12 +690,17 @@ export default function BlogManagementContent() {
 
   const handleDeleteBlog = async (blogId) => {
     try {
-      // TODO: Call delete API
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setBlogs((prev) => prev.filter((blog) => blog._id !== blogId));
-      alert("Xóa blog thành công!");
+      const result = await blogAPI.deleteBlog(blogId);
+
+      if (result.code === 200) {
+        setBlogs((prev) => prev.filter((blog) => blog._id !== blogId));
+        alert("Xóa blog thành công!");
+      } else {
+        alert("Không thể xóa blog");
+      }
     } catch (err) {
-      alert("Không thể xóa blog");
+      console.error("Error deleting blog:", err);
+      alert(err.message || "Không thể xóa blog");
     }
   };
 
@@ -629,9 +710,26 @@ export default function BlogManagementContent() {
     setView("addBlock");
   };
 
-  const handleViewBlog = (blog) => {
-    // TODO: Navigate to blog detail page
-    console.log("View blog:", blog);
+  const handleViewBlog = async (blog) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      // Fetch full blog details
+      const result = await blogAPI.getBlogById(blog._id);
+
+      if (result.code === 200 && result.data) {
+        setViewingBlog(result.data);
+        setView("detail");
+      } else {
+        setError("Không thể tải chi tiết blog");
+      }
+    } catch (err) {
+      console.error("Error fetching blog detail:", err);
+      setError(err.message || "Không thể tải chi tiết blog");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackToList = () => {
@@ -1288,6 +1386,165 @@ export default function BlogManagementContent() {
                     </>
                   )}
                 </button>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
+      {/* ========== BLOG DETAIL VIEW ========== */}
+      {view === "detail" && viewingBlog && (
+        <>
+          <section className="bg-gradient-to-r from-emerald-700 to-emerald-900 pt-20 pb-12">
+            <div className="max-w-[1400px] mx-auto">
+              <div className="px-4">
+                <button
+                  onClick={handleBackToList}
+                  className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors group mb-8 -ml-4"
+                >
+                  <ArrowLeft
+                    className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform"
+                  />
+                  <span className="font-medium">Quay lại danh sách</span>
+                </button>
+              </div>
+
+              <div className="max-w-[1000px] mx-auto text-center px-4">
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                  {viewingBlog.title}
+                </h1>
+                <div className="flex items-center justify-center gap-4 text-emerald-100 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    <span>
+                      {new Date(viewingBlog.created_at).toLocaleDateString(
+                        "vi-VN"
+                      )}
+                    </span>
+                  </div>
+                  {viewingBlog.knowledgeBlocks &&
+                    viewingBlog.knowledgeBlocks.length > 0 && (
+                      <>
+                        <span>•</span>
+                        <div className="flex items-center gap-2">
+                          <Book className="w-5 h-5" />
+                          <span>{viewingBlog.knowledgeBlocks.length} chương</span>
+                        </div>
+                      </>
+                    )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="py-12 px-4">
+            <div className="max-w-[1500px] mx-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-8">
+                {/* Sidebar - Table of Contents */}
+                {viewingBlog.knowledgeBlocks &&
+                  viewingBlog.knowledgeBlocks.length > 0 && (
+                    <div className="lg:sticky lg:top-24 h-fit">
+                      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 uppercase text-sm tracking-wide">
+                          <BookOpen className="w-4 h-4 text-emerald-600" />
+                          Mục lục
+                        </h3>
+                        <nav className="space-y-1">
+                          {viewingBlog.knowledgeBlocks.map((block, index) => (
+                            <div
+                              key={block._id || index}
+                              className="flex items-center gap-3 px-4 py-5 text-sm font-medium rounded-lg border-l-4 border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                            >
+                              <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-gray-100 text-gray-500">
+                                {index + 1}
+                              </span>
+                              <span className="truncate">{block.title}</span>
+                            </div>
+                          ))}
+                        </nav>
+                      </div>
+                    </div>
+                  )}
+
+                {/* Main Content */}
+                <div className="space-y-8">
+                  {/* Introduction */}
+                  <div className="bg-white rounded-xl shadow-md p-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                      Giới thiệu
+                    </h2>
+                    <p className="text-gray-700 leading-relaxed text-lg">
+                      {viewingBlog.content}
+                    </p>
+                  </div>
+
+                  {/* Knowledge Blocks */}
+                  {viewingBlog.knowledgeBlocks &&
+                    viewingBlog.knowledgeBlocks.map((block, index) => (
+                      <div
+                        key={block._id || index}
+                        className="bg-white rounded-xl shadow-md overflow-hidden"
+                      >
+                        {/* Block Image */}
+                        {block.image && (
+                          <div className="relative h-80 w-full">
+                            <Image
+                              src={block.image}
+                              alt={block.title}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+
+                        {/* Block Content */}
+                        <div className="p-8">
+                          <div className="flex items-start gap-4 mb-4">
+                            <div className="flex-shrink-0 w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold">
+                              {index + 1}
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900 flex-1">
+                              {block.title}
+                            </h2>
+                          </div>
+                          <div className="text-gray-700 leading-relaxed text-lg ml-14 whitespace-pre-line">
+                            {block.content}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                  {/* Navigation Buttons */}
+                  <div className="flex justify-between items-center pt-8">
+                    <button
+                      onClick={handleBackToList}
+                      className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full font-medium transition-colors"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                      Quay lại danh sách
+                    </button>
+
+                    <button
+                      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                      className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-medium transition-colors"
+                    >
+                      Lên đầu trang
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 10l7-7m0 0l7 7m-7-7v18"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
