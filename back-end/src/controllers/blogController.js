@@ -141,10 +141,11 @@ const createKnowledgeBlock = async (req, res, next) => {
 const updateKnowledgeBlog = async (req, res, next) => {
 	try {
 		const { blog_id } = req.params;
-		const { title, content, status } = req.body;
+		const { title, content, image, status } = req.body;
 		const updatedBlog = await blogService.updateKnowledgeBlog(blog_id, {
 			title,
 			content,
+			image,
 			status,
 		});
 		res.status(200).json({
