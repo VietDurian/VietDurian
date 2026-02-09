@@ -169,6 +169,7 @@ const translations = {
 		post_approved_success: 'Duyệt bài viết thành công',
 		post_rejected_success: 'Từ chối bài viết thành công',
 		reject_button: 'Từ chối',
+		progressing: 'Đang xử lý',
 
 		// Reports Page
 		reports: 'Báo cáo',
@@ -443,6 +444,7 @@ const translations = {
 		post_approved_success: 'Post approved successfully',
 		post_rejected_success: 'Post rejected successfully',
 		reject_button: 'Reject',
+		progressing: 'Processing',
 
 		// Reports Page
 		reports: 'Reports',
