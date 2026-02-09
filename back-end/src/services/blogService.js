@@ -130,7 +130,7 @@ const getKnowledgeBlogDetails = async (blog_id) => {
 };
 
 // Update knowledge blog
-const updateKnowledgeBlog = async (blog_id, { title, content, status }) => {
+const updateKnowledgeBlog = async (blog_id, { title, content,image, status }) => {
 	try {
 		const blog = await KnowledgeBlogModel.findById(blog_id);
 		if (!blog) {

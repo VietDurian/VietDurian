@@ -1,0 +1,46 @@
+@startuml 85_viewPostList
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor Farmer as "Users"
+boundary BlogPage as UI 
+control blogController as Controller 
+participant ":blogService" as Service 
+participant ":knowledgeBlogModel" as Model 
+database Database as DB 
+
+
+Farmer -> UI : 1. Users click "Blog" tab
+activate Farmer
+activate UI
+UI -> Controller : 2. Get blog list request
+activate Controller
+
+Controller -> Service : 3. getKnowledgeBlogs()
+activate Service
+Service -> Model : 4. find()
+activate Model
+Model -> DB : 5. Execute query
+activate DB
+DB --> Model : 6. Return result
+deactivate DB
+Model --> Service : 7. Return blog list
+deactivate Model
+    Service -> Service : 8. check blog list
+activate Service
+deactivate Service
+alt Blog available:
+    Service --> Controller : 8.1 Return blog list
+    Controller --> UI : 8.1.1 Show blog list
+    UI --> Farmer : 8.1.2 Display blog list
+else No blogs exist:
+    Service --> Controller : 8.2 Return empty list
+    deactivate Service
+    Controller --> UI : 8.2.1 Show empty message
+    deactivate Controller
+    UI --> Farmer : 8.2.2 Display 'No blogs found'
+    deactivate UI
+    deactivate Farmer
+end
+@enduml
