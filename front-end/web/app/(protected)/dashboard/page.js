@@ -30,7 +30,7 @@ export default function App() {
 	useEffect(() => {
 		if (loading) return;
 		if (!user || user.role !== 'admin') {
-			router.push('/');
+			router.push('/login');
 		}
 	}, [loading, router, user]);
 
@@ -119,7 +119,16 @@ export default function App() {
 							</div>
 							<span className="font-bold text-[#1a4d2e]">VietDurian</span>
 						</div>
-						<LanguageSwitcher />
+						<div className="flex">
+							<LanguageSwitcher />
+							<button
+								onClick={() => logout('/login')}
+								className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer"
+							>
+								<LogOut className="w-4 h-4" />
+								Logout
+							</button>
+						</div>
 					</div>
 
 					{/* Desktop Header with Language Switcher */}

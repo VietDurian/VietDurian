@@ -139,7 +139,7 @@ export default function BlogPage() {
                                     >
                                         <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
                                             {/* Blog Image */}
-                                            <div className="relative h-56 overflow-hidden">
+                                            <div className="relative h-60 overflow-hidden">
                                                 {blog.image ? (
                                                     <>
                                                         <Image

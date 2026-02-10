@@ -77,13 +77,14 @@ export const useAuthStore = create((set, get) => ({
     console.log("logout");
     try {
       await axiosInstance.post("/auth/logout");
+      toast.success("Logged out successfully");
+    } catch (error) {
+      toast.error(error.response.data.message);
+    } finally {
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
       set({ authUser: null });
-      toast.success("Logged out successfully");
       get().disconnectSocket();
-    } catch (error) {
-      toast.error(error.response.data.message);
     }
   },
 
