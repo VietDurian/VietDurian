@@ -4,7 +4,7 @@ skinparam shadowing false
 skinparam sequenceArrowThickness 1
 hide footbox
 
-actor User
+actor User as "Farmer"
 boundary CreateDiaryPage as UI
  
 control diaryController as Controller

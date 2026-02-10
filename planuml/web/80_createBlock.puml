@@ -1,0 +1,64 @@
+@startuml 80_createBlock
+hide footbox
+
+actor User as "Content Expert" 
+boundary BlogDetailPage as View
+control "BlocgController" as Controller
+participant ":BlogService" as Service
+entity "KnowledgeBlockModel" as Model
+database Database as Database
+
+
+User -> View : 1. Click "Add" icon 
+activate View
+activate User
+View -> View : 2. Display create block form
+activate View
+deactivate View
+User -> View : 3. Enter subtitle, content, image & submit
+View -> View : 4. Validate input
+activate View
+deactivate View
+opt Invalid Input or fields left empty
+    View --> User : 4.1. Display errors message
+end
+
+View -> Controller : 5. Create block request
+activate Controller
+
+Controller -> Service : 6. createKnowledgeBlock(data, blogId)
+activate Service
+
+Service -> Model : 7. save(data)
+activate Model
+
+Model -> Database : 8. save new block
+activate Database
+Database --> Model : 9. Return result
+deactivate Database
+
+Model --> Service : 10. Return created entity
+deactivate Model
+
+Service -> Service : 11. check block creation status
+activate Service
+deactivate Service
+
+alt Block creation successful
+    Service --> Controller : 11.1. Return BlockResponse
+
+    Controller --> View : 11.1.1. Show success message
+
+    View --> User : 11.1.2. Display 'Block created successfully'
+else Block creation failed
+    Service --> Controller : 11.2. Return failure
+    deactivate Service
+
+    Controller --> View : 11.2.1. Show error message
+    deactivate Controller
+
+    View --> User : 11.2.2. Display 'Block creation failed'
+    deactivate View
+    deactivate User
+end
+@enduml

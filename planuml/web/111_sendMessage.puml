@@ -1,0 +1,61 @@
+@startuml 111_sendMessage
+hide footbox
+
+actor User as "Users" 
+boundary ChatPage as View
+control "MessageController" as Controller
+participant ":MessageService" as Service
+entity "MessageModel" as Model
+database Database as Database
+
+
+User -> View : 1. Enter content and click 'Send' icon
+activate View
+activate User
+
+View -> View : 2. Validate input
+activate View
+deactivate View
+opt Fields left empty
+    View --> User : 2.1. Display errors message
+end
+
+View -> Controller : 3. Send message request
+activate Controller
+
+Controller -> Service : 4. sendMessage(messageData)
+activate Service
+
+Service -> Model : 5. save(messageData)
+activate Model
+
+Model -> Database : 6. save new message
+activate Database
+Database --> Model : 7. Return result
+deactivate Database
+
+Model --> Service : 8. Return created entity
+deactivate Model
+
+Service -> Service : 9. check message creation status
+activate Service
+deactivate Service
+
+alt Send message successful
+    Service --> Controller : 10.1. Return MessageResponse
+
+    Controller --> View : 10.1.1. Show success message
+
+    View --> User : 10.1.2. Display 'Message sent successfully'
+else Send message failed
+    Service --> Controller : 10.2. Return failure
+    deactivate Service
+
+    Controller --> View : 10.2.1. Show error message
+    deactivate Controller
+
+    View --> User : 10.2.2. Display 'Message sending failed'
+    deactivate View
+    deactivate User
+end
+@enduml

@@ -1,0 +1,55 @@
+@startuml 124_Assistant
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor User as "User"
+participant "HomePage" as UI
+participant "Route Handler" as API
+participant "Google SDK" as SDK
+entity "Gemini (Google) Service" as Gemini
+
+User -> UI : 1. Click balloon chat icon
+activate User
+activate UI
+UI -> UI : 2. Show chat widget
+activate UI
+deactivate UI
+
+opt Fields left empty
+    UI --> User : 2.1 Prompt to fill in required fields
+end
+
+User -> UI : 3. Enter prompt & Send
+
+UI -> API : 4. POST {message, history, image}
+activate API
+
+API -> Gemini : 5. Fetch available models list (REST API)
+activate Gemini
+Gemini --> API : 6. Return listJson.models
+deactivate Gemini
+
+alt No appropriate AI model found
+    API --> UI : 6.1. Return 502 (Error: No model available)
+    UI --> User : 6.1.1 Show "The service is currently unavailable" error
+else Model found
+    API -> SDK : 6.2. model.generateContent({contents, generationConfig})
+    activate SDK
+
+    SDK -> Gemini : 6.2.1. Send Request
+    activate Gemini
+    Gemini --> SDK : 6.2.2. Return Result Object
+    deactivate Gemini
+
+    SDK --> API : 6.2.3. Return Response Text
+    deactivate SDK
+
+    API --> UI : 6.2.4. Return JSON {success: true, data: text}
+    deactivate API
+
+    UI --> User : 6.2.5. Display Response (Plain Text)
+    deactivate UI
+    deactivate User
+end
+@enduml

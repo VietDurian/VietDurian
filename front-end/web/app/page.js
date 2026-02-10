@@ -21,6 +21,7 @@ import {
   Star,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import AiFloatingButton from "@/components/AiFloatingButton";
 
 export default function Home() {
   const router = useRouter();
@@ -1002,6 +1003,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+       {<AiFloatingButton />}
       <Footer />
     </div>
   );
