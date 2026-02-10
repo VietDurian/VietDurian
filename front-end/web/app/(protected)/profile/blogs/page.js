@@ -21,6 +21,32 @@ import Image from "next/image";
 import Link from "next/link";
 import { blogAPI } from "@/lib/api";
 
+// ==================== MODAL COMPONENT ====================
+const Modal = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white text-black w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
+        <div className="relative flex items-center justify-center p-4 border-b border-gray-200">
+          <h2 className="text-xl font-bold text-center flex-1">{title}</h2>
+          <button
+            onClick={onClose}
+            className="absolute right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition"
+            aria-label="Đóng"
+          >
+            <X size={20} className="text-gray-600" />
+          </button>
+        </div>
+
+        <div className="p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ==================== STEP INDICATOR ====================
 const StepIndicator = ({ currentStep }) => {
   const steps = [
@@ -112,13 +138,15 @@ const ImageUpload = ({ image, onImageChange, onImageRemove, label }) => {
 };
 
 // ==================== KNOWLEDGE BLOCK CARD ====================
-const KnowledgeBlockCard = ({ block, index, onEdit, onDelete }) => {
+const KnowledgeBlockCard = ({ block, index, onEdit, onDelete, displayIndex }) => {
+  const showIndex = displayIndex !== undefined ? displayIndex : index + 1;
+
   return (
     <div className="bg-white border-2 border-gray-200 rounded-xl p-5 hover:border-emerald-400 transition-all">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3 flex-1">
           <div className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
-            {index + 1}
+            {showIndex}
           </div>
           <h4 className="font-bold text-gray-900 text-lg line-clamp-1">
             {block.title}
@@ -234,12 +262,12 @@ const BlogCard = ({ blog, onEdit, onDelete, onAddBlock, onView }) => {
       {/* Blog Content */}
       <div className="p-5">
         <div onClick={() => onView(blog)} className="cursor-pointer">
-          <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 hover:text-emerald-600 transition-colors">
+          <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-1 hover:text-emerald-600 transition-colors">
             {blog.title}
           </h3>
         </div>
 
-        <p className="text-gray-600 text-sm mb-4 line-clamp-3">{blog.content}</p>
+        <p className="text-gray-600 text-sm mb-4 line-clamp-1">{blog.content}</p>
 
         {/* Meta Info */}
         <div className="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -274,7 +302,7 @@ export default function BlogManagementContent() {
   const { user } = useAuth();
 
   // View state
-  const [view, setView] = useState("list"); // list | create | edit | addBlock | detail
+  const [view, setView] = useState("list");
 
   // Blog list state
   const [blogs, setBlogs] = useState([]);
@@ -288,7 +316,7 @@ export default function BlogManagementContent() {
   const [blogContent, setBlogContent] = useState("");
   const [blogImage, setBlogImage] = useState("");
   const [blogImageData, setBlogImageData] = useState("");
-  const [blogImageChanged, setBlogImageChanged] = useState(false); // Track if image changed
+  const [blogImageChanged, setBlogImageChanged] = useState(false);
 
   // Knowledge blocks state
   const [knowledgeBlocks, setKnowledgeBlocks] = useState([]);
@@ -300,7 +328,7 @@ export default function BlogManagementContent() {
   const [blockContent, setBlockContent] = useState("");
   const [blockImage, setBlockImage] = useState("");
   const [blockImageData, setBlockImageData] = useState("");
-  const [blockImageChanged, setBlockImageChanged] = useState(false); // Track if block image changed
+  const [blockImageChanged, setBlockImageChanged] = useState(false);
 
   // Add block to existing blog state
   const [selectedBlog, setSelectedBlog] = useState(null);
@@ -322,7 +350,6 @@ export default function BlogManagementContent() {
 
         const userId = user._id || user.id;
 
-        // Call real API with author_id filter to get only current user's blogs
         const result = await blogAPI.getAllBlogs({
           author_id: userId,
           sort: "newest"
@@ -361,7 +388,7 @@ export default function BlogManagementContent() {
       const result = reader.result?.toString() || "";
       setBlogImageData(result);
       setBlogImage(result);
-      setBlogImageChanged(true); // Mark image as changed
+      setBlogImageChanged(true);
     };
     reader.readAsDataURL(file);
   };
@@ -380,7 +407,7 @@ export default function BlogManagementContent() {
       const result = reader.result?.toString() || "";
       setBlockImageData(result);
       setBlockImage(result);
-      setBlockImageChanged(true); // Mark block image as changed
+      setBlockImageChanged(true);
     };
     reader.readAsDataURL(file);
   };
@@ -440,11 +467,10 @@ export default function BlogManagementContent() {
       title: blockTitle.trim(),
       content: blockContent.trim(),
       image: blockImageData,
-      imageChanged: blockImageChanged, // Track if image changed for edit
+      imageChanged: blockImageChanged,
     };
 
     if (view === "addBlock") {
-      // Adding to existing blog
       if (editingBlockIndex !== null) {
         const updatedBlocks = [...newBlocks];
         updatedBlocks[editingBlockIndex] = newBlock;
@@ -454,10 +480,8 @@ export default function BlogManagementContent() {
         setNewBlocks([...newBlocks, newBlock]);
       }
     } else {
-      // Creating new blog or editing blog
       if (editingBlockIndex !== null) {
         const updatedBlocks = [...knowledgeBlocks];
-        // Preserve _id if editing existing block
         if (updatedBlocks[editingBlockIndex]._id) {
           newBlock._id = updatedBlocks[editingBlockIndex]._id;
         }
@@ -481,11 +505,17 @@ export default function BlogManagementContent() {
   const handleEditBlock = (index) => {
     const blocks = view === "addBlock" ? newBlocks : knowledgeBlocks;
     const block = blocks[index];
+
+    if (!block) {
+      console.error("Block not found at index:", index);
+      return;
+    }
+
     setBlockTitle(block.title);
     setBlockContent(block.content);
     setBlockImage(block.image);
     setBlockImageData(block.image);
-    setBlockImageChanged(false); // Reset - user needs to upload new image to change
+    setBlockImageChanged(false);
     setEditingBlockIndex(index);
     setIsAddingBlock(true);
   };
@@ -499,12 +529,10 @@ export default function BlogManagementContent() {
       const blocks = view === "addBlock" ? newBlocks : knowledgeBlocks;
       const block = blocks[index];
 
-      // Nếu block đã tồn tại trên server (có _id), gọi API xóa
-      if (block._id) {
+      if (block?._id) {
         const result = await blogAPI.deleteKnowledgeBlock(block._id);
 
         if (result.code === 200) {
-          // Xóa thành công trên server, cập nhật state local
           if (view === "addBlock") {
             setNewBlocks(newBlocks.filter((_, i) => i !== index));
           } else {
@@ -515,7 +543,6 @@ export default function BlogManagementContent() {
           alert("Không thể xóa chương");
         }
       } else {
-        // Block chưa lưu trên server, chỉ xóa trong state local
         if (view === "addBlock") {
           setNewBlocks(newBlocks.filter((_, i) => i !== index));
         } else {
@@ -551,15 +578,11 @@ export default function BlogManagementContent() {
 
     try {
       if (view === "edit" && editingBlog) {
-        // ============ UPDATE EXISTING BLOG ============
-
-        // 1. Update blog parent info (only if changed)
         const blogUpdateData = {
           title: blogTitle,
           content: blogContent,
         };
 
-        // Only include image if it changed
         if (blogImageChanged) {
           blogUpdateData.image = blogImageData;
         }
@@ -570,29 +593,24 @@ export default function BlogManagementContent() {
           throw new Error("Không thể cập nhật thông tin blog");
         }
 
-        // 2. Handle knowledge blocks
         const originalBlocks = editingBlog.knowledgeBlocks || [];
         const currentBlocks = knowledgeBlocks;
 
-        // Update or create blocks
         for (let i = 0; i < currentBlocks.length; i++) {
           const block = currentBlocks[i];
 
           if (block._id) {
-            // Existing block - update it
             const blockUpdateData = {
               title: block.title,
               content: block.content,
             };
 
-            // Only include image if it changed
             if (block.imageChanged) {
               blockUpdateData.image = block.image;
             }
 
             await blogAPI.updateKnowledgeBlock(block._id, blockUpdateData);
           } else {
-            // New block - create it
             await blogAPI.addKnowledgeBlock(editingBlog._id, {
               title: block.title,
               content: block.content,
@@ -601,20 +619,22 @@ export default function BlogManagementContent() {
           }
         }
 
-        // Delete blocks that were removed
         const currentBlockIds = currentBlocks
           .filter(b => b._id)
           .map(b => b._id);
 
         for (const originalBlock of originalBlocks) {
-          if (!currentBlockIds.includes(originalBlock._id)) {
-            await blogAPI.deleteKnowledgeBlock(originalBlock._id);
+          if (originalBlock._id && !currentBlockIds.includes(originalBlock._id)) {
+            try {
+              await blogAPI.deleteKnowledgeBlock(originalBlock._id);
+            } catch (deleteError) {
+              console.error("Error deleting block:", originalBlock._id, deleteError);
+            }
           }
         }
 
         alert("Blog đã được cập nhật thành công!");
       } else {
-        // ============ CREATE NEW BLOG ============
         const blogData = {
           title: blogTitle,
           content: blogContent,
@@ -655,7 +675,6 @@ export default function BlogManagementContent() {
     setError("");
 
     try {
-      // Add blocks one by one
       for (const block of newBlocks) {
         await blogAPI.addKnowledgeBlock(selectedBlog._id, {
           title: block.title,
@@ -682,7 +701,7 @@ export default function BlogManagementContent() {
     setBlogContent(blog.content);
     setBlogImage(blog.image);
     setBlogImageData(blog.image);
-    setBlogImageChanged(false); // Reset - existing image
+    setBlogImageChanged(false);
     setKnowledgeBlocks(blog.knowledgeBlocks || []);
     setView("edit");
     setCurrentStep(2);
@@ -715,7 +734,6 @@ export default function BlogManagementContent() {
       setLoading(true);
       setError("");
 
-      // Fetch full blog details
       const result = await blogAPI.getBlogById(blog._id);
 
       if (result.code === 200 && result.data) {
@@ -745,24 +763,26 @@ export default function BlogManagementContent() {
       {/* ========== LIST VIEW ========== */}
       {view === "list" && (
         <>
-          <section className="bg-gradient-to-r from-emerald-700 to-emerald-900 pt-24 pb-12">
-            <div className="max-w-7xl mx-auto px-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                    Blog Của Tôi
-                  </h1>
-                  <p className="text-emerald-100 text-lg">
-                    Quản lý và chia sẻ kiến thức của bạn
-                  </p>
+          <section className="pt-12 pb-8 px-4">
+            <div className="max-w-7xl mx-auto">
+              <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl p-8 md:p-12">
+                <div className="flex items-center justify-between flex-wrap gap-6">
+                  <div>
+                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                      Blog Của Tôi
+                    </h1>
+                    <p className="text-emerald-50 text-lg">
+                      Quản lý và chia sẻ kiến thức của bạn
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleCreateBlog}
+                    className="bg-white hover:bg-emerald-50 text-emerald-700 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg"
+                  >
+                    <Plus size={20} />
+                    Tạo Blog Mới
+                  </button>
                 </div>
-                <button
-                  onClick={handleCreateBlog}
-                  className="bg-white hover:bg-emerald-50 text-emerald-700 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg"
-                >
-                  <Plus size={20} />
-                  Tạo Blog Mới
-                </button>
               </div>
             </div>
           </section>
@@ -833,23 +853,28 @@ export default function BlogManagementContent() {
       {/* ========== CREATE/EDIT BLOG VIEW ========== */}
       {(view === "create" || view === "edit") && (
         <>
-          <section className="bg-gradient-to-r from-emerald-700 to-emerald-900 pt-24 pb-12">
-            <div className="max-w-4xl mx-auto px-4">
-              <button
-                onClick={handleBackToList}
-                className="flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-6"
-              >
-                <ArrowLeft size={20} />
-                <span className="font-medium">Quay lại</span>
-              </button>
-              <div className="text-center">
-                <BookOpen className="w-16 h-16 text-white mx-auto mb-4" />
-                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                  {view === "edit" ? "Chỉnh sửa Blog" : "Tạo Blog Mới"}
-                </h1>
-                <p className="text-emerald-100 text-lg">
-                  Chia sẻ kiến thức của bạn với cộng đồng
-                </p>
+          <section className="pt-12 pb-8 px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl p-8 md:p-12">
+                <button
+                  onClick={handleBackToList}
+                  className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer"
+                >
+                  <ArrowLeft size={20} />
+                  <span>Quay lại</span>
+                </button>
+
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <BookOpen className="w-10 h-10 text-white" />
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                    {view === "edit" ? "Chỉnh sửa Blog" : "Tạo Blog Mới"}
+                  </h1>
+                  <p className="text-emerald-50 text-lg">
+                    Chia sẻ kiến thức của bạn với cộng đồng
+                  </p>
+                </div>
               </div>
             </div>
           </section>
@@ -985,7 +1010,7 @@ export default function BlogManagementContent() {
                         <BookOpen className="text-emerald-600" size={28} />
                         Các chương ({knowledgeBlocks.length})
                       </h2>
-                      {!isAddingBlock && (
+                      {!isAddingBlock && view === "create" && (
                         <button
                           onClick={() => setIsAddingBlock(true)}
                           className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2"
@@ -1010,83 +1035,6 @@ export default function BlogManagementContent() {
                       </div>
                     )}
 
-                    {isAddingBlock && (
-                      <div className="border-2 border-emerald-200 rounded-xl p-6 bg-emerald-50">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">
-                          {editingBlockIndex !== null
-                            ? "Chỉnh sửa chương"
-                            : "Thêm chương mới"}
-                        </h3>
-
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                              Tiêu đề chương{" "}
-                              <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={blockTitle}
-                              onChange={(e) => setBlockTitle(e.target.value)}
-                              placeholder="Nhập tiêu đề chương..."
-                              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white"
-                              maxLength={200}
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                              Nội dung chương{" "}
-                              <span className="text-red-500">*</span>
-                            </label>
-                            <textarea
-                              value={blockContent}
-                              onChange={(e) => setBlockContent(e.target.value)}
-                              placeholder="Nhập nội dung chương..."
-                              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent resize-none bg-white"
-                              rows={6}
-                              maxLength={5000}
-                            />
-                            <div className="text-xs text-gray-500 text-right mt-1">
-                              {blockContent.length}/5000
-                            </div>
-                          </div>
-
-                          <ImageUpload
-                            image={blockImage}
-                            onImageChange={handleBlockImageChange}
-                            onImageRemove={() => {
-                              setBlockImage("");
-                              setBlockImageData("");
-                            }}
-                            label={
-                              <>
-                                Ảnh chương{" "}
-                                <span className="text-red-500">*</span>
-                              </>
-                            }
-                          />
-
-                          <div className="flex gap-3 justify-end pt-4">
-                            <button
-                              type="button"
-                              onClick={handleCancelBlock}
-                              className="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
-                            >
-                              Hủy
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleSaveBlock}
-                              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold transition-all"
-                            >
-                              {editingBlockIndex !== null ? "Cập nhật" : "Thêm"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
                     {knowledgeBlocks.length === 0 && !isAddingBlock && (
                       <div className="text-center py-12">
                         <BookOpen
@@ -1106,6 +1054,72 @@ export default function BlogManagementContent() {
                       </div>
                     )}
                   </div>
+
+                  {/* Modal for Adding/Editing Block */}
+                  <Modal
+                    isOpen={isAddingBlock}
+                    onClose={handleCancelBlock}
+                    title={editingBlockIndex !== null ? "Chỉnh sửa chương" : "Thêm chương mới"}
+                  >
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Tiêu đề chương{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={blockTitle}
+                          onChange={(e) => setBlockTitle(e.target.value)}
+                          placeholder="Nhập tiêu đề chương..."
+                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white"
+                          maxLength={200}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Nội dung chương{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          value={blockContent}
+                          onChange={(e) => setBlockContent(e.target.value)}
+                          placeholder="Nhập nội dung chương..."
+                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent resize-none bg-white"
+                          rows={6}
+                          maxLength={5000}
+                        />
+                        <div className="text-xs text-gray-500 text-right mt-1">
+                          {blockContent.length}/5000
+                        </div>
+                      </div>
+
+                      <ImageUpload
+                        image={blockImage}
+                        onImageChange={handleBlockImageChange}
+                        onImageRemove={() => {
+                          setBlockImage("");
+                          setBlockImageData("");
+                        }}
+                        label={
+                          <>
+                            Ảnh chương <span className="text-red-500">*</span>
+                          </>
+                        }
+                      />
+
+                      <div className="pt-4">
+                        <button
+                          type="button"
+                          onClick={handleSaveBlock}
+                          className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition"
+                        >
+                          {editingBlockIndex !== null ? "Cập nhật" : "Thêm"}
+                        </button>
+                      </div>
+                    </div>
+                  </Modal>
 
                   {/* Action Buttons */}
                   <div className="flex justify-between items-center">
@@ -1143,24 +1157,28 @@ export default function BlogManagementContent() {
       {/* ========== ADD BLOCK VIEW ========== */}
       {view === "addBlock" && (
         <>
-          <section className="bg-gradient-to-r from-emerald-700 to-emerald-900 pt-24 pb-12">
-            <div className="max-w-5xl mx-auto px-4">
-              <button
-                onClick={handleBackToList}
-                className="flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-6"
-              >
-                <ArrowLeft size={20} />
-                <span className="font-medium">Quay lại</span>
-              </button>
+          <section className="pt-12 pb-8 px-4">
+            <div className="max-w-5xl mx-auto">
+              <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl p-8 md:p-12">
+                <button
+                  onClick={handleBackToList}
+                  className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer"
+                >
+                  <ArrowLeft size={20} />
+                  <span>Quay lại</span>
+                </button>
 
-              <div className="text-center">
-                <BookOpen className="w-16 h-16 text-white mx-auto mb-4" />
-                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                  Thêm Chương Mới
-                </h1>
-                <p className="text-emerald-100 text-lg">
-                  Mở rộng nội dung blog của bạn
-                </p>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <BookOpen className="w-10 h-10 text-white" />
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                    Thêm Chương Mới
+                  </h1>
+                  <p className="text-emerald-50 text-lg">
+                    Mở rộng nội dung blog của bạn
+                  </p>
+                </div>
               </div>
             </div>
           </section>
@@ -1258,89 +1276,12 @@ export default function BlogManagementContent() {
                       <KnowledgeBlockCard
                         key={index}
                         block={block}
-                        index={
-                          (selectedBlog?.knowledgeBlocks?.length || 0) + index
-                        }
+                        index={index}
+                        displayIndex={(selectedBlog?.knowledgeBlocks?.length || 0) + index + 1}
                         onEdit={handleEditBlock}
                         onDelete={handleDeleteBlock}
                       />
                     ))}
-                  </div>
-                )}
-
-                {isAddingBlock && (
-                  <div className="border-2 border-emerald-200 rounded-xl p-6 bg-emerald-50">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">
-                      {editingBlockIndex !== null
-                        ? "Chỉnh sửa chương"
-                        : "Thêm chương mới"}
-                    </h3>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Tiêu đề chương{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={blockTitle}
-                          onChange={(e) => setBlockTitle(e.target.value)}
-                          placeholder="Nhập tiêu đề chương..."
-                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white"
-                          maxLength={200}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Nội dung chương{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <textarea
-                          value={blockContent}
-                          onChange={(e) => setBlockContent(e.target.value)}
-                          placeholder="Nhập nội dung chương..."
-                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent resize-none bg-white"
-                          rows={6}
-                          maxLength={5000}
-                        />
-                        <div className="text-xs text-gray-500 text-right mt-1">
-                          {blockContent.length}/5000
-                        </div>
-                      </div>
-
-                      <ImageUpload
-                        image={blockImage}
-                        onImageChange={handleBlockImageChange}
-                        onImageRemove={() => {
-                          setBlockImage("");
-                          setBlockImageData("");
-                        }}
-                        label={
-                          <>
-                            Ảnh chương <span className="text-red-500">*</span>
-                          </>
-                        }
-                      />
-
-                      <div className="flex gap-3 justify-end pt-4">
-                        <button
-                          type="button"
-                          onClick={handleCancelBlock}
-                          className="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
-                        >
-                          Hủy
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleSaveBlock}
-                          className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold transition-all"
-                        >
-                          {editingBlockIndex !== null ? "Cập nhật" : "Thêm"}
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 )}
 
@@ -1360,6 +1301,72 @@ export default function BlogManagementContent() {
                   </div>
                 )}
               </div>
+
+              {/* Modal for Adding/Editing Block */}
+              <Modal
+                isOpen={isAddingBlock}
+                onClose={handleCancelBlock}
+                title={editingBlockIndex !== null ? "Chỉnh sửa chương" : "Thêm chương mới"}
+              >
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Tiêu đề chương{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={blockTitle}
+                      onChange={(e) => setBlockTitle(e.target.value)}
+                      placeholder="Nhập tiêu đề chương..."
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white"
+                      maxLength={200}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Nội dung chương{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={blockContent}
+                      onChange={(e) => setBlockContent(e.target.value)}
+                      placeholder="Nhập nội dung chương..."
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent resize-none bg-white"
+                      rows={6}
+                      maxLength={5000}
+                    />
+                    <div className="text-xs text-gray-500 text-right mt-1">
+                      {blockContent.length}/5000
+                    </div>
+                  </div>
+
+                  <ImageUpload
+                    image={blockImage}
+                    onImageChange={handleBlockImageChange}
+                    onImageRemove={() => {
+                      setBlockImage("");
+                      setBlockImageData("");
+                    }}
+                    label={
+                      <>
+                        Ảnh chương <span className="text-red-500">*</span>
+                      </>
+                    }
+                  />
+
+                  <div className="pt-4">
+                    <button
+                      type="button"
+                      onClick={handleSaveBlock}
+                      className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition"
+                    >
+                      {editingBlockIndex !== null ? "Cập nhật" : "Thêm"}
+                    </button>
+                  </div>
+                </div>
+              </Modal>
 
               {/* Action Buttons */}
               <div className="flex justify-between items-center">
@@ -1395,156 +1402,122 @@ export default function BlogManagementContent() {
       {/* ========== BLOG DETAIL VIEW ========== */}
       {view === "detail" && viewingBlog && (
         <>
-          <section className="bg-gradient-to-r from-emerald-700 to-emerald-900 pt-20 pb-12">
-            <div className="max-w-[1400px] mx-auto">
-              <div className="px-4">
+          {/* Header - matching other pages */}
+          <section className="pt-12 pb-8 px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl p-8 md:p-12">
+                {/* Back button inside card */}
                 <button
                   onClick={handleBackToList}
-                  className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors group mb-8 -ml-4"
+                  className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer"
                 >
-                  <ArrowLeft
-                    className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform"
-                  />
-                  <span className="font-medium">Quay lại danh sách</span>
+                  <ArrowLeft size={20} />
+                  <span>Quay lại</span>
                 </button>
-              </div>
 
-              <div className="max-w-[1000px] mx-auto text-center px-4">
-                <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                  {viewingBlog.title}
-                </h1>
-                <div className="flex items-center justify-center gap-4 text-emerald-100 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
-                    <span>
-                      {new Date(viewingBlog.created_at).toLocaleDateString(
-                        "vi-VN"
-                      )}
-                    </span>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <BookOpen className="w-10 h-10 text-white" />
                   </div>
-                  {viewingBlog.knowledgeBlocks &&
-                    viewingBlog.knowledgeBlocks.length > 0 && (
-                      <>
-                        <span>•</span>
-                        <div className="flex items-center gap-2">
-                          <Book className="w-5 h-5" />
-                          <span>{viewingBlog.knowledgeBlocks.length} chương</span>
-                        </div>
-                      </>
-                    )}
+                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                    {viewingBlog.title}
+                  </h1>
+                  <div className="flex items-center justify-center gap-4 text-emerald-50 text-lg flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      <span>
+                        {new Date(viewingBlog.created_at).toLocaleDateString(
+                          "vi-VN"
+                        )}
+                      </span>
+                    </div>
+                    {viewingBlog.knowledgeBlocks &&
+                      viewingBlog.knowledgeBlocks.length > 0 && (
+                        <>
+                          <span>•</span>
+                          <div className="flex items-center gap-2">
+                            <Book className="w-5 h-5" />
+                            <span>{viewingBlog.knowledgeBlocks.length} chương</span>
+                          </div>
+                        </>
+                      )}
+                  </div>
                 </div>
               </div>
             </div>
           </section>
 
+          {/* Main Content - no sidebar */}
           <section className="py-12 px-4">
-            <div className="max-w-[1500px] mx-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-8">
-                {/* Sidebar - Table of Contents */}
-                {viewingBlog.knowledgeBlocks &&
-                  viewingBlog.knowledgeBlocks.length > 0 && (
-                    <div className="lg:sticky lg:top-24 h-fit">
-                      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-                        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 uppercase text-sm tracking-wide">
-                          <BookOpen className="w-4 h-4 text-emerald-600" />
-                          Mục lục
-                        </h3>
-                        <nav className="space-y-1">
-                          {viewingBlog.knowledgeBlocks.map((block, index) => (
-                            <div
-                              key={block._id || index}
-                              className="flex items-center gap-3 px-4 py-5 text-sm font-medium rounded-lg border-l-4 border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-                            >
-                              <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-gray-100 text-gray-500">
-                                {index + 1}
-                              </span>
-                              <span className="truncate">{block.title}</span>
-                            </div>
-                          ))}
-                        </nav>
+            <div className="max-w-4xl mx-auto space-y-8">
+              {/* Introduction */}
+              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <BookOpen className="text-emerald-600" size={28} />
+                  Giới thiệu
+                </h2>
+                <p className="text-gray-700 leading-relaxed text-lg">
+                  {viewingBlog.content}
+                </p>
+              </div>
+
+              {/* Knowledge Blocks */}
+              {viewingBlog.knowledgeBlocks &&
+                viewingBlog.knowledgeBlocks.map((block, index) => (
+                  <div
+                    key={block._id || index}
+                    className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200"
+                  >
+                    {/* Block Image */}
+                    {block.image && (
+                      <div className="relative h-96 w-full">
+                        <Image
+                          src={block.image}
+                          alt={block.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+
+                    {/* Block Content */}
+                    <div className="p-8">
+                      <div className="flex items-start gap-4 mb-6">
+                        <div className="flex-shrink-0 w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                          {index + 1}
+                        </div>
+                        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 flex-1">
+                          {block.title}
+                        </h2>
+                      </div>
+                      <div className="text-gray-700 leading-relaxed text-lg whitespace-pre-line">
+                        {block.content}
                       </div>
                     </div>
-                  )}
-
-                {/* Main Content */}
-                <div className="space-y-8">
-                  {/* Introduction */}
-                  <div className="bg-white rounded-xl shadow-md p-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                      Giới thiệu
-                    </h2>
-                    <p className="text-gray-700 leading-relaxed text-lg">
-                      {viewingBlog.content}
-                    </p>
                   </div>
+                ))}
 
-                  {/* Knowledge Blocks */}
-                  {viewingBlog.knowledgeBlocks &&
-                    viewingBlog.knowledgeBlocks.map((block, index) => (
-                      <div
-                        key={block._id || index}
-                        className="bg-white rounded-xl shadow-md overflow-hidden"
-                      >
-                        {/* Block Image */}
-                        {block.image && (
-                          <div className="relative h-80 w-full">
-                            <Image
-                              src={block.image}
-                              alt={block.title}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-
-                        {/* Block Content */}
-                        <div className="p-8">
-                          <div className="flex items-start gap-4 mb-4">
-                            <div className="flex-shrink-0 w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold">
-                              {index + 1}
-                            </div>
-                            <h2 className="text-2xl font-bold text-gray-900 flex-1">
-                              {block.title}
-                            </h2>
-                          </div>
-                          <div className="text-gray-700 leading-relaxed text-lg ml-14 whitespace-pre-line">
-                            {block.content}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                  {/* Navigation Buttons */}
-                  <div className="flex justify-between items-center pt-8">
-                    <button
-                      onClick={handleBackToList}
-                      className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full font-medium transition-colors"
-                    >
-                      <ArrowLeft className="w-5 h-5" />
-                      Quay lại danh sách
-                    </button>
-
-                    <button
-                      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                      className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-medium transition-colors"
-                    >
-                      Lên đầu trang
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 10l7-7m0 0l7 7m-7-7v18"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+              {/* Bottom Action Button */}
+              <div className="flex justify-center pt-8">
+                <button
+                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                  className="flex items-center gap-2 px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-lg"
+                >
+                  Lên đầu trang
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 10l7-7m0 0l7 7m-7-7v18"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
           </section>
