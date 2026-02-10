@@ -274,6 +274,74 @@ export const blogAPI = {
       throw error;
     }
   },
+
+  // Tạo blog mới
+  async createBlog(data) {
+    try {
+      const response = await apiClient.post("/blog/knowledge", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating blog:", error);
+      throw error;
+    }
+  },
+
+  // Cập nhật blog
+  async updateBlog(blogId, data) {
+    try {
+      const response = await apiClient.patch(`/blog/knowledge/${blogId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating blog:", error);
+      throw error;
+    }
+  },
+
+  // Thêm knowledge block vào blog
+  async addKnowledgeBlock(blogId, blockData) {
+    try {
+      const response = await apiClient.post(`/blog/knowledge/${blogId}/block`, blockData);
+      return response.data;
+    } catch (error) {
+      console.error("Error adding knowledge block:", error);
+      throw error;
+    }
+  },
+
+  // Cập nhật knowledge block
+  async updateKnowledgeBlock(blockId, blockData) {
+    try {
+      const response = await apiClient.patch(`/blog/knowledge/block/${blockId}`, blockData);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating knowledge block:", error);
+      throw error;
+    }
+  },
+
+  // Xóa knowledge block
+  async deleteKnowledgeBlock(blockId) {
+    try {
+      const response = await apiClient.delete(`/blog/knowledge/block/${blockId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting knowledge block:", error);
+      throw error;
+    }
+  },
+
+  // Lấy blog của user hiện tại (thêm filter author_id)
+  async getMyBlogs() {
+    try {
+      const response = await apiClient.get("/blog/knowledge", {
+        params: { sort: "newest" }
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching my blogs:", error);
+      throw error;
+    }
+  }
 };
 
 // Product API

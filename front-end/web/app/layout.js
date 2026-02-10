@@ -1,7 +1,6 @@
 "use client";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import AiFloatingButton from "@/components/AiFloatingButton";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -28,9 +27,6 @@ export default function RootLayout({ children }) {
     checkAuth();
   }, [checkAuth]);
 
-  //  Hide on chat routes
-  const hideAiButton = pathname.startsWith("/chat");
-
   return (
     <html lang="en">
       <body
@@ -40,7 +36,7 @@ export default function RootLayout({ children }) {
         <Toaster />
         <AuthProvider>
           {children}
-          {!hideAiButton && <AiFloatingButton />}
+         
         </AuthProvider>
       </body>
     </html>

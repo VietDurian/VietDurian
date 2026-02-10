@@ -1,0 +1,37 @@
+@startuml 69_viewBlogDetail
+skinparam shadowing false
+skinparam sequenceArrowThickness 1
+hide footbox
+
+actor Farmer as "Users"
+boundary BlogPage as UI 
+control blogController as Controller 
+participant ":blogService" as Service 
+participant ":knowledgeBlogModel" as Model 
+database Database as DB 
+
+
+Farmer -> UI : 1. Users click on a specific blog
+activate Farmer
+activate UI
+UI -> Controller : 2. Get blog detail request
+activate Controller
+
+Controller -> Service : 3. getKnowledgeBlogDetail(blogId)
+activate Service
+Service -> Model : 4. findById(blogId)
+activate Model
+Model -> DB : 5. Execute query
+activate DB
+DB --> Model : 6. Return result
+deactivate DB
+Model --> Service : 7. Return blog detail
+deactivate Model
+Service --> Controller : 8. Return blog detail
+deactivate Service
+Controller --> UI : 9. Show blog detail
+deactivate Controller
+UI --> Farmer : 10. Display blog detail
+deactivate UI
+deactivate Farmer
+@enduml

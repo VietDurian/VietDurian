@@ -20,6 +20,7 @@ opt Invalid Input or fields left empty
 end
 
 View -> Controller : 3. Create post request
+activate Controller
 
 Controller -> Service : 4. createGeneralPost(postData)
 activate Service
