@@ -46,7 +46,7 @@ export default function ProductsPage() {
   });
   const router = useRouter();
   const { authUser } = useAuthStore();
-  const { setSelectedUser } = useChatStore();
+  const { setSelectedUser, addContact } = useChatStore();
 
   const handleImageError = (productId) => {
     setImageErrors((prev) => ({
@@ -69,11 +69,14 @@ export default function ProductsPage() {
 
     if (!receiverId) return;
 
-    setSelectedUser({
+    const chatUser = {
       _id: receiverId,
       full_name: owner.full_name || "Người bán",
       avatar: owner.avatar || "images/avatar.jpg",
-    });
+    };
+
+    addContact(chatUser);
+    setSelectedUser(chatUser);
 
     router.push("/chat");
   };
