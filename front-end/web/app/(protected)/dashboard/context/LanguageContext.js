@@ -100,6 +100,15 @@ const translations = {
 		view_all: 'Xem tất cả',
 		view_details: 'Xem chi tiết',
 
+		// Product rating page
+		product_ratings: 'Đánh giá sản phẩm',
+		manage_product_ratings: 'Danh sách sản phẩm sắp xếp theo đánh giá từ cao đến thấp',
+		no_products: 'Không có sản phẩm',
+		rating: 'Đánh giá',
+		out_of_5: 'trên 5',
+		list: 'Danh sách',
+		failed_to_load_products: 'Không thể tải danh sách sản phẩm',
+
 		// Users Page
 		user_management: 'Quản lý người dùng',
 		search_users: 'Tìm kiếm người dùng...',
@@ -375,6 +384,15 @@ const translations = {
 		content_moderation: 'Content moderation',
 		view_all: 'View all',
 		view_details: 'View details',
+
+		// Product rating widget
+		product_ratings: 'Product ratings',
+		manage_product_ratings: 'Products sorted by rating from high to low',
+		no_products: 'No products',
+		rating: 'Rating',
+		out_of_5: 'out of 5',
+		list: 'List',
+		failed_to_load_products: 'Failed to load products',
 
 		// Users Page
 		user_management: 'User Management',
