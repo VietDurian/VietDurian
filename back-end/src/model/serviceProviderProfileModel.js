@@ -41,7 +41,6 @@ const serviceProviderProfileSchema = new mongoose.Schema(
         },
     },
     {
-        collection: "service_provider_profiles",
         timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
     }
 );

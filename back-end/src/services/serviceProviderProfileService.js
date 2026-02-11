@@ -61,7 +61,17 @@ const updateCapabilityProfile = async (userId, payload) => {
     }
 };
 
+const getCapabilityProfile = async (userId) => {
+    try {
+        const profile = await ServiceProviderProfile.findOne({ user_id: userId });
+        return profile;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const serviceProviderProfileService = {
     addCapabilityProfile,
     updateCapabilityProfile,
+    getCapabilityProfile,
 };
