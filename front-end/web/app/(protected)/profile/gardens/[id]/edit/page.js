@@ -1,12 +1,21 @@
 "use client";
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Save, X, Sprout, Check, ImageIcon } from "lucide-react";
 import { useGardenStore } from "@/store/useGardenStore";
 
-export default function CreateGarden() {
+export default function EditGarden() {
   const router = useRouter();
-  const { createGarden } = useGardenStore();
+  const params = useParams();
+  const gardenId = params.id;
+
+  const {
+    getGardenDetails,
+    editGarden,
+    gardenDetail,
+    isGardenDetailsLoading,
+    isGardenEditing,
+  } = useGardenStore();
   const [formData, setFormData] = useState({
     name: "",
     crop_type: "",
@@ -22,9 +31,33 @@ export default function CreateGarden() {
   const fileInputRef = useRef(null);
   const [imageData, setImageData] = useState("");
 
+  // 🔽 Load garden data
+  useEffect(() => {
+    if (gardenId) getGardenDetails(gardenId);
+  }, [gardenId, getGardenDetails]);
+
+  // 🔽 Fill form when data arrives
+  useEffect(() => {
+    if (!gardenDetail?._id) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      name: gardenDetail.name || "",
+      crop_type: gardenDetail.crop_type || "",
+      area: gardenDetail.area || "",
+      location: gardenDetail.location || "",
+      latitude: gardenDetail.latitude || "",
+      longitude: gardenDetail.longitude || "",
+      description: gardenDetail.description || "",
+      image: gardenDetail.image || "",
+    }));
+
+    setImagePreview(gardenDetail.image || "");
+  }, [gardenDetail]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    createGarden(formData);
+    editGarden(gardenId, formData);
     router.push("/profile/gardens");
   };
 
@@ -67,7 +100,7 @@ export default function CreateGarden() {
         <div className="max-w-4xl mx-auto px-6 py-6">
           <button
             onClick={() => router.push("/profile/gardens")}
-            className="cursor-pointer inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Trở lại vườn cây
@@ -78,10 +111,10 @@ export default function CreateGarden() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Tạo khu vườn mới
+                Chỉnh sửa khu vườn
               </h1>
               <p className="text-gray-600 text-sm">
-                Thêm một khu vườn cho bộ sưu tập của bạn
+                Chỉnh sửa thông tin khu vườn của bạn
               </p>
             </div>
           </div>
@@ -300,18 +333,18 @@ export default function CreateGarden() {
           <div className="flex items-center gap-4 mt-8 pt-6 border-t border-gray-200">
             <button
               type="submit"
-              className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
             >
               <Check className="w-4 h-4" />
-              Tạo khu vườn
+              Lưu thông tin
             </button>
             <button
               type="button"
               onClick={() => router.push("/profile/gardens")}
-              className="cursor-pointer inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors border border-gray-300"
+              className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors border border-gray-300"
             >
               <X className="w-4 h-4" />
-              Cancel
+              Hủy
             </button>
           </div>
         </form>
