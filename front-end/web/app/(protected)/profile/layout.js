@@ -7,14 +7,12 @@ export default function ProfileLayout({ children }) {
   const { authUser } = useAuthStore();
 
   return (
-    <html lang="en">
-      <body suppressHydrationWarning>
-        <Navbar />
-        <AsideBar role={authUser?.role} />
-        <main className="mt-14 ml-64 overflow-y-auto bg-gray-100">
-          {children}
-        </main>
-      </body>
-    </html>
+    <>
+      <Navbar />
+      <AsideBar role={authUser?.role} />
+      <main className="mt-14 ml-64 overflow-y-auto bg-gray-100">
+        {children}
+      </main>
+    </>
   );
 }
