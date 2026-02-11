@@ -4,6 +4,7 @@ import { Users, UserCheck, MessageSquareText, Newspaper, Loader2 } from 'lucide-
 import { GardenHeatmap } from './GardenHeatmap';
 import { UserChart } from './UserChart';
 import { PostBlogChart } from './PostBlogChart';
+import { ProductRatingPage } from './ProductRatingPage';
 import { StatsCard } from './StatsCard';
 import { useLanguage } from '../context/LanguageContext';
 import { usersAPI, blogAPI, getOwnPosts } from '../../../../lib/api';
@@ -228,10 +229,11 @@ export function DashboardPage({ onNavigate }) {
             </div>
 
             {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-4 md:gap-6 mb-6 md:mb-8">
                 <UserChart />
                 <GardenHeatmap />
                 <PostBlogChart />
+                <ProductRatingPage />
             </div>
         </div>
     );
