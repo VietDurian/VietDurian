@@ -98,6 +98,13 @@ Router.get(
 	gardenController.viewMap,
 );
 
+Router.post(
+	'/geocode',
+	authMiddleware.protect,
+	authorizationMiddleware.isAdmin,
+	gardenController.geocodeGardens,
+);
+
 /**
  * @swagger
  * /garden/{garden_id}:
