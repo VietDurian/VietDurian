@@ -27,6 +27,14 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
+// Garden API
+export const gardenAPI = {
+  async getGardensForMap() {
+    const response = await apiClient.get("/garden/map");
+    return response.data;
+  },
+};
+
 // Interceptor để tự động thêm token vào mỗi request
 apiClient.interceptors.request.use(
   (config) => {
