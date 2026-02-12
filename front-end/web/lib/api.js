@@ -908,4 +908,41 @@ export const favoriteAPI = {
     }
   },
 };
+
+// Service Provider Capability Profile API
+export const capabilityProfileAPI = {
+  // Tạo capability profile (chỉ tạo được 1 lần)
+  async create(data) {
+    try {
+      const response = await apiClient.post("/capability-profile", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error creating capability profile:", error);
+      throw error;
+    }
+  },
+
+  // Xem capability profile (nếu không truyền user_id thì lấy của chính mình)
+  async get(userId = null) {
+    try {
+      const params = userId ? { user_id: userId } : {};
+      const response = await apiClient.get("/capability-profile", { params });
+      return response.data;
+    } catch (error) {
+      // Bỏ console.error đi
+      throw error;
+    }
+  },
+
+  // Cập nhật capability profile
+  async update(data) {
+    try {
+      const response = await apiClient.put("/capability-profile", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating capability profile:", error);
+      throw error;
+    }
+  },
+};
 export default apiClient;
