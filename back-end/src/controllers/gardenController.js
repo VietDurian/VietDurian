@@ -16,6 +16,23 @@ const viewMap = async (req, res, next) => {
   }
 };
 
+// Admin: batch geocode gardens missing coordinates (cache lat/lng by location)
+const geocodeGardens = async (req, res, next) => {
+  try {
+    const limit = req.query?.limit;
+    const result = await gardenService.geocodeAllMissingGardens({ limit });
+
+    res.status(200).json({
+      code: 200,
+      success: true,
+      message: "Garden geocoding completed",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Get user's gardens
 const getUserGardens = async (req, res, next) => {
   try {
@@ -148,6 +165,7 @@ const deleteGarden = async (req, res, next) => {
 
 export const gardenController = {
   viewMap,
+  geocodeGardens,
   getUserGardens,
   getGardenDetails,
   registerGarden,
