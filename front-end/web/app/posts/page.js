@@ -9,17 +9,17 @@ import {
     ImageIcon,
     AlertCircle,
     Loader2,
-    CheckCircle,
-    Clock,
-    XCircle,
     Search,
     Filter,
     X,
+    Briefcase,
+    Users,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { favoriteAPI } from "@/lib/api";
+import { favoriteAPI, getOwnPosts } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
+import Navbar from "@/components/Navbar";
 
 const POST_CATEGORIES = [
     "Tất cả",
@@ -30,73 +30,15 @@ const POST_CATEGORIES = [
     "Khác",
 ];
 
-const STATUS_OPTIONS = [
-    { value: "all", label: "Tất cả trạng thái" },
-    { value: "active", label: "Đã duyệt" },
-    { value: "pending", label: "Đang chờ duyệt" },
-];
-
 const SORT_OPTIONS = [
     { value: "newest", label: "Mới nhất" },
     { value: "oldest", label: "Cũ nhất" },
 ];
 
-// Status Badge Component
-const StatusBadge = ({ status }) => {
-    const statusConfig = {
-        pending: {
-            icon: Clock,
-            text: "Đang chờ duyệt",
-            bgColor: "bg-amber-50",
-            textColor: "text-amber-700",
-            iconColor: "text-amber-500",
-            borderColor: "border-amber-200",
-        },
-        active: {
-            icon: CheckCircle,
-            text: "Đã duyệt",
-            bgColor: "bg-emerald-50",
-            textColor: "text-emerald-700",
-            iconColor: "text-emerald-500",
-            borderColor: "border-emerald-200",
-        },
-        rejected: {
-            icon: XCircle,
-            text: "Bị từ chối",
-            bgColor: "bg-red-50",
-            textColor: "text-red-700",
-            iconColor: "text-red-500",
-            borderColor: "border-red-200",
-        },
-        inactive: {
-            icon: AlertCircle,
-            text: "Ngưng hoạt động",
-            bgColor: "bg-gray-50",
-            textColor: "text-red-700",
-            iconColor: "text-red-500",
-            borderColor: "border-red-200",
-        },
-    };
-
-    const config = statusConfig[status] || statusConfig.pending;
-    const Icon = config.icon;
-
-    return (
-        <div
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${config.bgColor} ${config.borderColor} ${config.textColor} text-xs font-medium`}
-        >
-            <Icon size={14} className={config.iconColor} />
-            <span>{config.text}</span>
-        </div>
-    );
-};
-
-// Filter Bar Component
+// Filter Bar Component - FIXED DROPDOWN STYLE
 const FilterBar = ({
     selectedCategory,
     onCategoryChange,
-    selectedStatus,
-    onStatusChange,
     selectedSort,
     onSortChange,
     searchQuery,
@@ -104,17 +46,20 @@ const FilterBar = ({
     onClearFilters,
 }) => {
     const [showFilters, setShowFilters] = useState(false);
+    const [showSortDropdown, setShowSortDropdown] = useState(false);
 
     const hasActiveFilters =
         selectedCategory !== "Tất cả" ||
-        selectedStatus !== "all" ||
         selectedSort !== "newest" ||
         searchQuery.trim() !== "";
 
+    const selectedSortLabel = SORT_OPTIONS.find(opt => opt.value === selectedSort)?.label || "Mới nhất";
+
     return (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-5 mb-6">
-            {/* Search Bar */}
-            <div className="flex gap-3 mb-4">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-6">
+            {/* Top Row: Search + Sort + Filter Button */}
+            <div className="flex gap-3 mb-0">
+                {/* Search Input */}
                 <div className="flex-1 relative">
                     <Search
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -125,27 +70,63 @@ const FilterBar = ({
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
                         placeholder="Tìm kiếm bài viết..."
-                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white"
                     />
                 </div>
+
+                {/* Sort Dropdown - GIỐNG FORM POST/EDIT */}
+                <div className="relative">
+                    <button
+                        type="button"
+                        onClick={() => setShowSortDropdown(!showSortDropdown)}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white transition-all cursor-pointer text-left flex justify-between items-center min-w-[140px]"
+                    >
+                        <span>{selectedSortLabel}</span>
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    {showSortDropdown && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                            {SORT_OPTIONS.map((option) => (
+                                <div
+                                    key={option.value}
+                                    onClick={() => {
+                                        onSortChange(option.value);
+                                        setShowSortDropdown(false);
+                                    }}
+                                    className={`px-3 py-2 cursor-pointer transition-colors text-sm ${selectedSort === option.value
+                                        ? 'bg-emerald-600 text-white font-medium'
+                                        : 'text-gray-900 hover:bg-emerald-500 hover:text-white'
+                                        }`}
+                                >
+                                    {option.label}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Filter Toggle Button */}
                 <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition ${showFilters
-                            ? "bg-emerald-600 text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${showFilters
+                        ? "bg-emerald-600 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                         }`}
                 >
                     <Filter size={20} />
-                    Lọc
+                    <span className="hidden sm:inline">Lọc</span>
                 </button>
             </div>
 
-            {/* Filter Options */}
+            {/* Expandable Filter Section */}
             {showFilters && (
-                <div className="space-y-4 pt-4 border-t border-gray-200">
+                <div className="pt-4 mt-4 border-t border-gray-200 space-y-4">
                     {/* Category Filter */}
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">
                             Danh mục
                         </label>
                         <div className="flex flex-wrap gap-2">
@@ -153,9 +134,9 @@ const FilterBar = ({
                                 <button
                                     key={category}
                                     onClick={() => onCategoryChange(category)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${selectedCategory === category
-                                            ? "bg-emerald-600 text-white"
-                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedCategory === category
+                                        ? "bg-emerald-600 text-white shadow-md"
+                                        : "bg-gray-100 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 border border-transparent"
                                         }`}
                                 >
                                     {category}
@@ -164,50 +145,11 @@ const FilterBar = ({
                         </div>
                     </div>
 
-                    {/* Status & Sort Filters */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Status Filter */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Trạng thái
-                            </label>
-                            <select
-                                value={selectedStatus}
-                                onChange={(e) => onStatusChange(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            >
-                                {STATUS_OPTIONS.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Sort Filter */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Sắp xếp
-                            </label>
-                            <select
-                                value={selectedSort}
-                                onChange={(e) => onSortChange(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            >
-                                {SORT_OPTIONS.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
                     {/* Clear Filters Button */}
                     {hasActiveFilters && (
                         <button
                             onClick={onClearFilters}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition"
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all"
                         >
                             <X size={16} />
                             Xóa bộ lọc
@@ -215,6 +157,39 @@ const FilterBar = ({
                     )}
                 </div>
             )}
+        </div>
+    );
+};
+
+// Service Banner for Garden Owners
+const ServiceBanner = ({ onServiceFilter, isServiceFiltered }) => {
+    return (
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 mb-6 shadow-lg">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="bg-white/20 rounded-full p-3">
+                        <Briefcase className="text-white" size={32} />
+                    </div>
+                    <div className="text-white">
+                        <h3 className="text-xl font-bold mb-1">
+                            Cần thuê nhân công?
+                        </h3>
+                        <p className="text-emerald-50 text-sm">
+                            Xem các dịch vụ phun thuốc, diệt sâu, thu hoạch từ nhân công chuyên nghiệp
+                        </p>
+                    </div>
+                </div>
+                <button
+                    onClick={onServiceFilter}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all shadow-md whitespace-nowrap ${isServiceFiltered
+                        ? "bg-white text-emerald-700 hover:bg-emerald-50"
+                        : "bg-emerald-700 text-white hover:bg-emerald-800"
+                        }`}
+                >
+                    <Users size={20} />
+                    {isServiceFiltered ? "Xem tất cả" : "Xem dịch vụ"}
+                </button>
+            </div>
         </div>
     );
 };
@@ -265,9 +240,13 @@ const Post = ({ post, onLikeUpdate }) => {
     const isEmail = post.contact?.includes("@");
     const ContactIcon = isEmail ? Mail : Phone;
 
+    // Kiểm tra nếu là bài viết dịch vụ
+    const isServicePost = post.category === "Dịch vụ";
+
     return (
         <>
-            <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-shadow w-full">
+            <article className={`bg-white border rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-all w-full ${isServicePost ? "border-emerald-300 ring-2 ring-emerald-100" : "border-gray-200"
+                }`}>
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex gap-3">
                         <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100">
@@ -282,10 +261,18 @@ const Post = ({ post, onLikeUpdate }) => {
                                 <h4 className="font-bold text-gray-900 text-base">
                                     {post.userName}
                                 </h4>
-                                <StatusBadge status={post.status} />
+                                {/* Service Provider Badge */}
+                                {isServicePost && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">
+                                        <Briefcase size={12} />
+                                        Nhân công
+                                    </span>
+                                )}
                             </div>
                             <p className="text-gray-500 text-sm">
-                                @{post.userHandle} • {post.timestamp}
+                                {post.userHandle && post.userHandle}
+                                {post.userHandle && post.timestamp && " • "}
+                                {post.timestamp}
                             </p>
                         </div>
                     </div>
@@ -294,9 +281,12 @@ const Post = ({ post, onLikeUpdate }) => {
                 {/* Category Badge */}
                 {post.category && (
                     <div className="mb-4">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-200">
-                            <Tag size={16} className="text-teal-600" />
-                            <span className="text-sm font-semibold text-teal-700">
+                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${isServicePost
+                            ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                            : "bg-teal-50 border-teal-200 text-teal-700"
+                            }`}>
+                            <Tag size={16} />
+                            <span className="text-sm font-semibold">
                                 {post.category}
                             </span>
                         </div>
@@ -308,10 +298,13 @@ const Post = ({ post, onLikeUpdate }) => {
                     <p className="whitespace-pre-wrap">{post.content}</p>
                 </div>
 
-                {/* Contact Info */}
+                {/* Contact Info - Highlighted for Service Posts */}
                 {post.contact && (
                     <div className="mb-4">
-                        <div className="flex items-center gap-2 text-emerald-700">
+                        <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg ${isServicePost
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "text-emerald-700"
+                            }`}>
                             <ContactIcon size={18} className="text-emerald-600" />
                             <span className="text-sm font-semibold">{post.contact}</span>
                         </div>
@@ -335,8 +328,8 @@ const Post = ({ post, onLikeUpdate }) => {
                         onClick={handleLike}
                         disabled={isTogglingFavorite}
                         className={`flex items-center gap-2 transition px-3 py-1.5 rounded-lg ${isLiked
-                                ? "text-red-500"
-                                : "text-gray-500 hover:text-red-500 hover:bg-red-50"
+                            ? "text-red-500"
+                            : "text-gray-500 hover:text-red-500 hover:bg-red-50"
                             } ${isTogglingFavorite ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                         {isTogglingFavorite ? (
@@ -387,120 +380,96 @@ export default function PostsContent() {
 
     // Filter states
     const [selectedCategory, setSelectedCategory] = useState("Tất cả");
-    const [selectedStatus, setSelectedStatus] = useState("all");
     const [selectedSort, setSelectedSort] = useState("newest");
     const [searchQuery, setSearchQuery] = useState("");
 
-    // ===== MOCK DATA FOR UI TESTING =====
+    // Check if user is garden owner
+    const isGardenOwner = user?.role === "garden_owner";
+
+    // Load posts
     useEffect(() => {
-        // TODO: Replace with actual API call
-        // const loadPosts = async () => {
-        //   setLoadingPosts(true);
-        //   try {
-        //     const response = await fetch('/api/post/general?...');
-        //     const data = await response.json();
-        //     setPosts(normalizedPosts);
-        //   } catch (error) {
-        //     setPostsError(error.message);
-        //   } finally {
-        //     setLoadingPosts(false);
-        //   }
-        // };
+        let isCancelled = false;
 
-        // Mock data for UI testing
-        const mockPosts = [
-            {
-                id: "1",
-                userName: "Nguyễn Văn A",
-                userHandle: "nguyenvana",
-                userAvatar: "/images/avatar.jpg",
-                timestamp: "2 giờ trước",
-                content:
-                    "Trang trại sầu riêng của tôi đang thu hoạch mùa vụ mới! Sầu riêng Ri6 chất lượng cao, giá cả hợp lý. Liên hệ để đặt hàng nhé!",
-                contact: "0123456789",
-                image:
-                    "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg",
-                category: "Sản phẩm",
-                likes: 24,
-                comments: 8,
-                shares: 3,
-                status: "active",
-                isLiked: false,
-            },
-            {
-                id: "2",
-                userName: "Trần Thị B",
-                userHandle: "tranthib",
-                userAvatar: "/images/avatar.jpg",
-                timestamp: "5 giờ trước",
-                content:
-                    "Chia sẻ kinh nghiệm trồng sầu riêng hiệu quả: Cần chú ý đến độ pH của đất, tưới nước đều đặn và bón phân đúng cách. Ai cần tư vấn cứ inbox nhé!",
-                contact: "consultb@example.com",
-                image:
-                    "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg",
-                category: "Kinh nghiệm",
-                likes: 45,
-                comments: 12,
-                shares: 7,
-                status: "active",
-                isLiked: true,
-            },
-            {
-                id: "3",
-                userName: "Lê Văn C",
-                userHandle: "levanc",
-                userAvatar: "/images/avatar.jpg",
-                timestamp: "1 ngày trước",
-                content:
-                    "Cần thuê máy cày ruộng trong 3 ngày. Ai có dịch vụ cho thuê máy móc nông nghiệp liên hệ với tôi.",
-                contact: "0987654321",
-                image: null,
-                category: "Thuê dịch vụ",
-                likes: 12,
-                comments: 5,
-                shares: 1,
-                status: "active",
-                isLiked: false,
-            },
-            {
-                id: "4",
-                userName: "Phạm Thị D",
-                userHandle: "phamthid",
-                userAvatar: "/images/avatar.jpg",
-                timestamp: "2 ngày trước",
-                content:
-                    "Dịch vụ tư vấn kỹ thuật trồng sầu riêng chuyên nghiệp. Đội ngũ chuyên gia 10 năm kinh nghiệm. Báo giá miễn phí!",
-                contact: "tuvan@example.com",
-                image:
-                    "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg",
-                category: "Dịch vụ",
-                likes: 67,
-                comments: 23,
-                shares: 15,
-                status: "active",
-                isLiked: false,
-            },
-            {
-                id: "5",
-                userName: "Hoàng Văn E",
-                userHandle: "hoangvane",
-                userAvatar: "/images/avatar.jpg",
-                timestamp: "3 ngày trước",
-                content:
-                    "Thông báo: Hội thảo về kỹ thuật trồng và chăm sóc sầu riêng sẽ diễn ra vào tuần sau. Mọi người quan tâm đăng ký sớm nhé!",
-                contact: "hoithaoe@example.com",
-                image: null,
-                category: "Khác",
-                likes: 89,
-                comments: 34,
-                shares: 28,
-                status: "pending",
-                isLiked: false,
-            },
-        ];
+        const loadPostsWithFavorites = async () => {
+            setLoadingPosts(true);
+            setPostsError(null);
 
-        setPosts(mockPosts);
-    }, []);
+            try {
+                const filters = {
+                    status: "active",
+                    sort: selectedSort,
+                };
+
+                if (selectedCategory !== "Tất cả") {
+                    filters.category = selectedCategory;
+                }
+
+                if (searchQuery.trim()) {
+                    filters.search = searchQuery.trim();
+                }
+
+                const [postsData, favoritesResponse] = await Promise.all([
+                    getOwnPosts(filters),
+                    favoriteAPI.getFavorites().catch((err) => {
+                        console.error("Error loading favorites:", err);
+                        return { data: [] };
+                    }),
+                ]);
+
+                if (isCancelled) return;
+
+                const favoritePostIds = new Set(
+                    (favoritesResponse.data || [])
+                        .map((fav) => fav.post_id?._id || fav.post_id)
+                        .filter(Boolean)
+                );
+
+                const normalizedPosts = (postsData || []).map((post) => {
+                    const postId = post._id;
+                    const isLiked = favoritePostIds.has(postId);
+
+                    const author = post.author || {};
+                    const authorName = author.full_name || author.name || author.username || "Người dùng";
+                    const authorAvatar = author.avatar || "/images/avatar.jpg";
+                    const authorEmail = author.email || "";
+
+                    return {
+                        id: postId,
+                        userName: authorName,
+                        userHandle: authorEmail,
+                        userAvatar: authorAvatar,
+                        timestamp: post.created_at
+                            ? new Date(post.created_at).toLocaleString("vi-VN")
+                            : "Vừa xong",
+                        content: post.content,
+                        contact: post.contact,
+                        image: post.image,
+                        category: post.category,
+                        likes: post.likes_count || 0,
+                        comments: post.comments_count || 0,
+                        shares: post.shares_count || 0,
+                        status: post.status || "active",
+                        isLiked: isLiked,
+                    };
+                });
+
+                setPosts(normalizedPosts);
+            } catch (error) {
+                if (isCancelled) return;
+                console.error("Error loading posts:", error);
+                setPostsError(error?.message || "Không thể tải bài viết");
+            } finally {
+                if (isCancelled) return;
+                setLoadingPosts(false);
+            }
+        };
+
+        loadPostsWithFavorites();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [selectedCategory, selectedSort, searchQuery]);
 
     const handleLikeUpdate = (postId, isLiked) => {
         setPosts((prev) =>
@@ -518,65 +487,54 @@ export default function PostsContent() {
 
     const handleClearFilters = () => {
         setSelectedCategory("Tất cả");
-        setSelectedStatus("all");
         setSelectedSort("newest");
         setSearchQuery("");
     };
 
-    // Filter and sort posts
-    const filteredPosts = posts.filter((post) => {
-        // Category filter
-        if (selectedCategory !== "Tất cả" && post.category !== selectedCategory) {
-            return false;
-        }
-
-        // Status filter
-        if (selectedStatus !== "all" && post.status !== selectedStatus) {
-            return false;
-        }
-
-        // Search filter
-        if (searchQuery.trim() !== "") {
-            const query = searchQuery.toLowerCase();
-            return (
-                post.content.toLowerCase().includes(query) ||
-                post.userName.toLowerCase().includes(query) ||
-                post.category.toLowerCase().includes(query)
-            );
-        }
-
-        return true;
-    });
-
-    // Sort posts
-    const sortedPosts = [...filteredPosts].sort((a, b) => {
-        if (selectedSort === "newest") {
-            return new Date(b.timestamp) - new Date(a.timestamp);
+    const handleServiceFilter = () => {
+        if (selectedCategory === "Dịch vụ") {
+            setSelectedCategory("Tất cả");
         } else {
-            return new Date(a.timestamp) - new Date(b.timestamp);
+            setSelectedCategory("Dịch vụ");
         }
-    });
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <Navbar />
+
             <main className="pt-20 p-5 lg:pt-24 flex flex-col justify-center items-center">
                 <div className="w-full max-w-4xl">
-                    {/* Header */}
-                    <div className="mb-6">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                            Bài viết cộng đồng
-                        </h1>
-                        <p className="text-gray-600">
-                            Khám phá và chia sẻ kiến thức về nông nghiệp
-                        </p>
+                    {/* Header with Post Count */}
+                    <div className="mb-6 flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                Bài viết cộng đồng
+                            </h1>
+                            <p className="text-gray-600">
+                                Khám phá và chia sẻ kiến thức về nông nghiệp
+                            </p>
+                        </div>
+                        {posts.length > 0 && (
+                            <div className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg border border-emerald-200">
+                                <span className="text-2xl font-bold">{posts.length}</span>
+                                <span className="text-sm ml-2">bài viết</span>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Service Banner for Garden Owners */}
+                    {isGardenOwner && (
+                        <ServiceBanner
+                            onServiceFilter={handleServiceFilter}
+                            isServiceFiltered={selectedCategory === "Dịch vụ"}
+                        />
+                    )}
 
                     {/* Filter Bar */}
                     <FilterBar
                         selectedCategory={selectedCategory}
                         onCategoryChange={setSelectedCategory}
-                        selectedStatus={selectedStatus}
-                        onStatusChange={setSelectedStatus}
                         selectedSort={selectedSort}
                         onSortChange={setSelectedSort}
                         searchQuery={searchQuery}
@@ -599,7 +557,7 @@ export default function PostsContent() {
                         </div>
                     )}
 
-                    {!loadingPosts && !postsError && sortedPosts.length === 0 && (
+                    {!loadingPosts && !postsError && posts.length === 0 && (
                         <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
                             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <ImageIcon className="text-gray-400" size={28} />
@@ -619,20 +577,9 @@ export default function PostsContent() {
                         </div>
                     )}
 
-                    {sortedPosts.map((post) => (
-                        <Post
-                            key={post.id}
-                            post={post}
-                            onLikeUpdate={handleLikeUpdate}
-                        />
+                    {posts.map((post) => (
+                        <Post key={post.id} post={post} onLikeUpdate={handleLikeUpdate} />
                     ))}
-
-                    {/* Results Count */}
-                    {sortedPosts.length > 0 && (
-                        <div className="text-center py-4 text-gray-500 text-sm">
-                            Hiển thị {sortedPosts.length} bài viết
-                        </div>
-                    )}
                 </div>
             </main>
         </div>

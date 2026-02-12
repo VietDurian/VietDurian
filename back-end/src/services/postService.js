@@ -81,33 +81,30 @@ const getGeneralPost = async ({
 		// Apply sort via Mongoose `.sort()`; if no sort provided, no sort applied.
 		const postsQuery = GeneralPostModel.find(query).populate({
 			path: 'author_id',
-			select: 'full_name avatar',
+			select: 'full_name avatar email',
 		});
 
 		const rawPosts = Object.keys(sortOption).length
 			? await postsQuery.sort(sortOption).lean()
 			: await postsQuery.lean();
 
-		const postsWithAuthor = rawPosts.map((post) => {
-			const author = post.author_id;
-			const normalizedAuthorId =
-				author && author._id
-					? author._id.toString()
-					: post.author_id?.toString?.();
+		const postsWithAuthor = rawPosts
+			.filter((post) => post.author_id) // Filter out posts with deleted/missing authors
+			.map((post) => {
+				const author = post.author_id;
+				const normalizedAuthorId = author._id.toString();
 
-			return {
-				...post,
-				author:
-					author && author._id
-						? {
-								_id: author._id.toString(),
-								full_name: author.full_name,
-								avatar: author.avatar,
-							}
-						: null,
-				author_id: normalizedAuthorId || '',
-			};
-		});
+				return {
+					...post,
+					author: {
+						_id: author._id.toString(),
+						full_name: author.full_name,
+						avatar: author.avatar,
+						email: author.email,
+					},
+					author_id: normalizedAuthorId,
+				};
+			});
 
 		if (!shouldFilterBySearch) {
 			return postsWithAuthor;
