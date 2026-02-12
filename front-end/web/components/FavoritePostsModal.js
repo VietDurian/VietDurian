@@ -59,9 +59,9 @@ const StatusBadge = ({ status }) => {
             icon: AlertCircle,
             text: "Ngưng hoạt động",
             bgColor: "bg-gray-50",
-            textColor: "text-gray-700",
-            iconColor: "text-gray-500",
-            borderColor: "border-gray-200",
+            textColor: "text-red-700",
+            iconColor: "text-red-500",
+            borderColor: "border-red-200",
         },
     };
 
