@@ -129,4 +129,10 @@ Router.delete(
 	notificationController.deleteNotification
 );
 
+Router.patch(
+	'/:id/',
+	authMiddleware.protect,
+	notificationController.markAsRead
+);
+
 export const notificationRouter = Router;

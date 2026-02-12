@@ -106,9 +106,29 @@ const Router = express.Router();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ServiceProviderProfile'
- *       404:
- *         description: Profile not found
+ *             type: object
+ *             properties:
+ *               user_id:
+ *                 type: string
+ *                 description: User ID
+ *               business_name:
+ *                 type: string
+ *                 description: Business name
+ *               services:
+ *                 type: string
+ *                 description: Services provided
+ *               service_areas:
+ *                 type: string
+ *                 description: Service areas
+ *               experience_year:
+ *                 type: integer
+ *                 description: Years of experience
+ *               contact_phone:
+ *                 type: string
+ *                 description: Contact phone
+ *               description:
+ *                 type: string
+ *                 description: Description
  *
  *   put:
  *     summary: Update capability profile for service provider

@@ -23,10 +23,11 @@ const createNotification = async ({
 
 const getNotifications = async (userId) => {
 	try {
-		return await NotificationModel.find({ receiver_id: userId })
+		const notifications = await NotificationModel.find({ receiver_id: userId })
 			.sort({ created_at: -1 })
 			.populate('sender_id', 'full_name avatar')
 			.populate('post_id', 'title');
+		return notifications;
 	} catch (error) {
 		throw error;
 	}
@@ -40,8 +41,17 @@ const deleteNotification = async (id) => {
 	}
 };
 
+const markAsRead = async (id) => {
+	try {
+		return await NotificationModel.findByIdAndUpdate(id, { is_read: true }, { new: true });
+	} catch (error) {
+		throw error;
+	}
+};
+
 export const notificationService = {
 	createNotification,
 	getNotifications,
 	deleteNotification,
+	markAsRead,
 };

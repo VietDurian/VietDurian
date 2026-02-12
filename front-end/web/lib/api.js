@@ -909,6 +909,21 @@ export const favoriteAPI = {
   },
 };
 
+export const notificationAPI = {
+  async getNotifications() {
+    const response = await apiClient.get("/notification");
+    return response.data;
+  },
+  async markAsRead(notificationId) {
+    const response = await apiClient.patch(`/notification/${notificationId}`);
+    return response.data;
+  },
+  async deleteNotification(notificationId) {
+    const response = await apiClient.delete(`/notification/${notificationId}`);
+    return response.data;
+  }
+};
+
 // Service Provider Capability Profile API
 export const capabilityProfileAPI = {
   // Tạo capability profile (chỉ tạo được 1 lần)
@@ -945,4 +960,5 @@ export const capabilityProfileAPI = {
     }
   },
 };
+
 export default apiClient;
