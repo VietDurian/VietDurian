@@ -28,7 +28,6 @@ const POST_CATEGORIES = [
     "Khác",
 ];
 
-// Status Badge Component
 const StatusBadge = ({ status }) => {
     const statusConfig = {
         pending: {
@@ -78,7 +77,6 @@ const StatusBadge = ({ status }) => {
     );
 };
 
-// Edit Post Modal Component
 const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
     const fileInputRef = useRef(null);
     const [category, setCategory] = useState(post?.category || POST_CATEGORIES[0]);
@@ -353,7 +351,6 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
     );
 };
 
-// Favorite Post Card Component
 const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
     const [isLiked, setIsLiked] = useState(true);
     const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
@@ -450,6 +447,15 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
 
     const authorInfo = getAuthorInfo();
 
+    // Check if current user owns this post
+    const isOwnPost = () => {
+        const postAuthorId = post.post_id?.author_id?._id || post.post_id?.author_id;
+        const currentUserId = user?._id || user?.id;
+        return postAuthorId === currentUserId;
+    };
+
+    const canEditDelete = isOwnPost();
+
     return (
         <>
             <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-shadow w-full">
@@ -470,57 +476,60 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
                                 <StatusBadge status={post.post_id?.status} />
                             </div>
                             <p className="text-gray-500 text-sm">
-                                {authorInfo.handle && `@${authorInfo.handle}`}
+                                {authorInfo.handle && authorInfo.handle}
                                 {authorInfo.handle && post.post_id?.created_at && " • "}
                                 {post.post_id?.created_at && formatTimestamp(post.post_id.created_at)}
                             </p>
                         </div>
                     </div>
 
-                    <div className="relative">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowMenu(!showMenu);
-                            }}
-                            className="text-gray-400 hover:bg-gray-100 p-2 rounded-full transition"
-                        >
-                            <MoreHorizontal size={20} />
-                        </button>
+                    {/* CHỈ HIỂN THỊ MENU NẾU LÀ BÀI CỦA MÌNH */}
+                    {canEditDelete && (
+                        <div className="relative">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowMenu(!showMenu);
+                                }}
+                                className="text-gray-400 hover:bg-gray-100 p-2 rounded-full transition"
+                            >
+                                <MoreHorizontal size={20} />
+                            </button>
 
-                        {showMenu && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowMenu(false);
-                                        onEdit?.(post.post_id);
-                                    }}
-                                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition flex items-center gap-2"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                    Chỉnh sửa
-                                </button>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowMenu(false);
-                                        if (window.confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
-                                            onDelete?.(post.post_id?._id);
-                                        }
-                                    }}
-                                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-2"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    Xóa
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                            {showMenu && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowMenu(false);
+                                            onEdit?.(post.post_id);
+                                        }}
+                                        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition flex items-center gap-2"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        Chỉnh sửa
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowMenu(false);
+                                            if (window.confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+                                                onDelete?.(post.post_id?._id);
+                                            }
+                                        }}
+                                        className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-2"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Xóa
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {post.post_id?.category && (
@@ -604,7 +613,6 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
     );
 };
 
-// Main Favorite Posts Component
 export default function FavoritePostsModal() {
     const [favorites, setFavorites] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -750,7 +758,6 @@ export default function FavoritePostsModal() {
                 ))}
             </div>
 
-            {/* Edit Post Modal */}
             <EditPostModal
                 isOpen={isEditModalOpen}
                 onClose={() => {
