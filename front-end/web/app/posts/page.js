@@ -35,7 +35,6 @@ const SORT_OPTIONS = [
     { value: "oldest", label: "Cũ nhất" },
 ];
 
-// Filter Bar Component - FIXED DROPDOWN STYLE
 const FilterBar = ({
     selectedCategory,
     onCategoryChange,
@@ -57,9 +56,7 @@ const FilterBar = ({
 
     return (
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-6">
-            {/* Top Row: Search + Sort + Filter Button */}
             <div className="flex gap-3 mb-0">
-                {/* Search Input */}
                 <div className="flex-1 relative">
                     <Search
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -74,7 +71,6 @@ const FilterBar = ({
                     />
                 </div>
 
-                {/* Sort Dropdown - GIỐNG FORM POST/EDIT */}
                 <div className="relative">
                     <button
                         type="button"
@@ -108,7 +104,6 @@ const FilterBar = ({
                     )}
                 </div>
 
-                {/* Filter Toggle Button */}
                 <button
                     onClick={() => setShowFilters(!showFilters)}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${showFilters
@@ -121,10 +116,8 @@ const FilterBar = ({
                 </button>
             </div>
 
-            {/* Expandable Filter Section */}
             {showFilters && (
                 <div className="pt-4 mt-4 border-t border-gray-200 space-y-4">
-                    {/* Category Filter */}
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-3">
                             Danh mục
@@ -145,7 +138,6 @@ const FilterBar = ({
                         </div>
                     </div>
 
-                    {/* Clear Filters Button */}
                     {hasActiveFilters && (
                         <button
                             onClick={onClearFilters}
@@ -161,7 +153,6 @@ const FilterBar = ({
     );
 };
 
-// Service Banner for Garden Owners
 const ServiceBanner = ({ onServiceFilter, isServiceFiltered }) => {
     return (
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 mb-6 shadow-lg">
@@ -194,7 +185,6 @@ const ServiceBanner = ({ onServiceFilter, isServiceFiltered }) => {
     );
 };
 
-// Post Component
 const Post = ({ post, onLikeUpdate }) => {
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
     const [commentCount, setCommentCount] = useState(post.comments || 0);
@@ -240,13 +230,9 @@ const Post = ({ post, onLikeUpdate }) => {
     const isEmail = post.contact?.includes("@");
     const ContactIcon = isEmail ? Mail : Phone;
 
-    // Kiểm tra nếu là bài viết dịch vụ
-    const isServicePost = post.category === "Dịch vụ";
-
     return (
         <>
-            <article className={`bg-white border rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-all w-full ${isServicePost ? "border-emerald-300 ring-2 ring-emerald-100" : "border-gray-200"
-                }`}>
+            <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-all w-full">
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex gap-3">
                         <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100">
@@ -261,13 +247,6 @@ const Post = ({ post, onLikeUpdate }) => {
                                 <h4 className="font-bold text-gray-900 text-base">
                                     {post.userName}
                                 </h4>
-                                {/* Service Provider Badge */}
-                                {isServicePost && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">
-                                        <Briefcase size={12} />
-                                        Nhân công
-                                    </span>
-                                )}
                             </div>
                             <p className="text-gray-500 text-sm">
                                 {post.userHandle && post.userHandle}
@@ -278,40 +257,30 @@ const Post = ({ post, onLikeUpdate }) => {
                     </div>
                 </div>
 
-                {/* Category Badge */}
                 {post.category && (
                     <div className="mb-4">
-                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${isServicePost
-                            ? "bg-emerald-50 border-emerald-300 text-emerald-700"
-                            : "bg-teal-50 border-teal-200 text-teal-700"
-                            }`}>
-                            <Tag size={16} />
-                            <span className="text-sm font-semibold">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-200">
+                            <Tag size={16} className="text-teal-600" />
+                            <span className="text-sm font-semibold text-teal-700">
                                 {post.category}
                             </span>
                         </div>
                     </div>
                 )}
 
-                {/* Content */}
                 <div className="text-base text-gray-800 leading-relaxed mb-4">
                     <p className="whitespace-pre-wrap">{post.content}</p>
                 </div>
 
-                {/* Contact Info - Highlighted for Service Posts */}
                 {post.contact && (
                     <div className="mb-4">
-                        <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg ${isServicePost
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "text-emerald-700"
-                            }`}>
+                        <div className="flex items-center gap-2 text-emerald-700">
                             <ContactIcon size={18} className="text-emerald-600" />
                             <span className="text-sm font-semibold">{post.contact}</span>
                         </div>
                     </div>
                 )}
 
-                {/* Image */}
                 {post.image && (
                     <div className="rounded-xl overflow-hidden mb-4 border border-gray-200">
                         <img
@@ -322,7 +291,6 @@ const Post = ({ post, onLikeUpdate }) => {
                     </div>
                 )}
 
-                {/* Action Buttons */}
                 <div className="pt-3 border-t border-gray-200 flex items-center justify-between px-1">
                     <button
                         onClick={handleLike}
@@ -371,22 +339,16 @@ const Post = ({ post, onLikeUpdate }) => {
     );
 };
 
-// Main Component
 export default function PostsContent() {
     const { user } = useAuth();
     const [posts, setPosts] = useState([]);
     const [loadingPosts, setLoadingPosts] = useState(false);
     const [postsError, setPostsError] = useState(null);
 
-    // Filter states
     const [selectedCategory, setSelectedCategory] = useState("Tất cả");
     const [selectedSort, setSelectedSort] = useState("newest");
     const [searchQuery, setSearchQuery] = useState("");
 
-    // Check if user is garden owner
-    const isGardenOwner = user?.role === "garden_owner";
-
-    // Load posts
     useEffect(() => {
         let isCancelled = false;
 
@@ -505,7 +467,6 @@ export default function PostsContent() {
 
             <main className="pt-20 p-5 lg:pt-24 flex flex-col justify-center items-center">
                 <div className="w-full max-w-4xl">
-                    {/* Header with Post Count */}
                     <div className="mb-6 flex items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -523,15 +484,11 @@ export default function PostsContent() {
                         )}
                     </div>
 
-                    {/* Service Banner for Garden Owners */}
-                    {isGardenOwner && (
-                        <ServiceBanner
-                            onServiceFilter={handleServiceFilter}
-                            isServiceFiltered={selectedCategory === "Dịch vụ"}
-                        />
-                    )}
+                    <ServiceBanner
+                        onServiceFilter={handleServiceFilter}
+                        isServiceFiltered={selectedCategory === "Dịch vụ"}
+                    />
 
-                    {/* Filter Bar */}
                     <FilterBar
                         selectedCategory={selectedCategory}
                         onCategoryChange={setSelectedCategory}
@@ -542,7 +499,6 @@ export default function PostsContent() {
                         onClearFilters={handleClearFilters}
                     />
 
-                    {/* Posts List */}
                     {loadingPosts && (
                         <div className="flex flex-col items-center justify-center py-12">
                             <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>

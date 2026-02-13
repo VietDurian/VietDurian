@@ -63,7 +63,7 @@ const RoleBadge = ({ role }) => {
     trader: { label: "Thương nhân", color: "from-blue-500 to-indigo-500" },
     farmer: { label: "Nông dân", color: "from-green-500 to-emerald-500" },
     contentExpert: { label: "Chuyên gia", color: "from-purple-500 to-pink-500" },
-    serviceProvider: { label: "Nhà cung cấp", color: "from-orange-500 to-red-500" },
+    serviceProvider: { label: "Nhà cung cấp dịch vụ", color: "from-orange-500 to-red-500" },
   };
 
   const config = roleConfig[role] || { label: role, color: "from-gray-500 to-gray-600" };

@@ -520,7 +520,7 @@ export const ratingAPI = {
 
 // Get own posts
 export async function getOwnPosts(filters = {}) {
-  const { status, category, search, author_id } = filters;
+  const { status, category, search, sort, author_id } = filters;
 
   // Build query string safely
   const params = new URLSearchParams();
@@ -528,6 +528,7 @@ export async function getOwnPosts(filters = {}) {
   if (status && status !== "--") params.append("status", status);
   if (category && category !== "--") params.append("category", category);
   if (search) params.append("search", search);
+  if (sort) params.append("sort", sort);
   if (author_id) params.append("author_id", author_id);
 
   const url = `/post/general${params.toString() ? `?${params.toString()}` : ""
