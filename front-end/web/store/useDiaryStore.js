@@ -12,6 +12,7 @@ export const useDiaryStore = create((set, get) => ({
   isDiaryEditing: false,
   isDiaryDeleting: false,
   isDiaryStepAdding: false,
+  isDiaryCompleting: false,
 
   // Get all diaries by garden_id
   getAllDiariesByGardenId: async (garden_id, year) => {
@@ -126,6 +127,38 @@ export const useDiaryStore = create((set, get) => ({
       throw error;
     } finally {
       set({ isDiaryStepAdding: false });
+    }
+  },
+
+  // Mark diary completed
+  completeDiary: async (diaryId, payload) => {
+    set({ isDiaryCompleting: true });
+    try {
+      const res = await axiosInstance.patch(
+        `/diary/${diaryId}/finish`,
+        payload,
+      );
+
+      // update list and detail with server response
+      set((state) => ({
+        diaries: state.diaries.map((d) =>
+          d._id === diaryId ? res.data.data : d,
+        ),
+        diaryDetail: res.data.data,
+      }));
+
+      // refresh detail to keep nested stages/steps in sync
+      await get().getDiaryDetails(diaryId);
+
+      toast.success(res?.data?.message || "Đã đánh dấu hoàn thành");
+      return res?.data?.data;
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Không thể hoàn thành nhật ký",
+      );
+      throw error;
+    } finally {
+      set({ isDiaryCompleting: false });
     }
   },
 }));

@@ -15,6 +15,7 @@ import {
   DollarSign,
   X,
   Image as ImageIcon,
+  BookOpenCheck,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDiaryStore } from "@/store/useDiaryStore";
@@ -28,9 +29,11 @@ export default function GardenDiaryDetail() {
     isDiaryDetailsLoading,
     isDiaryStepAdding,
     isDiaryEditing,
+    isDiaryCompleting,
     getDiaryDetails,
     addDiaryStep,
     editDiary,
+    completeDiary,
   } = useDiaryStore();
 
   const [showAddStepModal, setShowAddStepModal] = useState(false);
@@ -47,6 +50,12 @@ export default function GardenDiaryDetail() {
     title: "",
     crop_type: "",
     description: "",
+  });
+
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [completeForm, setCompleteForm] = useState({
+    weight_durian: "",
+    price: "",
   });
 
   const [imagePreview, setImagePreview] = useState("");
@@ -111,6 +120,11 @@ export default function GardenDiaryDetail() {
     }
   };
 
+  const closeCompleteModal = () => {
+    setShowCompleteModal(false);
+    setCompleteForm({ weight_durian: "", price: "" });
+  };
+
   const handleAddStep = async (e) => {
     e.preventDefault();
 
@@ -148,6 +162,25 @@ export default function GardenDiaryDetail() {
         description: editForm.description.trim(),
       });
       setShowEditDiaryModal(false);
+    } catch (error) {
+      // toast handled in store
+    }
+  };
+
+  const handleCompleteChange = (e) => {
+    const { name, value } = e.target;
+    setCompleteForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCompleteDiary = async (e) => {
+    e.preventDefault();
+
+    try {
+      await completeDiary(diaryId, {
+        weight_durian: Number(completeForm.weight_durian) || 0,
+        price: Number(completeForm.price) || 0,
+      });
+      closeCompleteModal();
     } catch (error) {
       // toast handled in store
     }
@@ -236,18 +269,27 @@ export default function GardenDiaryDetail() {
                   diaryDetail.status === "In progressing"
                     ? "bg-yellow-100 text-yellow-700"
                     : diaryDetail.status === "Completed"
-                      ? "bg-blue-100 text-blue-700"
+                      ? "bg-green-100 text-green-700"
                       : "bg-gray-100 text-gray-700"
                 }`}
               >
                 {diaryDetail.status}
               </span>
+              {diaryDetail.status == "In progressing" && (
+                <button
+                  onClick={() => setShowCompleteModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  <BookOpenCheck className="w-4 h-4" />
+                  Đánh dấu hoàn thành
+                </button>
+              )}
               <button
                 onClick={() => setShowEditDiaryModal(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg font-medium transition-colors"
               >
                 <Edit className="w-4 h-4" />
-                Edit
+                Chỉnh sửa
               </button>
             </div>
           </div>
@@ -432,6 +474,78 @@ export default function GardenDiaryDetail() {
                 >
                   <Save className="w-4 h-4" />
                   {isDiaryEditing ? "Saving..." : "Save changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Complete Diary Modal */}
+      {showCompleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-900">
+                Đánh dấu hoàn thành
+              </h3>
+              <button
+                onClick={closeCompleteModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCompleteDiary} className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Khối lượng sầu riêng (kg){" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="weight_durian"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={completeForm.weight_durian}
+                  onChange={handleCompleteChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Giá bán (VND/kg) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="price"
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={completeForm.price}
+                  onChange={handleCompleteChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={closeCompleteModal}
+                  className="px-5 py-2.5 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isDiaryCompleting}
+                  className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
+                >
+                  <Save className="w-4 h-4" />
+                  {isDiaryCompleting ? "Đang lưu..." : "Xác nhận"}
                 </button>
               </div>
             </form>
