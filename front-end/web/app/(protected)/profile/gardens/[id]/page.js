@@ -92,7 +92,7 @@ export default function ProfileGardenDetail() {
       <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/30">
         {/* Header */}
         <div className=" bg-white border-b border-gray-200">
-          <div className=" mx-auto px-6 py-8">
+          <div className=" mx-auto px-6 py-7">
             <div className="flex items-center justify-between mt-3">
               <Link
                 href={"/profile/gardens"}
