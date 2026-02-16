@@ -9,6 +9,9 @@ export const useDiaryStore = create((set, get) => ({
   isDiariesLoading: false,
   isDiaryCreating: false,
   isDiaryDetailsLoading: false,
+  isDiaryEditing: false,
+  isDiaryDeleting: false,
+  isDiaryStepAdding: false,
 
   // Get all diaries by garden_id
   getAllDiariesByGardenId: async (garden_id, year) => {
@@ -51,11 +54,78 @@ export const useDiaryStore = create((set, get) => ({
     set({ isDiaryDetailsLoading: true });
     try {
       const res = await axiosInstance.get(`/diary/${diaryId}`);
-      console.log("DDDD", res);
       set({ diaryDetail: res.data.data });
     } catch (error) {
     } finally {
       set({ isDiaryDetailsLoading: false });
+    }
+  },
+
+  // Edit diary
+  editDiary: async (diaryId, data) => {
+    set({ isDiaryEditing: true });
+    try {
+      const res = await axiosInstance.patch(`/diary/${diaryId}`, data);
+
+      //  Update the edited garden in state
+      set((state) => ({
+        diaries: state.diaries.map((d) =>
+          d._id === diaryId ? res.data.data : d,
+        ),
+        diaryDetail: res.data.data,
+      }));
+
+      // Refresh detail to ensure nested data (stages/steps) stays in sync
+      await get().getDiaryDetails(diaryId);
+
+      toast.success(res.data.message);
+      return res?.data?.data;
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Không thể cập nhật nhật ký",
+      );
+      throw error;
+    } finally {
+      set({ isDiaryEditing: false });
+    }
+  },
+
+  // Delete diary
+  deleteGarden: async (diaryId) => {
+    set({ isDiaryDeleting: true });
+    try {
+      const res = await axiosInstance.delete(`/diary/${diaryId}`);
+
+      //  Update the edited garden in state
+      set((state) => ({
+        diaries: state.diaries.map((d) =>
+          d._id === diaryId ? res.data.data : d,
+        ),
+        diaryDetail: res.data.data,
+      }));
+
+      toast.success(res.data.message);
+    } finally {
+      set({ isDiaryDeleting: false });
+    }
+  },
+
+  // Add a new step to a diary
+  addDiaryStep: async (diaryId, payload) => {
+    set({ isDiaryStepAdding: true });
+    try {
+      const res = await axiosInstance.post(`/diary/${diaryId}/step`, payload);
+
+      // refresh detail so UI shows the newly added step
+      await get().getDiaryDetails(diaryId);
+
+      toast.success(res?.data?.message || "Thêm bước thành công");
+      return res?.data?.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Không thể thêm bước");
+      throw error;
+    } finally {
+      set({ isDiaryStepAdding: false });
     }
   },
 }));

@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   BookOpen,
   Edit,
+  Save,
   Clock,
   Plus,
   DollarSign,
@@ -17,23 +18,35 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDiaryStore } from "@/store/useDiaryStore";
-import { axiosInstance } from "@/lib/axios";
 
 export default function GardenDiaryDetail() {
   const { id: gardenId, diaryId } = useParams();
   const router = useRouter();
 
-  const { diaryDetail, isDiaryDetailsLoading, getDiaryDetails } =
-    useDiaryStore();
+  const {
+    diaryDetail,
+    isDiaryDetailsLoading,
+    isDiaryStepAdding,
+    isDiaryEditing,
+    getDiaryDetails,
+    addDiaryStep,
+    editDiary,
+  } = useDiaryStore();
 
   const [showAddStepModal, setShowAddStepModal] = useState(false);
-  const [isSubmittingStep, setIsSubmittingStep] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState(null);
   const [newStep, setNewStep] = useState({
     step_name: "",
     description: "",
     cost: "",
     image: "",
+  });
+
+  const [showEditDiaryModal, setShowEditDiaryModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    crop_type: "",
+    description: "",
   });
 
   const [imagePreview, setImagePreview] = useState("");
@@ -43,6 +56,15 @@ export default function GardenDiaryDetail() {
     if (!diaryId) return;
     getDiaryDetails(diaryId);
   }, [diaryId, getDiaryDetails]);
+
+  useEffect(() => {
+    if (!diaryDetail?._id) return;
+    setEditForm({
+      title: diaryDetail.title || "",
+      crop_type: diaryDetail.crop_type || "",
+      description: diaryDetail.description || "",
+    });
+  }, [diaryDetail]);
 
   const date = useMemo(
     () => (diaryDetail?.start_date ? new Date(diaryDetail.start_date) : null),
@@ -78,6 +100,17 @@ export default function GardenDiaryDetail() {
     setImagePreview("");
   };
 
+  const closeEditDiaryModal = () => {
+    setShowEditDiaryModal(false);
+    if (diaryDetail?._id) {
+      setEditForm({
+        title: diaryDetail.title || "",
+        crop_type: diaryDetail.crop_type || "",
+        description: diaryDetail.description || "",
+      });
+    }
+  };
+
   const handleAddStep = async (e) => {
     e.preventDefault();
 
@@ -87,22 +120,36 @@ export default function GardenDiaryDetail() {
     }
 
     try {
-      setIsSubmittingStep(true);
-      await axiosInstance.post(`/diary/${diaryId}/step`, {
+      await addDiaryStep(diaryId, {
         stage_id: selectedStageId,
         step_name: newStep.step_name.trim(),
         description: newStep.description.trim(),
         cost: Number(newStep.cost) || 0,
         image: newStep.image || undefined,
       });
-
-      toast.success("Thêm bước thành công");
-      await getDiaryDetails(diaryId);
       closeAddStepModal();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Không thể thêm bước");
-    } finally {
-      setIsSubmittingStep(false);
+      // errors are toasted inside the store; no-op here
+    }
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditDiary = async (e) => {
+    e.preventDefault();
+
+    try {
+      await editDiary(diaryId, {
+        title: editForm.title.trim(),
+        crop_type: editForm.crop_type.trim(),
+        description: editForm.description.trim(),
+      });
+      setShowEditDiaryModal(false);
+    } catch (error) {
+      // toast handled in store
     }
   };
 
@@ -187,7 +234,7 @@ export default function GardenDiaryDetail() {
               <span
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
                   diaryDetail.status === "In progressing"
-                    ? "bg-emerald-100 text-emerald-700"
+                    ? "bg-yellow-100 text-yellow-700"
                     : diaryDetail.status === "Completed"
                       ? "bg-blue-100 text-blue-700"
                       : "bg-gray-100 text-gray-700"
@@ -195,7 +242,10 @@ export default function GardenDiaryDetail() {
               >
                 {diaryDetail.status}
               </span>
-              <button className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg font-medium transition-colors">
+              <button
+                onClick={() => setShowEditDiaryModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg font-medium transition-colors"
+              >
                 <Edit className="w-4 h-4" />
                 Edit
               </button>
@@ -229,11 +279,11 @@ export default function GardenDiaryDetail() {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-gray-100">
+          <div className="pt-6 border-t border-gray-100 ">
             <div className="text-sm font-medium text-gray-500 mb-2">
               Description
             </div>
-            <p className="text-gray-700 leading-relaxed">
+            <p className="text-gray-700 leading-relaxed overflow-auto max-h-60">
               {diaryDetail.description}
             </p>
           </div>
@@ -309,6 +359,85 @@ export default function GardenDiaryDetail() {
           ))}
         </div>
       </div>
+
+      {/* Edit Diary Modal */}
+      {showEditDiaryModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-900">Edit Diary</h3>
+              <button
+                onClick={closeEditDiaryModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditDiary} className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="title"
+                  type="text"
+                  value={editForm.title}
+                  onChange={handleEditChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Crop Type <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="crop_type"
+                  type="text"
+                  value={editForm.crop_type}
+                  onChange={handleEditChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Description <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  name="description"
+                  value={editForm.description}
+                  onChange={handleEditChange}
+                  rows={4}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={closeEditDiaryModal}
+                  className="px-5 py-2.5 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isDiaryEditing}
+                  className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
+                >
+                  <Save className="w-4 h-4" />
+                  {isDiaryEditing ? "Saving..." : "Save changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add Step Modal */}
       {showAddStepModal && (
@@ -418,7 +547,7 @@ export default function GardenDiaryDetail() {
                       type="button"
                       onClick={() => {
                         setImagePreview("");
-                        setImageData("");
+                        setNewStep((prev) => ({ ...prev, image: "" }));
                       }}
                       className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full"
                     >
@@ -447,11 +576,11 @@ export default function GardenDiaryDetail() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmittingStep}
+                  disabled={isDiaryStepAdding}
                   className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  {isSubmittingStep ? "Đang thêm..." : "Add Step"}
+                  {isDiaryStepAdding ? "Đang thêm..." : "Add Step"}
                 </button>
               </div>
             </form>
