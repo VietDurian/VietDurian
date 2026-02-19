@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Star,
+  HeartHandshake,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import AiFloatingButton from "@/components/AiFloatingButton";
@@ -152,7 +153,7 @@ export default function Home() {
       <Navbar />
 
       {/* Header Title - Simple and Professional */}
-      <div className="text-center pt-28 pb-4 px-8">
+      <div className="text-center pt-28 pb-16 px-8">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
           Kết Nối Nông Dân - Dịch Vụ - Thị Trường
         </h1>
@@ -161,110 +162,81 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Image Grid Section with Enhanced Slogan and Buttons */}
-      <section className="px-4 lg:px-6 pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-[0.8fr_2fr_0.8fr] gap-6">
-          {/* ===== CỘT 1: DÀI TRÊN – NGẮN DƯỚI ===== */}
-          <div className="flex flex-col gap-6">
-            <div className="relative h-[380px] rounded-2xl overflow-hidden transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
-              <Image
-                src="/images/Durian1.jpg"
-                alt="Trồng sầu riêng"
-                fill
-                className="object-cover"
-              />
+      {/* Hero Connection Section */}
+      <section className="px-4 lg:px-6 pb-24 flex justify-center items-center">
+        <div className="relative flex items-center justify-center" style={{ width: '920px', height: '920px' }}>
+
+          {/* Ring 3 - outermost */}
+          <div className="absolute rounded-full border-4 border-dashed border-emerald-400 animate-spin"
+            style={{ width: '900px', height: '900px', animationDuration: '40s' }}></div>
+
+          {/* Ring 2 - middle, nodes sit on this, r=330 */}
+          <div className="absolute rounded-full border-4 border-dashed border-emerald-400 animate-spin"
+            style={{ width: '660px', height: '660px', animationDuration: '28s', animationDirection: 'reverse' }}></div>
+
+          {/* Ring 1 - inner glow */}
+          <div className="absolute rounded-full border border-emerald-200"
+            style={{ width: '360px', height: '360px', background: 'radial-gradient(circle, #ecfdf5 0%, #d1fae5 60%, #a7f3d0 100%)', boxShadow: '0 0 80px 30px rgba(110,231,183,0.25)' }}></div>
+
+          {/* CENTER */}
+          <div className="relative z-20 flex flex-col items-center justify-center">
+            <div className="w-40 h-40 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center shadow-2xl">
+              <HeartHandshake className="w-24 h-24 text-white" strokeWidth={1.5} />
             </div>
-
-            <div className="relative h-[220px] rounded-2xl overflow-hidden transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
-              <Image
-                src="/images/Durian2.jpg"
-                alt="Chăm sóc sầu riêng"
-                fill
-                className="object-cover"
-              />
-            </div>
-          </div>
-
-          {/* ===== CỘT 2: SLOGAN + BUTTONS + IMAGES ===== */}
-          <div className="flex flex-col">
-            {/* Slogan & Buttons */}
-            <div className="text-center py-4 mb-6">
-              <p className="text-gray-600 text-base max-w-2xl mx-auto mb-8">
-                Từ kiến thức kỹ thuật đến sản phẩm chất lượng, cùng kết nối và
-                phát triển bền vững
-              </p>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <Link
-                  href="/san-pham"
-                  className="px-8 py-3 border-2 border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors min-w-[160px] text-center"
-                >
-                  Sản Phẩm
-                </Link>
-                <Link
-                  href="/huong-dan"
-                  className="px-8 py-3 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors min-w-[160px] text-center"
-                >
-                  Hướng Dẫn
-                </Link>
-              </div>
-            </div>
-
-            {/* Images Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-end mt-auto">
-              <div className="relative h-[320px] rounded-2xl overflow-hidden transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
-                <Image
-                  src="/images/Durian3.jpg"
-                  alt="Lá sầu riêng"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-
-              <div className="relative h-[220px] rounded-2xl overflow-hidden transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
-                <Image
-                  src="/images/Durian4.jpg"
-                  alt="Cánh đồng"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-
-              <div className="relative h-[320px] rounded-2xl overflow-hidden transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
-                <Image
-                  src="/images/Durian5.jpg"
-                  alt="Rừng cây"
-                  fill
-                  className="object-cover"
-                />
-              </div>
+            <div className="mt-3 px-5 py-1.5 bg-emerald-600 text-white rounded-full text-sm font-bold shadow-lg">
+              Kết Nối
             </div>
           </div>
 
-          {/* ===== CỘT 3: NGẮN TRÊN – DÀI DƯỚI ===== */}
-          <div className="flex flex-col gap-6">
-            <div className="relative h-[220px] rounded-2xl overflow-hidden transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
-              <Image
-                src="/images/Durian6.jpg"
-                alt="Người trong rừng"
-                fill
-                className="object-cover"
-              />
+          {/* Nông Dân - Top */}
+          <div className="absolute flex flex-col items-center z-10" style={{ top: '66px', left: '396px' }}>
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-lime-400 shadow-2xl">
+              <img src="/images/Durian1.jpg" alt="Nông Dân" className="w-full h-full object-cover" />
             </div>
+            <span className="mt-2 px-3 py-1 bg-lime-400 text-emerald-900 text-xs font-bold rounded-full shadow">Nông Dân</span>
+          </div>
 
-            <div className="relative h-[380px] rounded-2xl overflow-hidden transition-transform duration-300 hover:scale-[1.02] hover:shadow-xl">
-              <Image
-                src="/images/Durian7.jpg"
-                alt="Nấm rừng"
-                fill
-                className="object-cover"
-              />
+          {/* Thị Trường - Top Right */}
+          <div className="absolute flex flex-col items-center z-10" style={{ top: '231px', left: '682px' }}>
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-orange-400 shadow-2xl">
+              <img src="/images/Durian2.jpg" alt="Thị Trường" className="w-full h-full object-cover" />
             </div>
+            <span className="mt-2 px-3 py-1 bg-orange-400 text-white text-xs font-bold rounded-full shadow">Thị Trường</span>
+          </div>
+
+          {/* Dịch Vụ - Bottom Right */}
+          <div className="absolute flex flex-col items-center z-10" style={{ top: '561px', left: '682px' }}>
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-cyan-400 shadow-2xl">
+              <img src="/images/Durian3.jpg" alt="Dịch Vụ" className="w-full h-full object-cover" />
+            </div>
+            <span className="mt-2 px-3 py-1 bg-cyan-400 text-white text-xs font-bold rounded-full shadow">Dịch Vụ</span>
+          </div>
+
+          {/* Công Nghệ AI - Bottom */}
+          <div className="absolute flex flex-col items-center z-10" style={{ top: '716px', left: '396px' }}>
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-purple-400 shadow-2xl">
+              <img src="/images/Durian4.jpg" alt="Công Nghệ AI" className="w-full h-full object-cover" />
+            </div>
+            <span className="mt-2 px-3 py-1 bg-purple-400 text-white text-xs font-bold rounded-full shadow">Công Nghệ AI</span>
+          </div>
+
+          {/* Vật Tư - Bottom Left */}
+          <div className="absolute flex flex-col items-center z-10" style={{ top: '561px', left: '111px' }}>
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-yellow-400 shadow-2xl">
+              <img src="/images/Durian5.jpg" alt="Vật Tư" className="w-full h-full object-cover" />
+            </div>
+            <span className="mt-2 px-3 py-1 bg-yellow-400 text-emerald-900 text-xs font-bold rounded-full shadow">Vật Tư</span>
+          </div>
+
+          {/* Chuyên Gia - Top Left */}
+          <div className="absolute flex flex-col items-center z-10" style={{ top: '231px', left: '111px' }}>
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-emerald-400 shadow-2xl">
+              <img src="/images/Durian6.jpg" alt="Chuyên Gia" className="w-full h-full object-cover" />
+            </div>
+            <span className="mt-2 px-3 py-1 bg-emerald-400 text-white text-xs font-bold rounded-full shadow">Chuyên Gia</span>
           </div>
         </div>
       </section>
-
       {/* ===== SECTION: HÀNH TRÌNH PHÁT TRIỂN SẦU RIÊNG ===== */}
       <section className="py-20 px-4 lg:px-6 bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-900 relative overflow-hidden">
         {/* Background Pattern */}
@@ -1003,7 +975,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-       {<AiFloatingButton />}
+      {<AiFloatingButton />}
       <Footer />
     </div>
   );
