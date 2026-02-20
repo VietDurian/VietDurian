@@ -14,9 +14,12 @@ export function ProductsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [typeFilter, setTypeFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [ratingSort, setRatingSort] = useState('desc');
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState({ totalItems: 0, totalPages: 0, currentPage: 1, itemsPerPage: 10 });
     const LIMIT = 10;
+    const API_FETCH_LIMIT = 100;
+    const MAX_FETCH_PAGES = 50;
     const [isTypeOpen, setIsTypeOpen] = useState(false);
     const typeDropdownRef = useRef(null);
     const [confirmDelete, setConfirmDelete] = useState(null);
@@ -179,77 +182,73 @@ export function ProductsPage() {
 
     useEffect(() => {
         const term = searchTerm.trim();
+        let isCancelled = false;
 
         const handler = setTimeout(async () => {
             setLoading(true);
             try {
-                // Build common params with server-side type filter
-                const params = {
-                    page,
-                    limit: LIMIT,
-                    ...(typeFilter !== 'all' ? { typeId: typeFilter } : {}),
-                };
+                const aggregated = [];
+                let currentPage = 1;
+                let keepFetching = true;
 
-                if (term) {
-                    const res = await productsAdminAPI.searchProducts(term, params);
+                while (keepFetching && currentPage <= MAX_FETCH_PAGES && !isCancelled) {
+                    const params = {
+                        page: currentPage,
+                        limit: API_FETCH_LIMIT,
+                        ...(typeFilter !== 'all' ? { typeId: typeFilter } : {}),
+                    };
+
+                    const res = term
+                        ? await productsAdminAPI.searchProducts(term, params)
+                        : await productsAdminAPI.getAllProducts(params);
+
                     const listRaw = Array.isArray(res?.data)
                         ? res.data
                         : Array.isArray(res?.data?.data)
                             ? res.data.data
                             : [];
-                    const list = listRaw.map(mapProduct);
-                    setProducts(list);
 
-                    const pgn = res?.data?.pagination || res?.pagination || null;
-                    setPagination(pgn ? {
-                        totalItems: Number(pgn.totalItems ?? 0),
-                        totalPages: Number(pgn.totalPages ?? 0),
-                        currentPage: Number(pgn.currentPage ?? page),
-                        itemsPerPage: Number(pgn.itemsPerPage ?? LIMIT),
-                    } : {
-                        totalItems: Number(res?.data?.totalItems ?? listRaw.length ?? 0),
-                        totalPages: Number(res?.data?.totalPages ?? 1),
-                        currentPage: page,
-                        itemsPerPage: LIMIT,
-                    });
-                } else {
-                    const res = await productsAdminAPI.getAllProducts(params);
-                    const listRaw = Array.isArray(res?.data)
-                        ? res.data
-                        : Array.isArray(res?.data?.data)
-                            ? res.data.data
-                            : [];
-                    const mapped = listRaw.map(mapProduct);
-                    setProducts(mapped);
-                    console.log("Products fetched:", mapped);
+                    aggregated.push(...listRaw.map(mapProduct));
 
-                    const pgn = res?.data?.pagination || res?.pagination || null;
-                    setPagination(pgn ? {
-                        totalItems: Number(pgn.totalItems ?? 0),
-                        totalPages: Number(pgn.totalPages ?? 0),
-                        currentPage: Number(pgn.currentPage ?? page),
-                        itemsPerPage: Number(pgn.itemsPerPage ?? LIMIT),
-                    } : {
-                        totalItems: Number(res?.data?.totalItems ?? listRaw.length ?? 0),
-                        totalPages: Number(res?.data?.totalPages ?? 1),
-                        currentPage: page,
-                        itemsPerPage: LIMIT,
-                    });
+                    const paginationInfo = res?.data?.pagination || res?.pagination;
+                    const totalPages = Number(paginationInfo?.totalPages ?? 0);
+                    const expectedLimit = Number(params.limit ?? API_FETCH_LIMIT);
+                    const hasPagination = totalPages > 0;
+                    const hasMoreFromPagination = hasPagination && currentPage < totalPages;
+                    const hasMoreFromLength = !hasPagination && listRaw.length === expectedLimit && listRaw.length > 0;
+
+                    if (hasMoreFromPagination || hasMoreFromLength) {
+                        currentPage += 1;
+                    } else {
+                        keepFetching = false;
+                    }
+                }
+
+                if (!isCancelled) {
+                    setProducts(aggregated);
                 }
             } catch (e) {
-                console.error("Error:", e);
+                if (!isCancelled) {
+                    console.error("Error:", e);
+                    setProducts([]);
+                }
             } finally {
-                setLoading(false);
+                if (!isCancelled) {
+                    setLoading(false);
+                }
             }
         }, 400);
 
-        return () => clearTimeout(handler);
-    }, [searchTerm, typeFilter, page]);
+        return () => {
+            isCancelled = true;
+            clearTimeout(handler);
+        };
+    }, [searchTerm, typeFilter]);
 
     // Reset to first page when filters/search change
     useEffect(() => {
         setPage(1);
-    }, [searchTerm, typeFilter, statusFilter]);
+    }, [searchTerm, typeFilter, statusFilter, ratingSort]);
 
     const goToPage = (newPage) => {
         const tp = Number(pagination.totalPages ?? 0);
@@ -269,7 +268,7 @@ export function ProductsPage() {
     const filteredProducts = useMemo(() => {
         const data = Array.isArray(products) ? products : [];
         const term = searchTerm.trim().toLowerCase();
-        return data.filter((p) => {
+        const filtered = data.filter((p) => {
             const name = (p.name || '').toLowerCase();
             const desc = (p.description || '').toLowerCase();
             const origin = (p.origin || '').toLowerCase();
@@ -278,7 +277,37 @@ export function ProductsPage() {
             const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
             return matchesSearch && matchesType && matchesStatus;
         });
-    }, [products, searchTerm, typeFilter, statusFilter]);
+
+        if (ratingSort === 'asc') {
+            return filtered.sort((a, b) => Number(a.rating ?? 0) - Number(b.rating ?? 0));
+        }
+        if (ratingSort === 'desc') {
+            return filtered.sort((a, b) => Number(b.rating ?? 0) - Number(a.rating ?? 0));
+        }
+        return filtered;
+    }, [products, searchTerm, typeFilter, statusFilter, ratingSort]);
+
+    const totalFiltered = filteredProducts.length;
+
+    useEffect(() => {
+        const computedTotalPages = totalFiltered === 0 ? 1 : Math.ceil(totalFiltered / LIMIT);
+        if (page > computedTotalPages) {
+            setPage(computedTotalPages);
+            return;
+        }
+        setPagination((prev) => ({
+            ...prev,
+            totalItems: totalFiltered,
+            totalPages: computedTotalPages,
+            currentPage: page,
+            itemsPerPage: LIMIT,
+        }));
+    }, [totalFiltered, page]);
+
+    const paginatedProducts = useMemo(() => {
+        const startIndex = (page - 1) * LIMIT;
+        return filteredProducts.slice(startIndex, startIndex + LIMIT);
+    }, [filteredProducts, page]);
 
     return (
         <div className="p-4 md:p-8">
@@ -323,6 +352,24 @@ export function ProductsPage() {
                             <option value="active">{t('active')}</option>
                             <option value="inactive">{t('inactive')}</option>
 
+                        </select>
+                    </div>
+
+                    {/* Rating Sort */}
+                    <div className="relative">
+                        <Star className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-yellow-500 pointer-events-none" />
+                        <select
+                            value={ratingSort}
+                            onChange={(e) => setRatingSort(e.target.value)}
+                            className="
+            w-full md:w-56 pl-10 pr-4 py-2.5
+            border border-gray-200 rounded-lg
+            focus:outline-none focus:ring-2 focus:ring-[#1a4d2e]
+            appearance-none bg-white
+        "
+                        >
+                            <option value="desc">{t('Rating: High to Low')}</option>
+                            <option value="asc">{t('Rating: Low to High')}</option>
                         </select>
                     </div>
 
@@ -398,7 +445,7 @@ export function ProductsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                            {filteredProducts.map((p) => (
+                            {paginatedProducts.map((p) => (
                                 <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
@@ -451,7 +498,7 @@ export function ProductsPage() {
 
             {/* Products Cards - Mobile */}
             <div className="md:hidden space-y-4">
-                {filteredProducts.map((p) => (
+                {paginatedProducts.map((p) => (
                     <div key={p.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                         <div className="flex items-start gap-3 mb-3">
                             <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-white font-bold flex-shrink-0 bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f] ring-1 ring-gray-200">
