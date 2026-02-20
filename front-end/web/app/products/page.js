@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { productAPI, productTypeAPI } from "@/lib/api";
+import { productAPI, productTypeAPI, ratingAPI } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
@@ -38,6 +38,7 @@ export default function ProductsPage() {
   const [selectedType, setSelectedType] = useState("");
   const [imageErrors, setImageErrors] = useState({});
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const [liveRatings, setLiveRatings] = useState({});
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -113,18 +114,15 @@ export default function ProductsPage() {
           sortOrder,
         };
 
-        if (searchTerm) {
-          params.name = searchTerm;
-        }
-
-        if (selectedType) {
-          params.typeId = selectedType;
-        }
+        if (searchTerm) params.name = searchTerm;
+        if (selectedType) params.typeId = selectedType;
 
         const response = await productAPI.getAllProducts(params);
 
         if (response.success) {
-          setProducts(response.data || []);
+          const productsData = response.data || [];
+          setProducts(productsData);
+
           if (response.pagination) {
             setPagination({
               currentPage: response.pagination.currentPage,
@@ -132,6 +130,24 @@ export default function ProductsPage() {
               totalItems: response.pagination.totalItems,
               itemsPerPage: response.pagination.itemsPerPage,
             });
+          }
+
+          // Fetch live ratings song song
+          if (productsData.length > 0) {
+            const ratingResults = await Promise.all(
+              productsData.map(p =>
+                ratingAPI.getRatingsByProductId(p._id, { limit: 1 })
+                  .catch(() => null)
+              )
+            );
+            const ratingsMap = {};
+            productsData.forEach((p, i) => {
+              const res = ratingResults[i];
+              if (res?.success && res?.statistics) {
+                ratingsMap[p._id] = parseFloat(res.statistics.averageRating || 0);
+              }
+            });
+            setLiveRatings(ratingsMap);
           }
         }
 
@@ -385,11 +401,11 @@ export default function ProductsPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {products.map((product) => {
-                  const rating =
-                    typeof product.rating === "object" &&
-                      product.rating.$numberDecimal
+                  const rating = liveRatings[product._id] !== undefined
+                    ? liveRatings[product._id]
+                    : (typeof product.rating === "object" && product.rating.$numberDecimal
                       ? parseFloat(product.rating.$numberDecimal)
-                      : parseFloat(product.rating || 0);
+                      : parseFloat(product.rating || 0));
 
                   return (
                     <Link href={`/products/${product._id}`} key={product._id}>
