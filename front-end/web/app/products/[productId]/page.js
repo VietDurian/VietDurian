@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { productAPI } from "@/lib/api";
+import { productAPI, ratingAPI } from "@/lib/api";
 import ProductRating from "@/components/ProductRating";
 import {
     ChevronRight,
@@ -67,6 +67,7 @@ export default function ProductDetailPage() {
     const [activeTab, setActiveTab] = useState("description");
     const [imageError, setImageError] = useState(false);
     const [userId, setUserId] = useState(null);
+    const [liveRating, setLiveRating] = useState(null);
 
     const handleImageError = () => {
         setImageError(true);
@@ -76,6 +77,23 @@ export default function ProductDetailPage() {
         const id = getUserId();
         setUserId(id);
     }, []);
+
+    // Thêm useEffect fetch rating
+    useEffect(() => {
+        const fetchLiveRating = async () => {
+            if (!productId) return;
+            try {
+                const response = await ratingAPI.getRatingsByProductId(productId, { limit: 1 });
+                if (response.success && response.statistics) {
+                    const avg = parseFloat(response.statistics.averageRating || 0);
+                    setLiveRating(avg);
+                }
+            } catch (err) {
+                console.error('Error fetching live rating:', err);
+            }
+        };
+        fetchLiveRating();
+    }, [productId]);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -162,9 +180,11 @@ export default function ProductDetailPage() {
         );
     }
 
-    const rating = typeof product.rating === 'object' && product.rating.$numberDecimal
-        ? parseFloat(product.rating.$numberDecimal)
-        : parseFloat(product.rating || 0);
+    const rating = liveRating !== null ? liveRating : (
+        typeof product.rating === 'object' && product.rating.$numberDecimal
+            ? parseFloat(product.rating.$numberDecimal)
+            : parseFloat(product.rating || 0)
+    );
 
     return (
         <div className="min-h-screen bg-gray-50">
