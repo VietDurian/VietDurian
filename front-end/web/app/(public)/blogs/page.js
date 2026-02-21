@@ -139,38 +139,33 @@ export default function BlogPage() {
                                     >
                                         <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
                                             {/* Blog Image */}
-                                            <div className="relative h-60 overflow-hidden">
-                                                {blog.image ? (
-                                                    <>
+                                            <div className="p-4 pb-0">
+                                                <div className="relative rounded-xl overflow-hidden bg-gray-100" style={{ aspectRatio: '16/9' }}>
+                                                    {blog.image ? (
                                                         <Image
                                                             src={blog.image}
                                                             alt={blog.title}
                                                             fill
-                                                            className="object-cover"
+                                                            className="object-contain"
                                                         />
-                                                        {/* Overlay effect */}
-                                                        <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity"></div>
-                                                    </>
-                                                ) : (
-                                                    <div className="relative h-full bg-gradient-to-br from-emerald-400 to-emerald-600">
-                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                    ) : (
+                                                        <div className="h-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
                                                             <svg className="w-20 h-20 text-white opacity-50" fill="currentColor" viewBox="0 0 20 20">
                                                                 <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
                                                             </svg>
                                                         </div>
-                                                        <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity"></div>
-                                                    </div>
-                                                )}
+                                                    )}
+                                                </div>
                                             </div>
 
                                             <div className="p-6">
                                                 {/* Blog Title */}
-                                                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-emerald-600 transition-colors">
+                                                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-1 group-hover:text-emerald-600 transition-colors">
                                                     {blog.title}
                                                 </h3>
 
                                                 {/* Blog Excerpt */}
-                                                <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                                                <p className="text-gray-600 text-sm mb-4 line-clamp-1">
                                                     {blog.content}
                                                 </p>
 
