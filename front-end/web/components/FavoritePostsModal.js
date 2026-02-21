@@ -16,7 +16,7 @@ import {
     XCircle,
     X,
 } from "lucide-react";
-import { favoriteAPI, deletePost, updatePost } from "@/lib/api";
+import { favoriteAPI, deletePost, updatePost, commentAPI } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 import { useAuth } from "@/context/AuthContext";
 
@@ -359,6 +359,10 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
     const [showMenu, setShowMenu] = useState(false);
     const { user } = useAuth();
 
+    useEffect(() => {
+        setCommentCount(post.post_id?.comments_count || 0);
+    }, [post.post_id?.comments_count]);
+
     const handleToggleFavorite = async () => {
         if (isTogglingFavorite) return;
 
@@ -633,6 +637,25 @@ export default function FavoritePostsModal() {
             const response = await favoriteAPI.getFavorites();
             const validFavorites = (response.data || []).filter(fav => fav.post_id);
             setFavorites(validFavorites);
+            const favWithComments = await Promise.all(
+                validFavorites.map(async (fav) => {
+                    try {
+                        const res = await commentAPI.getCommentsByPost(fav.post_id?._id, "all");
+                        const countComments = (list) => {
+                            let count = list.length;
+                            list.forEach(c => { if (c.children?.length) count += countComments(c.children); });
+                            return count;
+                        };
+                        return {
+                            ...fav,
+                            post_id: { ...fav.post_id, comments_count: countComments(res.data || []) }
+                        };
+                    } catch {
+                        return fav;
+                    }
+                })
+            );
+            setFavorites(favWithComments);
         } catch (err) {
             console.error("Error loading favorites:", err);
             setError(err?.response?.data?.message || err?.message || "Không thể tải danh sách yêu thích");

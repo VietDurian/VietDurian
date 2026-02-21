@@ -1,5 +1,5 @@
 "use client";
-import { X, Heart, ThumbsUp, Smile, Angry, Send } from "lucide-react";
+import { X, Heart, ThumbsUp, Smile, Angry, Send, Flag } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { commentAPI, reactionCommentAPI, reportCommentAPI } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -81,6 +81,67 @@ const getTimeAgo = (dateString) => {
   if (months < 12) return `${months}mo`;
   const years = Math.floor(days / 365);
   return `${years}y`;
+};
+
+// Report Modal Component
+const ReportCommentModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) setReason("");
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-orange-100 rounded-full">
+              <Flag size={18} className="text-orange-500" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">Báo cáo bình luận</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition"
+          >
+            <X size={20} className="text-gray-600" />
+          </button>
+        </div>
+
+        <p className="text-sm text-gray-500 mb-4">
+          Vui lòng cho chúng tôi biết lý do bạn báo cáo bình luận này. Chúng tôi sẽ xem xét và xử lý trong thời gian sớm nhất.
+        </p>
+
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Nhập lý do báo cáo..."
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent min-h-[100px] max-h-[200px]"
+        />
+
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={() => onSubmit(reason)}
+            disabled={!reason.trim() || isSubmitting}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Đang gửi...
+              </>
+            ) : (
+              "Gửi báo cáo"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // Reaction Modal Component
@@ -230,7 +291,7 @@ const CommentItem = ({
               onClick={() => toggleReactionOptions(comment._id)}
               className="text-gray-500 hover:text-gray-700 font-medium"
             >
-              Like
+              Thích
             </button>
           ) : (
             <button
@@ -289,7 +350,7 @@ const CommentItem = ({
               onClick={() => onReply(comment)}
               className="text-gray-500 hover:text-gray-700 font-medium"
             >
-              Answer
+              Trả lời
             </button>
           )}
 
@@ -300,13 +361,13 @@ const CommentItem = ({
                 onClick={() => onEdit(comment)}
                 className="text-gray-500 hover:text-gray-700 font-medium"
               >
-                Edit
+                Chỉnh sửa
               </button>
               <button
                 onClick={() => onDelete(comment._id)}
                 className="text-red-500 hover:text-red-700 font-medium"
               >
-                Delete
+                Xóa
               </button>
             </>
           )}
@@ -317,7 +378,7 @@ const CommentItem = ({
               onClick={() => onReport(comment._id)}
               className="text-orange-500 hover:text-orange-700 font-medium"
             >
-              Report
+              Báo cáo
             </button>
           )}
         </div>
@@ -366,6 +427,12 @@ export default function CommentModal({
   const [isLoading, setIsLoading] = useState(false);
   const [showReactionOptions, setShowReactionOptions] = useState({});
   const [reactionModalCommentId, setReactionModalCommentId] = useState(null);
+
+  // Report states
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportCommentId, setReportCommentId] = useState(null);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
   const textInputRef = useRef(null);
 
   // Load comments khi mở modal
@@ -420,6 +487,7 @@ export default function CommentModal({
       setIsLoading(false);
     }
   };
+
   const loadReactions = async (commentId) => {
     try {
       const response =
@@ -559,24 +627,30 @@ export default function CommentModal({
     }
   };
 
-  const handleReportComment = async (commentId) => {
-    const reason = prompt(
-      "Please enter the reason for reporting this comment:",
-    );
+  // Open report modal
+  const handleReportComment = (commentId) => {
+    setReportCommentId(commentId);
+    setReportModalOpen(true);
+  };
 
-    if (!reason || !reason.trim()) {
-      return;
-    }
+  // Submit report
+  const handleSubmitReport = async (reason) => {
+    if (!reason.trim()) return;
 
+    setIsSubmittingReport(true);
     try {
       await reportCommentAPI.createReport({
-        comment_id: commentId,
+        comment_id: reportCommentId,
         reason: reason.trim(),
       });
-      alert("Comment reported successfully. Thank you for your feedback.");
+      setReportModalOpen(false);
+      setReportCommentId(null);
+      alert("Báo cáo đã được gửi thành công. Cảm ơn bạn!");
     } catch (error) {
       console.error("Failed to report comment:", error);
-      alert("Failed to report comment. Please try again.");
+      alert("Không thể gửi báo cáo. Vui lòng thử lại.");
+    } finally {
+      setIsSubmittingReport(false);
     }
   };
 
@@ -616,6 +690,7 @@ export default function CommentModal({
                   onReply={handleReply}
                   onEdit={handleEdit}
                   onDelete={handleDeleteComment}
+                  onReport={handleReportComment}
                   reactions={reactions}
                   onReactionPress={handleReactionPress}
                   showReactionOptions={showReactionOptions}
@@ -709,6 +784,17 @@ export default function CommentModal({
         onClose={() => setReactionModalCommentId(null)}
         commentId={reactionModalCommentId}
         reactions={reactions}
+      />
+
+      {/* Report Modal */}
+      <ReportCommentModal
+        isOpen={reportModalOpen}
+        onClose={() => {
+          setReportModalOpen(false);
+          setReportCommentId(null);
+        }}
+        onSubmit={handleSubmitReport}
+        isSubmitting={isSubmittingReport}
       />
     </>
   );
