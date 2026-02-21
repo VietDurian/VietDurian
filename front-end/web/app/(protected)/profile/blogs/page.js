@@ -201,61 +201,47 @@ const BlogCard = ({ blog, onEdit, onDelete, onAddBlock, onView }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200">
+    <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 group">
       {/* Blog Image */}
-      <div className="relative h-48 overflow-hidden">
-        {blog.image ? (
-          <>
+      <div className="p-4 pb-0">
+        <div className="relative rounded-xl overflow-hidden bg-gray-100" style={{ aspectRatio: '16/9' }}>
+          {blog.image ? (
             <Image
               src={blog.image}
               alt={blog.title}
               fill
-              className="object-cover"
+              className="object-contain"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-          </>
-        ) : (
-          <div className="relative h-full bg-gradient-to-br from-emerald-400 to-emerald-600">
-            <div className="absolute inset-0 flex items-center justify-center">
+          ) : (
+            <div className="h-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
               <BookOpen className="w-20 h-20 text-white opacity-50" />
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Action Buttons Overlay */}
-        <div className="absolute top-3 right-3 flex gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddBlock(blog);
-            }}
-            className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-all"
-            title="Thêm chương"
-          >
-            <Plus size={18} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(blog);
-            }}
-            className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-lg transition-all"
-            title="Chỉnh sửa"
-          >
-            <Edit2 size={18} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm("Bạn có chắc chắn muốn xóa blog này?")) {
-                onDelete(blog._id);
-              }
-            }}
-            className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-all"
-            title="Xóa"
-          >
-            <Trash2 size={18} />
-          </button>
+          {/* Action Buttons - góc trên phải, chỉ hiện khi hover */}
+          <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <button
+              onClick={(e) => { e.stopPropagation(); onAddBlock(blog); }}
+              className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-all"
+              title="Thêm chương"
+            >
+              <Plus size={16} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(blog); }}
+              className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-lg transition-all"
+              title="Chỉnh sửa"
+            >
+              <Edit2 size={16} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); if (window.confirm("Bạn có chắc chắn muốn xóa blog này?")) { onDelete(blog._id); } }}
+              className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-all"
+              title="Xóa"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
