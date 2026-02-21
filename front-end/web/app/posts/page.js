@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { favoriteAPI, getOwnPosts } from "@/lib/api";
+import { favoriteAPI, getOwnPosts, commentAPI } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 import Navbar from "@/components/Navbar";
 
@@ -195,6 +195,10 @@ const Post = ({ post, onLikeUpdate }) => {
     useEffect(() => {
         setIsLiked(post.isLiked || false);
     }, [post.isLiked]);
+
+    useEffect(() => {
+        setCommentCount(post.comments || 0);
+    }, [post.comments]);
 
     const handleLike = async () => {
         if (isTogglingFavorite) return;
@@ -416,6 +420,22 @@ export default function PostsContent() {
                 });
 
                 setPosts(normalizedPosts);
+                const postsWithComments = await Promise.all(
+                    normalizedPosts.map(async (post) => {
+                        try {
+                            const res = await commentAPI.getCommentsByPost(post.id, "all");
+                            const countComments = (list) => {
+                                let count = list.length;
+                                list.forEach(c => { if (c.children?.length) count += countComments(c.children); });
+                                return count;
+                            };
+                            return { ...post, comments: countComments(res.data || []) };
+                        } catch {
+                            return post;
+                        }
+                    })
+                );
+                setPosts(postsWithComments);
             } catch (error) {
                 if (isCancelled) return;
                 console.error("Error loading posts:", error);
