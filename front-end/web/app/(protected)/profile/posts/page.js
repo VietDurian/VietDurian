@@ -15,6 +15,12 @@ import {
   Mail,
   Share2,
   Loader2,
+  Wrench,
+  BookOpen,
+  Leaf,
+  HandCoins,
+  Grid,
+  Plus
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -82,29 +88,21 @@ const StatusBadge = ({ status }) => {
 // Post Composer Component
 const PostComposer = ({ onOpenModal, user }) => {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-5 w-full">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-emerald-100 shadow-sm">
-          <img
-            src={user?.avatar || "/images/avatar.jpg"}
-            alt="User profile"
-            className="w-full h-full object-cover"
-          />
+    <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl p-8 md:p-12 w-full">
+      <div className="flex items-center justify-between flex-wrap gap-6">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            Bài viết của tôi
+          </h1>
+          <p className="text-emerald-50 text-lg">
+            Chia sẻ kinh nghiệm, đăng dịch vụ cho thuê, tìm người thuê và rao bán sản phẩm nông nghiệp
+          </p>
         </div>
-
-        <div
-          onClick={onOpenModal}
-          className="flex-1 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-emerald-50 hover:to-teal-50 border-2 border-gray-300 hover:border-emerald-400 rounded-full px-5 py-3.5 text-gray-600 cursor-pointer transition-all shadow-sm hover:shadow-md"
-        >
-          <span className="text-sm font-medium">Bạn đang nghĩ gì?</span>
-        </div>
-      </div>
-
-      <div className="flex justify-end">
         <button
           onClick={onOpenModal}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors shadow-sm hover:shadow-md"
+          className="bg-white hover:bg-emerald-50 text-emerald-700 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg"
         >
+          <Plus size={20} />
           Đăng bài
         </button>
       </div>
@@ -743,10 +741,6 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
     }
   };
 
-  // Xác định icon cho contact
-  const isEmail = post.link?.includes("@");
-  const ContactIcon = isEmail ? Mail : Phone;
-
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = () => setShowMenu(false);
@@ -828,14 +822,25 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
         </div>
 
         {/* SIMPLE CATEGORY BADGE */}
-        {post.category && (
-          <div className="mb-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-200">
-              <Tag size={16} className="text-teal-600" />
-              <span className="text-sm font-semibold text-teal-700">{post.category}</span>
+        {post.category && (() => {
+          const categoryConfig = {
+            "Dịch vụ": { icon: Wrench, bg: "from-blue-500 to-cyan-500" },
+            "Kinh nghiệm": { icon: BookOpen, bg: "from-amber-500 to-orange-500" },
+            "Sản phẩm": { icon: Leaf, bg: "from-emerald-500 to-teal-500" },
+            "Thuê dịch vụ": { icon: HandCoins, bg: "from-purple-500 to-violet-500" },
+            "Khác": { icon: Grid, bg: "from-gray-500 to-slate-500" },
+          };
+          const config = categoryConfig[post.category] || { icon: Grid, bg: "from-emerald-500 to-teal-500" };
+          const Icon = config.icon;
+          return (
+            <div className="mb-4">
+              <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r ${config.bg} text-white shadow-sm`}>
+                <Icon size={14} />
+                {post.category}
+              </span>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         <div className="text-base text-gray-800 leading-relaxed mb-4">
           <p className="whitespace-pre-wrap">{post.content}</p>
@@ -844,13 +849,12 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
         {/* SIMPLE CONTACT INFO - ICON + TEXT INLINE */}
         {post.link && (
           <div className="mb-4">
-            <div className="flex items-center gap-2 text-emerald-700">
-              <ContactIcon size={18} className="text-emerald-600" />
-              <span className="text-sm font-semibold">{post.link}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-gray-500">Liên hệ:</span>
+              <span className="text-sm font-semibold text-emerald-700">{post.link}</span>
             </div>
           </div>
         )}
-
         {post.image && (
           <div className="rounded-xl overflow-hidden mb-4 border border-gray-200">
             <img
@@ -1056,8 +1060,8 @@ export default function ContentExpertProfileContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      <main className="pt-18 p-5 lg:pt-20 flex flex-col justify-center items-center">
-        <div className="w-full max-w-4xl mt-5">
+      <main className="pt-7 px-4 flex flex-col justify-center items-center">
+        <div className="w-full mt-5">
           <PostComposer
             onOpenModal={() => setIsPostModalOpen(true)}
             user={user}
