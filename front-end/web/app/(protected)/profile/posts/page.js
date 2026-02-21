@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { createPost, getOwnPosts, updatePost, deletePost, favoriteAPI } from "@/lib/api";
+import { createPost, getOwnPosts, updatePost, deletePost, favoriteAPI, commentAPI } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 
 const POST_CATEGORIES = [
@@ -704,6 +704,10 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
     setIsLiked(post.isLiked || false);
   }, [post.isLiked]);
 
+  useEffect(() => {
+    setCommentCount(post.comments || 0);
+  }, [post.comments]);
+
   const handleLike = async () => {
     if (isTogglingFavorite) return; // Prevent double-click
 
@@ -976,6 +980,22 @@ export default function ContentExpertProfileContent() {
         })));
 
         setPosts(normalizedPosts);
+        const postsWithComments = await Promise.all(
+          normalizedPosts.map(async (post) => {
+            try {
+              const res = await commentAPI.getCommentsByPost(post.id, "all");
+              const countComments = (list) => {
+                let count = list.length;
+                list.forEach(c => { if (c.children?.length) count += countComments(c.children); });
+                return count;
+              };
+              return { ...post, comments: countComments(res.data || []) };
+            } catch {
+              return post;
+            }
+          })
+        );
+        setPosts(postsWithComments);
       } catch (error) {
         if (isCancelled) return;
         console.error("Error loading posts:", error);
