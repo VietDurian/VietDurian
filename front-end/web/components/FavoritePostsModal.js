@@ -15,6 +15,11 @@ import {
     Clock,
     XCircle,
     X,
+    Wrench,
+    BookOpen,
+    Leaf,
+    HandCoins,
+    Grid
 } from "lucide-react";
 import { favoriteAPI, deletePost, updatePost, commentAPI } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
@@ -377,9 +382,6 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
         }
     };
 
-    const isEmail = post.post_id?.contact?.includes("@");
-    const ContactIcon = isEmail ? Mail : Phone;
-
     useEffect(() => {
         const handleClickOutside = () => setShowMenu(false);
         if (showMenu) {
@@ -536,16 +538,25 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
                     )}
                 </div>
 
-                {post.post_id?.category && (
-                    <div className="mb-4">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-200">
-                            <Tag size={16} className="text-teal-600" />
-                            <span className="text-sm font-semibold text-teal-700">
+                {post.post_id?.category && (() => {
+                    const categoryConfig = {
+                        "Dịch vụ": { icon: Wrench, bg: "from-blue-500 to-cyan-500" },
+                        "Kinh nghiệm": { icon: BookOpen, bg: "from-amber-500 to-orange-500" },
+                        "Sản phẩm": { icon: Leaf, bg: "from-emerald-500 to-teal-500" },
+                        "Thuê dịch vụ": { icon: HandCoins, bg: "from-purple-500 to-violet-500" },
+                        "Khác": { icon: Grid, bg: "from-gray-500 to-slate-500" },
+                    };
+                    const config = categoryConfig[post.post_id.category] || { icon: Grid, bg: "from-emerald-500 to-teal-500" };
+                    const Icon = config.icon;
+                    return (
+                        <div className="mb-4">
+                            <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r ${config.bg} text-white shadow-sm`}>
+                                <Icon size={14} />
                                 {post.post_id.category}
                             </span>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 <div className="text-base text-gray-800 leading-relaxed mb-4">
                     <p className="whitespace-pre-wrap">{post.post_id?.content}</p>
@@ -553,9 +564,9 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
 
                 {post.post_id?.contact && (
                     <div className="mb-4">
-                        <div className="flex items-center gap-2 text-emerald-700">
-                            <ContactIcon size={18} className="text-emerald-600" />
-                            <span className="text-sm font-semibold">{post.post_id.contact}</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-gray-500">Liên hệ:</span>
+                            <span className="text-sm font-semibold text-emerald-700">{post.post_id.contact}</span>
                         </div>
                     </div>
                 )}
