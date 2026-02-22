@@ -412,7 +412,7 @@ export default function ProductsPage() {
                       <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 cursor-pointer group">
                         <div className="p-5">
                           {/* Hình ảnh không scale khi hover */}
-                          <div className="relative rounded-xl overflow-hidden bg-gray-100" style={{ aspectRatio: '16/9' }}>
+                          <div className="relative rounded-xl overflow-hidden bg-gray-100 mb-3" style={{ aspectRatio: '16/9' }}>
                             {product.images && product.images.length > 0 ? (
                               <Image
                                 src={
