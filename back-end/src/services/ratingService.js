@@ -1,5 +1,14 @@
 import { Rating } from "@/model/ratingModel.js";
+import { Product } from "@/model/productModel.js";
 import createError from "http-errors";
+
+const updateProductRating = async (productId) => {
+  const allRatings = await Rating.find({ product_id: productId });
+  const avg = allRatings.length
+    ? allRatings.reduce((acc, r) => acc + r.stars, 0) / allRatings.length
+    : 0;
+  await Product.findByIdAndUpdate(productId, { rating: parseFloat(avg.toFixed(1)) });
+};
 
 // Create a new rating
 const createRating = async ({ userId, productId, stars, content }) => {
@@ -30,6 +39,7 @@ const createRating = async ({ userId, productId, stars, content }) => {
     });
 
     const savedRating = await newRating.save();
+    await updateProductRating(productId);
 
     // Populate user and product details
     await savedRating.populate("user_id", "full_name avatar");
@@ -163,6 +173,7 @@ const updateRating = async ({ ratingId, userId, stars, content }) => {
     }
 
     const updatedRating = await rating.save();
+    await updateProductRating(rating.product_id);
 
     // Populate details
     await updatedRating.populate("user_id", "full_name avatar");
@@ -187,9 +198,9 @@ const deleteRating = async ({ ratingId, userId }) => {
     if (rating.user_id.toString() !== userId) {
       throw createError(403, "You can only delete your own ratings");
     }
-
+    const productId = rating.product_id;
     await Rating.findByIdAndDelete(ratingId);
-
+    await updateProductRating(productId);
     return { message: "Rating deleted successfully" };
   } catch (error) {
     throw error;
