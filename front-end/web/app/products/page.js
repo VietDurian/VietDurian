@@ -412,7 +412,7 @@ export default function ProductsPage() {
                       <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 cursor-pointer group">
                         <div className="p-5">
                           {/* Hình ảnh không scale khi hover */}
-                          <div className="relative h-64 rounded-xl overflow-hidden mb-4">
+                          <div className="relative rounded-xl overflow-hidden bg-gray-100" style={{ aspectRatio: '16/9' }}>
                             {product.images && product.images.length > 0 ? (
                               <Image
                                 src={
@@ -458,16 +458,17 @@ export default function ProductsPage() {
                               <span>{product.weight}kg</span>
                             </div>
                           </div>
-
                           <div className="mb-4">
-                            <p className="text-sm text-gray-500 mb-1">
-                              Giá tham khảo
-                            </p>
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-sm text-gray-500">Giá tham khảo</p>
+                              <span className="text-xs bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-md font-medium">
+                                1 sản phẩm
+                              </span>
+                            </div>
                             <span className="text-2xl font-bold text-emerald-600">
                               {formatPrice(product.price)}
                             </span>
                           </div>
-
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5 text-sm text-gray-500">
                               <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />

@@ -146,7 +146,7 @@ export default function BlogPage() {
                                                             src={blog.image}
                                                             alt={blog.title}
                                                             fill
-                                                            className="object-contain"
+                                                            className="object-cover"
                                                         />
                                                     ) : (
                                                         <div className="h-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
