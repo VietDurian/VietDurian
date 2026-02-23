@@ -1,7 +1,33 @@
 import User from "@/model/userModel.js";
 import Message from "@/model/messageModel.js";
+import Conversation from "@/model/conversationModel.js";
 import cloudinary from "../../node_modules/cloudinary/cloudinary.js";
 import { getReceiverSocketId, io } from "@/lib/socket.js";
+
+const getContacts = async (req, res) => {
+  try {
+    const myId = req.user._id;
+
+    const conversations = await Conversation.find({
+      participants: myId,
+    }).populate("participants", "-password");
+
+    // Return the other participant from each conversation
+    const contacts = conversations
+      .map((conv) => {
+        const other = conv.participants.find(
+          (p) => p._id.toString() !== myId.toString(),
+        );
+        return other;
+      })
+      .filter(Boolean);
+
+    res.status(200).json(contacts);
+  } catch (error) {
+    console.log("Error in getContacts controller: ", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 const getUsersForSidebar = async (req, res) => {
   try {
@@ -22,12 +48,17 @@ const getMessages = async (req, res) => {
     const { id: userToChatId } = req.params;
     const myId = req.user._id;
 
-    const messages = await Message.find({
-      $or: [
-        { senderId: myId, receiverId: userToChatId },
-        { senderId: userToChatId, receiverId: myId },
-      ],
+    const conversation = await Conversation.findOne({
+      participants: { $all: [myId, userToChatId] },
     });
+
+    if (!conversation) {
+      return res.status(200).json([]);
+    }
+
+    const messages = await Message.find({
+      conversationId: conversation._id,
+    }).sort({ createdAt: 1 });
 
     res.status(200).json(messages);
   } catch (error) {
@@ -49,7 +80,19 @@ const sendMessage = async (req, res) => {
       imageUrl = uploadResponse.secure_url;
     }
 
+    // Find existing conversation or create a new one
+    let conversation = await Conversation.findOne({
+      participants: { $all: [senderId, receiverId] },
+    });
+
+    if (!conversation) {
+      conversation = await Conversation.create({
+        participants: [senderId, receiverId],
+      });
+    }
+
     const newMessage = new Message({
+      conversationId: conversation._id,
       senderId,
       receiverId,
       text,
@@ -57,6 +100,14 @@ const sendMessage = async (req, res) => {
     });
 
     await newMessage.save();
+
+    // Update the lastMessage field on the conversation
+    conversation.lastMessage = {
+      text: text || "",
+      senderId,
+      createdAt: newMessage.createdAt,
+    };
+    await conversation.save();
 
     const receiverSocketId = getReceiverSocketId(receiverId);
 
@@ -73,6 +124,7 @@ const sendMessage = async (req, res) => {
 };
 
 export const messageController = {
+  getContacts,
   getUsersForSidebar,
   getMessages,
   sendMessage,
