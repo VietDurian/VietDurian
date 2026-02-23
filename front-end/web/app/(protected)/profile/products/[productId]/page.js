@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -146,14 +146,15 @@ export default function ProductDetailPage() {
     [productDetail, ratingValue],
   );
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [confirmName, setConfirmName] = useState("");
+
   const handleBack = () => {
     router.push("/profile/products");
   };
 
   const handleDelete = async () => {
     if (!productId) return;
-    const confirmed = window.confirm("Delete this product?");
-    if (!confirmed) return;
     await deleteProduct(productId);
     router.push("/profile/products");
   };
@@ -178,6 +179,48 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Xác nhận xóa sản phẩm
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Nhập tên sản phẩm <b>{productDetail?.name}</b> để xác nhận xóa.
+            </p>
+            <input
+              value={confirmName}
+              onChange={(e) => setConfirmName(e.target.value)}
+              placeholder="Nhập tên sản phẩm..."
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-red-500 outline-none"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setConfirmName("");
+                }}
+                className="cursor-pointer px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                Hủy
+              </button>
+              <button
+                disabled={
+                  confirmName !== productDetail?.name || isProductDeleting
+                }
+                onClick={handleDelete}
+                className={`cursor-pointer px-4 py-2 rounded-lg text-white ${
+                  confirmName === productDetail?.name
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-red-300 cursor-not-allowed"
+                }`}
+              >
+                {isProductDeleting ? "Đang xóa..." : "Xóa vĩnh viễn"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Top bar */}
         <div className="flex items-center justify-between">
@@ -189,17 +232,22 @@ export default function ProductDetailPage() {
             Back to Products
           </button>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 border border-gray-200 bg-white text-sm font-medium text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
+            <button
+              onClick={() => {
+                router.push(`/profile/products/${productId}/edit`);
+              }}
+              className="flex items-center gap-1.5 border border-gray-200 bg-white text-sm font-medium text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
+            >
               <SquarePen size={13} />
-              Edit Product
+              Chỉnh sửa
             </button>
             <button
-              onClick={handleDelete}
+              onClick={() => setShowDeleteModal(true)}
               disabled={isProductDeleting}
               className="flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Trash2 size={13} />
-              {isProductDeleting ? "Deleting..." : "Delete"}
+              {isProductDeleting ? "Đang xóa..." : "Xóa"}
             </button>
           </div>
         </div>
