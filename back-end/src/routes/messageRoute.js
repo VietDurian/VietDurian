@@ -4,6 +4,8 @@ import { authMiddleware } from "@/middlewares/authentication";
 
 const router = express.Router();
 
+router.get("/contacts", authMiddleware.protect, messageController.getContacts);
+
 router.get(
   "/users",
   authMiddleware.protect,
