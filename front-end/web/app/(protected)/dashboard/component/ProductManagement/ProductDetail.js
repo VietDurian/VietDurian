@@ -76,6 +76,61 @@ export function ProductDetail({ product, onClose }) {
     const full = Math.floor(rating);
     const hasHalf = rating - full >= 0.5 && full < 5;
     const empty = 5 - full - (hasHalf ? 1 : 0);
+    const ratingValue = rating.toFixed(1);
+    const ratingIcons = (
+        <>
+            {Array.from({ length: full }).map((_, i) => (
+                <Star key={`full-${i}`} className="w-4 h-4 text-amber-500" fill="currentColor" stroke="none" />
+            ))}
+            {hasHalf && <StarHalf key="half" className="w-4 h-4 text-amber-500" />}
+            {Array.from({ length: empty }).map((_, i) => (
+                <Star key={`empty-${i}`} className="w-4 h-4 text-gray-300" />
+            ))}
+        </>
+    );
+    const quickStats = [
+        {
+            key: 'rating',
+            label: t('Rating'),
+            value: ratingValue,
+            detail: t('Average score'),
+            render: (
+                <div className="mt-2 flex items-center gap-1 text-amber-500">
+                    {ratingIcons}
+                    <span className="text-xs font-semibold text-amber-700">{ratingValue}</span>
+                </div>
+            ),
+        },
+        {
+            key: 'views',
+            label: t('Views'),
+            value: Number(product.viewCount ?? 0).toLocaleString('vi-VN'),
+            detail: t('Total impressions'),
+        },
+        {
+            key: 'created',
+            label: t('Created At'),
+            value: formatDate(product.createdAt),
+            detail: t('Record created'),
+        },
+        {
+            key: 'updated',
+            label: t('Updated At'),
+            value: formatDate(product.updatedAt),
+            detail: t('Last update'),
+        },
+    ];
+    const harvestMilestones = [
+        { key: 'harvest-start', label: t('Harvest Start'), value: formatDate(product.harvestStartDate), accent: 'from-emerald-50 to-white' },
+        { key: 'harvest-end', label: t('Harvest End'), value: formatDate(product.harvestEndDate), accent: 'from-amber-50 to-white' },
+    ];
+    const detailFacts = [
+        { key: 'origin', label: t('Origin'), value: product.origin || '--' },
+        { key: 'weight', label: t('Weight'), value: Number(product.weight ?? 0).toLocaleString('vi-VN') },
+        { key: 'created-by', label: t('Created By'), value: product?.user_name || product?.userId || '--' },
+        { key: 'product-id', label: t('Product ID'), value: product.id || '--', wrap: true },
+    ];
+    const hasImage = Boolean(product.imageUrl);
 
     return (
         <div
@@ -87,133 +142,147 @@ export function ProductDetail({ product, onClose }) {
                 if (e.target === e.currentTarget) onClose?.();
             }}
         >
-            <div className="w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
-                {/* Header */}
-                <div className="relative flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#1a4d2e] to-[#2d7a4f]">
-                    <h2 id="product-detail-title" className="text-lg font-semibold text-white">
-                        {product.name || t('Product Detail')}
-                    </h2>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        aria-label={t('Close')}
-                        className="inline-flex items-center justify-center p-2 rounded-full bg-white/10 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/60"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
+            <div className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-3xl border border-white/30 bg-white/90 shadow-2xl">
+                <div className="pointer-events-none absolute inset-0 opacity-60" aria-hidden>
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#1a4d2e]/10 via-white to-white" />
+                    <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-[#1a4d2e]/10 blur-3xl" />
                 </div>
-
-                {/* Body (scrollable) */}
-                <div className="overflow-y-auto p-5">
-                    <div className="flex flex-col md:flex-row gap-6">
-                        {/* Image */}
-                        <div className="w-full md:w-56 flex-shrink-0">
-                            <div className="aspect-square w-56 mx-auto md:mx-0 rounded-xl overflow-hidden bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f] flex items-center justify-center text-white font-bold ring-1 ring-gray-200">
-                                {product.imageUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={product.imageUrl} alt={product.name || 'product'} className="w-full h-full object-cover" />
-                                ) : (
-                                    (product.name || '--')?.charAt(0)
-                                )}
-                            </div>
+                <div className="relative flex h-full flex-col">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-white/40 bg-gradient-to-r from-[#1a4d2e] to-[#2d7a4f] px-6 py-5 text-white">
+                        <div>
+                            <p className="text-xs uppercase tracking-[0.3em] text-white/60">{t('Product Detail')}</p>
+                            <h2 id="product-detail-title" className="text-xl font-semibold">
+                                {product.name || t('Product Detail')}
+                            </h2>
                         </div>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            aria-label={t('Close')}
+                            className="inline-flex items-center justify-center rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/60"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
 
-                        {/* Main info */}
-                        <div className="flex-1 space-y-4">
-                            <div className="space-y-1">
-                                <p className="text-xs uppercase tracking-wide text-gray-500">{t('Description')}</p>
-                                <p className="text-gray-900 leading-relaxed">
-                                    {product.description || '--'}
+                    {/* Body */}
+                    <div className="flex-1 overflow-y-auto bg-slate-50">
+                        <div className="px-6 py-8 space-y-8">
+                            {/* Overview */}
+                            <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm shadow-slate-200/60">
+                                <div className="flex flex-wrap items-start justify-between gap-4">
+                                    <div className="space-y-3">
+                                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{t('Overview')}</p>
+                                        <h3 className="text-2xl font-semibold text-slate-900">
+                                            {product.name || '--'}
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-wide ${getTypeBadgeColor(product.typeName)}`}>
+                                                {product.typeName || '--'}
+                                            </span>
+                                            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-wide ${getStatusBadgeColor(product.status)}`}>
+                                                {product.status || '--'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{t('Price')}</p>
+                                        <p className="text-3xl font-semibold text-[#1a4d2e]">{formatVND(decimalToNumber(product.price))}</p>
+                                        <p className="text-sm text-slate-500">{t('Weight')}: {Number(product.weight ?? 0).toLocaleString('vi-VN')}</p>
+                                    </div>
+                                </div>
+                                <p className="mt-4 text-sm leading-relaxed text-slate-600">
+                                    {product.description || t('No description available for this product yet.')}
                                 </p>
-                            </div>
+                            </section>
 
-                            {/* Quick badges */}
-                            <div className="flex flex-wrap gap-2">
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(product.typeName)}`}>
-                                    {product.typeName || '--'}
-                                </span>
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(product.status)}`}>
-                                    {product.status || '--'}
-                                </span>
-                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                                    {t('Rating')}: {rating.toFixed(1)}
-                                </span>
-                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-slate-50 text-slate-700 border border-slate-200">
-                                    {t('Views')}: {Number(product.viewCount ?? 0)}
-                                </span>
-                            </div>
+                            <div className="grid gap-8 lg:grid-cols-[320px,1fr]">
+                                {/* Visual + stats */}
+                                <aside className="space-y-5">
+                                    <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-[#1a4d2e] text-white shadow-xl">
+                                        {hasImage ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img src={product.imageUrl} alt={product.name || 'product'} className="absolute inset-0 h-full w-full object-cover" />
+                                        ) : (
+                                            <div className="absolute inset-0 bg-gradient-to-br from-[#1a4d2e]/90 to-[#2d7a4f]/80" />
+                                        )}
+                                        {!hasImage && (
+                                            <span className="absolute inset-0 flex items-center justify-center text-8xl font-black text-white/10">
+                                                {(product.name || '--')?.charAt(0)}
+                                            </span>
+                                        )}
+                                        <div className="relative z-10 flex min-h-[320px] flex-col justify-end gap-2 p-6">
+                                            <div className={`max-w-sm rounded-2xl px-4 py-3 ${hasImage ? 'bg-black/50 text-white backdrop-blur-sm' : 'text-white/90'}`}>
+                                                <p className="text-xs uppercase tracking-[0.3em] text-white/70">{t('Product Preview')}</p>
+                                                <p className="text-2xl font-semibold">{product.name || '--'}</p>
+                                                <p className="text-sm text-white/80">{product.origin || t('Origin unknown')}</p>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            {/* Details grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="rounded-lg border border-gray-100 p-4 bg-gray-50/50">
-                                    <p className="text-xs uppercase tracking-wide text-gray-500">{t('Price')}</p>
-                                    <p className="text-gray-900">{formatVND(decimalToNumber(product.price))}</p>
-                                </div>
-                                <div className="rounded-lg border border-gray-100 p-4 bg-gray-50/50">
-                                    <p className="text-xs uppercase tracking-wide text-gray-500">{t('Origin')}</p>
-                                    <p className="text-gray-900">{product.origin || '--'}</p>
-                                </div>
-                                <div className="rounded-lg border border-gray-100 p-4 bg-gray-50/50">
-                                    <p className="text-xs uppercase tracking-wide text-gray-500">{t('Weight')}</p>
-                                    <p className="text-gray-900">{Number(product.weight ?? 0)}</p>
-                                </div>
-                                <div className="rounded-lg border border-gray-100 p-4 bg-gray-50/50">
-                                    <p className="text-xs uppercase tracking-wide text-gray-500">{t('Harvest Start')}</p>
-                                    <p className="text-gray-900">{formatDate(product.harvestStartDate)}</p>
-                                </div>
-                                <div className="rounded-lg border border-gray-100 p-4 bg-gray-50/50">
-                                    <p className="text-xs uppercase tracking-wide text-gray-500">{t('Harvest End')}</p>
-                                    <p className="text-gray-900">{formatDate(product.harvestEndDate)}</p>
-                                </div>
-                            </div>
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        {quickStats.map((item) => (
+                                            <div key={item.key} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{item.label}</p>
+                                                <p className="mt-2 text-lg font-semibold text-slate-900">{item.value}</p>
+                                                <p className="text-xs text-slate-500">{item.detail}</p>
+                                                {item.render}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </aside>
 
-                            {/* Rating */}
-                            <div>
-                                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">{t('Rating')}</p>
-                                <div className="flex items-center gap-1">
-                                    {Array.from({ length: full }).map((_, i) => (
-                                        <Star key={`full-${i}`} className="w-4 h-4 text-yellow-500" fill="currentColor" stroke="none" />
-                                    ))}
-                                    {hasHalf && <StarHalf className="w-4 h-4 text-yellow-500" />}
-                                    {Array.from({ length: empty }).map((_, i) => (
-                                        <Star key={`empty-${i}`} className="w-4 h-4 text-gray-300" />
-                                    ))}
-                                    <span className="ml-2 text-xs text-gray-500">{rating.toFixed(1)}</span>
-                                </div>
-                            </div>
+                                {/* Details */}
+                                <div className="space-y-6">
+                                    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                                                <Star className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-900">{t('Harvest Timeline')}</p>
+                                                <p className="text-xs text-slate-500">{t('Plan your logistics with confidence')}</p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-6 grid gap-4 md:grid-cols-2">
+                                            {harvestMilestones.map((milestone) => (
+                                                <div key={milestone.key} className={`rounded-2xl border border-slate-100 bg-gradient-to-br ${milestone.accent} p-4 shadow-inner`}>
+                                                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{milestone.label}</p>
+                                                    <p className="mt-2 text-lg font-semibold text-slate-900">{milestone.value}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </section>
 
-                            {/* Meta */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="rounded-lg border border-gray-100 p-4">
-                                    <p className="text-xs uppercase tracking-wide text-gray-500">{t('Created At')}</p>
-                                    <p className="text-gray-900">{formatDate(product.createdAt)}</p>
-                                </div>
-                                <div className="rounded-lg border border-gray-100 p-4">
-                                    <p className="text-xs uppercase tracking-wide text-gray-500">{t('Updated At')}</p>
-                                    <p className="text-gray-900">{formatDate(product.updatedAt)}</p>
-                                </div>
-                                <div className="rounded-lg border border-gray-100 p-4">
-                                    <p className="text-xs uppercase tracking-wide text-gray-500">{t('Product ID')}</p>
-                                    <p className="text-gray-900 break-all">{product.id || '--'}</p>
-                                </div>
-                                <div className="rounded-lg border border-gray-100 p-4">
-                                    <p className="text-xs uppercase tracking-wide text-gray-500">{t('Created By')}</p>
-                                    <p className="text-gray-900 break-all">{product?.user_name || product?.userId || '--'}</p>
+                                    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                                        <p className="text-sm font-semibold text-slate-900">{t('Key Details')}</p>
+                                        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                                            {detailFacts.map((fact) => (
+                                                <div key={fact.key} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+                                                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{fact.label}</p>
+                                                    <p className={`mt-2 text-sm font-medium text-slate-900 ${fact.wrap ? 'break-all' : ''}`}>
+                                                        {fact.value}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </section>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Footer */}
-                <div className="px-5 py-4 border-t bg-gray-50 flex justify-end">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="px-3 py-1.5 text-sm rounded-md border bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                    >
-                        {t('Close')}
-                    </button>
+                    {/* Footer */}
+                    <div className="border-t border-slate-200 bg-white px-6 py-4 text-right">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        >
+                            {t('Close')}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
