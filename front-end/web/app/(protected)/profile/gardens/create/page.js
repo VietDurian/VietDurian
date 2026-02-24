@@ -1,8 +1,17 @@
 "use client";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, X, Sprout, Check, ImageIcon } from "lucide-react";
+import { ArrowLeft, X, Sprout, Check, ImageIcon } from "lucide-react";
 import { useGardenStore } from "@/store/useGardenStore";
+import dynamic from "next/dynamic";
+import { toast } from "sonner";
+
+const LocationPickerMap = dynamic(
+  () => import("@/components/LocationPickerMap"),
+  {
+    ssr: false,
+  },
+);
 
 export default function CreateGarden() {
   const router = useRouter();
@@ -46,12 +55,20 @@ export default function CreateGarden() {
     }));
   };
 
+  const handlePickLocation = (latitude, longitude) => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: latitude.toFixed(6),
+      longitude: longitude.toFixed(6),
+    }));
+  };
+
   const handleImageChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      setError("Ảnh quá lớn. Tối đa 5MB");
+      toast.error("Ảnh quá lớn. Tối đa 5MB");
       return;
     }
 
@@ -202,46 +219,32 @@ export default function CreateGarden() {
             {/* Coordinates */}
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
-                Tọa độ
+                Tọa độ <span className="text-red-500">*</span>
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="latitude"
-                    className="block text-xs text-gray-600 mb-1"
-                  >
-                    Vĩ dộ
-                  </label>
-                  <input
-                    type="number"
-                    id="latitude"
-                    name="latitude"
-                    value={formData.latitude}
-                    onChange={handleChange}
-                    required
-                    step="0.000001"
-                    placeholder="ví dụ: 45.5231"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-                  />
+              <p className="text-xs text-gray-600 mb-3">
+                Nhấp vào bản đồ để chọn vị trí khu vườn
+              </p>
+              <LocationPickerMap
+                latitude={
+                  formData.latitude ? Number(formData.latitude) : undefined
+                }
+                longitude={
+                  formData.longitude ? Number(formData.longitude) : undefined
+                }
+                onPick={handlePickLocation}
+              />
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm">
+                  <span className="text-gray-500">Vĩ độ: </span>
+                  <span className="font-medium text-gray-900">
+                    {formData.latitude || "Chưa chọn"}
+                  </span>
                 </div>
-                <div>
-                  <label
-                    htmlFor="longitude"
-                    className="block text-xs text-gray-600 mb-1"
-                  >
-                    Kinh độ
-                  </label>
-                  <input
-                    type="number"
-                    id="longitude"
-                    name="longitude"
-                    value={formData.longitude}
-                    onChange={handleChange}
-                    required
-                    step="0.000001"
-                    placeholder="ví dụ: -122.6765"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-                  />
+                <div className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm">
+                  <span className="text-gray-500">Kinh độ: </span>
+                  <span className="font-medium text-gray-900">
+                    {formData.longitude || "Chưa chọn"}
+                  </span>
                 </div>
               </div>
             </div>

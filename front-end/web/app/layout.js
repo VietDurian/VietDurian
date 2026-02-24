@@ -1,6 +1,7 @@
 "use client";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
