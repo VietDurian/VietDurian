@@ -58,6 +58,8 @@ const passwordRules = [
   },
 ];
 
+const OTP_RESEND_DELAY_MS = 10 * 60 * 1000;
+
 export default function RegisterPage() {
   const { signup, isSigningUp } = useAuthStore();
 
@@ -105,6 +107,12 @@ export default function RegisterPage() {
     });
 
     if (result) {
+      const resendCooldownKey = `verify_otp_resend_available_at_${email.toLowerCase()}`;
+      localStorage.setItem(
+        resendCooldownKey,
+        String(Date.now() + OTP_RESEND_DELAY_MS),
+      );
+
       setTimeout(() => {
         router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       }, 1500);
