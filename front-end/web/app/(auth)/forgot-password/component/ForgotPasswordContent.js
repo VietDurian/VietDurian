@@ -1,7 +1,6 @@
 // Nguyễn Trọng Quý - CE180596
 "use client";
-import Notification from "@/components/Notification";
-import axios from "axios";
+import { useAuthStore } from "@/store/useAuthStore";
 import { Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,37 +9,23 @@ import React, { useState } from "react";
 
 export default function ForogtPasswordContent() {
   const router = useRouter();
+  const { forgotPassword, isRequestingResetOtp } = useAuthStore();
   const [email, setEmail] = useState("");
-  const [notificationSuccessMessage, setNotificationSuccessMessage] =
-    useState("");
-  const [notificationErrorMessage, setNotificationErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
 
   // Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return;
-    try {
-      setLoading(true);
-      await axios.post(`${API_BASE}/auth/forgot-password`, {
-        email,
-      });
-      // Notify user that they have successfully verified their email
-      setNotificationSuccessMessage("Đang chuyển hướng đến trang nhập OTP...");
-      // 2 second wait before redirecting user to the Login Page
+    if (isRequestingResetOtp) return;
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const result = await forgotPassword(normalizedEmail);
+
+    if (result) {
       setTimeout(() => {
         router.push(
-          `/verify-reset-otp?email=${encodeURIComponent(
-            email.trim().toLowerCase()
-          )}`
+          `/verify-reset-otp?email=${encodeURIComponent(normalizedEmail)}`,
         );
       }, 2000);
-    } catch (err) {
-      setNotificationErrorMessage(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -89,21 +74,12 @@ export default function ForogtPasswordContent() {
               </div>
             </div>
 
-            {notificationSuccessMessage && (
-              <Notification
-                type="success"
-                title="Xác nhận thành công!"
-                message={notificationSuccessMessage}
-                onClose={() => setNotificationSuccessMessage("")}
-              />
-            )}
-
             <button
               type="submit"
-              disabled={loading}
+              disabled={isRequestingResetOtp}
               className="w-full bg-[#04543D] text-white py-3.5 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? (
+              {isRequestingResetOtp ? (
                 <>
                   <span className="inline-block h-5 w-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
                   <span>Đang gửi...</span>

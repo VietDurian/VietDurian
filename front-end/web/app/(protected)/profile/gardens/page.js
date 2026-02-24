@@ -36,20 +36,20 @@ export default function ProfileGarden() {
             </div>
           </div>
         ))}
-      <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/30">
+      <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/30 mt-7">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200">
+        <div className="mx-auto bg-linear-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl max-w-7xl">
           <div className="max-w-7xl mx-auto px-6 py-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-white">
                   Khu vườn của tôi
                 </h1>
-                <p className="text-gray-600 mt-1">Quản lí khu vườn & Nhật ký</p>
+                <p className="text-white">Quản lí khu vườn & Nhật ký</p>
               </div>
               <Link
                 href="/profile/gardens/create"
-                className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 bg-white hover:bg-emerald-100 text-emerald-700 px-6 py-3 rounded-lg font-bold transition-colors shadow-sm"
               >
                 <Plus className="w-5 h-5" />
                 Tạo khu vườn

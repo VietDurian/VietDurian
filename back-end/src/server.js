@@ -21,7 +21,6 @@ app.use(
 
 // Cookie Parser
 app.use(cookieParser());
-
 // Body parser
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
@@ -31,6 +30,17 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Api V1 Routes
 app.use("/api/v1", API_v1);
+
+// Error responses
+app.use((err, req, res, next) => {
+  const status = err.status || err.statusCode || 400;
+  const message = err.message || "Internal Server Error";
+
+  res.status(status).json({
+    success: false,
+    message,
+  });
+});
 
 const PORT = process.env.PORT || 8080;
 
