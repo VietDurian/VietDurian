@@ -71,28 +71,68 @@ export default function EditProduct() {
         typeof img === "string" ? img : img?.url || "",
       );
 
-      setFormData({
-        name: productDetail.name || "",
-        description: productDetail.description || "",
-        price: resolveDecimal(productDetail.price),
-        weight: resolveDecimal(productDetail.weight),
-        origin: productDetail.origin || "",
-        typeId,
-        harvestStartDate: startDate ? startDate.slice(0, 10) : "",
-        harvestEndDate: endDate ? endDate.slice(0, 10) : "",
-        status: productDetail.status || "active",
-        images: imageUrls,
-      });
+      queueMicrotask(() => {
+        setFormData({
+          name: productDetail.name || "",
+          description: productDetail.description || "",
+          price: resolveDecimal(productDetail.price),
+          weight: resolveDecimal(productDetail.weight),
+          origin: productDetail.origin || "",
+          typeId,
+          harvestStartDate: startDate ? startDate.slice(0, 10) : "",
+          harvestEndDate: endDate ? endDate.slice(0, 10) : "",
+          status: productDetail.status || "active",
+          images: imageUrls,
+        });
 
-      if (imageUrls[0]) {
-        setImagePreview(imageUrls[0]);
-      }
+        if (imageUrls[0]) {
+          setImagePreview(imageUrls[0]);
+        }
+      });
     }
   }, [productDetail]);
+
+  const priceValue = Number(formData.price);
+  const weightValue = Number(formData.weight);
+  const isFormComplete =
+    !!formData.name.trim() &&
+    !!formData.description.trim() &&
+    formData.price !== "" &&
+    formData.weight !== "" &&
+    !!formData.origin.trim() &&
+    !!formData.typeId &&
+    !!formData.harvestStartDate &&
+    !!formData.harvestEndDate &&
+    !!formData.status &&
+    formData.images.length > 0;
+  const isNonNegativeNumber =
+    Number.isFinite(priceValue) &&
+    Number.isFinite(weightValue) &&
+    priceValue >= 0 &&
+    weightValue >= 0;
+  const isValidHarvestDateRange =
+    !formData.harvestStartDate ||
+    !formData.harvestEndDate ||
+    formData.harvestEndDate >= formData.harvestStartDate;
+  const isSubmitDisabled =
+    isProductEditing ||
+    !isFormComplete ||
+    !isNonNegativeNumber ||
+    !isValidHarvestDateRange;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (formData.harvestEndDate < formData.harvestStartDate) {
+      setError("Ngày kết thúc không được trước ngày bắt đầu");
+      return;
+    }
+
+    if (!formData.images.length) {
+      setError("Vui lòng chọn ảnh sản phẩm");
+      return;
+    }
 
     const payload = {
       ...formData,
@@ -111,10 +151,31 @@ export default function EditProduct() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    let nextValue = value;
+
+    if ((name === "price" || name === "weight") && value !== "") {
+      const numberValue = Number(value);
+      if (!Number.isNaN(numberValue) && numberValue < 0) {
+        nextValue = "0";
+      }
+    }
+
+    setFormData((prev) => {
+      const nextFormData = {
+        ...prev,
+        [name]: nextValue,
+      };
+
+      if (
+        name === "harvestStartDate" &&
+        nextFormData.harvestEndDate &&
+        nextFormData.harvestEndDate < nextValue
+      ) {
+        nextFormData.harvestEndDate = "";
+      }
+
+      return nextFormData;
+    });
   };
 
   const handleImageChange = (event) => {
@@ -211,6 +272,7 @@ export default function EditProduct() {
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
+                  required
                   rows={4}
                   placeholder="Mô tả khu vườn của bạn..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors resize-none"
@@ -234,6 +296,7 @@ export default function EditProduct() {
                   name="price"
                   value={formData.price}
                   onChange={handleChange}
+                  min={0}
                   required
                   placeholder="ví dụ: 120000"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
@@ -254,6 +317,7 @@ export default function EditProduct() {
                   name="weight"
                   value={formData.weight}
                   onChange={handleChange}
+                  min={0}
                   required
                   placeholder="ví dụ: 2"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
@@ -350,6 +414,7 @@ export default function EditProduct() {
                   name="harvestEndDate"
                   value={formData.harvestEndDate}
                   onChange={handleChange}
+                  min={formData.harvestStartDate || undefined}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
                 />
@@ -392,7 +457,9 @@ export default function EditProduct() {
 
           {/* Image Upload */}
           <div className="bg-white rounded-xl shadow-sm p-8 mt-5 space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Ảnh</label>
+            <label className="text-sm font-semibold text-gray-700">
+              Ảnh <span className="text-red-500">*</span>
+            </label>
 
             {!imagePreview ? (
               <div
@@ -440,7 +507,7 @@ export default function EditProduct() {
           <div className="flex items-center gap-4 mt-8 pt-6 border-t border-gray-200">
             <button
               type="submit"
-              disabled={isProductEditing}
+              disabled={isSubmitDisabled}
               className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
             >
               <Check className="w-4 h-4" />
