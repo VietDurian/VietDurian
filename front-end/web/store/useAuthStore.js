@@ -11,6 +11,7 @@ export const useAuthStore = create((set, get) => ({
   isResendingOtp: false,
   isVerifyingEmail: false,
   isRequestingResetOtp: false,
+  isVerifyingResetOtp: false,
   isLoggingIn: false,
   isUpdatingProfile: false,
   isCheckingAuth: true,
@@ -93,6 +94,25 @@ export const useAuthStore = create((set, get) => ({
       return null;
     } finally {
       set({ isRequestingResetOtp: false });
+    }
+  },
+
+  verifyResetOtp: async ({ email, otp }) => {
+    set({ isVerifyingResetOtp: true });
+    try {
+      const normalizedEmail = email?.trim().toLowerCase();
+      const res = await axiosInstance.post("/auth/verify-reset-otp", {
+        email: normalizedEmail,
+        otp,
+      });
+
+      toast.success("Xác nhận OTP thành công");
+      return res?.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Xác nhận OTP thất bại");
+      return null;
+    } finally {
+      set({ isVerifyingResetOtp: false });
     }
   },
 
