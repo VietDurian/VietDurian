@@ -113,7 +113,8 @@ export default function Navbar() {
   }, []);
 
   const handleLogout = async () => {
-    await logout(); // calls AuthContext action - which clears everything and redirects
+    await logout(); // calls Zustand action
+    router.push("/login"); // redirect
   };
   return (
     <nav className="fixed top-0 inset-x-0 z-50 bg-white backdrop-blur-md border-b border-gray-200">
