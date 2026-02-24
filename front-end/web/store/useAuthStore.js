@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { io } from "socket.io-client";
 
 const BASE_URL = "http://localhost:8080";
@@ -8,6 +8,8 @@ const BASE_URL = "http://localhost:8080";
 export const useAuthStore = create((set, get) => ({
   authUser: null,
   isSigningUp: false,
+  isResendingOtp: false,
+  isVerifyingEmail: false,
   isLoggingIn: false,
   isUpdatingProfile: false,
   isCheckingAuth: true,
@@ -35,14 +37,44 @@ export const useAuthStore = create((set, get) => ({
   signup: async (data) => {
     set({ isSigningUp: true });
     try {
-      const res = await axiosInstance.post("/auth/signup", data);
-      set({ authUser: res.data });
-      toast.success("Account created successfully");
-      get().connectSocket();
+      const res = await axiosInstance.post("/auth/register", data);
+      toast.success("Kiểm tra mail cho mã OTP");
+      return res?.data;
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error?.response?.data?.message);
+      return null;
     } finally {
       set({ isSigningUp: false });
+    }
+  },
+
+  verifyEmail: async (data) => {
+    set({ isVerifyingEmail: true });
+    try {
+      const res = await axiosInstance.post("/auth/verify-email", data);
+      toast.success("Xác nhận thành công! Đang chuyển hướng đến đăng nhập...");
+      return res?.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Xác nhận email thất bại");
+      return null;
+    } finally {
+      set({ isVerifyingEmail: false });
+    }
+  },
+
+  resendVerificationOtp: async (email) => {
+    set({ isResendingOtp: true });
+    try {
+      const res = await axiosInstance.post("/auth/resend-verification-otp", {
+        email,
+      });
+      toast.success("Đã gửi lại mã OTP");
+      return res?.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Gửi lại OTP thất bại");
+      return null;
+    } finally {
+      set({ isResendingOtp: false });
     }
   },
 

@@ -1,7 +1,6 @@
 // Nguyễn Trọng Quý - CE180596
 "use client";
 import React, { useState } from "react";
-import axios from "axios";
 import {
   Mail,
   Lock,
@@ -20,7 +19,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Notification from "@/components/Notification";
+import { toast } from "sonner";
+import { useAuthStore } from "@/store/useAuthStore";
 
 function isValidPassword(pwd) {
   const minLength = pwd.length >= 12;
@@ -59,6 +59,8 @@ const passwordRules = [
 ];
 
 export default function RegisterPage() {
+  const { signup, isSigningUp } = useAuthStore();
+
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -67,13 +69,7 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [step, setStep] = useState(1); // 1: info entry, 2: role selection
-  const [loading, setLoading] = useState(false);
-  const [notificationSuccessMessage, setNotificationSuccessMessage] =
-    useState("");
-  const [notificationErrorMessage, setNotificationErrorMessage] = useState("");
   const router = useRouter();
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
 
   const ROLES = [
     { key: "trader", label: "Trader", icon: Briefcase },
@@ -85,7 +81,7 @@ export default function RegisterPage() {
   // Handle Submit Register Form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return;
+    if (isSigningUp) return;
     if (!isValidPassword(password)) {
       setPasswordError("Vui lòng nhập mật khẩu hợp lệ");
       return;
@@ -96,31 +92,22 @@ export default function RegisterPage() {
     }
 
     if (!selectedRole) {
-      setNotificationSuccessMessage("Vui lòng chọn vai trò");
+      toast.error("Vui lòng chọn vai trò");
       return;
     }
 
-    setNotificationSuccessMessage("");
-    setLoading(true);
-    try {
-      const res = await axios.post(`${API_BASE}/auth/register`, {
-        full_name: fullName,
-        email,
-        password,
-        phone,
-        role: selectedRole,
-      });
+    const result = await signup({
+      full_name: fullName,
+      email,
+      password,
+      phone,
+      role: selectedRole,
+    });
 
-      setNotificationSuccessMessage("Kiểm tra mail cho mã OTP");
+    if (result) {
       setTimeout(() => {
         router.push(`/verify-email?email=${encodeURIComponent(email)}`);
-      }, 3000);
-    } catch (err) {
-      setNotificationErrorMessage(
-        err?.message || "Có lỗi xảy ra, vui lòng thử lại."
-      );
-    } finally {
-      setLoading(false);
+      }, 1500);
     }
   };
 
@@ -329,31 +316,13 @@ export default function RegisterPage() {
               </div>
             )}
 
-            {notificationSuccessMessage && (
-              <Notification
-                type="success"
-                title="Đăng ký thành công"
-                message={notificationSuccessMessage}
-                onClose={() => setNotificationSuccessMessage("")}
-              />
-            )}
-
-            {notificationErrorMessage && (
-              <Notification
-                type="error"
-                title={"Đăng ký thất bại"}
-                message={notificationErrorMessage}
-                onClose={() => setNotifictionErrorMessage("")}
-              />
-            )}
-
             <div className="flex gap-3">
               <button
                 type="submit"
-                disabled={loading || (step === 2 && !selectedRole)}
+                disabled={isSigningUp || (step === 2 && !selectedRole)}
                 className={`flex-1 bg-[#04543D] text-white py-3.5 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
               >
-                {loading ? (
+                {isSigningUp ? (
                   <>
                     <span className="inline-block h-5 w-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
                     <span>Đang đăng ký...</span>
