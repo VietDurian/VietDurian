@@ -17,7 +17,6 @@ import {
 import Image from "next/image";
 import { useAuthStore } from "@/store/useAuthStore";
 import { notificationAPI } from '@/lib/api';
-import { useAuth } from "@/context/AuthContext";
 
 const NAV_LINKS = [
   { label: "Trang Chủ", href: "/" },
@@ -30,8 +29,7 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { authUser } = useAuthStore();
-  const { logout } = useAuth();
+  const { authUser, logout } = useAuthStore();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
