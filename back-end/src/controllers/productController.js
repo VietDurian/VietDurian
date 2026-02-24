@@ -110,6 +110,26 @@ const getAllProducts = async (req, res, next) => {
   }
 };
 
+const getOwnProducts = async (req, res, next) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ code: 401, message: "User not authenticated" });
+    }
+
+    const products = await productService.getOwnProducts(userId);
+
+    return res.status(200).json({
+      code: 200,
+      success: true,
+      message: "Own products retrieved successfully",
+      data: products,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Get product detail by ID
 const getProductDetail = async (req, res, next) => {
   try {
@@ -297,6 +317,7 @@ const sortProducts = async (req, res, next) => {
 export const productController = {
   createProduct,
   getAllProducts,
+  getOwnProducts,
   getProductDetail,
   updateProduct,
   deleteProduct,
