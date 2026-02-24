@@ -43,20 +43,21 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    const storedToken = localStorage.getItem("auth_token"); // check token FIRST
     const storedUser = localStorage.getItem("auth_user");
-    const storedToken = localStorage.getItem("auth_token"); // load token
 
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Failed to parse auth_user", error);
-        localStorage.removeItem("auth_user");
-      }
-    }
-
+    // Only set user if token exists
     if (storedToken) {
       setToken(storedToken);
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (error) {
+          console.error("Failed to parse auth_user", error);
+          localStorage.removeItem("auth_user");
+          setUser(null);
+        }
+      }
     } else {
       // No token: ensure we drop any stale user session
       setUser(null);
@@ -77,15 +78,24 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(
-    (redirectTo = "/login") => {
-      setUser(null);
-      setToken(null);
+    async (redirectTo = "/login") => {
       const target = typeof redirectTo === "string" ? redirectTo : "/login";
-      localStorage.removeItem("auth_user");
-      localStorage.removeItem("auth_token"); // clear token
 
+      // Call logout endpoint FIRST to invalidate session on backend
+      try {
+        await apiClient.post("/auth/logout");
+      } catch (error) {
+        console.log("Error calling logout endpoint:", error);
+      }
+
+      // Then clear local state
       setUser(null);
       setToken(null);
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("auth_token");
+
+      // Reset the 401 handler flag to allow future requests to handle 401 properly
+      isHandling401.current = false;
 
       // Keep Zustand auth state in sync to avoid login/dashboard redirect loops.
       useAuthStore.setState({ authUser: null });

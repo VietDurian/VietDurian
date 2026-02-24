@@ -17,6 +17,7 @@ import {
 import Image from "next/image";
 import { useAuthStore } from "@/store/useAuthStore";
 import { notificationAPI } from '@/lib/api';
+import { useAuth } from "@/context/AuthContext";
 
 const NAV_LINKS = [
   { label: "Trang Chủ", href: "/" },
@@ -29,7 +30,8 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { authUser, logout } = useAuthStore();
+  const { authUser } = useAuthStore();
+  const { logout } = useAuth();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -111,7 +113,7 @@ export default function Navbar() {
   }, []);
 
   const handleLogout = async () => {
-    await logout(); // calls Zustand action
+    await logout(); // calls AuthContext action - which clears everything and redirects
   };
   return (
     <nav className="fixed top-0 inset-x-0 z-50 bg-white backdrop-blur-md border-b border-gray-200">
@@ -182,6 +184,7 @@ export default function Navbar() {
 														<div
 															key={notif.id}
 															onClick={async () => {
+																// Mark as read
 																if (!notif.read) {
 																	try {
 																		await notificationAPI.markAsRead(
@@ -201,6 +204,21 @@ export default function Navbar() {
 																		);
 																	}
 																}
+
+																// Navigate based on entity type
+																if (notif.entityType === 'comment' || notif.entityType === 'reply') {
+																	// Comment or reply notification → go to posts list with postId
+																	if (notif.postId) {
+																		router.push(`/posts?postId=${notif.postId}`);
+																	} else {
+																		router.push('/posts');
+																	}
+																} else if (notif.entityType === 'Accepted Post' || notif.entityType === 'Rejected Post') {
+																	// Post status notification → go to user's posts
+																	router.push('/profile/posts');
+																}
+
+																setNotificationOpen(false); // Close notification dropdown
 															}}
 															className={`p-4 hover:bg-gray-50 transition group flex items-start gap-3 cursor-pointer ${
 																!notif.read ? 'bg-emerald-50' : ''
