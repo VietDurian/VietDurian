@@ -1,0 +1,83 @@
+@startuml TypeProductManagement
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+left to right direction
+
+' ==============================
+' ========== ROUTE =============
+' ==============================
+
+class TypeProductRoute <<control>> {
+    +GET /(req, res): void
+    +POST /(req, res): void
+    +PATCH /:id(req, res): void
+    +DELETE /:id(req, res): void
+}
+
+' ==============================
+' ======= CONTROLLER ===========
+' ==============================
+
+class TypeProductController <<control>> {
+    +getAllTypeProducts(req, res): void
+    +createTypeProduct(req, res): void
+    +updateTypeProduct(req, res): void
+    +deleteTypeProduct(req, res): void
+}
+
+' ==============================
+' ========= SERVICE ============
+' ==============================
+
+class TypeProductService <<service>> {
+    +getAllTypeProducts(params): { data: TypeProduct[], pagination }
+    +createTypeProduct(data): TypeProduct
+    +updateTypeProduct(data): TypeProduct
+    +deleteTypeProduct(params): void
+}
+
+' ==============================
+' ========= REPOSITORY =========
+' ==============================
+
+class TypeProductModel <<repository>> {
+    +find(filter): TypeProduct[]
+    +countDocuments(filter): number
+    +findByIdAndUpdate(id, update, options): TypeProduct
+    +findByIdAndDelete(id): TypeProduct
+    +save(): TypeProduct
+}
+
+' ==============================
+' ========== ENTITY ============
+' ==============================
+
+class TypeProduct <<entity>> {
+    +_id: ObjectId
+    +name: string
+    +description: string
+    +created_at: Date
+    +updated_at: Date
+}
+
+class Product <<entity>> {
+    +_id: ObjectId
+    +type_ids: ObjectId[]
+}
+
+class Database <<database>>
+
+' ==============================
+' ===== RELATIONSHIPS ==========
+' ==============================
+
+TypeProductRoute --> TypeProductController : calls
+TypeProductController --> TypeProductService : uses
+TypeProductService --> TypeProductModel : uses
+
+TypeProductModel --> Database : queries
+
+Product "1" o-- "0..*" TypeProduct : categorizes
+
+@enduml

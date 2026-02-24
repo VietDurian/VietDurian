@@ -14,10 +14,15 @@ import {
     X,
     Briefcase,
     Users,
+    Wrench,
+    BookOpen,
+    Leaf,
+    HandCoins,
+    Grid
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { favoriteAPI, getOwnPosts } from "@/lib/api";
+import { favoriteAPI, getOwnPosts, commentAPI } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 import Navbar from "@/components/Navbar";
 
@@ -196,6 +201,10 @@ const Post = ({ post, onLikeUpdate }) => {
         setIsLiked(post.isLiked || false);
     }, [post.isLiked]);
 
+    useEffect(() => {
+        setCommentCount(post.comments || 0);
+    }, [post.comments]);
+
     const handleLike = async () => {
         if (isTogglingFavorite) return;
 
@@ -227,9 +236,6 @@ const Post = ({ post, onLikeUpdate }) => {
         }
     };
 
-    const isEmail = post.contact?.includes("@");
-    const ContactIcon = isEmail ? Mail : Phone;
-
     return (
         <>
             <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-all w-full">
@@ -257,16 +263,25 @@ const Post = ({ post, onLikeUpdate }) => {
                     </div>
                 </div>
 
-                {post.category && (
-                    <div className="mb-4">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-200">
-                            <Tag size={16} className="text-teal-600" />
-                            <span className="text-sm font-semibold text-teal-700">
+                {post.category && (() => {
+                    const categoryConfig = {
+                        "Dịch vụ": { icon: Wrench, bg: "from-blue-500 to-cyan-500" },
+                        "Kinh nghiệm": { icon: BookOpen, bg: "from-amber-500 to-orange-500" },
+                        "Sản phẩm": { icon: Leaf, bg: "from-emerald-500 to-teal-500" },
+                        "Thuê dịch vụ": { icon: HandCoins, bg: "from-purple-500 to-violet-500" },
+                        "Khác": { icon: Grid, bg: "from-gray-500 to-slate-500" },
+                    };
+                    const config = categoryConfig[post.category] || { icon: Grid, bg: "from-emerald-500 to-teal-500" };
+                    const Icon = config.icon;
+                    return (
+                        <div className="mb-4">
+                            <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r ${config.bg} text-white shadow-sm`}>
+                                <Icon size={14} />
                                 {post.category}
                             </span>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 <div className="text-base text-gray-800 leading-relaxed mb-4">
                     <p className="whitespace-pre-wrap">{post.content}</p>
@@ -274,9 +289,9 @@ const Post = ({ post, onLikeUpdate }) => {
 
                 {post.contact && (
                     <div className="mb-4">
-                        <div className="flex items-center gap-2 text-emerald-700">
-                            <ContactIcon size={18} className="text-emerald-600" />
-                            <span className="text-sm font-semibold">{post.contact}</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-gray-500">Liên hệ:</span>
+                            <span className="text-sm font-semibold text-emerald-700">{post.contact}</span>
                         </div>
                     </div>
                 )}
@@ -416,6 +431,22 @@ export default function PostsContent() {
                 });
 
                 setPosts(normalizedPosts);
+                const postsWithComments = await Promise.all(
+                    normalizedPosts.map(async (post) => {
+                        try {
+                            const res = await commentAPI.getCommentsByPost(post.id, "all");
+                            const countComments = (list) => {
+                                let count = list.length;
+                                list.forEach(c => { if (c.children?.length) count += countComments(c.children); });
+                                return count;
+                            };
+                            return { ...post, comments: countComments(res.data || []) };
+                        } catch {
+                            return post;
+                        }
+                    })
+                );
+                setPosts(postsWithComments);
             } catch (error) {
                 if (isCancelled) return;
                 console.error("Error loading posts:", error);

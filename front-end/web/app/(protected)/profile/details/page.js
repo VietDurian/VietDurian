@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   User,
   Mail,
@@ -18,6 +18,7 @@ import {
   Eye,
   EyeOff,
   Lightbulb,
+  Camera,
 } from "lucide-react";
 import { profileAPI, authAPI } from "@/lib/api";
 import FavoritePostsModal from "@/components/FavoritePostsModal"
@@ -104,6 +105,25 @@ export default function ProfileDetails() {
     avatar: "",
   });
   const [isSaving, setIsSaving] = useState(false);
+
+  // Avatar upload ref
+  const avatarInputRef = useRef(null);
+
+  // Handle avatar file change
+  const handleAvatarChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Ảnh quá lớn. Tối đa 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result?.toString() || "";
+      setEditForm((prev) => ({ ...prev, avatar: result }));
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Password change state
   const [passwordForm, setPasswordForm] = useState({
@@ -250,7 +270,6 @@ export default function ProfileDetails() {
     } catch (error) {
       console.error("Error changing password:", error);
 
-      // Xử lý các loại lỗi khác nhau
       let errorMessage = "Có lỗi xảy ra khi đổi mật khẩu!";
 
       if (error?.response) {
@@ -626,15 +645,30 @@ export default function ProfileDetails() {
 
             {/* Modal Body */}
             <div className="p-6 space-y-6">
-              {/* Avatar Preview */}
-              <div className="flex flex-col items-center gap-4">
+              {/* Avatar Upload */}
+              <div className="flex flex-col items-center gap-3">
                 <div className="relative">
                   <img
                     src={editForm.avatar || profileData.avatar}
                     alt="Avatar preview"
                     className="w-32 h-32 rounded-full border-4 border-emerald-500 object-cover"
                   />
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="absolute bottom-0 right-0 p-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg transition-colors"
+                  >
+                    <Camera size={16} strokeWidth={2.5} />
+                  </button>
                 </div>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+                <p className="text-sm text-gray-500">Nhấp vào biểu tượng camera để thay ảnh (tối đa 5MB)</p>
               </div>
 
               {/* Form Fields */}
@@ -664,20 +698,6 @@ export default function ProfileDetails() {
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
                     placeholder="Nhập số điện thoại"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    URL Avatar
-                  </label>
-                  <input
-                    type="url"
-                    name="avatar"
-                    value={editForm.avatar}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
-                    placeholder="https://example.com/avatar.jpg"
                   />
                 </div>
               </div>

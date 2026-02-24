@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { productAPI, productTypeAPI } from "@/lib/api";
+import { productAPI, productTypeAPI, ratingAPI } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
@@ -38,6 +38,7 @@ export default function ProductsPage() {
   const [selectedType, setSelectedType] = useState("");
   const [imageErrors, setImageErrors] = useState({});
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const [liveRatings, setLiveRatings] = useState({});
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -78,7 +79,7 @@ export default function ProductsPage() {
     addContact(chatUser);
     setSelectedUser(chatUser);
 
-    router.push("/chat");
+    router.push(`/chat/${receiverId}`);
   };
 
   // Fetch product types
@@ -113,18 +114,15 @@ export default function ProductsPage() {
           sortOrder,
         };
 
-        if (searchTerm) {
-          params.name = searchTerm;
-        }
-
-        if (selectedType) {
-          params.typeId = selectedType;
-        }
+        if (searchTerm) params.name = searchTerm;
+        if (selectedType) params.typeId = selectedType;
 
         const response = await productAPI.getAllProducts(params);
 
         if (response.success) {
-          setProducts(response.data || []);
+          const productsData = response.data || [];
+          setProducts(productsData);
+
           if (response.pagination) {
             setPagination({
               currentPage: response.pagination.currentPage,
@@ -132,6 +130,27 @@ export default function ProductsPage() {
               totalItems: response.pagination.totalItems,
               itemsPerPage: response.pagination.itemsPerPage,
             });
+          }
+
+          // Fetch live ratings song song
+          if (productsData.length > 0) {
+            const ratingResults = await Promise.all(
+              productsData.map((p) =>
+                ratingAPI
+                  .getRatingsByProductId(p._id, { limit: 1 })
+                  .catch(() => null),
+              ),
+            );
+            const ratingsMap = {};
+            productsData.forEach((p, i) => {
+              const res = ratingResults[i];
+              if (res?.success && res?.statistics) {
+                ratingsMap[p._id] = parseFloat(
+                  res.statistics.averageRating || 0,
+                );
+              }
+            });
+            setLiveRatings(ratingsMap);
           }
         }
 
@@ -250,10 +269,11 @@ export default function ProductsPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedType("")}
-                  className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === ""
-                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                  className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${
+                    selectedType === ""
+                      ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
                 >
                   <span className="flex items-center gap-2">
                     <List className="w-4 h-4" />
@@ -264,10 +284,11 @@ export default function ProductsPage() {
                   <button
                     key={type._id}
                     onClick={() => setSelectedType(type._id)}
-                    className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === type._id
-                      ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                    className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${
+                      selectedType === type._id
+                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                   >
                     {type.name}
                   </button>
@@ -301,10 +322,11 @@ export default function ProductsPage() {
                           <button
                             key={option.value}
                             onClick={() => handleSortChange(option.value)}
-                            className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${sortBy === option.value
-                              ? "bg-emerald-50 text-emerald-700 font-semibold"
-                              : "text-gray-700 hover:bg-gray-50"
-                              } ${index !== sortOptions.length - 1 ? "border-b border-gray-100" : ""}`}
+                            className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${
+                              sortBy === option.value
+                                ? "bg-emerald-50 text-emerald-700 font-semibold"
+                                : "text-gray-700 hover:bg-gray-50"
+                            } ${index !== sortOptions.length - 1 ? "border-b border-gray-100" : ""}`}
                           >
                             {option.label}
                           </button>
@@ -317,20 +339,22 @@ export default function ProductsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setSortOrder("asc")}
-                      className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "asc"
-                        ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
+                      className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${
+                        sortOrder === "asc"
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      }`}
                       title="Tăng dần"
                     >
                       <ChevronUp className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => setSortOrder("desc")}
-                      className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "desc"
-                        ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
+                      className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${
+                        sortOrder === "desc"
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      }`}
                       title="Giảm dần"
                     >
                       <ChevronDown className="w-5 h-5" />
@@ -386,17 +410,22 @@ export default function ProductsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {products.map((product) => {
                   const rating =
-                    typeof product.rating === "object" &&
-                      product.rating.$numberDecimal
-                      ? parseFloat(product.rating.$numberDecimal)
-                      : parseFloat(product.rating || 0);
+                    liveRatings[product._id] !== undefined
+                      ? liveRatings[product._id]
+                      : typeof product.rating === "object" &&
+                          product.rating.$numberDecimal
+                        ? parseFloat(product.rating.$numberDecimal)
+                        : parseFloat(product.rating || 0);
 
                   return (
                     <Link href={`/products/${product._id}`} key={product._id}>
                       <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 cursor-pointer group">
                         <div className="p-5">
                           {/* Hình ảnh không scale khi hover */}
-                          <div className="relative h-64 rounded-xl overflow-hidden mb-4">
+                          <div
+                            className="relative rounded-xl overflow-hidden bg-gray-100 mb-3"
+                            style={{ aspectRatio: "16/9" }}
+                          >
                             {product.images && product.images.length > 0 ? (
                               <Image
                                 src={
@@ -442,16 +471,19 @@ export default function ProductsPage() {
                               <span>{product.weight}kg</span>
                             </div>
                           </div>
-
                           <div className="mb-4">
-                            <p className="text-sm text-gray-500 mb-1">
-                              Giá tham khảo
-                            </p>
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-sm text-gray-500">
+                                Giá tham khảo
+                              </p>
+                              <span className="text-xs bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-md font-medium">
+                                1 sản phẩm
+                              </span>
+                            </div>
                             <span className="text-2xl font-bold text-emerald-600">
                               {formatPrice(product.price)}
                             </span>
                           </div>
-
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5 text-sm text-gray-500">
                               <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
@@ -496,10 +528,11 @@ export default function ProductsPage() {
                         <button
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
-                          className={`px-4 py-2 rounded-lg border-2 transition-colors ${pagination.currentPage === pageNum
-                            ? "bg-emerald-600 text-white border-emerald-600"
-                            : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                            }`}
+                          className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                            pagination.currentPage === pageNum
+                              ? "bg-emerald-600 text-white border-emerald-600"
+                              : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                          }`}
                         >
                           {pageNum}
                         </button>

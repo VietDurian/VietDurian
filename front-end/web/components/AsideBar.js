@@ -1,16 +1,28 @@
 "use client";
 import React, { useState } from "react";
-import { Home, FileText, User, Briefcase, FileEdit, Sprout, PenTool, ChevronRight, Sparkles } from "lucide-react";
+import {
+  Home,
+  FileText,
+  User,
+  Briefcase,
+  FileEdit,
+  Sprout,
+  PenTool,
+  ChevronRight,
+  Sparkles,
+  Package,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const SidebarItem = ({ icon: Icon, label, href, active }) => (
   <Link
     href={href}
-    className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${active
-      ? "bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white scale-105"
-      : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
-      }`}
+    className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${
+      active
+        ? "bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white scale-105"
+        : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
+    }`}
   >
     {/* Animated background gradient */}
     {active && (
@@ -18,23 +30,30 @@ const SidebarItem = ({ icon: Icon, label, href, active }) => (
     )}
 
     {/* Icon container with animated background */}
-    <div className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${active
-      ? "bg-white/20 backdrop-blur-sm"
-      : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
-      }`}>
+    <div
+      className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
+        active
+          ? "bg-white/20 backdrop-blur-sm"
+          : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
+      }`}
+    >
       <Icon
         size={20}
-        className={`${active
-          ? "text-white"
-          : "text-emerald-600 group-hover:text-emerald-700 group-hover:scale-110"
-          } transition-all duration-300`}
+        className={`${
+          active
+            ? "text-white"
+            : "text-emerald-600 group-hover:text-emerald-700 group-hover:scale-110"
+        } transition-all duration-300`}
         strokeWidth={2.5}
       />
     </div>
 
     {/* Label with better typography */}
-    <span className={`relative z-10 text-[15px] font-semibold tracking-wide ${active ? "text-white" : "text-gray-700 group-hover:text-gray-900"
-      } transition-colors duration-300`}>
+    <span
+      className={`relative z-10 text-[15px] font-semibold tracking-wide ${
+        active ? "text-white" : "text-gray-700 group-hover:text-gray-900"
+      } transition-colors duration-300`}
+    >
       {label}
     </span>
 
@@ -73,6 +92,7 @@ export default function AsideBar({ role }) {
           { icon: User, label: "Thông tin", href: "/profile/details" },
           { icon: FileText, label: "Bài viết", href: "/profile/posts" },
           { icon: Sprout, label: "Vườn cây", href: "/profile/gardens" },
+          { icon: Package, label: "Sản Phẩm", href: "/profile/products" },
         ];
       case "contentExpert":
         return [
@@ -100,10 +120,13 @@ export default function AsideBar({ role }) {
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500" />
 
       {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-[0.02]" style={{
-        backgroundImage: `radial-gradient(circle at 1px 1px, rgb(16 185 129) 1px, transparent 0)`,
-        backgroundSize: '40px 40px'
-      }} />
+      <div
+        className="absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgb(16 185 129) 1px, transparent 0)`,
+          backgroundSize: "40px 40px",
+        }}
+      />
 
       {/* Navigation Links */}
       <nav className="relative z-10 flex flex-col flex-1 space-y-2">
@@ -111,7 +134,7 @@ export default function AsideBar({ role }) {
           <div
             key={item.label}
             style={{
-              animation: `slideInLeft 0.4s ease-out ${index * 0.1}s both`
+              animation: `slideInLeft 0.4s ease-out ${index * 0.1}s both`,
             }}
           >
             <SidebarItem
@@ -182,7 +205,7 @@ export default function AsideBar({ role }) {
             transform: translateX(0);
           }
         }
-        
+
         @keyframes shine {
           0% {
             transform: translateX(-100%);
@@ -191,7 +214,7 @@ export default function AsideBar({ role }) {
             transform: translateX(100%);
           }
         }
-        
+
         .animate-shine {
           animation: shine 3s ease-in-out infinite;
         }
