@@ -17,6 +17,7 @@ import {
 import Image from "next/image";
 import { useAuthStore } from "@/store/useAuthStore";
 import { notificationAPI } from '@/lib/api';
+import { useAuth } from "@/context/AuthContext";
 
 const NAV_LINKS = [
   { label: "Trang Chủ", href: "/" },
@@ -29,7 +30,8 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { authUser, logout } = useAuthStore();
+	const { authUser } = useAuthStore();
+	const { logout } = useAuth();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -68,7 +70,7 @@ export default function Navbar() {
 				// Map dữ liệu từ API
 				const mappedNotifications = data.map((notif) => ({
 					id: notif._id,
-          postId: notif.post_id,
+          postId: notif.post_id?._id,
 					message: notif.message,
 					time: calculateRelativeTime(notif.created_at),
 					read: notif.is_read,
@@ -110,9 +112,8 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = async () => {
-    await logout(); // calls Zustand action
-    router.push("/login"); // redirect
+	const handleLogout = () => {
+		logout("/login");
   };
   return (
     <nav className="fixed top-0 inset-x-0 z-50 bg-white backdrop-blur-md border-b border-gray-200">
