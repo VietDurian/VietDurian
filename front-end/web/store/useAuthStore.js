@@ -10,6 +10,7 @@ export const useAuthStore = create((set, get) => ({
   isSigningUp: false,
   isResendingOtp: false,
   isVerifyingEmail: false,
+  isRequestingResetOtp: false,
   isLoggingIn: false,
   isUpdatingProfile: false,
   isCheckingAuth: true,
@@ -75,6 +76,23 @@ export const useAuthStore = create((set, get) => ({
       return null;
     } finally {
       set({ isResendingOtp: false });
+    }
+  },
+
+  forgotPassword: async (email) => {
+    set({ isRequestingResetOtp: true });
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+      const res = await axiosInstance.post("/auth/forgot-password", {
+        email: normalizedEmail,
+      });
+      toast.success("Đã gửi mã OTP đến email");
+      return res?.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Không thể gửi mã OTP");
+      return null;
+    } finally {
+      set({ isRequestingResetOtp: false });
     }
   },
 
