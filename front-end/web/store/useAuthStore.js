@@ -12,6 +12,7 @@ export const useAuthStore = create((set, get) => ({
   isVerifyingEmail: false,
   isRequestingResetOtp: false,
   isVerifyingResetOtp: false,
+  isResettingPassword: false,
   isLoggingIn: false,
   isUpdatingProfile: false,
   isCheckingAuth: true,
@@ -113,6 +114,23 @@ export const useAuthStore = create((set, get) => ({
       return null;
     } finally {
       set({ isVerifyingResetOtp: false });
+    }
+  },
+
+  resetPassword: async ({ token, newPassword, confirmPassword }) => {
+    set({ isResettingPassword: true });
+    try {
+      const res = await axiosInstance.post(`/auth/reset-password/${token}`, {
+        newPassword,
+        confirmPassword,
+      });
+      toast.success("Đổi mật khẩu thành công! Đang chuyển hướng đăng nhập...");
+      return res?.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Đổi mật khẩu thất bại");
+      return null;
+    } finally {
+      set({ isResettingPassword: false });
     }
   },
 
