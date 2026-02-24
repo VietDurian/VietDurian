@@ -5,6 +5,7 @@ import { TypeProductModel } from "@/model/typeProductModel.js";
 
 // Create a new product
 const createProduct = async ({
+  diaryId,
   userId,
   typeId,
   name,
@@ -46,6 +47,7 @@ const createProduct = async ({
     const newProduct = new Product({
       user_id: userId,
       type_id: typeId,
+      diary_id: diaryId,
       name,
       description,
       price: mongoose.Types.Decimal128.fromString(String(numericPrice)),

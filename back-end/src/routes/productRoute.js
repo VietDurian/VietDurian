@@ -22,6 +22,9 @@ const Router = express.Router();
  *           schema:
  *             type: object
  *             properties:
+ *               diaryId:
+ *                 type: string
+ *                 example: "66b111111111111111111111"
  *               name:
  *                 type: string
  *                 example: "Organic Tomatoes"
@@ -42,7 +45,7 @@ const Router = express.Router();
  *               typeId:
  *                 type: string
  *                 description: Must be a valid TypeProduct ID
- *                 example: "507f1f77bcf86cd799439011"
+ *                 example: "66b000000000000000000101"
  *               harvestStartDate:
  *                 type: string
  *                 format: date

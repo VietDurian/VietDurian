@@ -10,6 +10,7 @@ export default function CreateProduct() {
   const { createProduct, isProductCreating } = useProductStore();
   const { types, fetchTypes, isTypesLoading } = useTypeProductStore();
   const [formData, setFormData] = useState({
+    diary: "",
     name: "",
     description: "",
     price: "",
