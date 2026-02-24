@@ -707,7 +707,11 @@ export default function ProfileDetails() {
             <div className="bg-gray-50 p-6 flex justify-center rounded-b-2xl border-t border-gray-200">
               <button
                 onClick={handleSaveProfile}
-                disabled={isSaving}
+                disabled={isSaving ||
+                  (editForm.full_name === profileData.full_name && editForm.phone === profileData.phone && editForm.avatar === profileData.avatar) ||
+                  !editForm.full_name.trim() ||
+                  !editForm.phone.trim()
+                }
                 className="px-8 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isSaving ? (
