@@ -363,6 +363,10 @@ const resetPasswordWithToken = async (token, newPassword) => {
     if (!user) {
       throw createError(404, "User not found");
     }
+    const isSame = await user.comparePassword(newPassword);
+    if (isSame) {
+      throw createError(400, "New password must be different from old password");
+    }
     user.password = newPassword;
     await user.save();
     return { message: "Password reset successfully" };
