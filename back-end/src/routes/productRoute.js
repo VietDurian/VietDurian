@@ -2,6 +2,7 @@
 import express from 'express';
 import { productController } from '@/controllers/productController.js';
 import { authMiddleware } from '@/middlewares/authentication.js';
+import { authorizationMiddleware } from '@/middlewares/authorization';
 
 const Router = express.Router();
 
@@ -155,6 +156,61 @@ const Router = express.Router();
  *                     type: object
  *                 pagination:
  *                   type: object
+ */
+
+/**
+ * @swagger
+ * /products/own:
+ *   get:
+ *     summary: Get authenticated farmer products
+ *     description: Returns all products that belong to the authenticated farmer. Non-farmer roles receive null data.
+ *     tags:
+ *       - Products
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Products retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 200
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Own products retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       price:
+ *                         type: number
+ *                       status:
+ *                         type: string
+ *                       images:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             _id:
+ *                               type: string
+ *                             url:
+ *                               type: string
+ *       401:
+ *         description: User not authenticated
+ *       403:
+ *         description: Authenticated user is not a farmer
  */
 
 /**
@@ -374,6 +430,7 @@ const Router = express.Router();
  */
 Router.post('/', authMiddleware.protect, productController.createProduct);
 Router.get('/', productController.getAllProducts);
+Router.get("/own", authMiddleware.protect, authorizationMiddleware.isFarmer, productController.getOwnProducts);
 Router.get('/search', productController.searchProducts);
 Router.get('/sort', productController.sortProducts);
 Router.get('/filter', productController.filterProducts);
