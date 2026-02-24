@@ -31,6 +31,16 @@ export default function EditGarden() {
   const fileInputRef = useRef(null);
   const [imageData, setImageData] = useState("");
 
+  const isSaveDisabled =
+    !formData.name.toString().trim() ||
+    !formData.crop_type.toString().trim() ||
+    !formData.area.toString().trim() ||
+    !formData.location.toString().trim() ||
+    !formData.latitude.toString().trim() ||
+    !formData.longitude.toString().trim() ||
+    !formData.description.toString().trim() ||
+    !formData.image;
+
   // 🔽 Load garden data
   useEffect(() => {
     if (gardenId) getGardenDetails(gardenId);
@@ -96,11 +106,11 @@ export default function EditGarden() {
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/30">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div>
         <div className="max-w-4xl mx-auto px-6 py-6">
           <button
             onClick={() => router.push("/profile/gardens")}
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            className="cursor-pointer inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Trở lại vườn cây
@@ -122,10 +132,10 @@ export default function EditGarden() {
       </div>
 
       {/* Form */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-6">
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
+          className="bg-white rounded-xl shadow-sm p-8"
         >
           <div className="space-y-6">
             {/* Name */}
@@ -134,7 +144,7 @@ export default function EditGarden() {
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-900 mb-2"
               >
-                Tên khu vườn <span className="text-red-500">*</span>
+                Tên khu vườn
               </label>
               <input
                 type="text"
@@ -154,7 +164,7 @@ export default function EditGarden() {
                 htmlFor="crop_type"
                 className="block text-sm font-medium text-gray-900 mb-2"
               >
-                Loại cây <span className="text-red-500">*</span>
+                Loại cây
               </label>
               <input
                 type="text"
@@ -174,7 +184,7 @@ export default function EditGarden() {
                 htmlFor="area"
                 className="block text-sm font-medium text-gray-900 mb-2"
               >
-                Diện tích (m²) <span className="text-red-500">*</span>
+                Diện tích (m²)
               </label>
               <div className="relative">
                 <input
@@ -205,7 +215,7 @@ export default function EditGarden() {
                 htmlFor="location"
                 className="block text-sm font-medium text-gray-900 mb-2"
               >
-                Vị trí <span className="text-red-500">*</span>
+                Vị trí
               </label>
               <input
                 type="text"
@@ -238,6 +248,7 @@ export default function EditGarden() {
                     name="latitude"
                     value={formData.latitude}
                     onChange={handleChange}
+                    required
                     step="0.000001"
                     placeholder="ví dụ: 45.5231"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
@@ -256,6 +267,7 @@ export default function EditGarden() {
                     name="longitude"
                     value={formData.longitude}
                     onChange={handleChange}
+                    required
                     step="0.000001"
                     placeholder="ví dụ: -122.6765"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
@@ -277,6 +289,7 @@ export default function EditGarden() {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
+                required
                 rows={4}
                 placeholder="Mô tả khu vườn của bạn..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors resize-none"
@@ -312,6 +325,10 @@ export default function EditGarden() {
                   onClick={() => {
                     setImagePreview("");
                     setImageData("");
+                    setFormData((prev) => ({
+                      ...prev,
+                      image: "",
+                    }));
                   }}
                   className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full"
                 >
@@ -333,7 +350,8 @@ export default function EditGarden() {
           <div className="flex items-center gap-4 mt-8 pt-6 border-t border-gray-200">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+              disabled={isSaveDisabled}
+              className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
             >
               <Check className="w-4 h-4" />
               Lưu thông tin
@@ -341,7 +359,7 @@ export default function EditGarden() {
             <button
               type="button"
               onClick={() => router.push("/profile/gardens")}
-              className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors border border-gray-300"
+              className="cursor-pointer inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors border border-gray-300"
             >
               <X className="w-4 h-4" />
               Hủy
