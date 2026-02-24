@@ -4,12 +4,20 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, X, Check, ImageIcon, Package } from "lucide-react";
 import { useProductStore } from "@/store/useProductStore";
 import { useProductStore as useTypeProductStore } from "@/store/useTypeProduct";
+import { useGardenStore } from "@/store/useGardenStore";
+import { useDiaryStore } from "@/store/useDiaryStore";
+import { useAuthStore } from "@/store/useAuthStore";
+
 
 export default function CreateProduct() {
   const router = useRouter();
   const { createProduct, isProductCreating } = useProductStore();
   const { types, fetchTypes, isTypesLoading } = useTypeProductStore();
+  const { authUser } = useAuthStore();
+  const { gardens, getUserGardens, isGardensLoading } = useGardenStore();
+  const { diaries, getAllDiariesByGardenId, isDiariesLoading } = useDiaryStore();
   const [formData, setFormData] = useState({
+    diaryId: "",
     name: "",
     description: "",
     price: "",
@@ -25,6 +33,7 @@ export default function CreateProduct() {
   const [imagePreview, setImagePreview] = useState("");
   const fileInputRef = useRef(null);
   const [error, setError] = useState("");
+  const [selectedGardenId, setSelectedGardenId] = useState("");
 
   useEffect(() => {
     if (!types?.length) {
@@ -32,9 +41,71 @@ export default function CreateProduct() {
     }
   }, [types?.length, fetchTypes]);
 
+  useEffect(() => {
+    if (authUser?._id) {
+      getUserGardens(authUser._id);
+    }
+  }, [authUser?._id, getUserGardens]);
+
+  useEffect(() => {
+    if (!selectedGardenId) return;
+
+    getAllDiariesByGardenId(selectedGardenId, null);
+  }, [selectedGardenId, getAllDiariesByGardenId]);
+
+  const priceValue = Number(formData.price);
+  const weightValue = Number(formData.weight);
+  const isFormComplete =
+    !!selectedGardenId &&
+    !!formData.diaryId &&
+    !!formData.name.trim() &&
+    !!formData.description.trim() &&
+    formData.price !== "" &&
+    formData.weight !== "" &&
+    !!formData.origin.trim() &&
+    !!formData.typeId &&
+    !!formData.harvestStartDate &&
+    !!formData.harvestEndDate &&
+    !!formData.status &&
+    formData.images.length > 0;
+  const isNonNegativeNumber =
+    Number.isFinite(priceValue) &&
+    Number.isFinite(weightValue) &&
+    priceValue >= 0 &&
+    weightValue >= 0;
+  const isValidHarvestDateRange =
+    !formData.harvestStartDate ||
+    !formData.harvestEndDate ||
+    formData.harvestEndDate >= formData.harvestStartDate;
+  const isSubmitDisabled =
+    isProductCreating ||
+    !isFormComplete ||
+    !isNonNegativeNumber ||
+    !isValidHarvestDateRange;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!selectedGardenId) {
+      setError("Vui lòng chọn vườn");
+      return;
+    }
+
+    if (!formData.diaryId) {
+      setError("Vui lòng chọn nhật ký");
+      return;
+    }
+
+    if (formData.harvestEndDate < formData.harvestStartDate) {
+      setError("Ngày kết thúc không được trước ngày bắt đầu");
+      return;
+    }
+
+    if (!formData.images.length) {
+      setError("Vui lòng chọn ảnh sản phẩm");
+      return;
+    }
 
     const payload = {
       ...formData,
@@ -53,10 +124,37 @@ export default function CreateProduct() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    let nextValue = value;
+
+    if ((name === "price" || name === "weight") && value !== "") {
+      const numberValue = Number(value);
+      if (!Number.isNaN(numberValue) && numberValue < 0) {
+        nextValue = "0";
+      }
+    }
+
+    setFormData((prev) => {
+      const nextFormData = {
+        ...prev,
+        [name]: nextValue,
+      };
+
+      if (
+        name === "harvestStartDate" &&
+        nextFormData.harvestEndDate &&
+        nextFormData.harvestEndDate < nextValue
+      ) {
+        nextFormData.harvestEndDate = "";
+      }
+
+      return nextFormData;
+    });
+  };
+
+  const handleGardenChange = (e) => {
+    const nextGardenId = e.target.value;
+    setSelectedGardenId(nextGardenId);
+    setFormData((prev) => ({ ...prev, diaryId: "" }));
   };
 
   const handleImageChange = (event) => {
@@ -123,6 +221,73 @@ export default function CreateProduct() {
           <div className="bg-white rounded-xl shadow-sm p-8 pb-2">
             <p className="font-bold mb-5">Thông tin cơ bản</p>
             <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-5">
+                <div>
+                  <label
+                    htmlFor="gardenId"
+                    className="block text-sm font-medium text-gray-900 mb-2"
+                  >
+                    Chọn vườn <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="gardenId"
+                    name="gardenId"
+                    value={selectedGardenId}
+                    onChange={handleGardenChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors bg-white"
+                  >
+                    <option value="">Chọn vườn đang sở hữu</option>
+                    {gardens?.map((garden) => (
+                      <option key={garden?._id} value={garden?._id}>
+                        {garden?.name}
+                      </option>
+                    ))}
+                  </select>
+                  {isGardensLoading ? (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Đang tải danh sách vườn...
+                    </p>
+                  ) : null}
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="diaryId"
+                    className="block text-sm font-medium text-gray-900 mb-2"
+                  >
+                    Chọn nhật ký <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="diaryId"
+                    name="diaryId"
+                    value={formData.diaryId}
+                    onChange={handleChange}
+                    required
+                    disabled={!selectedGardenId}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                  >
+                    <option value="">
+                      {selectedGardenId
+                        ? "Chọn nhật ký thuộc vườn"
+                        : "Vui lòng chọn vườn trước"}
+                    </option>
+                    {selectedGardenId
+                      ? diaries?.map((diary) => (
+                          <option key={diary?._id} value={diary?._id}>
+                            {diary?.title}
+                          </option>
+                        ))
+                      : null}
+                  </select>
+                  {selectedGardenId && isDiariesLoading ? (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Đang tải nhật ký...
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+
               {/* Name */}
               <div>
                 <label
@@ -156,6 +321,7 @@ export default function CreateProduct() {
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
+                  required
                   rows={4}
                   placeholder="Mô tả khu vườn của bạn..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors resize-none"
@@ -179,6 +345,7 @@ export default function CreateProduct() {
                   name="price"
                   value={formData.price}
                   onChange={handleChange}
+                  min={0}
                   required
                   placeholder="ví dụ: 120000"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
@@ -199,6 +366,7 @@ export default function CreateProduct() {
                   name="weight"
                   value={formData.weight}
                   onChange={handleChange}
+                  min={0}
                   required
                   placeholder="ví dụ: 2"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
@@ -295,6 +463,7 @@ export default function CreateProduct() {
                   name="harvestEndDate"
                   value={formData.harvestEndDate}
                   onChange={handleChange}
+                  min={formData.harvestStartDate || undefined}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
                 />
@@ -337,7 +506,9 @@ export default function CreateProduct() {
 
           {/* Image Upload */}
           <div className="bg-white rounded-xl shadow-sm p-8 mt-5 space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Ảnh</label>
+            <label className="text-sm font-semibold text-gray-700">
+              Ảnh <span className="text-red-500">*</span>
+            </label>
 
             {!imagePreview ? (
               <div
@@ -385,7 +556,7 @@ export default function CreateProduct() {
           <div className="flex items-center gap-4 mt-8 pt-6 border-t border-gray-200">
             <button
               type="submit"
-              disabled={isProductCreating}
+              disabled={isSubmitDisabled}
               className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
             >
               <Check className="w-4 h-4" />

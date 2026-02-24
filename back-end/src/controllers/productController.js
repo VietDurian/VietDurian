@@ -5,6 +5,7 @@ import { productService } from "@/services/productService.js";
 const createProduct = async (req, res, next) => {
   try {
     const {
+      diaryId,
       name,
       description,
       price,
@@ -20,6 +21,7 @@ const createProduct = async (req, res, next) => {
 
     // Validate required fields
     if (
+      !diaryId ||
       !name ||
       !description ||
       !price ||
@@ -47,6 +49,7 @@ const createProduct = async (req, res, next) => {
     const newProduct = await productService.createProduct({
       userId,
       typeId,
+      diaryId,
       name,
       description,
       price,
@@ -75,6 +78,7 @@ const getAllProducts = async (req, res, next) => {
     const {
       name,
       typeId,
+      diaryId,
       sortBy,
       sortOrder,
       page,
@@ -91,6 +95,7 @@ const getAllProducts = async (req, res, next) => {
       searchName: name,
       typeId,
       userId,
+      diaryId,
       status,
       sortBy: sortBy || "created_at",
       sortOrder: sortOrder || "desc",

@@ -33,6 +33,11 @@ const productSchema = new mongoose.Schema(
       ref: "TypeProduct",
       required: true,
     },
+    diary_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Diary",
+      required: true,
+    },
     name: {
       type: String,
       required: true,

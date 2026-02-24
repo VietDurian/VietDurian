@@ -9,6 +9,8 @@ import { productAPI, productTypeAPI, ratingAPI } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
+import { useDiaryStore } from "@/store/useDiaryStore";
+import { useProductStore } from "@/store/useProductStore"
 import {
   Search,
   X,
