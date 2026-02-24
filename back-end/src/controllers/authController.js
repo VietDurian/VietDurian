@@ -58,6 +58,28 @@ const verifyEmail = async (req, res, next) => {
   }
 };
 
+const resendVerificationOtp = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        code: 400,
+        message: "Please provide email",
+      });
+    }
+
+    await authService.resendVerificationOtp(email);
+
+    res.status(200).json({
+      success: true,
+      message: "OTP resent successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -241,6 +263,7 @@ const checkAuth = (req, res) => {
 export const authController = {
   register,
   verifyEmail,
+  resendVerificationOtp,
   login,
   logout,
   forgotPassword,
@@ -255,6 +278,7 @@ module.exports = { authController };
 
 module.exports.register = register;
 module.exports.verifyEmail = verifyEmail;
+module.exports.resendVerificationOtp = resendVerificationOtp;
 module.exports.login = login;
 module.exports.logout = logout;
 module.exports.forgotPassword = forgotPassword;

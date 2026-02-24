@@ -1,7 +1,6 @@
 // Nguyễn Trọng Quý - CE180596
 "use client";
-import Notification from "@/components/Notification";
-import axios from "axios";
+import { useAuthStore } from "@/store/useAuthStore";
 import { Shield } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,37 +11,21 @@ export default function VerifyResetOTPContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
   const router = useRouter();
+  const { verifyResetOtp, isVerifyingResetOtp } = useAuthStore();
   const [otp, setOtp] = useState("");
-  const [notificationSuccessMessage, setNotificationSuccessMessage] =
-    useState("");
-  const [notificationErrorMessage, setNotificationErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
 
   // Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return;
-    try {
-      setLoading(true);
-      const response = await axios.post(`${API_BASE}/auth/verify-reset-otp`, {
-        email,
-        otp,
-      });
-      const token = response.data.resetToken;
-      // Notify user that they have successfully verified their email
-      setNotificationSuccessMessage(
-        "Đang chuyển hướng đến trang đổi mật khẩu..."
-      );
-      // 2 second wait before redirecting user to the Login Page
+    if (isVerifyingResetOtp || !email) return;
+
+    const result = await verifyResetOtp({ email, otp });
+    const token = result?.resetToken;
+
+    if (token) {
       setTimeout(() => {
         router.push(`/reset-password/${token}`);
       }, 2000);
-    } catch (err) {
-      setNotificationErrorMessage(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -64,16 +47,16 @@ export default function VerifyResetOTPContent() {
       <div className="w-full px-5 flex flex-col items-center justify-center">
         <div className="max-w-xs w-full mx-auto">
           <h1 className="text-3xl font-semibold text-gray-900 mb-3">
-            Xác nhận mã OTP
+            Password Reset OTP
           </h1>
           <p className="text-gray-500 text-sm mb-10 leading-relaxed">
-            Kiểm tra Email cho mã OTP
+            Kiểm tra Email cho mã Password Reset OTP
           </p>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                OTP
+                Password Reset OTP
               </label>
               <div className="relative">
                 <Shield
@@ -81,7 +64,7 @@ export default function VerifyResetOTPContent() {
                   size={18}
                 />
                 <input
-                  placeholder="Nhập mã OTP"
+                  placeholder="vd: 0123456"
                   className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
@@ -90,30 +73,12 @@ export default function VerifyResetOTPContent() {
               </div>
             </div>
 
-            <div className="flex justify-end">
-              <Link
-                href={"/forgot-password"}
-                className="text-xs font-medium text-teal-800 hover:underline"
-              >
-                Gửi lại mã OTP
-              </Link>
-            </div>
-
-            {notificationSuccessMessage && (
-              <Notification
-                type="success"
-                title="Xác nhận thành công!"
-                message={notificationSuccessMessage}
-                onClose={() => setNotificationSuccessMessage("")}
-              />
-            )}
-
             <button
               type="submit"
-              disabled={loading}
+              disabled={isVerifyingResetOtp}
               className="w-full bg-[#04543D] text-white py-3.5 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? (
+              {isVerifyingResetOtp ? (
                 <>
                   <span className="inline-block h-5 w-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
                   <span>Đang xác nhận...</span>

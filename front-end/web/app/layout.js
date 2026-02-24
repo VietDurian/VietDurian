@@ -1,11 +1,12 @@
 "use client";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthProvider } from "@/context/AuthContext";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,10 +35,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Toaster />
-        <AuthProvider>
-          {children}
-         
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
