@@ -110,11 +110,10 @@ const FilterBar = ({
                     onSortChange(option.value);
                     setShowSortDropdown(false);
                   }}
-                  className={`px-3 py-2 cursor-pointer transition-colors text-sm ${
-                    selectedSort === option.value
-                      ? "bg-emerald-600 text-white font-medium"
-                      : "text-gray-900 hover:bg-emerald-500 hover:text-white"
-                  }`}
+                  className={`px-3 py-2 cursor-pointer transition-colors text-sm ${selectedSort === option.value
+                    ? "bg-emerald-600 text-white font-medium"
+                    : "text-gray-900 hover:bg-emerald-500 hover:text-white"
+                    }`}
                 >
                   {option.label}
                 </div>
@@ -125,11 +124,10 @@ const FilterBar = ({
 
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
-            showFilters
-              ? "bg-emerald-600 text-white shadow-md"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${showFilters
+            ? "bg-emerald-600 text-white shadow-md"
+            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
         >
           <Filter size={20} />
           <span className="hidden sm:inline">Lọc</span>
@@ -147,11 +145,10 @@ const FilterBar = ({
                 <button
                   key={category}
                   onClick={() => onCategoryChange(category)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    selectedCategory === category
-                      ? "bg-emerald-600 text-white shadow-md"
-                      : "bg-gray-100 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 border border-transparent"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedCategory === category
+                    ? "bg-emerald-600 text-white shadow-md"
+                    : "bg-gray-100 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 border border-transparent"
+                    }`}
                 >
                   {category}
                 </button>
@@ -192,11 +189,10 @@ const ServiceBanner = ({ onServiceFilter, isServiceFiltered }) => {
         </div>
         <button
           onClick={onServiceFilter}
-          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all shadow-md whitespace-nowrap ${
-            isServiceFiltered
-              ? "bg-white text-emerald-700 hover:bg-emerald-50"
-              : "bg-emerald-700 text-white hover:bg-emerald-800"
-          }`}
+          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all shadow-md whitespace-nowrap ${isServiceFiltered
+            ? "bg-white text-emerald-700 hover:bg-emerald-50"
+            : "bg-emerald-700 text-white hover:bg-emerald-800"
+            }`}
         >
           <Users size={20} />
           {isServiceFiltered ? "Xem tất cả" : "Xem dịch vụ"}
@@ -207,6 +203,7 @@ const ServiceBanner = ({ onServiceFilter, isServiceFiltered }) => {
 };
 
 const Post = ({ post, onLikeUpdate, onContact }) => {
+  const router = useRouter();
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments || 0);
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
@@ -257,7 +254,10 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
       <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-all w-full">
         <div className="flex justify-between items-start mb-4">
           <div className="flex gap-3">
-            <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100">
+            <div
+              className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100 cursor-pointer"
+              onClick={() => router.push(`/profile/${post.authorId}`)}
+            >
               <img
                 src={post.userAvatar || "/images/avatar.jpg"}
                 alt={post.userName}
@@ -342,11 +342,10 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
           <button
             onClick={handleLike}
             disabled={isTogglingFavorite}
-            className={`flex items-center gap-2 transition px-3 py-1.5 rounded-lg ${
-              isLiked
-                ? "text-red-500"
-                : "text-gray-500 hover:text-red-500 hover:bg-red-50"
-            } ${isTogglingFavorite ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`flex items-center gap-2 transition px-3 py-1.5 rounded-lg ${isLiked
+              ? "text-red-500"
+              : "text-gray-500 hover:text-red-500 hover:bg-red-50"
+              } ${isTogglingFavorite ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             {isTogglingFavorite ? (
               <Loader2 size={20} className="animate-spin" />
@@ -509,10 +508,10 @@ export default function PostsContent() {
       prev.map((post) =>
         post.id === postId
           ? {
-              ...post,
-              isLiked,
-              likes: isLiked ? post.likes + 1 : post.likes - 1,
-            }
+            ...post,
+            isLiked,
+            likes: isLiked ? post.likes + 1 : post.likes - 1,
+          }
           : post,
       ),
     );

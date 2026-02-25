@@ -24,6 +24,7 @@ import {
 import { favoriteAPI, deletePost, updatePost, commentAPI } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 const POST_CATEGORIES = [
     "Dịch vụ",
@@ -357,6 +358,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
 };
 
 const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
+    const router = useRouter();
     const [isLiked, setIsLiked] = useState(true);
     const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
@@ -467,7 +469,13 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDelete }) => {
             <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-shadow w-full">
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex gap-3">
-                        <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100">
+                        <div
+                            className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100 cursor-pointer"
+                            onClick={() => {
+                                const authorId = post.post_id?.author_id?._id || post.post_id?.author_id;
+                                if (authorId) router.push(`/profile/${authorId}`);
+                            }}
+                        >
                             <img
                                 src={authorInfo.avatar}
                                 alt={authorInfo.name}

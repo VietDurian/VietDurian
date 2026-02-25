@@ -3,6 +3,7 @@ import { X, Heart, ThumbsUp, Smile, Angry, Send, Flag } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { commentAPI, reactionCommentAPI, reportCommentAPI } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useRouter } from "next/navigation";
 
 const REACTION_TYPES = ["like", "love", "haha", "angry"];
 
@@ -228,6 +229,7 @@ const CommentItem = ({
   toggleReactionOptions,
   onShowReactionModal,
 }) => {
+  const router = useRouter();
   // Kiểm tra author_id có thể là object hoặc string
   const authorId =
     typeof comment.author_id === "object"
@@ -267,7 +269,13 @@ const CommentItem = ({
       <img
         src={avatarUrl || "/images/avatar.jpg"}
         alt={userName}
-        className="w-10 h-10 rounded-full flex-shrink-0 mt-2.5"
+        className="w-10 h-10 rounded-full flex-shrink-0 mt-2.5 cursor-pointer"
+        onClick={() => {
+          const id = typeof comment.author_id === "object"
+            ? comment.author_id?._id
+            : comment.author_id;
+          if (id) router.push(`/profile/${id}`);
+        }}
       />
 
       {/* Comment Content */}

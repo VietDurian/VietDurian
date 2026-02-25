@@ -322,11 +322,10 @@ export default function ProductDetailPage() {
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star
                             key={star}
-                            className={`w-5 h-5 ${
-                              star <= Math.floor(rating)
-                                ? "text-yellow-400 fill-yellow-400"
-                                : "text-gray-300"
-                            }`}
+                            className={`w-5 h-5 ${star <= Math.floor(rating)
+                              ? "text-yellow-400 fill-yellow-400"
+                              : "text-gray-300"
+                              }`}
                           />
                         ))}
                       </div>
@@ -444,7 +443,10 @@ export default function ProductDetailPage() {
                       Thông tin người bán:
                     </h3>
                     <div className="flex items-center gap-4">
-                      <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                      <div
+                        className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 cursor-pointer"
+                        onClick={() => router.push(`/profile/${product.user_id._id}`)}
+                      >
                         {product.user_id.avatar ? (
                           <Image
                             src={product.user_id.avatar}
@@ -478,31 +480,28 @@ export default function ProductDetailPage() {
               <div className="flex border-b border-gray-200">
                 <button
                   onClick={() => setActiveTab("description")}
-                  className={`px-8 py-4 font-semibold transition-colors ${
-                    activeTab === "description"
-                      ? "text-emerald-600 border-b-2 border-emerald-600"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`px-8 py-4 font-semibold transition-colors ${activeTab === "description"
+                    ? "text-emerald-600 border-b-2 border-emerald-600"
+                    : "text-gray-600 hover:text-gray-900"
+                    }`}
                 >
                   Mô tả sản phẩm
                 </button>
                 <button
                   onClick={() => setActiveTab("specifications")}
-                  className={`px-8 py-4 font-semibold transition-colors ${
-                    activeTab === "specifications"
-                      ? "text-emerald-600 border-b-2 border-emerald-600"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`px-8 py-4 font-semibold transition-colors ${activeTab === "specifications"
+                    ? "text-emerald-600 border-b-2 border-emerald-600"
+                    : "text-gray-600 hover:text-gray-900"
+                    }`}
                 >
                   Thông số kỹ thuật
                 </button>
                 <button
                   onClick={() => setActiveTab("diary")}
-                  className={`px-8 py-4 font-semibold transition-colors ${
-                    activeTab === "diary"
-                      ? "text-emerald-600 border-b-2 border-emerald-600"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`px-8 py-4 font-semibold transition-colors ${activeTab === "diary"
+                    ? "text-emerald-600 border-b-2 border-emerald-600"
+                    : "text-gray-600 hover:text-gray-900"
+                    }`}
                 >
                   Nhật kí canh tác
                 </button>
