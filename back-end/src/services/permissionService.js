@@ -170,6 +170,31 @@ const rejectPermissionRequest = async (request_id, adminId, reason = "") => {
         throw error;
     }
 };
+const submitProofs = async (userId, proofs = []) => {
+    const request = await PermissionAccountModel.findOne({
+        user_id: userId,
+        status: "pending",
+    });
+
+    if (!request) {
+        const error = new Error("Permission request not found or already processed");
+        error.status = 404;
+        throw error;
+    }
+
+    const types = new Set(proofs.map(p => p.type));
+    const hasFront = types.has("cccd_front");
+    const hasBack = types.has("cccd_back");
+    if (!hasFront || !hasBack) {
+        const error = new Error("CCCD front and back are required");
+        error.status = 400;
+        throw error;
+    }
+
+    request.proofs = proofs;
+    await request.save();
+    return request;
+};
 
 export const permissionService = {
     getPermissionRequests,
@@ -178,5 +203,6 @@ export const permissionService = {
     getPermissionRequestDetail,
     confirmPermissionRequest,
     rejectPermissionRequest,
+    submitProofs,
 
 };

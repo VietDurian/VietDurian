@@ -1,6 +1,5 @@
 /** Vo Lam Thuy Vi */
-const { authService } = require("../services/authService");
-
+import { authService } from "@/services/authService.js";
 const register = async (req, res, next) => {
   try {
     const { full_name, email, password, phone, avatar, role } = req.body;
@@ -46,11 +45,21 @@ const verifyEmail = async (req, res, next) => {
 
     const result = await authService.verifyEmail(email, otp);
 
+    res.cookie("token", result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
       success: true,
       message: "Email verified successfully",
       data: {
         user: result.user,
+        token: result.token,
+        need_upload_proofs: result.need_upload_proofs,
+        requested_role: result.requested_role,
       },
     });
   } catch (error) {
@@ -274,16 +283,3 @@ export const authController = {
   checkAuth,
 };
 
-module.exports = { authController };
-
-module.exports.register = register;
-module.exports.verifyEmail = verifyEmail;
-module.exports.resendVerificationOtp = resendVerificationOtp;
-module.exports.login = login;
-module.exports.logout = logout;
-module.exports.forgotPassword = forgotPassword;
-module.exports.verifyResetOtp = verifyResetOtp;
-module.exports.resetPassword = resetPassword;
-module.exports.googleLogin = googleLogin;
-module.exports.changePassword = changePassword;
-module.exports.checkAuth = checkAuth;
