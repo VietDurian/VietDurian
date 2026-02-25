@@ -174,9 +174,27 @@ const deleteConversation = async (req, res) => {
     const { id: userToDeleteConversationWith } = req.params;
     const myId = req.user._id;
 
-    const conversation = await Conversation.findOne({
+    let conversation = await Conversation.findOne({
       participants: { $all: [myId, userToDeleteConversationWith] },
     });
+
+    if (!conversation) {
+      const latestPairMessage = await Message.findOne({
+        $or: [
+          { senderId: myId, receiverId: userToDeleteConversationWith },
+          { senderId: userToDeleteConversationWith, receiverId: myId },
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .select("conversationId");
+
+      if (latestPairMessage) {
+        conversation = await Conversation.findOne({
+          _id: latestPairMessage.conversationId,
+          participants: myId,
+        });
+      }
+    }
 
     if (!conversation) {
       return res.status(404).json({
