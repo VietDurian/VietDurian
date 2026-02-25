@@ -26,6 +26,7 @@ import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { createPost, getOwnPosts, updatePost, deletePost, favoriteAPI, commentAPI } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
+import { useRouter } from "next/navigation";
 
 const POST_CATEGORIES = [
   "Dịch vụ",
@@ -690,6 +691,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
 
 // Post Component - FIXED LIKE
 const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
+  const router = useRouter();
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments || 0);
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
@@ -755,7 +757,10 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
       <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-shadow w-full">
         <div className="flex justify-between items-start mb-4">
           <div className="flex gap-3">
-            <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100">
+            <div
+              className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100 cursor-pointer"
+              onClick={() => router.push(`/profile/${post.authorId}`)}
+            >
               <img
                 src={post.userAvatar || "/images/avatar.jpg"}
                 alt={post.userName}
@@ -960,6 +965,7 @@ export default function ContentExpertProfileContent() {
 
           return {
             id: postId,
+            authorId: user._id || user.id,
             userName: user?.full_name || user?.name || user?.username || "Bạn",
             userHandle: user?.username || user?.email || "",
             userAvatar: user?.avatar || "/images/avatar.jpg",
