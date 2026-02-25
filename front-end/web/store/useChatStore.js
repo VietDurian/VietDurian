@@ -7,6 +7,7 @@ export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
   selectedUser: null,
+  messageListener: null,
   isUsersLoading: false,
   isMessagesLoading: false,
 
@@ -48,6 +49,19 @@ export const useChatStore = create((set, get) => ({
     });
   },
 
+  deleteConversation: async (userId) => {
+    try {
+      await axiosInstance.delete(`/messages/conversation/${userId}`);
+      get().removeContact(userId);
+      toast.success("Xóa cuộc trò chuyện thành công");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Không thể xóa cuộc trò chuyện",
+      );
+      throw error;
+    }
+  },
+
   getMessages: async (userId) => {
     set({ isMessagesLoading: true });
     try {
@@ -81,7 +95,12 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
-    socket.on("newMessage", (newMessage) => {
+    const { messageListener } = get();
+    if (messageListener) {
+      socket.off("newMessage", messageListener);
+    }
+
+    const handler = (newMessage) => {
       const isMessageSentFromSelectedUser =
         newMessage.senderId === selectedUser._id;
       if (!isMessageSentFromSelectedUser) return;
@@ -89,13 +108,21 @@ export const useChatStore = create((set, get) => ({
       set({
         messages: [...get().messages, newMessage],
       });
-    });
+    };
+
+    socket.on("newMessage", handler);
+    set({ messageListener: handler });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
-    socket.off("newMessage");
+
+    const { messageListener } = get();
+    if (messageListener) {
+      socket.off("newMessage", messageListener);
+      set({ messageListener: null });
+    }
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),

@@ -13,16 +13,44 @@ const getContacts = async (req, res) => {
     }).populate("participants", "-password");
 
     // Return the other participant from each conversation
-    const contacts = conversations
-      .map((conv) => {
-        const other = conv.participants.find(
-          (p) => p._id.toString() !== myId.toString(),
-        );
-        return other;
-      })
-      .filter(Boolean);
+    const contacts = (
+      await Promise.all(
+        conversations.map(async (conv) => {
+          const other = conv.participants.find(
+            (p) => p._id.toString() !== myId.toString(),
+          );
 
-    res.status(200).json(contacts);
+          if (other) return other;
+
+          const lastPairMessage = await Message.findOne({
+            conversationId: conv._id,
+            $or: [{ senderId: myId }, { receiverId: myId }],
+          })
+            .sort({ createdAt: -1 })
+            .select("senderId receiverId");
+
+          if (!lastPairMessage) return null;
+
+          const otherUserId =
+            lastPairMessage.senderId.toString() === myId.toString()
+              ? lastPairMessage.receiverId
+              : lastPairMessage.senderId;
+
+          if (!otherUserId || otherUserId.toString() === myId.toString()) {
+            return null;
+          }
+
+          return User.findById(otherUserId).select("-password");
+        }),
+      )
+    ).filter(Boolean);
+
+    const uniqueContactsMap = new Map();
+    contacts.forEach((contact) => {
+      uniqueContactsMap.set(contact._id.toString(), contact);
+    });
+
+    res.status(200).json(Array.from(uniqueContactsMap.values()));
   } catch (error) {
     console.log("Error in getContacts controller: ", error.message);
     res.status(500).json({ error: "Internal Server Error" });
@@ -48,9 +76,27 @@ const getMessages = async (req, res) => {
     const { id: userToChatId } = req.params;
     const myId = req.user._id;
 
-    const conversation = await Conversation.findOne({
+    let conversation = await Conversation.findOne({
       participants: { $all: [myId, userToChatId] },
     });
+
+    if (!conversation) {
+      const latestPairMessage = await Message.findOne({
+        $or: [
+          { senderId: myId, receiverId: userToChatId },
+          { senderId: userToChatId, receiverId: myId },
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .select("conversationId");
+
+      if (latestPairMessage) {
+        conversation = await Conversation.findOne({
+          _id: latestPairMessage.conversationId,
+          participants: myId,
+        });
+      }
+    }
 
     if (!conversation) {
       return res.status(200).json([]);
@@ -123,9 +169,67 @@ const sendMessage = async (req, res) => {
   }
 };
 
+const deleteConversation = async (req, res) => {
+  try {
+    const { id: userToDeleteConversationWith } = req.params;
+    const myId = req.user._id;
+
+    let conversation = await Conversation.findOne({
+      participants: { $all: [myId, userToDeleteConversationWith] },
+    });
+
+    if (!conversation) {
+      const latestPairMessage = await Message.findOne({
+        $or: [
+          { senderId: myId, receiverId: userToDeleteConversationWith },
+          { senderId: userToDeleteConversationWith, receiverId: myId },
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .select("conversationId");
+
+      if (latestPairMessage) {
+        conversation = await Conversation.findOne({
+          _id: latestPairMessage.conversationId,
+          participants: myId,
+        });
+      }
+    }
+
+    if (!conversation) {
+      return res.status(404).json({
+        success: false,
+        message: "Conversation not found",
+      });
+    }
+
+    const updatedConversation = await Conversation.findByIdAndUpdate(
+      conversation._id,
+      {
+        $pull: { participants: myId },
+      },
+      { new: true },
+    );
+
+    if (updatedConversation && updatedConversation.participants.length === 0) {
+      await Message.deleteMany({ conversationId: conversation._id });
+      await Conversation.findByIdAndDelete(conversation._id);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Conversation removed for current user",
+    });
+  } catch (error) {
+    console.log("Error in deleteConversation controller: ", error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 export const messageController = {
   getContacts,
   getUsersForSidebar,
   getMessages,
   sendMessage,
+  deleteConversation,
 };

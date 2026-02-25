@@ -5,7 +5,7 @@ import { useChatStore } from "../store/useChatStore";
 
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeleton/SidebarSkeleton";
-import { Archive, Ellipsis, EllipsisIcon, Search, X } from "lucide-react";
+import { Ellipsis, Search, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // This component is a sidebar for the chat
@@ -16,16 +16,17 @@ const Sidebar = () => {
     selectedUser,
     setSelectedUser,
     isUsersLoading,
-    removeContact,
+    deleteConversation,
   } = useChatStore();
 
-  const { onlineUsers } = useAuthStore();
+  const { onlineUsers, socket } = useAuthStore();
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("all");
   const router = useRouter();
 
-  const [openChatOption, setOpenChatOption] = useState(false);
   const [openConversationOption, setOpenConversationOption] = useState(null);
+  const [deleteTargetUser, setDeleteTargetUser] = useState(null);
+  const [isDeletingConversation, setIsDeletingConversation] = useState(false);
 
   const chatOptionRef = useRef(null);
   const conversationOptionRef = useRef(null);
@@ -34,13 +35,23 @@ const Sidebar = () => {
     loadContacts();
   }, [loadContacts]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = () => {
+      loadContacts();
+    };
+
+    socket.on("newMessage", handleNewMessage);
+
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+    };
+  }, [socket, loadContacts]);
+
   // Popup closes when clicked outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (chatOptionRef.current && !chatOptionRef.current.contains(e.target)) {
-        setOpenChatOption(false);
-      }
-
       if (
         conversationOptionRef.current &&
         !conversationOptionRef.current.contains(e.target)
@@ -53,6 +64,19 @@ const Sidebar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleConfirmDeleteConversation = async () => {
+    if (!deleteTargetUser?._id || isDeletingConversation) return;
+
+    try {
+      setIsDeletingConversation(true);
+      await deleteConversation(deleteTargetUser._id);
+      setDeleteTargetUser(null);
+      setOpenConversationOption(null);
+    } finally {
+      setIsDeletingConversation(false);
+    }
+  };
+
   if (isUsersLoading) return <SidebarSkeleton />;
   return (
     <aside className="h-full w-25 lg:w-90 border-r border-base-300 flex flex-col transition-all duration-200">
@@ -60,23 +84,6 @@ const Sidebar = () => {
       <div className="hidden lg:flex flex-col w-full p-4">
         <div className="relative flex justify-between items-center gap-2">
           <span className="font-bold text-2xl hidden lg:block">Đoạn chat</span>
-          <Ellipsis
-            onClick={() => setOpenChatOption((prev) => !prev)}
-            size={32}
-            className="bg-gray-200 hover:bg-gray-300 rounded-full p-1 cursor-pointer select-none"
-          />
-          {/* Chat Option Dropdown */}
-          {openChatOption && (
-            <div
-              ref={chatOptionRef}
-              className="absolute top-10 -right-72 w-80 p-2 bg-white shadow-lg rounded-md border border-gray-300 z-50 animate-fadeIn"
-            >
-              <button className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-gray-200 rounded-lg cursor-pointer select-none">
-                <Archive />
-                Đoạn chat đã lưu trữ
-              </button>
-            </div>
-          )}
         </div>
       </div>
       {/* Sidebar search bar */}
@@ -200,34 +207,65 @@ const Sidebar = () => {
             {openConversationOption === user._id && (
               <div
                 ref={conversationOptionRef}
-                className="absolute right-3 top-15 w-40 bg-white border border-gray-300 shadow-lg rounded-md z-50 animate-fadeIn"
+                className="absolute right-3 top-15 w-50 bg-white border border-gray-300 shadow-lg rounded-md z-50 animate-fadeIn p-2"
               >
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    removeContact(user._id);
+                    setDeleteTargetUser(user);
                     setOpenConversationOption(null);
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                  className="w-full items-center gap-2  hover:bg-gray-100 text-sm text-black flex text-nowrap p-1 rounded-sm cursor-pointer"
                 >
-                  ❌ Xóa cuộc trò chuyện
-                </button>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log("Archive", user._id);
-                    setOpenConversationOption(null);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                >
-                  📦 Lưu trữ
+                  <Trash2 />
+                  Xóa cuộc trò chuyện
                 </button>
               </div>
             )}
           </div>
         ))}
       </div>
+
+      {deleteTargetUser && (
+        <div
+          className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => {
+            if (isDeletingConversation) return;
+            setDeleteTargetUser(null);
+          }}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Xóa cuộc trò chuyện?
+            </h3>
+            <p className="text-sm text-gray-600 mb-5">
+              Bạn có chắc muốn xóa cuộc trò chuyện với{" "}
+              {deleteTargetUser.full_name}? Hành động này chỉ áp dụng cho tài
+              khoản của bạn.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTargetUser(null)}
+                disabled={isDeletingConversation}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleConfirmDeleteConversation}
+                disabled={isDeletingConversation}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeletingConversation ? "Đang xóa..." : "Xóa"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 };

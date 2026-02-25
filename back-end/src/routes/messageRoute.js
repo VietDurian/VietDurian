@@ -11,6 +11,11 @@ router.get(
   authMiddleware.protect,
   messageController.getUsersForSidebar,
 );
+router.delete(
+  "/conversation/:id",
+  authMiddleware.protect,
+  messageController.deleteConversation,
+);
 router.get("/:id", authMiddleware.protect, messageController.getMessages);
 
 router.post("/send/:id", authMiddleware.protect, messageController.sendMessage);
