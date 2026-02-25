@@ -249,6 +249,65 @@ const Router = express.Router();
  *       404:
  *         description: Request not found
  */
+/**
+ * @swagger
+ * /permission/requests/proofs:
+ *   post:
+ *     summary: Submit or update proof documents for pending request
+ *     description: Authenticated users attach CCCD front/back images (and optional extra proofs) to their own pending permission request.
+ *     tags: [Permission]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - proofs
+ *             properties:
+ *               proofs:
+ *                 type: array
+ *                 minItems: 2
+ *                 description: Proof documents, requires both CCCD sides
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [cccd_front, cccd_back, other]
+ *                     url:
+ *                       type: string
+ *                       format: uri
+ *                 example:
+ *                   - type: cccd_front
+ *                     url: "https://cdn.example.com/cccd-front.jpg"
+ *                   - type: cccd_back
+ *                     url: "https://cdn.example.com/cccd-back.jpg"
+ *     responses:
+ *       200:
+ *         description: Proofs submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Proofs submitted successfully"
+ *                 data:
+ *                   $ref: '#/components/schemas/PermissionRequest'
+ *       400:
+ *         description: CCCD front/back missing or invalid payload
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Pending permission request not found
+ */
 Router.get(
     "/requests",
     authMiddleware.protect,
@@ -285,5 +344,10 @@ Router.patch(
     authorizationMiddleware.isAdmin,
     permissionController.rejectAccount
 );
+Router.post(
+    "/requests/proofs",
+    authMiddleware.protect,
+    permissionController.submitProofs
+)
 
 export const permissionRoute = Router;

@@ -105,7 +105,19 @@ const verifyEmail = async (email, otp) => {
     otpRecord.is_used = true;
     await otpRecord.save();
 
-    return { user };
+    const permission = await PermissionAccountModel.findOne({
+      user_id: user._id,
+      status: "pending",
+    }).lean();
+
+    const token = generateToken(user._id);
+
+    return {
+      user,
+      token,
+      need_upload_proofs: !!permission,
+      requested_role: permission?.requested_role || null,
+    };
   } catch (error) {
     throw error;
   }
