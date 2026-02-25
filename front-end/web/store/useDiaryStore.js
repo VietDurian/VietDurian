@@ -52,11 +52,16 @@ export const useDiaryStore = create((set, get) => ({
 
   // Get diary detals
   getDiaryDetails: async (diaryId) => {
-    set({ isDiaryDetailsLoading: true });
+    set({ isDiaryDetailsLoading: true, diaryDetail: {} });
     try {
       const res = await axiosInstance.get(`/diary/${diaryId}`);
       set({ diaryDetail: res.data.data });
+      return res?.data?.data;
     } catch (error) {
+      set({ diaryDetail: {} });
+      toast.error(
+        error?.response?.data?.message || "Không thể tải chi tiết nhật ký",
+      );
     } finally {
       set({ isDiaryDetailsLoading: false });
     }
