@@ -1,13 +1,14 @@
 import React from "react";
 import { useState } from "react";
 import { useChatStore } from "../store/useChatStore";
-import { Image, Send, X } from "lucide-react";
+import { Image, Loader2, Send, X } from "lucide-react";
 import { useRef } from "react";
 import toast from "react-hot-toast";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
+  const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef(null);
   const { sendMessage } = useChatStore();
 
@@ -32,9 +33,10 @@ const MessageInput = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!text.trim() && !imagePreview) return;
+    if ((!text.trim() && !imagePreview) || isSending) return;
 
     try {
+      setIsSending(true);
       await sendMessage({
         text: text.trim(),
         image: imagePreview,
@@ -45,6 +47,8 @@ const MessageInput = () => {
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error("Failed to send message:", error);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -99,9 +103,13 @@ const MessageInput = () => {
         <button
           type="submit"
           className="btn btn-circle"
-          disabled={!text.trim() && !imagePreview}
+          disabled={isSending || (!text.trim() && !imagePreview)}
         >
-          <Send size={20} />
+          {isSending ? (
+            <Loader2 size={20} className="animate-spin" />
+          ) : (
+            <Send size={20} />
+          )}
         </button>
       </form>
     </div>
