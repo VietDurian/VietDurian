@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Menu, LogOut } from 'lucide-react';
-import { Toaster } from 'sonner';
 
 import { useAuth } from '@/context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -149,19 +148,6 @@ export default function App() {
 					<div className="flex-1 overflow-auto">{renderPage()}</div>
 				</div>
 			</div>
-
-			{/* Toast Notifications */}
-			<Toaster
-				position="top-right"
-				richColors
-				closeButton
-				toastOptions={{
-					style: {
-						background: 'white',
-						border: '1px solid #e5e7eb',
-					},
-				}}
-			/>
 		</LanguageProvider>
 	);
 }
