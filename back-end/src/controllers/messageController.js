@@ -123,9 +123,39 @@ const sendMessage = async (req, res) => {
   }
 };
 
+const deleteConversation = async (req, res) => {
+  try {
+    const { id: userToDeleteConversationWith } = req.params;
+    const myId = req.user._id;
+
+    const conversation = await Conversation.findOne({
+      participants: { $all: [myId, userToDeleteConversationWith] },
+    });
+
+    if (!conversation) {
+      return res.status(404).json({
+        success: false,
+        message: "Conversation not found",
+      });
+    }
+
+    await Message.deleteMany({ conversationId: conversation._id });
+    await Conversation.findByIdAndDelete(conversation._id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Conversation deleted successfully",
+    });
+  } catch (error) {
+    console.log("Error in deleteConversation controller: ", error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 export const messageController = {
   getContacts,
   getUsersForSidebar,
   getMessages,
   sendMessage,
+  deleteConversation,
 };

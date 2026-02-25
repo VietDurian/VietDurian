@@ -16,10 +16,10 @@ const Sidebar = () => {
     selectedUser,
     setSelectedUser,
     isUsersLoading,
-    removeContact,
+    deleteConversation,
   } = useChatStore();
 
-  const { onlineUsers } = useAuthStore();
+  const { onlineUsers, socket } = useAuthStore();
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("all");
   const router = useRouter();
@@ -33,6 +33,20 @@ const Sidebar = () => {
   useEffect(() => {
     loadContacts();
   }, [loadContacts]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = () => {
+      loadContacts();
+    };
+
+    socket.on("newMessage", handleNewMessage);
+
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+    };
+  }, [socket, loadContacts]);
 
   // Popup closes when clicked outside
   useEffect(() => {
@@ -203,9 +217,9 @@ const Sidebar = () => {
                 className="absolute right-3 top-15 w-40 bg-white border border-gray-300 shadow-lg rounded-md z-50 animate-fadeIn"
               >
                 <button
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.stopPropagation();
-                    removeContact(user._id);
+                    await deleteConversation(user._id);
                     setOpenConversationOption(null);
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
