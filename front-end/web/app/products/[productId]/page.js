@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { productAPI, ratingAPI } from "@/lib/api";
 import ProductRating from "@/components/ProductRating";
+import DiaryPublicModel from "@/components/DiaryPublicModel";
 import {
   ChevronRight,
   Eye,
@@ -69,7 +70,7 @@ export default function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState("description");
   const [imageError, setImageError] = useState(false);
-  const [userId, setUserId] = useState(null);
+  const [userId] = useState(() => getUserId());
   const [liveRating, setLiveRating] = useState(null);
   const { authUser } = useAuthStore();
   const { setSelectedUser, addContact } = useChatStore();
@@ -104,11 +105,6 @@ export default function ProductDetailPage() {
 
     router.push(`/chat/${receiverId}`);
   };
-
-  useEffect(() => {
-    const id = getUserId();
-    setUserId(id);
-  }, []);
 
   // Thêm useEffect fetch rating
   useEffect(() => {
@@ -176,6 +172,13 @@ export default function ProductDetailPage() {
       month: "2-digit",
       year: "numeric",
     });
+  };
+
+  const getDiaryId = () => {
+    if (!product?.diary_id) return null;
+    return typeof product.diary_id === "object"
+      ? product.diary_id?._id
+      : product.diary_id;
   };
 
   if (loading) {
@@ -493,6 +496,16 @@ export default function ProductDetailPage() {
                 >
                   Thông số kỹ thuật
                 </button>
+                <button
+                  onClick={() => setActiveTab("diary")}
+                  className={`px-8 py-4 font-semibold transition-colors ${
+                    activeTab === "diary"
+                      ? "text-emerald-600 border-b-2 border-emerald-600"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Nhật kí canh tác
+                </button>
               </div>
 
               <div className="p-8">
@@ -578,11 +591,16 @@ export default function ProductDetailPage() {
                     </div>
                   </div>
                 )}
+
+                {activeTab === "diary" && (
+                  <DiaryPublicModel diaryId={getDiaryId()} />
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
+
       <ProductRating productId={productId} userId={userId} />
       <Footer />
     </div>
