@@ -81,17 +81,46 @@ const updateDiary = async (diaryId, { title, description, crop_type }) => {
 const finishDiary = async (diaryId, { weight_durian, price }) => {
 	try {
 		if (!diaryId) throw new Error('Diary ID is required for finish');
-		if (!weight_durian || !price) {
+		if (weight_durian === undefined || price === undefined) {
 			throw new Error(
 				'Weight durian and price are required when marking diary as Completed',
 			);
 		}
+
+		const parsedWeightDurian = Number(weight_durian);
+		const parsedPrice = Number(price);
+
+		if (Number.isNaN(parsedWeightDurian) || Number.isNaN(parsedPrice)) {
+			throw new Error('Weight durian and price must be valid numbers');
+		}
+
+		const steps = await DiaryStepModel.find({ diary_id: diaryId }).select(
+			'cost',
+		);
+		const totalCost = steps.reduce(
+			(sum, step) => sum + (Number(step.cost) || 0),
+			0,
+		);
+		const totalRevenue = parsedPrice * parsedWeightDurian;
+		const profit = totalRevenue - totalCost;
+
 		const end_date = new Date();
 		const updatedDiary = await DiaryModel.findByIdAndUpdate(
 			diaryId,
-			{ status: 'Completed', end_date, weight_durian, price },
+			{
+				status: 'Completed',
+				end_date,
+				weight_durian: parsedWeightDurian,
+				price: parsedPrice,
+				total_cost: totalCost,
+				total_revenue: totalRevenue,
+				profit,
+			},
 			{ new: true },
 		);
+
+		if (!updatedDiary) throw new Error('Diary not found');
+
 		return updatedDiary;
 	} catch (error) {
 		throw error;
@@ -219,9 +248,19 @@ const statisticsDiary = async (diaryId) => {
 		const diary = await DiaryModel.findById(diaryId);
 		if (!diary) throw new Error('Diary not found');
 		const steps = await DiaryStepModel.find({ diary_id: diaryId });
-		const totalCost = steps.reduce((sum, step) => sum + (step.cost || 0), 0);
-		const totalRevenue = (diary.price || 0) * (diary.weight_durian || 0);
+		const totalCost = steps.reduce(
+			(sum, step) => sum + (Number(step.cost) || 0),
+			0,
+		);
+		const totalRevenue =
+			(Number(diary.price) || 0) * (Number(diary.weight_durian) || 0);
 		const profit = totalRevenue - totalCost;
+
+		// Cập nhật lại diary với các giá trị tính toán
+		diary.total_cost = totalCost;
+		diary.total_revenue = totalRevenue;
+		diary.profit = profit;
+		await diary.save();
 		return {
 			diary_id: diaryId,
 			total_cost: totalCost,

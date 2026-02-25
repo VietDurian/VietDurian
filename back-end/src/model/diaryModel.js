@@ -43,6 +43,18 @@ const DiarySchema = new mongoose.Schema(
 			type: Number,
 			default: 0,
 		},
+		total_cost: {
+			type: Number,
+			default: 0,
+		},
+		total_revenue: {
+			type: Number,
+			default: 0,
+		},
+		profit: {
+			type: Number,
+			default: 0,
+		},
 	},
 	{
 		timestamps: {
