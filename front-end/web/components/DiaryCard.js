@@ -64,9 +64,9 @@ export default function DiaryCard({ diary }) {
 
           <Link
             href={`/profile/gardens/${diary.garden_id?._id}/diaries/${diary._id}`}
-            className="text-emerald-700 text-sm font-medium hover:underline"
+            className="flex items-center text-emerald-700 text-sm font-medium hover:underline"
           >
-            Read Full Entry →
+            Xem chi tiết <ChevronRight />
           </Link>
         </div>
       </div>

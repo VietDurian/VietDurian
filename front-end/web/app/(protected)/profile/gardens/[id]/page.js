@@ -2,20 +2,19 @@
 import { useEffect, useState } from "react";
 
 import {
-  Plus,
   MapPin,
   Ruler,
   Sprout,
-  ArrowRight,
   ChevronLeft,
   Notebook,
   Pen,
   Trash,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import { useGardenStore } from "@/store/useGardenStore";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 export default function ProfileGardenDetail() {
   const { id } = useParams();
@@ -37,16 +36,48 @@ export default function ProfileGardenDetail() {
     }
   }, [authUser, getGardenDetails, id]);
 
-  if (isGardenDetailsLoading) return <div>Loading gardens...</div>;
+  if (isGardenDetailsLoading) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/40 mt-7 px-4 py-10">
+        <div className="max-w-6xl mx-auto bg-white rounded-3xl border border-gray-100 shadow-sm p-10 flex items-center justify-center gap-3 text-gray-500">
+          <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+          Đang tải thông tin khu vườn...
+        </div>
+      </div>
+    );
+  }
+
+  if (!gardenDetail) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/40 mt-7 px-4 py-10">
+        <div className="max-w-3xl mx-auto bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
+          <p className="text-gray-800 text-lg font-semibold mb-2">
+            Không tìm thấy khu vườn
+          </p>
+          <p className="text-sm text-gray-500 mb-6">
+            Khu vườn có thể đã bị xóa hoặc bạn không có quyền truy cập.
+          </p>
+          <Link
+            href="/profile/gardens"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Quay lại danh sách
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl p-6 md:p-7 w-full max-w-md shadow-xl border border-gray-100">
+            <h2 className="text-xl font-bold text-gray-900 mb-2 leading-tight">
               Xác nhận xóa khu vườn
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
               Nhập tên khu vườn <b>{gardenDetail?.name}</b> để xác nhận xóa.
             </p>
 
@@ -54,16 +85,16 @@ export default function ProfileGardenDetail() {
               value={confirmName}
               onChange={(e) => setConfirmName(e.target.value)}
               placeholder="Nhập tên khu vườn..."
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-red-500 outline-none"
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 mb-5 focus:ring-2 focus:ring-red-500 outline-none"
             />
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-2.5">
               <button
                 onClick={() => {
                   setShowDeleteModal(false);
                   setConfirmName("");
                 }}
-                className="cursor-pointer px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+                className="cursor-pointer px-4 py-2.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
               >
                 Hủy
               </button>
@@ -74,9 +105,9 @@ export default function ProfileGardenDetail() {
                 }
                 onClick={async () => {
                   await deleteGarden(id);
-                  router.push("/profile/gardens"); // go back after delete
+                  router.push("/profile/gardens");
                 }}
-                className={`cursor-pointer px-4 py-2 rounded-lg text-white ${
+                className={`cursor-pointer px-4 py-2.5 rounded-xl text-white font-medium transition-colors ${
                   confirmName === gardenDetail?.name
                     ? "bg-red-600 hover:bg-red-700"
                     : "bg-red-300 cursor-not-allowed"
@@ -89,117 +120,168 @@ export default function ProfileGardenDetail() {
         </div>
       )}
 
-      <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/30">
-        {/* Header */}
-        <div className=" bg-white border-b border-gray-200">
-          <div className=" mx-auto px-6 py-7">
-            <div className="flex items-center justify-between mt-3">
-              <Link
-                href={"/profile/gardens"}
-                className="mr-5 text-gray-300 hover:text-green-500 transition-all duration-300 ease-in-out"
-              >
-                <ChevronLeft size={64} />
-              </Link>
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {gardenDetail?.name}
-                </h1>
+      <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/30 mt-7 px-4 pb-10">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="bg-linear-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl px-6 md:px-8 py-7 md:py-8">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex items-start gap-3 md:gap-4">
+                <Link
+                  href="/profile/gardens"
+                  className="mt-0.5 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </Link>
+
+                <div>
+                  <p className="text-emerald-100 text-sm mb-1">
+                    Khu vườn của bạn
+                  </p>
+                  <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight break-words">
+                    {gardenDetail?.name}
+                  </h1>
+                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 text-emerald-50 text-sm">
+                    <Sprout className="w-4 h-4" />
+                    {gardenDetail?.crop_type || "Chưa cập nhật loại cây"}
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2">
+
+              <div className="flex flex-wrap gap-2.5">
                 <Link
                   href={`/profile/gardens/${id}/diaries`}
-                  className="inline-flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+                  className="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors shadow-sm"
                 >
-                  <Notebook className="w-5 h-5" />
-                  <p className="font-bold">Nhật Ký</p>
+                  <Notebook className="w-4 h-4" />
+                  Nhật ký
                 </Link>
 
                 <Link
                   href={`/profile/gardens/${id}/edit`}
-                  className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+                  className="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors shadow-sm"
                 >
-                  <Pen className="w-5 h-5" />
-                  <p className="font-bold">Chỉnh sửa</p>
+                  <Pen className="w-4 h-4" />
+                  Chỉnh sửa
                 </Link>
+
                 <button
                   onClick={() => setShowDeleteModal(true)}
-                  className="cursor-pointer inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+                  className="cursor-pointer inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors shadow-sm"
                 >
-                  <Trash className="w-5 h-5" />
-                  <p className="font-bold">Xóa</p>
+                  <Trash className="w-4 h-4" />
+                  Xóa
                 </button>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Content */}
-        <div className="max-w-6xl mx-auto px-6 py-8 ">
-          {/* Grid layout */}
-          <div className="grid grid-cols-3 gap-5">
-            {/* Crop Type */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-emerald-100 ">
-                <Sprout className="text-emerald-600 " />
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3">
+                <p className="text-emerald-100 text-xs mb-1">Diện tích</p>
+                <p className="text-white text-lg font-semibold">
+                  {gardenDetail?.area || "-"} m²
+                </p>
               </div>
-              <p className="text-sm text-gray-600 mb-1">Loại cây</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {gardenDetail?.crop_type}
-              </p>
-            </div>
-            {/* Area */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-blue-100">
-                <Ruler className="text-blue-600 " />
+              <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3">
+                <p className="text-emerald-100 text-xs mb-1">Vị trí</p>
+                <p className="text-white text-sm font-medium line-clamp-2 min-h-[40px]">
+                  {gardenDetail?.location || "Chưa cập nhật"}
+                </p>
               </div>
-              <p className="text-sm text-gray-600 mb-1">Tổng diện tích</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {gardenDetail?.area} m²
-              </p>
-            </div>
-            {/* Location */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-purple-100 ">
-                <MapPin className="text-purple-600 " />
+              <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3">
+                <p className="text-emerald-100 text-xs mb-1">Tọa độ</p>
+                <p className="text-white text-sm font-medium">
+                  {gardenDetail?.latitude || "-"},{" "}
+                  {gardenDetail?.longitude || "-"}
+                </p>
               </div>
-              <p className="text-sm text-gray-600 mb-1">Vị trí</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {gardenDetail?.location}
-              </p>
             </div>
-            {/* Image */}
-            <div className="col-span-3 bg-white rounded-xl shadow-sm border border-gray-200 p-6 ">
-              <p className="text-2xl font-bold text-gray-900 mb-3  pb-3">
-                Ảnh vườn
-              </p>
-              <img src={gardenDetail?.image} className="w-full rounded-lg" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <p className="text-lg font-semibold text-gray-900">
+                  Ảnh khu vườn
+                </p>
+              </div>
+
+              {gardenDetail?.image ? (
+                <img
+                  src={gardenDetail.image}
+                  alt={gardenDetail?.name || "Garden"}
+                  className="w-full h-[340px] md:h-[420px] object-cover"
+                />
+              ) : (
+                <div className="h-[340px] md:h-[420px] bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+                  Chưa có ảnh khu vườn
+                </div>
+              )}
             </div>
-            {/* Description */}
-            <div className="col-span-3 bg-white rounded-xl shadow-sm border border-gray-200 p-6 ">
-              <p className="text-2xl font-bold text-gray-900 mb-3">
-                Thông tin mô tả
-              </p>
-              <p className="text-md text-gray-700 leading-relaxed max-h-100 overflow-auto">
-                {gardenDetail?.description}
-              </p>
-            </div>
-            {/* Coordinates */}
-            <div className="col-span-3 bg-white rounded-xl shadow-sm border border-gray-200 p-6 ">
-              <p className="text-2xl font-bold text-gray-900 mb-3">Tọa độ</p>
-              {/* Grid layout */}
-              <div className="grid grid-cols-2 gap-5">
-                {/* Latitude */}
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
-                  <p className="text-sm text-gray-600 mb-1">Vĩ độ</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {gardenDetail?.latitude}
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Thông tin nhanh
+              </h2>
+
+              <div className="space-y-3">
+                <div className="rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3">
+                  <div className="flex items-center gap-2 text-xs font-medium text-emerald-700 mb-1">
+                    <Sprout className="w-3.5 h-3.5" />
+                    Loại cây
+                  </div>
+                  <p className="text-gray-900 font-semibold">
+                    {gardenDetail?.crop_type || "-"}
                   </p>
                 </div>
-                {/* Longitude */}
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
-                  <p className="text-sm text-gray-600 mb-1">Kinh độ</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {gardenDetail?.longitude}
+
+                <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3">
+                  <div className="flex items-center gap-2 text-xs font-medium text-blue-700 mb-1">
+                    <Ruler className="w-3.5 h-3.5" />
+                    Diện tích
+                  </div>
+                  <p className="text-gray-900 font-semibold">
+                    {gardenDetail?.area || "-"} m²
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-purple-50 border border-purple-100 px-4 py-3">
+                  <div className="flex items-center gap-2 text-xs font-medium text-purple-700 mb-1">
+                    <MapPin className="w-3.5 h-3.5" />
+                    Vị trí
+                  </div>
+                  <p className="text-gray-900 font-semibold text-sm leading-relaxed">
+                    {gardenDetail?.location || "-"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <p className="text-lg font-semibold text-gray-900 mb-2">
+                Thông tin mô tả
+              </p>
+              <p className="text-sm text-gray-700 leading-7 whitespace-pre-wrap">
+                {gardenDetail?.description || "Chưa có mô tả cho khu vườn này."}
+              </p>
+            </div>
+
+            <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <p className="text-lg font-semibold text-gray-900 mb-4">Tọa độ</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">
+                    Vĩ độ
+                  </p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {gardenDetail?.latitude || "-"}
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">
+                    Kinh độ
+                  </p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {gardenDetail?.longitude || "-"}
                   </p>
                 </div>
               </div>
