@@ -122,7 +122,6 @@ const Router = express.Router();
  *         description: Forbidden
  */
 
-
 /**
  * @swagger
  * /permission/requests/sort:
@@ -308,46 +307,46 @@ const Router = express.Router();
  *       404:
  *         description: Pending permission request not found
  */
-Router.get(
-    "/requests",
-    authMiddleware.protect,
-    authorizationMiddleware.isAdmin,
-    permissionController.getPermissionRequests
-);
-Router.get(
-    "/requests/search",
-    authMiddleware.protect,
-    authorizationMiddleware.isAdmin,
-    permissionController.searchPermissionRequests
-);
-Router.get(
-    "/requests/sort",
-    authMiddleware.protect,
-    authorizationMiddleware.isAdmin,
-    permissionController.sortPermissionRequests
-);
-Router.patch(
-    "/requests/:request_id/confirm",
-    authMiddleware.protect,
-    authorizationMiddleware.isAdmin,
-    permissionController.confirmAccount
-);
-Router.get(
-    "/requests/:request_id",
-    authMiddleware.protect,
-    authorizationMiddleware.isAdmin,
-    permissionController.getPermissionRequestDetail
-);
-Router.patch(
-    "/requests/:request_id/reject",
-    authMiddleware.protect,
-    authorizationMiddleware.isAdmin,
-    permissionController.rejectAccount
-);
 Router.post(
-    "/requests/proofs",
-    authMiddleware.protect,
-    permissionController.submitProofs
-)
+  "/requests/proofs",
+  authMiddleware.protect,
+  permissionController.submitProofs,
+);
+Router.get(
+  "/requests",
+  authMiddleware.protect,
+  authorizationMiddleware.isAdmin,
+  permissionController.getPermissionRequests,
+);
+Router.get(
+  "/requests/search",
+  authMiddleware.protect,
+  authorizationMiddleware.isAdmin,
+  permissionController.searchPermissionRequests,
+);
+Router.get(
+  "/requests/sort",
+  authMiddleware.protect,
+  authorizationMiddleware.isAdmin,
+  permissionController.sortPermissionRequests,
+);
+Router.patch(
+  "/requests/:request_id/confirm",
+  authMiddleware.protect,
+  authorizationMiddleware.isAdmin,
+  permissionController.confirmAccount,
+);
+Router.get(
+  "/requests/:request_id",
+  authMiddleware.protect,
+  authorizationMiddleware.isAdmin,
+  permissionController.getPermissionRequestDetail,
+);
+Router.patch(
+  "/requests/:request_id/reject",
+  authMiddleware.protect,
+  authorizationMiddleware.isAdmin,
+  permissionController.rejectAccount,
+);
 
 export const permissionRoute = Router;
