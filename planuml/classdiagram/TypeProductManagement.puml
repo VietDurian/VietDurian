@@ -9,10 +9,12 @@ left to right direction
 ' ==============================
 
 class TypeProductRoute <<control>> {
-    +GET /(req, res): void
-    +POST /(req, res): void
-    +PATCH /:id(req, res): void
-    +DELETE /:id(req, res): void
+    +createTypeProduct(req, res): void
+    +getAllTypeProducts(req, res): void
+    +updateTypeProduct(req, res): void
+    +deleteTypeProduct(req, res): void
+    +searchTypeProducts(req, res): void
+    +sortTypeProducts(req, res): void
 }
 
 ' ==============================
@@ -20,10 +22,12 @@ class TypeProductRoute <<control>> {
 ' ==============================
 
 class TypeProductController <<control>> {
-    +getAllTypeProducts(req, res): void
     +createTypeProduct(req, res): void
+    +getAllTypeProducts(req, res): void
     +updateTypeProduct(req, res): void
     +deleteTypeProduct(req, res): void
+    +searchTypeProducts(req, res): void
+    +sortTypeProducts(req, res): void
 }
 
 ' ==============================
@@ -31,10 +35,12 @@ class TypeProductController <<control>> {
 ' ==============================
 
 class TypeProductService <<service>> {
-    +getAllTypeProducts(params): { data: TypeProduct[], pagination }
     +createTypeProduct(data): TypeProduct
-    +updateTypeProduct(data): TypeProduct
-    +deleteTypeProduct(params): void
+    +getAllTypeProducts(params): { data: TypeProduct[], pagination }
+    +updateTypeProduct(typeProductId, data): TypeProduct
+    +deleteTypeProduct(typeProductId): TypeProduct
+    +searchTypeProducts(params): { data: TypeProduct[], pagination }
+    +sortTypeProducts(params): { data: TypeProduct[], pagination }
 }
 
 ' ==============================
