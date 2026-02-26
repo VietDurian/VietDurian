@@ -4,6 +4,7 @@ import {
 	Search,
 	Filter,
 	PauseCircle,
+	PlayCircle,
 	Trash2,
 	ArrowUpDown,
 	Check,
@@ -88,7 +89,7 @@ export function PostsPage() {
 		return () => {
 			isMounted = false;
 		};
-	}, [searchTerm, statusFilter, categoryFilter]);
+	}, [searchTerm, statusFilter, categoryFilter, t]);
 
 	const parseDate = (value) => {
 		if (!value) return 0;
@@ -206,6 +207,22 @@ export function PostsPage() {
 		}
 	};
 
+	const getToggleStatusMeta = (postStatus) => {
+		if (postStatus === 'active') {
+			return {
+				title: t('inactive_post') || 'Ngưng hoạt động',
+				hoverClass: 'hover:bg-yellow-100',
+				icon: <PauseCircle className="w-4 h-4 text-yellow-700" />,
+			};
+		}
+
+		return {
+			title: t('active_post') || 'Kích hoạt',
+			hoverClass: 'hover:bg-green-100',
+			icon: <PlayCircle className="w-4 h-4 text-green-700" />,
+		};
+	};
+
 	return (
 		<div className="p-4 md:p-8">
 			{/* Header */}
@@ -308,6 +325,9 @@ export function PostsPage() {
 						</thead>
 						<tbody className="divide-y divide-gray-200">
 							{paginatedPosts.map((post) => (
+								(() => {
+									const toggleMeta = getToggleStatusMeta(post.status);
+									return (
 								<tr
 									key={post.id}
 									onClick={() => setSelectedPost(post)}
@@ -364,13 +384,13 @@ export function PostsPage() {
 													e.stopPropagation();
 													setInactive(post.id);
 												}}
-												className="p-2 hover:bg-yellow-100 rounded-lg transition-colors"
-												title={t('inactive_post')}
+												className={`p-2 rounded-lg transition-colors ${toggleMeta.hoverClass}`}
+												title={toggleMeta.title}
 											>
 												{updatingPostId === post.id ? (
 													<div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
 												) : (
-													<PauseCircle className="w-4 h-4 text-gray-500" />
+													toggleMeta.icon
 												)}
 											</button>
 											<button
@@ -386,6 +406,8 @@ export function PostsPage() {
 										</div>
 									</td>
 								</tr>
+									);
+								})()
 							))}
 						</tbody>
 					</table>
@@ -395,6 +417,9 @@ export function PostsPage() {
 			{/* Posts Cards - Mobile */}
 			<div className="md:hidden space-y-4">
 				{paginatedPosts.map((post) => (
+					(() => {
+						const toggleMeta = getToggleStatusMeta(post.status);
+						return (
 					<div
 						key={post.id}
 						onClick={() => setSelectedPost(post)}
@@ -447,12 +472,13 @@ export function PostsPage() {
 										e.stopPropagation();
 										setInactive(post.id);
 									}}
-									className="p-2 rounded-lg transition-colors hover:bg-yellow-100"
+									className={`p-2 rounded-lg transition-colors ${toggleMeta.hoverClass}`}
+									title={toggleMeta.title}
 								>
 									{updatingPostId === post.id ? (
 										<div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
 									) : (
-										<PauseCircle className="w-4 h-4 text-gray-600" />
+										toggleMeta.icon
 									)}
 								</button>
 								<button
@@ -467,6 +493,8 @@ export function PostsPage() {
 							</div>
 						</div>
 					</div>
+						);
+					})()
 				))}
 			</div>
 

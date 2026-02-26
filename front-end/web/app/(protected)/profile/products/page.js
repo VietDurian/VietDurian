@@ -5,18 +5,16 @@ import {
   Package,
   Eye,
   Star,
-  Tag,
   Plus,
   Search,
   Filter,
-  MoreVertical,
   MapPin,
   Weight,
-  Trash2,
   SquarePen,
   Calendar,
 } from "lucide-react";
 import { useProductStore } from "../../../../store/useProductStore";
+import { useProductStore as useTypeProductStore } from "@/store/useTypeProduct";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -207,7 +205,8 @@ function ProductCard({ product, onDelete }) {
 
 export default function MyProductsPage() {
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All Categories");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const router = useRouter();
 
   const {
@@ -217,17 +216,33 @@ export default function MyProductsPage() {
     deleteProduct,
     isProductCreating,
   } = useProductStore();
+  const { types, fetchTypes } = useTypeProductStore();
 
   useEffect(() => {
-    fetchProducts().catch(() => {});
-  }, [fetchProducts]);
+    fetchTypes().catch(() => {});
+  }, [fetchTypes]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchProducts(search ? { name: search } : {}).catch(() => {});
+      const params = {};
+
+      if (search.trim()) {
+        params.name = search.trim();
+      }
+
+      if (typeFilter) {
+        params.typeId = typeFilter;
+      }
+
+      if (statusFilter) {
+        params.status = statusFilter;
+      }
+
+      fetchProducts(params).catch(() => {});
     }, 300);
+
     return () => clearTimeout(timer);
-  }, [search, fetchProducts]);
+  }, [search, typeFilter, statusFilter, fetchProducts]);
 
   const stats = useMemo(() => {
     const total = products.length;
@@ -356,10 +371,30 @@ export default function MyProductsPage() {
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-300"
               />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-600">
               <Filter size={14} className="text-gray-400" />
-              {category}
-            </button>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="bg-transparent outline-none text-sm text-gray-700"
+              >
+                <option value="">All Categories</option>
+                {types?.map((type) => (
+                  <option key={type?._id} value={type?._id}>
+                    {type?.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 outline-none"
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
           </div>
 
           {/* Product Grid */}

@@ -17,10 +17,19 @@ const permissionAccountSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    document: {
-      type: String,
-      default: "",
-    },
+    proofs: [
+      {
+        type: {
+          type: String,
+          enum: ["cccd_front", "cccd_back", "degree", "certificate", "other"],
+          required: true,
+        },
+        url: { type: String, required: true },
+        note: { type: String, default: "" },
+        uploaded_at: { type: Date, default: Date.now },
+      },
+    ],
+
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],

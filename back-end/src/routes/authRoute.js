@@ -518,6 +518,7 @@ const Router = express.Router();
 // Register new user
 Router.post("/register", authController.register);
 Router.post("/verify-email", authController.verifyEmail);
+Router.post("/resend-verification-otp", authController.resendVerificationOtp);
 // Login
 Router.post("/login", authController.login);
 Router.post("/logout", authMiddleware.protect, authController.logout);

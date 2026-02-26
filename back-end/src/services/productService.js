@@ -5,6 +5,7 @@ import { TypeProductModel } from "@/model/typeProductModel.js";
 
 // Create a new product
 const createProduct = async ({
+  diaryId,
   userId,
   typeId,
   name,
@@ -46,6 +47,7 @@ const createProduct = async ({
     const newProduct = new Product({
       user_id: userId,
       type_id: typeId,
+      diary_id: diaryId,
       name,
       description,
       price: mongoose.Types.Decimal128.fromString(String(numericPrice)),
@@ -164,6 +166,42 @@ const getAllProducts = async ({
         itemsPerPage: limitNumber,
       },
     };
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getOwnProducts = async (userId) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw createError(400, "Invalid userId");
+    }
+
+    const products = await Product.find({ user_id: userId })
+      .populate("user_id", "full_name avatar role")
+      .populate("type_id", "name")
+      .sort({ created_at: -1 })
+      .lean();
+
+    if (products.length === 0) {
+      return [];
+    }
+
+    const productIds = products.map((p) => p._id);
+    const images = await ProductImage.find({ product_id: { $in: productIds } })
+      .lean();
+
+    const imagesByProductId = images.reduce((acc, img) => {
+      const key = String(img.product_id);
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(img);
+      return acc;
+    }, {});
+
+    return products.map((p) => ({
+      ...p,
+      images: imagesByProductId[String(p._id)] || [],
+    }));
   } catch (error) {
     throw error;
   }
@@ -396,6 +434,7 @@ const sortProducts = async ({
 export const productService = {
   createProduct,
   getAllProducts,
+  getOwnProducts,
   getProductById,
   updateProduct,
   deleteProduct,

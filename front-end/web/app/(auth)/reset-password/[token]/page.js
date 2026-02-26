@@ -1,12 +1,12 @@
 // Nguyễn Trọng Quý - CE180596
 "use client";
-import Notification from "@/components/Notification";
-import axios from "axios";
+import { useAuthStore } from "@/store/useAuthStore";
 import { Check, Eye, EyeOff, Lock, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { toast } from "sonner";
 
 function isValidPassword(pwd) {
   const minLength = pwd.length >= 12;
@@ -48,43 +48,36 @@ export default function ResetPasswordPage() {
   const params = useParams();
   const token = params.token;
   const router = useRouter();
+  const { resetPassword, isResettingPassword } = useAuthStore();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [notificationSuccessMessage, setNotificationSuccessMessage] =
-    useState("");
-  const [notificationErrorMessage, setNotificationErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
 
   // Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return;
+    if (isResettingPassword) return;
     if (!isValidPassword(newPassword)) {
+      toast.error("Mật khẩu mới chưa đúng định dạng");
       return;
     }
-    try {
-      setLoading(true);
-      const response = await axios.post(
-        `${API_BASE}/auth/reset-password/${token}`,
-        {
-          newPassword,
-          confirmPassword,
-        }
-      );
-      // Notify user that they have successfully verified their email
-      setNotificationSuccessMessage("Đang chuyển hướng đến trang đăng nhập...");
-      // 2 second wait before redirecting user to the Login Page
+
+    if (!token) {
+      toast.error("Token đổi mật khẩu không hợp lệ");
+      return;
+    }
+
+    const result = await resetPassword({
+      token,
+      newPassword,
+      confirmPassword,
+    });
+
+    if (result) {
       setTimeout(() => {
         router.push(`/login`);
       }, 2000);
-    } catch (err) {
-      setNotificationErrorMessage(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -214,35 +207,15 @@ export default function ResetPasswordPage() {
               </div>
             </div>
 
-            {/* Notification */}
-
-            {notificationSuccessMessage && (
-              <Notification
-                type="success"
-                title="Đổi mật khẩu thành công"
-                message={notificationSuccessMessage}
-                onClose={() => setNotificationSuccessMessage("")}
-              />
-            )}
-
-            {notificationErrorMessage && (
-              <Notification
-                type="error"
-                title={"Đổi mật khẩu thất bại"}
-                message={notificationErrorMessage}
-                onClose={() => setNotificationErrorMessage("")}
-              />
-            )}
-
             {/* Submit Button */}
 
             <div className="flex gap-3">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isResettingPassword}
                 className={`flex-1 bg-[#04543D] text-white py-3.5 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
               >
-                {loading ? (
+                {isResettingPassword ? (
                   <>
                     <span className="inline-block h-5 w-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
                     <span>Đang đổi mật khẩu...</span>

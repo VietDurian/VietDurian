@@ -1,8 +1,17 @@
 "use client";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, X, Sprout, Check, ImageIcon } from "lucide-react";
+import { ArrowLeft, X, Sprout, Check, ImageIcon } from "lucide-react";
 import { useGardenStore } from "@/store/useGardenStore";
+import dynamic from "next/dynamic";
+import { toast } from "sonner";
+
+const LocationPickerMap = dynamic(
+  () => import("@/components/LocationPickerMap"),
+  {
+    ssr: false,
+  },
+);
 
 export default function CreateGarden() {
   const router = useRouter();
@@ -22,6 +31,16 @@ export default function CreateGarden() {
   const fileInputRef = useRef(null);
   const [imageData, setImageData] = useState("");
 
+  const isCreateDisabled =
+    !formData.name.trim() ||
+    !formData.crop_type.trim() ||
+    !formData.area.toString().trim() ||
+    !formData.location.trim() ||
+    !formData.latitude.toString().trim() ||
+    !formData.longitude.toString().trim() ||
+    !formData.description.trim() ||
+    !formData.image;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     createGarden(formData);
@@ -36,12 +55,20 @@ export default function CreateGarden() {
     }));
   };
 
+  const handlePickLocation = (latitude, longitude) => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: latitude.toFixed(6),
+      longitude: longitude.toFixed(6),
+    }));
+  };
+
   const handleImageChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      setError("Ảnh quá lớn. Tối đa 5MB");
+      toast.error("Ảnh quá lớn. Tối đa 5MB");
       return;
     }
 
@@ -63,7 +90,7 @@ export default function CreateGarden() {
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/30">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div>
         <div className="max-w-4xl mx-auto px-6 py-6">
           <button
             onClick={() => router.push("/profile/gardens")}
@@ -89,10 +116,10 @@ export default function CreateGarden() {
       </div>
 
       {/* Form */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-6">
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-8"
+          className="bg-white rounded-xl shadow-sm p-8"
         >
           <div className="space-y-6">
             {/* Name */}
@@ -101,7 +128,7 @@ export default function CreateGarden() {
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-900 mb-2"
               >
-                Tên khu vườn <span className="text-red-500">*</span>
+                Tên khu vườn
               </label>
               <input
                 type="text"
@@ -121,7 +148,7 @@ export default function CreateGarden() {
                 htmlFor="crop_type"
                 className="block text-sm font-medium text-gray-900 mb-2"
               >
-                Loại cây <span className="text-red-500">*</span>
+                Loại cây
               </label>
               <input
                 type="text"
@@ -141,10 +168,13 @@ export default function CreateGarden() {
                 htmlFor="area"
                 className="block text-sm font-medium text-gray-900 mb-2"
               >
-                Diện tích (m²) <span className="text-red-500">*</span>
+                Diện tích (m²)
               </label>
               <div className="relative">
                 <input
+                  onKeyDown={(e) => {
+                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                  }}
                   type="number"
                   id="area"
                   name="area"
@@ -172,7 +202,7 @@ export default function CreateGarden() {
                 htmlFor="location"
                 className="block text-sm font-medium text-gray-900 mb-2"
               >
-                Vị trí <span className="text-red-500">*</span>
+                Vị trí
               </label>
               <input
                 type="text"
@@ -189,44 +219,32 @@ export default function CreateGarden() {
             {/* Coordinates */}
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
-                Tọa độ
+                Tọa độ <span className="text-red-500">*</span>
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="latitude"
-                    className="block text-xs text-gray-600 mb-1"
-                  >
-                    Vĩ dộ
-                  </label>
-                  <input
-                    type="number"
-                    id="latitude"
-                    name="latitude"
-                    value={formData.latitude}
-                    onChange={handleChange}
-                    step="0.000001"
-                    placeholder="ví dụ: 45.5231"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-                  />
+              <p className="text-xs text-gray-600 mb-3">
+                Nhấp vào bản đồ để chọn vị trí khu vườn
+              </p>
+              <LocationPickerMap
+                latitude={
+                  formData.latitude ? Number(formData.latitude) : undefined
+                }
+                longitude={
+                  formData.longitude ? Number(formData.longitude) : undefined
+                }
+                onPick={handlePickLocation}
+              />
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm">
+                  <span className="text-gray-500">Vĩ độ: </span>
+                  <span className="font-medium text-gray-900">
+                    {formData.latitude || "Chưa chọn"}
+                  </span>
                 </div>
-                <div>
-                  <label
-                    htmlFor="longitude"
-                    className="block text-xs text-gray-600 mb-1"
-                  >
-                    Kinh độ
-                  </label>
-                  <input
-                    type="number"
-                    id="longitude"
-                    name="longitude"
-                    value={formData.longitude}
-                    onChange={handleChange}
-                    step="0.000001"
-                    placeholder="ví dụ: -122.6765"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-                  />
+                <div className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm">
+                  <span className="text-gray-500">Kinh độ: </span>
+                  <span className="font-medium text-gray-900">
+                    {formData.longitude || "Chưa chọn"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -244,6 +262,7 @@ export default function CreateGarden() {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
+                required
                 rows={4}
                 placeholder="Mô tả khu vườn của bạn..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors resize-none"
@@ -279,6 +298,10 @@ export default function CreateGarden() {
                   onClick={() => {
                     setImagePreview("");
                     setImageData("");
+                    setFormData((prev) => ({
+                      ...prev,
+                      image: "",
+                    }));
                   }}
                   className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full"
                 >
@@ -291,6 +314,7 @@ export default function CreateGarden() {
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              required
               className="hidden"
               onChange={handleImageChange}
             />
@@ -300,7 +324,8 @@ export default function CreateGarden() {
           <div className="flex items-center gap-4 mt-8 pt-6 border-t border-gray-200">
             <button
               type="submit"
-              className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
+              disabled={isCreateDisabled}
+              className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
             >
               <Check className="w-4 h-4" />
               Tạo khu vườn
@@ -311,7 +336,7 @@ export default function CreateGarden() {
               className="cursor-pointer inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors border border-gray-300"
             >
               <X className="w-4 h-4" />
-              Cancel
+              Hủy
             </button>
           </div>
         </form>

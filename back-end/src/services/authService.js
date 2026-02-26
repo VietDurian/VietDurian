@@ -34,7 +34,8 @@ const register = async (userData) => {
       email: userData.email,
       password: userData.password,
       phone: userData.phone || "",
-      avatar: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg",
+      avatar:
+        "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg",
       role: needApproval ? "trader" : requestedRole,
       is_verified: false,
     });
@@ -104,7 +105,57 @@ const verifyEmail = async (email, otp) => {
     otpRecord.is_used = true;
     await otpRecord.save();
 
-    return { user };
+    const permission = await PermissionAccountModel.findOne({
+      user_id: user._id,
+      status: "pending",
+    }).lean();
+
+    const token = generateToken(user._id);
+
+    return {
+      user,
+      token,
+      need_upload_proofs: !!permission,
+      requested_role: permission?.requested_role || null,
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
+const resendVerificationOtp = async (email) => {
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw createError(404, "No user found with that email");
+    }
+
+    if (user.is_verified) {
+      throw createError(400, "Email is already verified");
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiryTime = new Date(Date.now() + 10 * 60 * 1000);
+
+    await OTP.create({
+      user_id: user._id,
+      code: otp,
+      purpose: "verify_account",
+      expires_at: expiryTime,
+    });
+
+    if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
+      await sendVerificationEmail(
+        user.full_name || "User",
+        user.email,
+        otp,
+        "verify",
+      );
+    } else {
+      console.warn("⚠️ Email credentials not configured. OTP: " + otp);
+    }
+
+    return { message: "OTP resent successfully" };
   } catch (error) {
     throw error;
   }
@@ -115,7 +166,7 @@ const sendVerificationEmail = async (
   email,
   otpCode,
   purpose = "verify", // "verify" | "reset"
-  subjectOverride
+  subjectOverride,
 ) => {
   try {
     if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
@@ -136,7 +187,7 @@ const sendVerificationEmail = async (
       "..",
       "views",
       "email-templates",
-      templateFile
+      templateFile,
     );
 
     let htmlContent;
@@ -201,14 +252,14 @@ const login = async (email, password) => {
     if (user.is_banned) {
       throw createError(
         403,
-        "Your account has been banned. Please contact support."
+        "Your account has been banned. Please contact support.",
       );
     }
 
     if (!user.is_verified) {
       throw createError(
         403,
-        "Please verify your email address before logging in"
+        "Please verify your email address before logging in",
       );
     }
 
@@ -217,12 +268,15 @@ const login = async (email, password) => {
     });
 
     if (permission && permission.status === "pending") {
-      throw createError(403, "Your account upgrade request is still pending approval.");
+      throw createError(
+        403,
+        "Your account upgrade request is still pending approval.",
+      );
     }
     if (permission && permission.status === "rejected") {
       throw createError(403, "Your account upgrade request has been rejected.");
     }
-    console.log('Đăng nhập thành công user logged in:', user._id);
+    console.log("Đăng nhập thành công user logged in:", user._id);
     const token = generateToken(user._id);
 
     user.password = undefined;
@@ -301,7 +355,7 @@ const verifyResetOtp = async (email, otp) => {
     const resetToken = jwt.sign(
       { uid: user._id.toString(), action: "reset_password" },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     );
 
     return { resetToken };
@@ -320,6 +374,10 @@ const resetPasswordWithToken = async (token, newPassword) => {
     const user = await User.findById(payload.uid).select("+password");
     if (!user) {
       throw createError(404, "User not found");
+    }
+    const isSame = await user.comparePassword(newPassword);
+    if (isSame) {
+      throw createError(400, "New password must be different from old password");
     }
     user.password = newPassword;
     await user.save();
@@ -384,6 +442,7 @@ const changePassword = async (userId, currentPassword, newPassword) => {
 export const authService = {
   register,
   verifyEmail,
+  resendVerificationOtp,
   login,
   logout,
   forgotPassword,

@@ -5,7 +5,7 @@ import { useChatStore } from "../store/useChatStore";
 
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeleton/SidebarSkeleton";
-import { Archive, Ellipsis, EllipsisIcon, Search, X } from "lucide-react";
+import { Ellipsis, Search, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // This component is a sidebar for the chat
@@ -16,255 +16,42 @@ const Sidebar = () => {
     selectedUser,
     setSelectedUser,
     isUsersLoading,
-    removeContact,
+    deleteConversation,
   } = useChatStore();
 
-  const { onlineUsers } = useAuthStore();
+  const { onlineUsers, socket } = useAuthStore();
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("all");
   const router = useRouter();
 
-  const [openChatOption, setOpenChatOption] = useState(false);
   const [openConversationOption, setOpenConversationOption] = useState(null);
+  const [deleteTargetUser, setDeleteTargetUser] = useState(null);
+  const [isDeletingConversation, setIsDeletingConversation] = useState(false);
 
   const chatOptionRef = useRef(null);
   const conversationOptionRef = useRef(null);
-
-  const TEST_USERS = [
-    {
-      _id: "65f1a9c4e9b1a3d001a00001",
-      full_name: "Nguyen Van An",
-      email: "an.nguyen1@test.com",
-      password: "Strong@Pass1234",
-      phone: "0901000001",
-      avatar: "",
-      role: "trader",
-      is_banned: false,
-      is_verified: true,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00002",
-      full_name: "Tran Thi Binh",
-      email: "binh.tran2@test.com",
-      password: "Secure@Pass1234",
-      phone: "0901000002",
-      avatar: "",
-      role: "farmer",
-      is_banned: false,
-      is_verified: true,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00003",
-      full_name: "Le Quang Huy",
-      email: "huy.le3@test.com",
-      password: "Power@Pass1234",
-      phone: "0901000003",
-      avatar: "",
-      role: "serviceProvider",
-      is_banned: false,
-      is_verified: false,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00004",
-      full_name: "Pham Minh Chau",
-      email: "chau.pham4@test.com",
-      password: "Ultra@Pass1234",
-      phone: "0901000004",
-      avatar: "",
-      role: "contentExpert",
-      is_banned: false,
-      is_verified: true,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00005",
-      full_name: "Do Thanh Nam",
-      email: "nam.do5@test.com",
-      password: "Strong@Pass1234",
-      phone: "0901000005",
-      avatar: "",
-      role: "trader",
-      is_banned: false,
-      is_verified: true,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00006",
-      full_name: "Hoang Thi Lan",
-      email: "lan.hoang6@test.com",
-      password: "Secure@Pass1234",
-      phone: "0901000006",
-      avatar: "",
-      role: "farmer",
-      is_banned: false,
-      is_verified: false,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00007",
-      full_name: "Vu Tuan Kiet",
-      email: "kiet.vu7@test.com",
-      password: "Power@Pass1234",
-      phone: "0901000007",
-      avatar: "",
-      role: "admin",
-      is_banned: false,
-      is_verified: true,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00008",
-      full_name: "Bui Ngoc Anh",
-      email: "anh.bui8@test.com",
-      password: "Ultra@Pass1234",
-      phone: "0901000008",
-      avatar: "",
-      role: "contentExpert",
-      is_banned: false,
-      is_verified: true,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00009",
-      full_name: "Dang Hoai Phuc",
-      email: "phuc.dang9@test.com",
-      password: "Strong@Pass1234",
-      phone: "0901000009",
-      avatar: "",
-      role: "serviceProvider",
-      is_banned: false,
-      is_verified: false,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a0000a",
-      full_name: "Ngo Bao Tran",
-      email: "tran.ngo10@test.com",
-      password: "Secure@Pass1234",
-      phone: "0901000010",
-      avatar: "",
-      role: "trader",
-      is_banned: false,
-      is_verified: true,
-    },
-
-    {
-      _id: "65f1a9c4e9b1a3d001a0000b",
-      full_name: "Ly Thanh Son",
-      email: "son.ly11@test.com",
-      password: "Power@Pass1234",
-      phone: "0901000011",
-      avatar: "",
-      role: "farmer",
-      is_banned: false,
-      is_verified: false,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a0000c",
-      full_name: "Cao My Dung",
-      email: "dung.cao12@test.com",
-      password: "Ultra@Pass1234",
-      phone: "0901000012",
-      avatar: "",
-      role: "contentExpert",
-      is_banned: false,
-      is_verified: true,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a0000d",
-      full_name: "Phan Duc Long",
-      email: "long.phan13@test.com",
-      password: "Strong@Pass1234",
-      phone: "0901000013",
-      avatar: "",
-      role: "serviceProvider",
-      is_banned: false,
-      is_verified: false,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a0000e",
-      full_name: "Mai Thu Ha",
-      email: "ha.mai14@test.com",
-      password: "Secure@Pass1234",
-      phone: "0901000014",
-      avatar: "",
-      role: "trader",
-      is_banned: false,
-      is_verified: true,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a0000f",
-      full_name: "Nguyen Hoai Phong",
-      email: "phong.nguyen15@test.com",
-      password: "Power@Pass1234",
-      phone: "0901000015",
-      avatar: "",
-      role: "admin",
-      is_banned: false,
-      is_verified: true,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00010",
-      full_name: "Ta Bao Ngoc",
-      email: "ngoc.ta16@test.com",
-      password: "Ultra@Pass1234",
-      phone: "0901000016",
-      avatar: "",
-      role: "contentExpert",
-      is_banned: false,
-      is_verified: false,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00011",
-      full_name: "Vu Minh Quan",
-      email: "quan.vu17@test.com",
-      password: "Strong@Pass1234",
-      phone: "0901000017",
-      avatar: "",
-      role: "farmer",
-      is_banned: false,
-      is_verified: true,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00012",
-      full_name: "Truong Gia Bao",
-      email: "bao.truong18@test.com",
-      password: "Secure@Pass1234",
-      phone: "0901000018",
-      avatar: "",
-      role: "serviceProvider",
-      is_banned: false,
-      is_verified: false,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00013",
-      full_name: "Doan Thi Kim",
-      email: "kim.doan19@test.com",
-      password: "Power@Pass1234",
-      phone: "0901000019",
-      avatar: "",
-      role: "trader",
-      is_banned: false,
-      is_verified: true,
-    },
-    {
-      _id: "65f1a9c4e9b1a3d001a00014",
-      full_name: "Phung Anh Tuan",
-      email: "tuan.phung20@test.com",
-      password: "Ultra@Pass1234",
-      phone: "0901000020",
-      avatar: "",
-      role: "contentExpert",
-      is_banned: false,
-      is_verified: false,
-    },
-  ];
 
   useEffect(() => {
     loadContacts();
   }, [loadContacts]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = () => {
+      loadContacts();
+    };
+
+    socket.on("newMessage", handleNewMessage);
+
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+    };
+  }, [socket, loadContacts]);
+
   // Popup closes when clicked outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (chatOptionRef.current && !chatOptionRef.current.contains(e.target)) {
-        setOpenChatOption(false);
-      }
-
       if (
         conversationOptionRef.current &&
         !conversationOptionRef.current.contains(e.target)
@@ -277,6 +64,19 @@ const Sidebar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleConfirmDeleteConversation = async () => {
+    if (!deleteTargetUser?._id || isDeletingConversation) return;
+
+    try {
+      setIsDeletingConversation(true);
+      await deleteConversation(deleteTargetUser._id);
+      setDeleteTargetUser(null);
+      setOpenConversationOption(null);
+    } finally {
+      setIsDeletingConversation(false);
+    }
+  };
+
   if (isUsersLoading) return <SidebarSkeleton />;
   return (
     <aside className="h-full w-25 lg:w-90 border-r border-base-300 flex flex-col transition-all duration-200">
@@ -284,23 +84,6 @@ const Sidebar = () => {
       <div className="hidden lg:flex flex-col w-full p-4">
         <div className="relative flex justify-between items-center gap-2">
           <span className="font-bold text-2xl hidden lg:block">Đoạn chat</span>
-          <Ellipsis
-            onClick={() => setOpenChatOption((prev) => !prev)}
-            size={32}
-            className="bg-gray-200 hover:bg-gray-300 rounded-full p-1 cursor-pointer select-none"
-          />
-          {/* Chat Option Dropdown */}
-          {openChatOption && (
-            <div
-              ref={chatOptionRef}
-              className="absolute top-10 -right-72 w-80 p-2 bg-white shadow-lg rounded-md border border-gray-300 z-50 animate-fadeIn"
-            >
-              <button className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-gray-200 rounded-lg cursor-pointer select-none">
-                <Archive />
-                Đoạn chat đã lưu trữ
-              </button>
-            </div>
-          )}
         </div>
       </div>
       {/* Sidebar search bar */}
@@ -362,7 +145,7 @@ const Sidebar = () => {
 
       {/* Sidebar conversations */}
       <div className="overflow-y-auto w-full p-2 pt-0  h-full">
-        {TEST_USERS.map((user) => (
+        {users.map((user) => (
           <div
             key={user._id}
             className={`
@@ -424,34 +207,65 @@ const Sidebar = () => {
             {openConversationOption === user._id && (
               <div
                 ref={conversationOptionRef}
-                className="absolute right-3 top-15 w-40 bg-white border border-gray-300 shadow-lg rounded-md z-50 animate-fadeIn"
+                className="absolute right-3 top-15 w-50 bg-white border border-gray-300 shadow-lg rounded-md z-50 animate-fadeIn p-2"
               >
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    removeContact(user._id);
+                    setDeleteTargetUser(user);
                     setOpenConversationOption(null);
                   }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                  className="w-full items-center gap-2  hover:bg-gray-100 text-sm text-black flex text-nowrap p-1 rounded-sm cursor-pointer"
                 >
-                  ❌ Xóa cuộc trò chuyện
-                </button>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log("Archive", user._id);
-                    setOpenConversationOption(null);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                >
-                  📦 Lưu trữ
+                  <Trash2 />
+                  Xóa cuộc trò chuyện
                 </button>
               </div>
             )}
           </div>
         ))}
       </div>
+
+      {deleteTargetUser && (
+        <div
+          className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => {
+            if (isDeletingConversation) return;
+            setDeleteTargetUser(null);
+          }}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Xóa cuộc trò chuyện?
+            </h3>
+            <p className="text-sm text-gray-600 mb-5">
+              Bạn có chắc muốn xóa cuộc trò chuyện với{" "}
+              {deleteTargetUser.full_name}? Hành động này chỉ áp dụng cho tài
+              khoản của bạn.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTargetUser(null)}
+                disabled={isDeletingConversation}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleConfirmDeleteConversation}
+                disabled={isDeletingConversation}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeletingConversation ? "Đang xóa..." : "Xóa"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 };

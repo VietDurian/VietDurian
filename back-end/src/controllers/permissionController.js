@@ -106,6 +106,22 @@ const rejectAccount = async (req, res, next) => {
         next(error);
     }
 };
+const submitProofs = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const { proofs } = req.body;
+
+        const result = await permissionService.submitProofs(userId, proofs);
+
+        res.status(200).json({
+            code: 200,
+            message: "Proofs submitted successfully",
+            data: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
 
 export const permissionController = {
     getPermissionRequests,
@@ -114,4 +130,5 @@ export const permissionController = {
     getPermissionRequestDetail,
     confirmAccount,
     rejectAccount,
+    submitProofs,
 };

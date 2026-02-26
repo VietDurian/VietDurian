@@ -5,6 +5,7 @@ import { productService } from "@/services/productService.js";
 const createProduct = async (req, res, next) => {
   try {
     const {
+      diaryId,
       name,
       description,
       price,
@@ -20,6 +21,7 @@ const createProduct = async (req, res, next) => {
 
     // Validate required fields
     if (
+      !diaryId ||
       !name ||
       !description ||
       !price ||
@@ -47,6 +49,7 @@ const createProduct = async (req, res, next) => {
     const newProduct = await productService.createProduct({
       userId,
       typeId,
+      diaryId,
       name,
       description,
       price,
@@ -75,6 +78,7 @@ const getAllProducts = async (req, res, next) => {
     const {
       name,
       typeId,
+      diaryId,
       sortBy,
       sortOrder,
       page,
@@ -91,6 +95,7 @@ const getAllProducts = async (req, res, next) => {
       searchName: name,
       typeId,
       userId,
+      diaryId,
       status,
       sortBy: sortBy || "created_at",
       sortOrder: sortOrder || "desc",
@@ -107,6 +112,26 @@ const getAllProducts = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+const getOwnProducts = async (req, res, next) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ code: 401, message: "User not authenticated" });
+    }
+
+    const products = await productService.getOwnProducts(userId);
+
+    return res.status(200).json({
+      code: 200,
+      success: true,
+      message: "Own products retrieved successfully",
+      data: products,
+    });
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -297,6 +322,7 @@ const sortProducts = async (req, res, next) => {
 export const productController = {
   createProduct,
   getAllProducts,
+  getOwnProducts,
   getProductDetail,
   updateProduct,
   deleteProduct,
