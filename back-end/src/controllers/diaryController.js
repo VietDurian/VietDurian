@@ -21,13 +21,12 @@ const getDiariesByUser = async (req, res, next) => {
 // Create diary
 const createDiary = async (req, res, next) => {
 	try {
-		const { title, description, crop_type, garden_id } = req.body;
+		const { title, description, garden_id } = req.body;
 		// Validate required fields
-		if (!title || !crop_type || !description || !garden_id) {
+		if (!title || !description || !garden_id) {
 			return res.status(400).json({
 				code: 400,
-				message:
-					'Title, crop_type, description, and garden_id are required fields',
+				message: 'Title, description, and garden_id are required fields',
 			});
 		}
 		const userId = req.user.id;
@@ -36,7 +35,6 @@ const createDiary = async (req, res, next) => {
 			garden_id,
 			title,
 			description,
-			crop_type,
 		});
 		res.status(201).json({
 			code: 201,
@@ -52,11 +50,10 @@ const createDiary = async (req, res, next) => {
 const updateDiary = async (req, res, next) => {
 	try {
 		const { diaryId } = req.params;
-		const { title, description, crop_type } = req.body;
+		const { title, description } = req.body;
 		const updatedDiary = await diaryService.updateDiary(diaryId, {
 			title,
 			description,
-			crop_type,
 		});
 		res.status(200).json({
 			code: 200,

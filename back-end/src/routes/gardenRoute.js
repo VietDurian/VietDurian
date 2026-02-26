@@ -211,9 +211,9 @@ Router.get(
  *                 description: Tên vườn
  *                 example: Vườn sầu riêng Cái Mơn
  *               crop_type:
- *                 type: string
- *                 description: Loại cây trồng
- *                 example: Sầu riêng Ri6
+ *                 type: [string]
+ *                 description: Loại cây trồng (có thể là nhiều loại)
+ *                 example: ["Sầu riêng Ri6", "Sầu riêng Musang King"]
  *               area:
  *                 type: number
  *                 description: Diện tích vườn (m2)
@@ -237,7 +237,7 @@ Router.get(
  *               image:
  *                 type: string
  *                 description: URL hình ảnh của vườn
- *                 example: https://res.cloudinary.com/di6lwnmsm/image/upload/v1769865383/Trang_tr%E1%BA%A1i_s%E1%BA%A7u_ri%C3%AAng_bi%E1%BB%87t_c%C3%B4ng_ngh%E1%BB%87_ti%C3%AAn_ti%E1%BA%BFn_to_l%E1%BB%9Bn_nh%E1%BA%A5t_t%E1%BB%89nh_B%C3%ACnh_Ph%C6%B0%E1%BB%9Bc_al83hs.jpg
+ *                 example: https://res.cloudinary.com/di6lwnmsm/image/upload/v1771911818/vietdurian/pgs5xaqvjp5iplzlymcz.jpg
  *     responses:
  *       201:
  *         description: Tạo thành công
@@ -280,9 +280,9 @@ Router.post(
  *                 description: Tên vườn
  *                 example: Vườn sầu riêng Cái Mơn cập nhật
  *               crop_type:
- *                 type: string
- *                 description: Loại cây trồng
- *                 example: Sầu riêng Ri6 cập nhật
+ *                 type: [string]
+ *                 description: Loại cây trồng (có thể là nhiều loại)
+ *                 example: ["Sầu riêng Ri6 cập nhật", "Sầu riêng Musang King cập nhật"]
  *               area:
  *                 type: number
  *                 description: Diện tích vườn (m2)
@@ -305,7 +305,7 @@ Router.post(
  *               image:
  *                 type: string
  *                 description: URL hình ảnh của vườn
- *                 example: https://res.cloudinary.com/di6lwnmsm/image/upload/v1769865383/Trang_tr%E1%BA%A1i_s%E1%BA%A7u_ri%C3%AAng_bi%E1%BB%87t_c%C3%B4ng_ngh%E1%BB%87_ti%C3%AAn_ti%E1%BA%BFn_to_l%E1%BB%9Bn_nh%E1%BA%A5t_t%E1%BB%89nh_B%C3%ACnh_Ph%C6%B0%E1%BB%9Bc_al83hs.jpg
+ *                 example: https://res.cloudinary.com/di6lwnmsm/image/upload/v1771911818/vietdurian/pgs5xaqvjp5iplzlymcz.jpg
  *     responses:
  *       200:
  *         description: Cập nhật thành công

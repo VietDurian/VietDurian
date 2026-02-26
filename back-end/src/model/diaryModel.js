@@ -19,10 +19,6 @@ const DiarySchema = new mongoose.Schema(
 		description: {
 			type: String,
 		},
-		crop_type: {
-			type: String,
-			required: true,
-		},
 		status: {
 			type: String,
 			enum: ['In progressing', 'Completed'],
@@ -61,7 +57,7 @@ const DiarySchema = new mongoose.Schema(
 			createdAt: 'created_at',
 			updatedAt: 'updated_at',
 		},
-	}
+	},
 );
 
 const DiaryModel = mongoose.model('Diary', DiarySchema);

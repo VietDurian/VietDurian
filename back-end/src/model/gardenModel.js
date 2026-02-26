@@ -13,8 +13,9 @@ const GardenSchema = new mongoose.Schema(
 		},
 		// Loại cây trồng
 		crop_type: {
-			type: String,
+			type: [String],
 			required: true,
+			default: [],
 		},
 		area: {
 			type: Number,

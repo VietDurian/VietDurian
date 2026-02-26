@@ -50,6 +50,9 @@ export default function DiaryPublicModel({ diaryId }) {
 	const endSeasonDate =
 		diaryDetail.end_date ||
 		(diaryDetail.status === 'Completed' ? diaryDetail.updated_at : null);
+	const cropTypeText = Array.isArray(diaryDetail?.garden_id?.crop_type)
+		? diaryDetail.garden_id.crop_type.filter(Boolean).join(', ')
+		: diaryDetail?.garden_id?.crop_type || 'Chưa cập nhật';
 	const statusVi = toVietnameseStatus(diaryDetail.status);
 	const statusBadgeClass =
 		diaryDetail.status === 'Completed'
@@ -79,9 +82,7 @@ export default function DiaryPublicModel({ diaryId }) {
 					</div>
 					<div className="flex justify-between border-b border-gray-100 py-2 gap-3">
 						<span className="font-semibold text-gray-600">Giống cây</span>
-						<span className="text-gray-900 text-right">
-							{diaryDetail.crop_type || 'Chưa cập nhật'}
-						</span>
+						<span className="text-gray-900 text-right">{cropTypeText}</span>
 					</div>
 					<div className="flex justify-between border-b border-gray-100 py-2 gap-3">
 						<span className="font-semibold text-gray-600">Bắt đầu mùa vụ</span>

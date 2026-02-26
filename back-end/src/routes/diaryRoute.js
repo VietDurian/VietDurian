@@ -63,7 +63,6 @@ const Router = express.Router();
  *             type: object
  *             required:
  *               - title
- *               - crop_type
  *               - description
  *               - garden_id
  *             properties:
@@ -73,9 +72,6 @@ const Router = express.Router();
  *               description:
  *                 type: string
  *                 example: Mô tả về vụ sầu riêng Dona 2025
- *               crop_type:
- *                 type: string
- *                 example: Sầu riêng Ri6
  *               garden_id:
  *                 type: string
  *                 example: 66a002222222222222222222
@@ -180,9 +176,6 @@ const Router = express.Router();
  *               description:
  *                 type: string
  *                 example: Mô tả về vụ sầu riêng Dona 2025 - Cập nhật
- *               crop_type:
- *                 type: string
- *                 example: Sầu riêng Ri6 - Cập nhật
  *     responses:
  *       200:
  *         description: Diary updated successfully
@@ -362,7 +355,6 @@ const Router = express.Router();
  *         - user_id
  *         - garden_id
  *         - title
- *         - crop_type
  *       properties:
  *         _id:
  *           type: string
@@ -373,8 +365,6 @@ const Router = express.Router();
  *         title:
  *           type: string
  *         description:
- *           type: string
- *         crop_type:
  *           type: string
  *         status:
  *           type: string

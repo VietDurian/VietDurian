@@ -31,7 +31,7 @@ const getDiariesByUser = async (filter = {}) => {
 
 		const diaries = await DiaryModel.find(query)
 			.sort({ created_at: -1 })
-			.populate('garden_id', 'name')
+			.populate('garden_id', 'name crop_type')
 			.populate('user_id', 'full_name avatar');
 		return diaries;
 	} catch (error) {
@@ -40,20 +40,13 @@ const getDiariesByUser = async (filter = {}) => {
 };
 
 // Create diary
-const createDiary = async ({
-	user_id,
-	garden_id,
-	title,
-	description,
-	crop_type,
-}) => {
+const createDiary = async ({ user_id, garden_id, title, description }) => {
 	try {
 		const newDiary = new DiaryModel({
 			user_id,
 			garden_id,
 			title,
 			description,
-			crop_type,
 		});
 		await newDiary.save();
 		return newDiary;
@@ -63,12 +56,12 @@ const createDiary = async ({
 };
 
 // Update diary (general fields)
-const updateDiary = async (diaryId, { title, description, crop_type }) => {
+const updateDiary = async (diaryId, { title, description }) => {
 	try {
 		if (!diaryId) throw new Error('Diary ID is required for update');
 		const updatedDiary = await DiaryModel.findByIdAndUpdate(
 			diaryId,
-			{ title, description, crop_type },
+			{ title, description },
 			{ new: true },
 		);
 		return updatedDiary;
@@ -131,7 +124,7 @@ const finishDiary = async (diaryId, { weight_durian, price }) => {
 const getDiaryDetails = async (diaryId) => {
 	try {
 		const diary = await DiaryModel.findById(diaryId)
-			.populate('garden_id', 'name')
+			.populate('garden_id', 'name crop_type')
 			.populate('user_id', 'full_name avatar');
 		if (!diary) return null;
 

@@ -4,13 +4,32 @@ import { cloudinary } from '@/config/cloudinary';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const NOMINATIM_BASE_URL =
-	String(process.env.NOMINATIM_BASE_URL || 'https://nominatim.openstreetmap.org/search').trim();
-const NOMINATIM_USER_AGENT = String(process.env.NOMINATIM_USER_AGENT || '').trim();
+const NOMINATIM_BASE_URL = String(
+	process.env.NOMINATIM_BASE_URL ||
+		'https://nominatim.openstreetmap.org/search',
+).trim();
+const NOMINATIM_USER_AGENT = String(
+	process.env.NOMINATIM_USER_AGENT || '',
+).trim();
 const NOMINATIM_DELAY_MS = Number(process.env.NOMINATIM_DELAY_MS ?? 1100);
-const NOMINATIM_MAX_PER_REQUEST = Number(process.env.NOMINATIM_MAX_PER_REQUEST ?? 10);
+const NOMINATIM_MAX_PER_REQUEST = Number(
+	process.env.NOMINATIM_MAX_PER_REQUEST ?? 10,
+);
 
 const geocodeCache = new Map();
+
+const normalizeCropTypes = (cropTypeValue) => {
+	if (Array.isArray(cropTypeValue)) {
+		return [
+			...new Set(
+				cropTypeValue.map((item) => String(item || '').trim()).filter(Boolean),
+			),
+		];
+	}
+
+	const single = String(cropTypeValue || '').trim();
+	return single ? [single] : [];
+};
 
 const geocodeLocation = async (location) => {
 	if (!NOMINATIM_USER_AGENT) return null;
@@ -44,7 +63,10 @@ const geocodeLocation = async (location) => {
 
 const geocodeAllMissingGardens = async ({ limit } = {}) => {
 	if (!NOMINATIM_USER_AGENT) {
-		throw createError(500, 'Missing NOMINATIM_USER_AGENT in environment (.env)');
+		throw createError(
+			500,
+			'Missing NOMINATIM_USER_AGENT in environment (.env)',
+		);
 	}
 
 	const effectiveLimit = Number.isFinite(Number(limit)) ? Number(limit) : 500;
@@ -172,10 +194,12 @@ const createGarden = async (userId, gardenData) => {
 			image,
 		} = gardenData;
 
+		const normalizedCropTypes = normalizeCropTypes(crop_type);
+
 		// Validate required fields
 		if (
 			!name ||
-			!crop_type ||
+			normalizedCropTypes.length === 0 ||
 			!area ||
 			!location ||
 			area <= 0 ||
@@ -192,13 +216,13 @@ const createGarden = async (userId, gardenData) => {
 				});
 				imageUrl = result.secure_url;
 			} catch (error) {
-				throw new Error('Image upload failed');
+				throw error;
 			}
 		}
 		const newGarden = new GardenModel({
 			user_id: userId,
 			name,
-			crop_type,
+			crop_type: normalizedCropTypes,
 			area,
 			location,
 			longitude,
@@ -217,7 +241,11 @@ const createGarden = async (userId, gardenData) => {
 // Update garden record
 const updateGarden = async (gardenId, updateData) => {
 	try {
-    if (updateData.image) {
+		if (Object.prototype.hasOwnProperty.call(updateData, 'crop_type')) {
+			updateData.crop_type = normalizeCropTypes(updateData.crop_type);
+		}
+
+		if (updateData.image) {
 			try {
 				const result = await cloudinary.uploader.upload(updateData.image, {
 					folder: 'vietdurian',
