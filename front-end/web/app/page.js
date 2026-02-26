@@ -634,7 +634,7 @@ export default function Home() {
                                   <span className="font-medium">{rating.toFixed(1)}</span>
                                 </div>
                                 <button className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">
-                                  Xem Ngay
+                                  Liên hệ
                                 </button>
                               </div>
                             </div>
