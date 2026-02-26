@@ -1,0 +1,104 @@
+@startuml CommentPostManagement
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+left to right direction
+
+
+' ===== Routes & Middleware =====
+class CommentPostRoute <<control>> {
+  +createCommentPost(req, res): void
+  +viewCommentPost(req, res): void
+  +updateCommentPost(req, res): void
+  +deleteCommentPost(req, res): void
+  +replyCommentPost(req, res): void
+  +filterCommentPost(req, res): void
+}
+
+class AuthMiddleware <<control>> {
+  +protect(req): UserInfo
+}
+
+' ===== Controller =====
+class CommentPostController <<control>> {
+  +createCommentPost(req, res): void
+  +viewCommentPost(req, res): void
+  +updateCommentPost(req, res): void
+  +deleteCommentPost(req, res): void
+  +replyCommentPost(req, res): void
+  +filterCommentPost(req, res): void
+}
+
+' ===== Service =====
+class CommentPostService <<service>> {
+  +createCommentPost(data): CommentPost
+  +viewCommentPost(postId, params): { data: CommentPost[], pagination }
+  +updateCommentPost(commentId, data): CommentPost
+  +deleteCommentPost(commentId): CommentPost
+  +replyCommentPost(parentId, data): CommentPost
+  +filterCommentPost(params): { data: CommentPost[], pagination }
+}
+
+' ===== Models =====
+class CommentPostModel <<model>> {
+  +find(filter): CommentPost[]
+  +findById(id): CommentPost
+  +findByIdAndUpdate(id, update, options): CommentPost
+  +findByIdAndDelete(id): CommentPost
+  +countDocuments(filter): number
+  +save(): CommentPost
+}
+
+class GeneralPostModel <<model>> {
+  +findById(id): GeneralPost
+}
+
+class UserModel <<model>> {
+  +findById(id): User
+}
+
+' ===== Entities =====
+class CommentPost <<entity>> {
+  +_id: ObjectId
+  +post_id: ObjectId
+  +author_id: ObjectId
+  +parent_id: ObjectId
+  +is_active: string  ' active | inactive
+  +content: string
+  +created_at: Date
+  +updated_at: Date
+}
+
+class GeneralPost <<entity>> {
+  +_id: ObjectId
+  +title: string
+  +content: string
+}
+
+class User <<entity>> {
+  +_id: ObjectId
+  +full_name: string
+  +avatar: string
+}
+
+class Database <<database>>
+
+' ===== Relationships =====
+CommentPostRoute --> AuthMiddleware : uses (create/update/delete)
+CommentPostRoute --> CommentPostController : calls handlers
+
+CommentPostController --> CommentPostService : orchestration
+
+CommentPostService --> CommentPostModel : persistence
+CommentPostService --> GeneralPostModel : validate post
+CommentPostService --> UserModel : validate author
+
+CommentPostModel --> Database : queries
+GeneralPostModel --> Database : queries
+UserModel --> Database : queries
+
+GeneralPost "1" o-- "0..*" CommentPost : has comments
+User "1" o-- "0..*" CommentPost : writes
+CommentPost "0..*" --> "0..1" CommentPost : replies to (parent_id)
+
+@enduml

@@ -1,0 +1,93 @@
+@startuml BlogManagement
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+left to right direction
+
+
+' ===== Routes & Middleware =====
+class BlogRoute <<control>> {
+  +createBlog(req, res): void
+  +viewBlogList(req, res): void
+  +viewBlogDetail(req, res): void
+  +updateBlog(req, res): void
+  +deleteBlog(req, res): void
+  +searchBlog(req, res): void
+  +filterBlog(req, res): void
+}
+
+class AuthMiddleware <<control>> {
+  +protect(req): UserInfo
+}
+
+' ===== Controller =====
+class BlogController <<control>> {
+  +createBlog(req, res): void
+  +viewBlogList(req, res): void
+  +viewBlogDetail(req, res): void
+  +updateBlog(req, res): void
+  +deleteBlog(req, res): void
+  +searchBlog(req, res): void
+  +filterBlog(req, res): void
+}
+
+' ===== Service =====
+class BlogService <<service>> {
+  +createBlog(data): KnowledgeBlog
+  +viewBlogList(params): { data: KnowledgeBlog[], pagination }
+  +viewBlogDetail(blogId): KnowledgeBlog
+  +updateBlog(blogId, data): KnowledgeBlog
+  +deleteBlog(blogId): KnowledgeBlog
+  +searchBlog(params): { data: KnowledgeBlog[], pagination }
+  +filterBlog(params): { data: KnowledgeBlog[], pagination }
+}
+
+' ===== Models =====
+class KnowledgeBlogModel <<model>> {
+  +find(filter): KnowledgeBlog[]
+  +findById(id): KnowledgeBlog
+  +findByIdAndUpdate(id, update, options): KnowledgeBlog
+  +findByIdAndDelete(id): KnowledgeBlog
+  +countDocuments(filter): number
+  +save(): KnowledgeBlog
+}
+
+class UserModel <<model>> {
+  +findById(id): User
+}
+
+' ===== Entities =====
+class KnowledgeBlog <<entity>> {
+  +_id: ObjectId
+  +title: string
+  +content: string
+  +author_id: ObjectId
+  +image: string
+  +status: string  ' progressing | active | inactive
+  +created_at: Date
+  +updated_at: Date
+}
+
+class User <<entity>> {
+  +_id: ObjectId
+  +full_name: string
+  +avatar: string
+}
+
+class Database <<database>>
+
+' ===== Relationships =====
+BlogRoute --> AuthMiddleware : uses (create/update/delete)
+BlogRoute --> BlogController : calls handlers
+
+BlogController --> BlogService : orchestration
+
+BlogService --> KnowledgeBlogModel : persistence
+BlogService --> UserModel : validate author
+
+KnowledgeBlogModel --> Database : queries
+UserModel --> Database : queries
+
+User "1" o-- "0..*" KnowledgeBlog : writes
+
+@enduml

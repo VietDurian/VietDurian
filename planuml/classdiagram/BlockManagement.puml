@@ -1,0 +1,83 @@
+@startuml BlockManagement
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+left to right direction
+
+
+' ===== Routes & Middleware =====
+class BlockRoute <<control>> {
+  +createBlock(req, res): void
+  +viewBlock(req, res): void
+  +updateBlock(req, res): void
+  +deleteBlock(req, res): void
+}
+
+class AuthMiddleware <<control>> {
+  +protect(req): UserInfo
+}
+
+' ===== Controller =====
+class BlockController <<control>> {
+  +createBlock(req, res): void
+  +viewBlock(req, res): void
+  +updateBlock(req, res): void
+  +deleteBlock(req, res): void
+}
+
+' ===== Service =====
+class BlockService <<service>> {
+  +createBlock(data): Block
+  +viewBlock(blogId): Block[]
+  +updateBlock(blockId, data): Block
+  +deleteBlock(blockId): Block
+}
+
+' ===== Models =====
+class BlockModel <<model>> {
+  +find(filter): Block[]
+  +findById(id): Block
+  +findByIdAndUpdate(id, update, options): Block
+  +findByIdAndDelete(id): Block
+  +countDocuments(filter): number
+  +save(): Block
+}
+
+class BlogModel <<model>> {
+  +findById(id): Blog
+}
+
+' ===== Entities =====
+class Block <<entity>> {
+  +_id: ObjectId
+  +blog_id: ObjectId
+  +title: string
+  +content: string
+  +image: string
+  +created_at: Date
+  +updated_at: Date
+}
+
+class Blog <<entity>> {
+  +_id: ObjectId
+  +title: string
+  +content: string
+}
+
+class Database <<database>>
+
+' ===== Relationships =====
+BlockRoute --> AuthMiddleware : uses (create/update/delete)
+BlockRoute --> BlockController : calls handlers
+
+BlockController --> BlockService : orchestration
+
+BlockService --> BlockModel : persistence
+BlockService --> BlogModel : validate blog
+
+BlockModel --> Database : queries
+BlogModel --> Database : queries
+
+Blog "1" o-- "0..*" Block : contains
+
+@enduml
