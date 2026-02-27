@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
 	Search,
 	Plus,
@@ -13,6 +13,8 @@ import { productTypesAPI } from '@/lib/api';
 
 export function TypePage() {
 	const { t } = useLanguage();
+	const descriptionTemplate = t('type_description_template');
+	const lastTemplateRef = useRef(descriptionTemplate);
 	const [productTypes, setProductTypes] = useState([]);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [loading, setLoading] = useState(false);
@@ -42,11 +44,7 @@ export function TypePage() {
 	const [nameError, setNameError] = useState('');
 	const [checkingName, setCheckingName] = useState(false);
 
-	useEffect(() => {
-		fetchProductTypes();
-	}, [currentPage]); // Only depend on page changes, not search
-
-	const fetchProductTypes = async () => {
+	const fetchProductTypes = useCallback(async () => {
 		setLoading(true);
 		try {
 			
@@ -66,11 +64,15 @@ export function TypePage() {
 			setTotalItems(pagination.totalItems || data.length);
 			
 		} catch (error) {
-			toast.error(error.message || 'Lấy danh sách loại sản phẩm thất bại');
+			toast.error(error.message || t('fetch_type_failed') || 'Lấy danh sách loại sầu riêng thất bại');
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [currentPage, itemsPerPage]);
+
+	useEffect(() => {
+		fetchProductTypes();
+	}, [fetchProductTypes]);
 
 	// Filter and sort product types
 	const filteredTypes = productTypes
@@ -148,7 +150,7 @@ export function TypePage() {
 	// Validate name on blur
 	const handleNameBlur = async () => {
 		if (!formData.name.trim()) {
-			setNameError(t('type_name_required') || 'Tên loại sản phẩm không được để trống');
+			setNameError(t('type_name_required') || 'Tên loại sầu riêng không được để trống');
 			return;
 		}
 
@@ -159,7 +161,7 @@ export function TypePage() {
 		);
 		
 		if (isDuplicate) {
-			setNameError(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
+			setNameError(t('type_name_duplicate') || 'Tên loại sầu riêng đã tồn tại');
 		} else {
 			setNameError('');
 		}
@@ -169,8 +171,8 @@ export function TypePage() {
 
 
 	// Reset form
-	const resetForm = () => {
-		setFormData({ name: '', description: '' });
+	const resetForm = ({ description = '' } = {}) => {
+		setFormData({ name: '', description });
 		setSelectedType(null);
 		setNameError('');
 		setCheckingName(false);
@@ -178,9 +180,21 @@ export function TypePage() {
 
 	// Open create modal
 	const openCreateModal = () => {
-		resetForm();
+		lastTemplateRef.current = descriptionTemplate;
+		resetForm({ description: descriptionTemplate });
 		setCreateModalOpen(true);
 	};
+
+	useEffect(() => {
+		if (!createModalOpen) return;
+		if (selectedType) return;
+
+		// Only auto-switch the template if user hasn't modified it.
+		if (formData.description === lastTemplateRef.current) {
+			setFormData((prev) => ({ ...prev, description: descriptionTemplate }));
+		}
+		lastTemplateRef.current = descriptionTemplate;
+	}, [createModalOpen, descriptionTemplate, formData.description, selectedType]);
 
 	// Open edit modal
 	const openEditModal = (type) => {
@@ -209,7 +223,7 @@ export function TypePage() {
 	// Handle create
 	const handleCreate = async () => {
 		if (!formData.name.trim()) {
-			toast.error(t('type_name_required') || 'Tên loại sản phẩm không được để trống');
+			toast.error(t('type_name_required') || 'Tên loại sầu riêng không được để trống');
 			return;
 		}
 
@@ -227,8 +241,8 @@ export function TypePage() {
 		// Kiểm tra lại lần cuối
 		const isDuplicate = await checkDuplicateName(formData.name);
 		if (isDuplicate) {
-			setNameError(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
-			toast.error(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
+			setNameError(t('type_name_duplicate') || 'Tên loại sầu riêng đã tồn tại');
+			toast.error(t('type_name_duplicate') || 'Tên loại sầu riêng đã tồn tại');
 			return;
 		}
 
@@ -240,7 +254,7 @@ export function TypePage() {
 			};
 
 			await productTypesAPI.createProductType(createData);
-			toast.success(t('create_type_success') || 'Tạo loại sản phẩm thành công');
+			toast.success(t('create_type_success') || 'Tạo loại sầu riêng thành công');
 			closeModals();
 			// Fetch lại data để đảm bảo hiển thị đúng
 			await fetchProductTypes();
@@ -248,9 +262,9 @@ export function TypePage() {
 			// Xử lý lỗi trùng tên
 			if (error.message === 'Type product name already exists' || 
 				error.response?.status === 400) {
-				toast.error(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
+				toast.error(t('type_name_duplicate') || 'Tên loại sầu riêng đã tồn tại');
 			} else {
-				toast.error(error.message || t('create_type_failed') || 'Tạo loại sản phẩm thất bại');
+				toast.error(error.message || t('create_type_failed') || 'Tạo loại sầu riêng thất bại');
 			}
 		} finally {
 			setActionLoading(null);
@@ -260,7 +274,7 @@ export function TypePage() {
 	// Handle update
 	const handleUpdate = async () => {
 		if (!selectedType || !formData.name.trim()) {
-			toast.error(t('type_name_required') || 'Tên loại sản phẩm không được để trống');
+			toast.error(t('type_name_required') || 'Tên loại sầu riêng không được để trống');
 			return;
 		}
 
@@ -281,8 +295,8 @@ export function TypePage() {
 			selectedType._id || selectedType.id
 		);
 		if (isDuplicate) {
-			setNameError(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
-			toast.error(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
+			setNameError(t('type_name_duplicate') || 'Tên loại sầu riêng đã tồn tại');
+			toast.error(t('type_name_duplicate') || 'Tên loại sầu riêng đã tồn tại');
 			return;
 		}
 
@@ -294,7 +308,7 @@ export function TypePage() {
 			};
 
 			await productTypesAPI.updateProductType(selectedType._id || selectedType.id, updateData);
-			toast.success(t('update_type_success') || 'Cập nhật loại sản phẩm thành công');
+			toast.success(t('update_type_success') || 'Cập nhật loại sầu riêng thành công');
 			closeModals();
 			// Fetch lại data để đảm bảo hiển thị đúng
 			await fetchProductTypes();
@@ -302,9 +316,9 @@ export function TypePage() {
 			// Xử lý lỗi trùng tên
 			if (error.message === 'Type product name already exists' || 
 				error.response?.status === 400) {
-				toast.error(t('type_name_duplicate') || 'Tên loại sản phẩm đã tồn tại');
+				toast.error(t('type_name_duplicate') || 'Tên loại sầu riêng đã tồn tại');
 			} else {
-				toast.error(error.message || t('update_type_failed') || 'Cập nhật loại sản phẩm thất bại');
+				toast.error(error.message || t('update_type_failed') || 'Cập nhật loại sầu riêng thất bại');
 			}
 		} finally {
 			setActionLoading(null);
@@ -318,12 +332,12 @@ export function TypePage() {
 		setActionLoading('delete');
 		try {
 			await productTypesAPI.deleteProductType(selectedType._id || selectedType.id);
-			toast.success(t('delete_type_success') || 'Xóa loại sản phẩm thành công');
+			toast.success(t('delete_type_success') || 'Xóa loại sầu riêng thành công');
 			closeModals();
 			// Fetch lại data để đảm bảo hiển thị đúng
 			await fetchProductTypes();
 		} catch (error) {
-			toast.error(error.message || t('delete_type_failed') || 'Xóa loại sản phẩm thất bại');
+			toast.error(error.message || t('delete_type_failed') || 'Xóa loại sầu riêng thất bại');
 		} finally {
 			setActionLoading(null);
 		}
@@ -336,10 +350,10 @@ export function TypePage() {
 				<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 					<div>
 						<h1 className="text-2xl md:text-3xl font-bold text-[#1a4d2e] mb-2">
-							{t('product_types') || 'Loại sản phẩm'}
+							{t('product_types') || 'Loại sầu riêng'}
 						</h1>
 						<p className="text-sm md:text-base text-gray-600">
-							{t('manage_product_types') || 'Quản lý các loại sản phẩm'}
+							{t('manage_product_types') || 'Quản lý các loại sầu riêng'}
 						</p>
 					</div>
 					<button
@@ -347,7 +361,7 @@ export function TypePage() {
 						className="flex items-center gap-2 px-4 py-2.5 bg-[#1a4d2e] text-white rounded-lg hover:bg-[#2d7a4f] transition-colors font-medium"
 					>
 						<Plus className="w-5 h-5" />
-						{t('add_product_type') || 'Thêm loại sản phẩm'}
+						{t('add_product_type') || 'Thêm loại sầu riêng'}
 					</button>
 				</div>
 			</div>
@@ -360,7 +374,7 @@ export function TypePage() {
 						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
 						<input
 							type="text"
-							placeholder={t('search_product_types') || 'Tìm theo tên loại sản phẩm, mô tả...'}
+							placeholder={t('search_product_types') || 'Tìm theo tên loại sầu riêng, mô tả...'}
 							value={searchTerm}
 							onChange={(e) => handleSearchChange(e.target.value)}
 							className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-gray-500 font-medium placeholder:text-gray-500 placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
@@ -418,7 +432,7 @@ export function TypePage() {
 						<thead className="bg-gray-50 border-b border-gray-200">
 							<tr>
 								<th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-									{t('product_type') || 'Loại sản phẩm'}
+									{t('product_type') || 'Loại sầu riêng'}
 								</th>
 								<th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
 									{t('description') || 'Mô tả'}
@@ -442,7 +456,7 @@ export function TypePage() {
 							) : filteredTypes.length === 0 ? (
 								<tr>
 									<td colSpan="4" className="px-6 py-8 text-center">
-										<div className="text-gray-500">{t('no_product_types') || 'Không có loại sản phẩm nào'}</div>
+										<div className="text-gray-500">{t('no_product_types') || 'Không có loại sầu riêng nào'}</div>
 									</td>
 								</tr>
 							) : (
@@ -464,7 +478,7 @@ export function TypePage() {
 											</div>
 										</td>
 										<td className="px-6 py-4">
-											<p className="text-sm text-gray-900 line-clamp-2 max-w-xs">
+											<p className="text-sm text-gray-900 whitespace-pre-line break-words max-w-md">
 												{type.description || t('no_description') || 'Chưa có mô tả'}
 											</p>
 										</td>
@@ -511,7 +525,7 @@ export function TypePage() {
 					</div>
 				) : filteredTypes.length === 0 ? (
 					<div className="text-center py-8 text-gray-500">
-						{t('no_product_types') || 'Không có loại sản phẩm nào'}
+						{t('no_product_types') || 'Không có loại sầu riêng nào'}
 					</div>
 				) : (
 					filteredTypes.map((type) => (
@@ -535,7 +549,7 @@ export function TypePage() {
 							</div>
 
 							<div className="mb-3">
-								<p className="text-sm text-gray-700">
+								<p className="text-sm text-gray-700 whitespace-pre-line break-words">
 									{type.description || t('no_description') || 'Chưa có mô tả'}
 								</p>
 							</div>
@@ -631,12 +645,12 @@ export function TypePage() {
 				>
 					<div className="absolute inset-0 bg-black/50" />
 					<div
-						className="relative w-[92%] max-w-md rounded-2xl bg-white shadow-xl border border-gray-100 p-5 md:p-6"
+						className="relative w-[92%] max-w-3xl rounded-2xl bg-white shadow-xl border border-gray-100 p-6 md:p-8"
 						onClick={(e) => e.stopPropagation()}
 					>
 						<div className="flex items-center justify-between mb-4">
 							<h3 className="text-lg font-semibold text-gray-900">
-								{t('add_product_type') || 'Thêm loại sản phẩm'}
+								{t('add_product_type') || 'Thêm loại sầu riêng'}
 							</h3>
 							<button
 								onClick={closeModals}
@@ -646,10 +660,10 @@ export function TypePage() {
 							</button>
 						</div>
 
-						<div className="space-y-4">
+						<div className="space-y-5">
 							<div>
 							<label className="block text-sm font-medium text-gray-900 mb-1">
-								{t('product_type_name') || 'Tên loại sản phẩm'} *
+									{t('product_type_name') || 'Tên loại sầu riêng'} *
 							</label>
 							<input
 								type="text"
@@ -659,7 +673,7 @@ export function TypePage() {
 							className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] bg-white text-gray-900 ${
 								nameError ? 'border-red-500' : 'border-gray-300'
 							}`}
-							placeholder={t('enter_product_type_name') || 'Nhập tên loại sản phẩm'}
+							placeholder={t('enter_product_type_name') || 'Nhập tên loại sầu riêng'}
 							disabled={checkingName}
 						/>
 						{checkingName && (
@@ -680,9 +694,9 @@ export function TypePage() {
 							<textarea
 								value={formData.description}
 								onChange={(e) => handleFormChange('description', e.target.value)}
-								rows={3}
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] bg-white text-gray-900"
-									placeholder={t('enter_description') || 'Nhập mô tả'}
+							rows={10}
+							className="w-full min-h-[260px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] bg-white text-gray-900 whitespace-pre-wrap"
+							placeholder={t('enter_description') || ''}
 								/>
 							</div>
 						</div>
@@ -720,12 +734,12 @@ export function TypePage() {
 				>
 					<div className="absolute inset-0 bg-black/50" />
 					<div
-						className="relative w-[92%] max-w-md rounded-2xl bg-white shadow-xl border border-gray-100 p-5 md:p-6"
+						className="relative w-[92%] max-w-3xl rounded-2xl bg-white shadow-xl border border-gray-100 p-6 md:p-8"
 						onClick={(e) => e.stopPropagation()}
 					>
 						<div className="flex items-center justify-between mb-4">
 							<h3 className="text-lg font-semibold text-gray-900">
-								{t('edit_product_type') || 'Chỉnh sửa loại sản phẩm'}
+								{t('edit_product_type') || 'Chỉnh sửa loại sầu riêng'}
 							</h3>
 							<button
 								onClick={closeModals}
@@ -735,10 +749,10 @@ export function TypePage() {
 							</button>
 						</div>
 
-						<div className="space-y-4">
+						<div className="space-y-5">
 							<div>
 							<label className="block text-sm font-medium text-gray-900 mb-1">
-								{t('product_type_name') || 'Tên loại sản phẩm'} *
+									{t('product_type_name') || 'Tên loại sầu riêng'} *
 							</label>
 							<input
 								type="text"
@@ -768,8 +782,8 @@ export function TypePage() {
 							<textarea
 								value={formData.description}
 								onChange={(e) => handleFormChange('description', e.target.value)}
-								rows={3}
-								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] bg-white text-gray-900"
+							rows={10}
+							className="w-full min-h-[260px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] bg-white text-gray-900 whitespace-pre-wrap"
 								/>
 							</div>
 						</div>
@@ -819,7 +833,7 @@ export function TypePage() {
 									{t('confirm_delete_title') || 'Xác nhận xóa'}
 								</h3>
 								<p className="mt-1 text-sm text-gray-600">
-									{t('confirm_delete_product_type') || 'Bạn có chắc muốn xóa loại sản phẩm này?'}
+									{t('confirm_delete_product_type') || 'Bạn có chắc muốn xóa loại sầu riêng này?'}
 								</p>
 								<p className="mt-1 text-sm font-medium text-gray-900">
 									{selectedType.name}
