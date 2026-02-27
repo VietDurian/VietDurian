@@ -8,6 +8,7 @@ const BASE_URL = "http://localhost:8080";
 export const useAuthStore = create((set, get) => ({
   authUser: null,
   isSigningUp: false,
+  isCheckingEmail: false,
   isResendingOtp: false,
   isVerifyingEmail: false,
   isRequestingResetOtp: false,
@@ -48,6 +49,24 @@ export const useAuthStore = create((set, get) => ({
       return null;
     } finally {
       set({ isSigningUp: false });
+    }
+  },
+
+  checkEmailExists: async (email) => {
+    set({ isCheckingEmail: true });
+    try {
+      const normalizedEmail = email?.trim().toLowerCase();
+      if (!normalizedEmail) return false;
+
+      const res = await axiosInstance.get("/auth/check-email", {
+        params: { email: normalizedEmail },
+      });
+
+      return Boolean(res?.data?.data?.exists);
+    } catch (error) {
+      return null;
+    } finally {
+      set({ isCheckingEmail: false });
     }
   },
 
