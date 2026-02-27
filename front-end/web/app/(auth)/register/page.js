@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   Check,
   X,
+  ChevronDown,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -72,6 +73,7 @@ export default function RegisterPage() {
   const [selectedRole, setSelectedRole] = useState("");
   const [step, setStep] = useState(1); // 1: info entry, 2: role selection
   const router = useRouter();
+  const [activeRole, setActiveRole] = useState(null);
 
   const ROLES = [
     { key: "trader", label: "Trader", icon: Briefcase },
@@ -125,7 +127,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen font-sans bg-white p-5 pt-15 lg:pt-0">
+    <div className="grid grid-cols-2 min-h-screen bg-gray-50 font-sans p-5 pt-15 lg:pt-0 absolute inset-0 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
       {/* Logo */}
       <Link
         href={"/"}
@@ -140,19 +142,24 @@ export default function RegisterPage() {
       </Link>
       {/* LEFT SECTION: Register Form */}
       <div className="w-full flex flex-col items-center justify-center">
-        <div className="max-w-md w-full mx-auto lg:mx-0">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-3">Đăng Ký</h1>
-          <p className="text-gray-500 text-sm mb-10 leading-relaxed">
-            Hệ thống sầu riêng uy tín, chất lượng Việt Nam
+        <div className="max-w-xl w-full mx-auto lg:mx-0">
+          <h1 className="text-3xl font-semibold text-emerald-500 mb-3 text-center text-shadow-md text-shadow-emerald-100">
+            Đăng Ký tài khoản
+          </h1>
+          <p className="text-gray-500 text-sm mb-10 leading-relaxed text-center text-shadow-md text-shadow-gray-200">
+            Tạo tài khoản mới để bắt đầu trải nghiệm dịch vụ của chúng tôi
           </p>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form
+            className="space-y-5 bg-white shadow-xl border border-gray-200 rounded-3xl p-7"
+            onSubmit={handleSubmit}
+          >
             {step === 1 && (
               <>
                 {/* Fullname */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Họ Tên
+                    Họ Tên <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <User
@@ -172,7 +179,7 @@ export default function RegisterPage() {
                 {/* Email */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Email
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Mail
@@ -192,7 +199,7 @@ export default function RegisterPage() {
                 {/* Password */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Mật Khẩu
+                    Mật Khẩu <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Lock
@@ -259,7 +266,7 @@ export default function RegisterPage() {
                 {/* Phone Number */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Số điện thoại
+                    Số điện thoại <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Phone
@@ -303,18 +310,32 @@ export default function RegisterPage() {
                         key={role.key}
                         type="button"
                         onClick={() => setSelectedRole(role.key)}
-                        className={`flex flex-col items-center gap-2 border rounded-xl p-4 text-sm font-semibold transition-all shadow-sm hover:-translate-y-[2px] cursor-pointer ${
-                          active
-                            ? "border-emerald-700 bg-emerald-50 text-emerald-800"
-                            : "border-gray-200 bg-white text-gray-800"
-                        }`}
+                        className={`
+                          flex flex-col items-center gap-2
+                          rounded-xl p-4 text-sm font-semibold
+                          transition-all duration-200
+                          shadow-sm cursor-pointer
+                          hover:-translate-y-0.5
+                          border
+                          ${
+                            active
+                              ? "border-emerald-600 bg-emerald-100 text-emerald-900 shadow-md"
+                              : "border-gray-200 bg-white text-emerald-700"
+                          }
+                            `}
                       >
                         <div
                           className={`h-12 w-12 rounded-xl flex items-center justify-center ${
-                            active ? "bg-emerald-100" : "bg-gray-100"
+                            active ? "bg-emerald-500" : "bg-emerald-100"
                           }`}
                         >
-                          <Icon className="w-6 h-6" />
+                          <Icon
+                            className={`
+     flex items-center justify-center
+      transition-all
+      ${active ? " text-white" : " text-emerald-800"}
+    `}
+                          />
                         </div>
                         <span>{role.label}</span>
                       </button>
@@ -328,7 +349,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isSigningUp || (step === 2 && !selectedRole)}
-                className={`flex-1 bg-[#04543D] text-white py-3.5 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+                className={`flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3.5 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
               >
                 {isSigningUp ? (
                   <>
@@ -348,7 +369,7 @@ export default function RegisterPage() {
             Đã có tài khoản?{" "}
             <Link
               href={"/login"}
-              className="text-teal-800 font-bold hover:underline"
+              className="text-emerald-600 font-bold hover:underline"
             >
               Đăng nhập
             </Link>
@@ -357,14 +378,120 @@ export default function RegisterPage() {
       </div>
 
       {/* RIGHT SECTION: Branding & Testimonial */}
-      {/* <div className="hidden m-5 rounded-2xl lg:flex w-[55%] bg-[#04543D] relative overflow-hidden flex-col justify-center px-16 xl:px-24">
-        <Image
-          src={"/images/Durian-login.jpg"}
-          fill
-          alt="Login page image"
-          className="object-cover"
-        />
-      </div> */}
+      <div className="flex flex-col items-center justify-center w-full max-w-2xl min-h-screen">
+        <p className="text-3xl font-bold text-center text-emerald-500 text-shadow-md text-shadow-emerald-100">
+          Vai trò của chúng tôi
+        </p>
+        <p className="text-1xl text-center text-gray-500 text-shadow-md text-shadow-gray-200">
+          Kết nối người trồng, thương lái và chuyên gia sầu riêng trên một nền
+          tảng
+        </p>
+
+        <div className="grid grid-cols-1 w-full max-w-xl gap-4 mt-6">
+          {[
+            {
+              title: "Trader",
+              desc: "Người thương lái",
+              icon: Briefcase,
+              detail:
+                "Tìm kiếm vườn sầu riêng, kết nối trực tiếp với nông dân và quản lý nguồn hàng hiệu quả.",
+            },
+            {
+              title: "Farmer",
+              desc: "Tạo vườn & sản phẩm",
+              icon: Leaf,
+              detail:
+                "Quản lý thông tin vườn, đăng bán sầu riêng và theo dõi quy trình canh tác VietGAP.",
+            },
+            {
+              title: "Service Provider",
+              desc: "Dịch vụ nông nghiệp",
+              icon: Wrench,
+              detail:
+                "Cung cấp phân bón, kỹ thuật, vận chuyển và các dịch vụ hỗ trợ sản xuất.",
+            },
+            {
+              title: "Content Expert",
+              desc: "Chuyên gia nội dung",
+              icon: PenSquare,
+              detail:
+                "Chia sẻ kiến thức, hướng dẫn kỹ thuật và phát triển cộng đồng sầu riêng.",
+            },
+          ].map((item, index) => {
+            const Icon = item.icon;
+            const isOpen = activeRole === index;
+
+            return (
+              <div
+                key={index}
+                onClick={() => setActiveRole(isOpen ? null : index)}
+                className={`
+          group
+          rounded-2xl
+          border
+          bg-white/60 backdrop-blur-lg
+          px-6 py-5
+          transition-all duration-300
+          cursor-pointer
+          hover:shadow-lg hover:-translate-y-[2px]
+          ${isOpen ? "border-emerald-500 shadow-md" : "border-gray-200"}
+        `}
+              >
+                {/* HEADER */}
+                <div className="flex items-center gap-4">
+                  {/* Icon */}
+                  <div
+                    className={`
+              h-12 w-12 flex items-center justify-center
+              rounded-xl transition-all
+              ${
+                isOpen
+                  ? "bg-emerald-500 text-white"
+                  : "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200"
+              }
+            `}
+                  >
+                    <Icon size={22} />
+                  </div>
+
+                  {/* Text */}
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">{item.title}</p>
+                    <p className="text-sm text-gray-500">{item.desc}</p>
+                  </div>
+
+                  {/* Arrow indicator */}
+                  <div
+                    className={`transition-transform duration-300 ${
+                      isOpen ? "rotate-180 text-emerald-600" : "text-gray-400"
+                    }`}
+                  >
+                    <ChevronDown />
+                  </div>
+                </div>
+
+                {/* EXPAND */}
+                <div
+                  className={`
+            grid transition-all duration-300
+            ${
+              isOpen
+                ? "grid-rows-[1fr] opacity-100 mt-4"
+                : "grid-rows-[0fr] opacity-0"
+            }
+          `}
+                >
+                  <div className="overflow-hidden">
+                    <div className="border-t border-gray-200 pt-4 text-sm text-gray-600 leading-relaxed">
+                      {item.detail}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
