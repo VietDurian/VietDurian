@@ -102,7 +102,7 @@ export default function VerifyEmailContent() {
   };
 
   return (
-    <div className="grid grid-cols-2 min-h-screen font-sans bg-white">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-screen font-sans bg-white">
       {/* Logo */}
       <Link
         href={"/"}
