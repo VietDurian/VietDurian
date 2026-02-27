@@ -185,7 +185,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="grid grid-cols-2 min-h-screen bg-gray-50 font-sans p-5 pt-15 lg:pt-0 absolute inset-0 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-screen bg-gray-50 font-sans p-5 pt-15 lg:pt-0 absolute inset-0 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
       {/* Logo */}
       <Link
         href={"/"}
