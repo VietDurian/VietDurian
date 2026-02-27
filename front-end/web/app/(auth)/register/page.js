@@ -1,6 +1,6 @@
 // Nguyễn Trọng Quý - CE180596
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Mail,
   Lock,
@@ -22,58 +22,33 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
-
-function isValidPassword(pwd) {
-  const minLength = pwd.length >= 12;
-  const hasUppercase = /[A-Z]/.test(pwd);
-  const hasLowercase = /[a-z]/.test(pwd);
-  const hasNumber = /\d/.test(pwd);
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>[\]\\';`~+=\-_/]/.test(pwd);
-
-  return (
-    minLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar
-  );
-}
-
-const passwordRules = [
-  { id: "length", test: (pwd) => pwd.length >= 12, label: "Ít nhất 12 ký tự" },
-  {
-    id: "uppercase",
-    test: (pwd) => /[A-Z]/.test(pwd),
-    label: "Có chữ in hoa",
-  },
-  {
-    id: "lowercase",
-    test: (pwd) => /[a-z]/.test(pwd),
-    label: "Có chữ thường",
-  },
-  {
-    id: "number",
-    test: (pwd) => /\d/.test(pwd),
-    label: "Có ít nhất một số",
-  },
-  {
-    id: "special",
-    test: (pwd) => /[!@#$%^&*(),.?":{}|<>[\]\\';`~+=\-_/]/.test(pwd),
-    label: "Có ký tự đặc biệt (ví dụ: @, #, $)",
-  },
-];
+import { useValidatorStore } from "@/store/useValidatorStore";
 
 const OTP_RESEND_DELAY_MS = 10 * 60 * 1000;
 
 export default function RegisterPage() {
-  const { signup, isSigningUp } = useAuthStore();
+  const { signup, isSigningUp, checkEmailExists, isCheckingEmail } =
+    useAuthStore();
+  const { validateField, passwordRules, isValidPassword } = useValidatorStore();
 
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [step, setStep] = useState(1); // 1: info entry, 2: role selection
   const router = useRouter();
   const [activeRole, setActiveRole] = useState(null);
+  const [touched, setTouched] = useState({
+    fullName: false,
+    email: false,
+    password: false,
+    phone: false,
+    role: false,
+  });
+  const [emailExistsError, setEmailExistsError] = useState("");
+  const emailCheckRequestIdRef = useRef(0);
 
   const ROLES = [
     { key: "trader", label: "Trader", icon: Briefcase },
@@ -82,20 +57,74 @@ export default function RegisterPage() {
     { key: "contentExpert", label: "Content Expert", icon: PenSquare },
   ];
 
+  const fullNameError = validateField("fullName", fullName);
+  const emailError = validateField("email", email);
+  const combinedEmailError = emailError || emailExistsError;
+  const passwordError = validateField("password", password);
+  const phoneError = validateField("phone", phone);
+  const roleError = !selectedRole ? "Vui lòng chọn vai trò" : "";
+
+  const stepOneValid =
+    !fullNameError &&
+    !combinedEmailError &&
+    !passwordError &&
+    !phoneError &&
+    !isCheckingEmail;
+
+  const handleBlur = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  useEffect(() => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || emailError) {
+      setEmailExistsError("");
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      const requestId = emailCheckRequestIdRef.current + 1;
+      emailCheckRequestIdRef.current = requestId;
+
+      const exists = await checkEmailExists(normalizedEmail);
+
+      if (requestId !== emailCheckRequestIdRef.current) {
+        return;
+      }
+
+      if (exists === true) {
+        setEmailExistsError("Email đã tồn tại");
+      } else {
+        setEmailExistsError("");
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [email, emailError, checkEmailExists]);
+
   // Handle Submit Register Form
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSigningUp) return;
-    if (!isValidPassword(password)) {
-      setPasswordError("Vui lòng nhập mật khẩu hợp lệ");
-      return;
-    }
+
     if (step === 1) {
+      setTouched((prev) => ({
+        ...prev,
+        fullName: true,
+        email: true,
+        password: true,
+        phone: true,
+      }));
+
+      if (!stepOneValid) return;
+
       setStep(2);
       return;
     }
 
     if (!selectedRole) {
+      setTouched((prev) => ({ ...prev, role: true }));
       toast.error("Vui lòng chọn vai trò");
       return;
     }
@@ -124,6 +153,35 @@ export default function RegisterPage() {
   // Password real-time validation
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
+  };
+
+  const handlePhoneChange = (e) => {
+    const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setPhone(digitsOnly);
+  };
+
+  const handlePhoneKeyDown = (e) => {
+    const allowedControlKeys = [
+      "Backspace",
+      "Delete",
+      "Tab",
+      "ArrowLeft",
+      "ArrowRight",
+      "Home",
+      "End",
+    ];
+
+    if (
+      allowedControlKeys.includes(e.key) ||
+      (e.ctrlKey && ["a", "c", "v", "x"].includes(e.key.toLowerCase())) ||
+      (e.metaKey && ["a", "c", "v", "x"].includes(e.key.toLowerCase()))
+    ) {
+      return;
+    }
+
+    if (!/^\d$/.test(e.key)) {
+      e.preventDefault();
+    }
   };
 
   return (
@@ -169,12 +227,21 @@ export default function RegisterPage() {
                     <input
                       type="text"
                       placeholder="Nhập họ và tên"
-                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
+                      className={`w-full border rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
+                        touched.fullName && fullNameError
+                          ? "border-red-400 focus:ring-red-300"
+                          : "border-teal-800/30 focus:ring-teal-800"
+                      }`}
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
+                      onBlur={() => handleBlur("fullName")}
+                      aria-invalid={Boolean(touched.fullName && fullNameError)}
                       required
                     />
                   </div>
+                  {touched.fullName && fullNameError && (
+                    <p className="mt-1 text-xs text-red-600">{fullNameError}</p>
+                  )}
                 </div>
                 {/* Email */}
                 <div>
@@ -189,12 +256,30 @@ export default function RegisterPage() {
                     <input
                       type="email"
                       placeholder="Nhập email"
-                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
+                      className={`w-full border rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
+                        touched.email && combinedEmailError
+                          ? "border-red-400 focus:ring-red-300"
+                          : "border-teal-800/30 focus:ring-teal-800"
+                      }`}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      onBlur={() => handleBlur("email")}
+                      aria-invalid={Boolean(
+                        touched.email && combinedEmailError,
+                      )}
                       required
                     />
                   </div>
+                  {touched.email && combinedEmailError && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {combinedEmailError}
+                    </p>
+                  )}
+                  {touched.email && !combinedEmailError && isCheckingEmail && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Đang kiểm tra email...
+                    </p>
+                  )}
                 </div>
                 {/* Password */}
                 <div>
@@ -209,9 +294,15 @@ export default function RegisterPage() {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Nhập mật khẩu"
-                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
+                      className={`w-full border rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
+                        touched.password && passwordError
+                          ? "border-red-400 focus:ring-red-300"
+                          : "border-teal-800/30 focus:ring-teal-800"
+                      }`}
                       value={password}
                       onChange={handlePasswordChange}
+                      onBlur={() => handleBlur("password")}
+                      aria-invalid={Boolean(touched.password && passwordError)}
                       required
                     />
                     <button
@@ -262,6 +353,9 @@ export default function RegisterPage() {
                       </div>
                     )}
                   </div>
+                  {touched.password && passwordError && (
+                    <p className="mt-1 text-xs text-red-600">{passwordError}</p>
+                  )}
                 </div>
                 {/* Phone Number */}
                 <div>
@@ -274,14 +368,27 @@ export default function RegisterPage() {
                       size={18}
                     />
                     <input
-                      type="tel"
+                      type="text"
                       placeholder="Nhập số điện thoại"
-                      className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
+                      className={`w-full border rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
+                        touched.phone && phoneError
+                          ? "border-red-400 focus:ring-red-300"
+                          : "border-teal-800/30 focus:ring-teal-800"
+                      }`}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={10}
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={handlePhoneChange}
+                      onKeyDown={handlePhoneKeyDown}
+                      onBlur={() => handleBlur("phone")}
+                      aria-invalid={Boolean(touched.phone && phoneError)}
                       required
                     />
                   </div>
+                  {touched.phone && phoneError && (
+                    <p className="mt-1 text-xs text-red-600">{phoneError}</p>
+                  )}
                 </div>
               </>
             )}
@@ -309,7 +416,10 @@ export default function RegisterPage() {
                       <button
                         key={role.key}
                         type="button"
-                        onClick={() => setSelectedRole(role.key)}
+                        onClick={() => {
+                          setSelectedRole(role.key);
+                          setTouched((prev) => ({ ...prev, role: true }));
+                        }}
                         className={`
                           flex flex-col items-center gap-2
                           rounded-xl p-4 text-sm font-semibold
@@ -342,6 +452,9 @@ export default function RegisterPage() {
                     );
                   })}
                 </div>
+                {touched.role && roleError && (
+                  <p className="text-xs text-red-600">{roleError}</p>
+                )}
               </div>
             )}
 

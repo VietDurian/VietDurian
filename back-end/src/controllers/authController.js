@@ -32,6 +32,28 @@ const register = async (req, res, next) => {
   }
 };
 
+const checkEmailExists = async (req, res, next) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({
+        code: 400,
+        message: "Please provide email",
+      });
+    }
+
+    const exists = await authService.checkEmailExists(email);
+
+    res.status(200).json({
+      success: true,
+      data: { exists },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const verifyEmail = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
@@ -271,6 +293,7 @@ const checkAuth = (req, res) => {
 
 export const authController = {
   register,
+  checkEmailExists,
   verifyEmail,
   resendVerificationOtp,
   login,
@@ -282,4 +305,3 @@ export const authController = {
   changePassword,
   checkAuth,
 };
-
