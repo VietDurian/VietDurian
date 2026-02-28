@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { profileAPI } from "@/lib/api";
 import apiClient from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
+import { axiosInstance } from "@/lib/axios";
 
 const AuthContext = createContext();
 
@@ -19,6 +20,20 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const isHandling401 = useRef(false);
+
+  const clearClientAuthState = useCallback(() => {
+    localStorage.removeItem("auth_user");
+    localStorage.removeItem("auth_token");
+
+    const cookieNames = ["accessToken", "refreshToken", "user_id"];
+    cookieNames.forEach((name) => {
+      document.cookie = `${name}=; Max-Age=0; path=/`;
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+    });
+
+    useAuthStore.setState({ authUser: null });
+    useAuthStore.getState().disconnectSocket();
+  }, []);
 
   const setUserUnsafe = useCallback((nextUser) => {
     localStorage.setItem("auth_user", JSON.stringify(nextUser));
@@ -33,6 +48,7 @@ export function AuthProvider({ children }) {
       if (latestUser && typeof latestUser === "object") {
         localStorage.setItem("auth_user", JSON.stringify(latestUser));
         setUser(latestUser);
+        useAuthStore.setState({ authUser: latestUser });
       }
 
       return latestUser;
@@ -48,10 +64,13 @@ export function AuthProvider({ children }) {
 
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        useAuthStore.setState({ authUser: parsedUser });
       } catch (error) {
         console.error("Failed to parse auth_user", error);
         localStorage.removeItem("auth_user");
+        useAuthStore.setState({ authUser: null });
       }
     }
 
@@ -61,11 +80,11 @@ export function AuthProvider({ children }) {
       // No token: ensure we drop any stale user session
       setUser(null);
       setToken(null);
-      localStorage.removeItem("auth_user");
+      clearClientAuthState();
     }
 
     setLoading(false);
-  }, []);
+  }, [clearClientAuthState]);
 
   const login = useCallback((userData, authToken) => {
     // Save to localStorage
@@ -74,26 +93,26 @@ export function AuthProvider({ children }) {
 
     setUser(userData);
     setToken(authToken); // update state
+    useAuthStore.setState({ authUser: userData });
   }, []);
 
   const logout = useCallback(
-    (redirectTo = "/login") => {
+    async (redirectTo = "/login") => {
       setUser(null);
       setToken(null);
       const target = typeof redirectTo === "string" ? redirectTo : "/login";
-      localStorage.removeItem("auth_user");
-      localStorage.removeItem("auth_token"); // clear token
 
-      setUser(null);
-      setToken(null);
-
-      // Keep Zustand auth state in sync to avoid login/dashboard redirect loops.
-      useAuthStore.setState({ authUser: null });
-      useAuthStore.getState().disconnectSocket();
-
-      router.push(target);
+      try {
+        await axiosInstance.post("/auth/logout");
+      } catch (error) {
+        console.error("Logout API failed", error);
+      } finally {
+        clearClientAuthState();
+        isHandling401.current = false;
+        router.replace(target);
+      }
     },
-    [router],
+    [clearClientAuthState, router],
   );
 
   // Bắt 401 toàn cục cho dashboard

@@ -32,7 +32,10 @@ export const useAuthStore = create((set, get) => ({
       }
     } catch (error) {
       console.log("Error in checkAuth: ", error);
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("auth_token");
       set({ authUser: null });
+      get().disconnectSocket();
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -181,13 +184,12 @@ export const useAuthStore = create((set, get) => ({
   },
 
   logout: async () => {
-    console.log("logout");
     try {
       set({ authUser: null });
       await axiosInstance.post("/auth/logout");
       toast.success("Logged out successfully");
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error?.response?.data?.message || "Logout failed");
     } finally {
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
