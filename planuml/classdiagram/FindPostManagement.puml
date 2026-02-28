@@ -1,0 +1,100 @@
+@startuml FindPostManagement
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+left to right direction
+
+
+' ===== Routes & Middleware =====
+class FindPostRoute <<control>> {
+  +viewPostList(req, res): void
+  +viewPostDetail(req, res): void
+  +updatePost(req, res): void
+  +deletePost(req, res): void
+  +approvePost(req, res): void
+  +rejectPost(req, res): void
+  +searchPost(req, res): void
+  +sortPost(req, res): void
+  +filterPost(req, res): void
+}
+
+class AuthMiddleware <<control>> {
+  +protect(req): UserInfo
+}
+
+' ===== Controller =====
+class FindPostController <<control>> {
+  +viewPostList(req, res): void
+  +viewPostDetail(req, res): void
+  +updatePost(req, res): void
+  +deletePost(req, res): void
+  +approvePost(req, res): void
+  +rejectPost(req, res): void
+  +searchPost(req, res): void
+  +sortPost(req, res): void
+  +filterPost(req, res): void
+}
+
+' ===== Service =====
+class FindPostService <<service>> {
+  +viewPostList(params): { data: Post[], pagination }
+  +viewPostDetail(postId): Post
+  +updatePost(postId, data): Post
+  +deletePost(postId): Post
+  +approvePost(postId): Post
+  +rejectPost(postId): Post
+  +searchPost(params): { data: Post[], pagination }
+  +sortPost(params): { data: Post[], pagination }
+  +filterPost(params): { data: Post[], pagination }
+}
+
+' ===== Models =====
+class PostModel <<model>> {
+  +find(filter): Post[]
+  +findById(id): Post
+  +findByIdAndUpdate(id, update, options): Post
+  +findByIdAndDelete(id): Post
+  +countDocuments(filter): number
+  +save(): Post
+}
+
+class UserModel <<model>> {
+  +findById(id): User
+}
+
+' ===== Entities =====
+class Post <<entity>> {
+  +_id: ObjectId
+  +author_id: ObjectId
+  +category: string
+  +content: string
+  +image: string
+  +contact: string
+  +status: string
+  +created_at: Date
+  +updated_at: Date
+}
+
+class User <<entity>> {
+  +_id: ObjectId
+  +full_name: string
+  +avatar: string
+}
+
+class Database <<database>>
+
+' ===== Relationships =====
+FindPostRoute --> AuthMiddleware : uses (update/delete/approve/reject)
+FindPostRoute --> FindPostController : calls handlers
+
+FindPostController --> FindPostService : orchestration
+
+FindPostService --> PostModel : persistence
+FindPostService --> UserModel : validate author
+
+PostModel --> Database : queries
+UserModel --> Database : queries
+
+User "1" o-- "0..*" Post : writes
+
+@enduml
