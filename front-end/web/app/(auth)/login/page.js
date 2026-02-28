@@ -25,19 +25,19 @@ export default function LoginPage() {
     password: "",
   });
   const { login, isLoggingIn } = useAuthStore();
-  const { login: loginContext, user, token, loading } = useAuth();
+  const { login: loginContext, user, loading } = useAuth();
   const [activeRole, setActiveRole] = useState(null);
 
   useEffect(() => {
     if (loading) return;
-    if (!user || !token) return;
+    if (!user) return;
 
     if (user.role === "admin") {
       router.push("/dashboard");
     } else {
       router.push("/");
     }
-  }, [loading, router, token, user]);
+  }, [loading, router, user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
