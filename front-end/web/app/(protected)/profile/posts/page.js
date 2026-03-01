@@ -35,6 +35,20 @@ const POST_CATEGORIES = [
   "Thuê dịch vụ",
   "Khác",
 ];
+const getCategoriesByRole = (role) => {
+  switch (role) {
+    case "trader":
+      return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
+    case "farmer":
+      return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
+    case "serviceProvider":
+      return ["Dịch vụ", "Sản phẩm", "Kinh nghiệm", "Khác"];
+    case "contentExpert":
+      return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
+    default:
+      return POST_CATEGORIES;
+  }
+};
 
 // Status Badge Component
 const StatusBadge = ({ status }) => {
@@ -114,7 +128,8 @@ const PostComposer = ({ onOpenModal, user }) => {
 // Post Modal Component (giữ nguyên như cũ)
 const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
   const fileInputRef = useRef(null);
-  const [category, setCategory] = useState(POST_CATEGORIES[0]);
+  const categories = getCategoriesByRole(user?.role);
+  const [category, setCategory] = useState(categories[0]);
   const [content, setContent] = useState("");
   const [contact, setContact] = useState("");
   const [imagePreview, setImagePreview] = useState("");
@@ -128,13 +143,17 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
     Boolean(contact.trim());
 
   useEffect(() => {
+    setCategory(getCategoriesByRole(user?.role)[0]);
+  }, [user?.role]);
+
+  useEffect(() => {
     if (!isOpen) {
       setContent("");
       setContact("");
       setImagePreview("");
       setImageData("");
       setError("");
-      setCategory(POST_CATEGORIES[0]);
+      setCategory(categories[0]);
     }
   }, [isOpen]);
 
@@ -276,7 +295,7 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
                 id="category-dropdown"
                 className="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
               >
-                {POST_CATEGORIES.map((item) => (
+                {categories.map((item) => (
                   <div
                     key={item}
                     onClick={() => {
@@ -403,7 +422,8 @@ const PostModal = ({ isOpen, onClose, user, onPostCreated }) => {
 // Edit Post Modal Component (giữ nguyên)
 const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const fileInputRef = useRef(null);
-  const [category, setCategory] = useState(post?.category || POST_CATEGORIES[0]);
+  const categories = getCategoriesByRole(user?.role);
+  const [category, setCategory] = useState(post?.category || categories[0]);
   const [content, setContent] = useState(post?.content || "");
   const [contact, setContact] = useState(post?.link || "");
   const [imagePreview, setImagePreview] = useState(post?.image || "");
@@ -566,7 +586,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
                 id="edit-category-dropdown"
                 className="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
               >
-                {POST_CATEGORIES.map((item) => (
+                {categories.map((item) => (
                   <div
                     key={item}
                     onClick={() => {

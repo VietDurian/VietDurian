@@ -33,6 +33,20 @@ const POST_CATEGORIES = [
     "Thuê dịch vụ",
     "Khác",
 ];
+const getCategoriesByRole = (role) => {
+    switch (role) {
+        case "trader":
+            return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
+        case "farmer":
+            return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
+        case "serviceProvider":
+            return ["Dịch vụ", "Sản phẩm", "Kinh nghiệm", "Khác"];
+        case "contentExpert":
+            return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
+        default:
+            return POST_CATEGORIES;
+    }
+};
 
 const StatusBadge = ({ status }) => {
     const statusConfig = {
@@ -85,7 +99,8 @@ const StatusBadge = ({ status }) => {
 
 const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
     const fileInputRef = useRef(null);
-    const [category, setCategory] = useState(post?.category || POST_CATEGORIES[0]);
+    const categories = getCategoriesByRole(user?.role);
+    const [category, setCategory] = useState(post?.category || categories[0]);
     const [content, setContent] = useState(post?.content || "");
     const [contact, setContact] = useState(post?.contact || "");
     const [imagePreview, setImagePreview] = useState(post?.image || "");
@@ -101,7 +116,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
 
     useEffect(() => {
         if (post) {
-            setCategory(post.category || POST_CATEGORIES[0]);
+            setCategory(post.category || categories[0]);
             setContent(post.content || "");
             setContact(post.contact || "");
             setImagePreview(post.image || "");
@@ -234,7 +249,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
                                 id="edit-category-dropdown"
                                 className="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
                             >
-                                {POST_CATEGORIES.map((item) => (
+                                {categories.map((item) => (
                                     <div
                                         key={item}
                                         onClick={() => {
