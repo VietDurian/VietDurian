@@ -21,6 +21,9 @@ const Router = express.Router();
  *         name:
  *           type: string
  *           description: Tên vườn
+ *         unit_code:
+ *           type: string
+ *           description: Mã đơn vị vườn
  *         crop_type:
  *           type: string
  *           description: Loại cây trồng
@@ -46,6 +49,7 @@ const Router = express.Router();
  *           format: date-time
  *       required:
  *         - name
+ *         - unit_code
  *         - crop_type
  *         - area
  *         - location
@@ -200,6 +204,7 @@ Router.get(
  *             type: object
  *             required:
  *               - name
+ *               - unit_code
  *               - crop_type
  *               - area
  *               - location
@@ -210,6 +215,10 @@ Router.get(
  *                 type: string
  *                 description: Tên vườn
  *                 example: Vườn sầu riêng Cái Mơn
+ *               unit_code:
+ *                 type: string
+ *                 description: Mã đơn vị vườn
+ *                 example: VTDR-001
  *               crop_type:
  *                 type: [string]
  *                 description: Loại cây trồng (có thể là nhiều loại)
@@ -279,6 +288,10 @@ Router.post(
  *                 type: string
  *                 description: Tên vườn
  *                 example: Vườn sầu riêng Cái Mơn cập nhật
+ *               unit_code:
+ *                 type: string
+ *                 description: Mã đơn vị vườn
+ *                 example: VTDR-001-UPD
  *               crop_type:
  *                 type: [string]
  *                 description: Loại cây trồng (có thể là nhiều loại)
