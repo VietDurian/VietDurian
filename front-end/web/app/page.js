@@ -30,11 +30,25 @@ import { productAPI, blogAPI } from "@/lib/api";
 
 export default function Home() {
   const router = useRouter();
-  const { authUser } = useAuthStore();
+  const { authUser, isCheckingAuth } = useAuthStore();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [products, setProducts] = useState([]);
   const [blogs, setBlogs] = useState([]);
   const [imageErrors, setImageErrors] = useState({});
+  useEffect(() => {
+    if (isCheckingAuth) return;
+    if (!authUser) return;
+
+    const roleRoutes = {
+      farmer: "/home/farmer",
+      trader: "/home/trader",
+      serviceProvider: "/home/serviceProvider",
+      contentExpert: "/home/contentExpert",
+    };
+    if (roleRoutes[authUser.role]) {
+      router.replace(roleRoutes[authUser.role]);
+    }
+  }, [authUser, isCheckingAuth]);
 
   // Fetch top 6 sản phẩm theo rating cao nhất
   useEffect(() => {
@@ -107,7 +121,15 @@ export default function Home() {
 
   const featuredBlog = blogs[0] || null;
   const otherBlogs = blogs.slice(1);
+  if (isCheckingAuth) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
 
+  if (isCheckingAuth || (authUser?.role && ["farmer", "trader", "serviceProvider", "contentExpert"].includes(authUser.role))) {
+    return <div className="min-h-screen bg-white"></div>;
+  }
   return (
     <div className="min-h-screen bg-white">
       <Navbar />

@@ -78,6 +78,20 @@ const register = async (userData) => {
   }
 };
 
+const checkEmailExists = async (email) => {
+  try {
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (!normalizedEmail) {
+      throw createError(400, "Please provide email");
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail }).lean();
+    return !!existingUser;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const verifyEmail = async (email, otp) => {
   try {
     const user = await User.findOne({ email });
@@ -377,7 +391,10 @@ const resetPasswordWithToken = async (token, newPassword) => {
     }
     const isSame = await user.comparePassword(newPassword);
     if (isSame) {
-      throw createError(400, "New password must be different from old password");
+      throw createError(
+        400,
+        "New password must be different from old password",
+      );
     }
     user.password = newPassword;
     await user.save();
@@ -441,6 +458,7 @@ const changePassword = async (userId, currentPassword, newPassword) => {
 
 export const authService = {
   register,
+  checkEmailExists,
   verifyEmail,
   resendVerificationOtp,
   login,

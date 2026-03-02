@@ -1,7 +1,15 @@
 // Nguyễn Trọng Quý - CE180596
 "use client";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Shield } from "lucide-react";
+import {
+  ChevronDown,
+  Shield,
+  Briefcase,
+  Leaf,
+  Mail,
+  PenSquare,
+  Wrench,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -30,6 +38,7 @@ export default function VerifyEmailContent() {
   } = useAuthStore();
   const [otp, setOtp] = useState("");
   const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [activeRole, setActiveRole] = useState(0);
 
   const resendCooldownKey = useMemo(() => {
     if (!email) return null;
@@ -93,7 +102,7 @@ export default function VerifyEmailContent() {
   };
 
   return (
-    <div className="flex min-h-screen font-sans bg-white">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-screen font-sans bg-white">
       {/* Logo */}
       <Link
         href={"/"}
@@ -106,17 +115,20 @@ export default function VerifyEmailContent() {
           alt="logo"
         />
       </Link>
-      {/* Verify Form */}
-      <div className="w-full px-5 flex flex-col items-center justify-center">
-        <div className="max-w-xs w-full mx-auto">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-3">
+      {/* Left Side */}
+      <div className="w-full flex flex-col items-center justify-center">
+        <div className="max-w-md w-full mx-auto">
+          <h1 className="text-3xl font-semibold text-emerald-500 mb-3 text-center text-shadow-md text-shadow-emerald-100">
             Xác nhận Email
           </h1>
-          <p className="text-gray-500 text-sm mb-10 leading-relaxed">
+          <p className="text-gray-500 text-sm mb-10 leading-relaxed text-center text-shadow-md text-shadow-gray-200">
             Vào Email mà bạn đã đăng ký và điền mã OTP vào đây
           </p>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form
+            className="space-y-5 bg-white shadow-xl border border-gray-200 rounded-3xl p-7 w-full max-w-md"
+            onSubmit={handleSubmit}
+          >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 OTP
@@ -154,7 +166,7 @@ export default function VerifyEmailContent() {
             <button
               type="submit"
               disabled={isVerifyingEmail}
-              className="w-full bg-[#04543D] text-white py-3.5 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3.5 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isVerifyingEmail ? (
                 <>
@@ -166,6 +178,101 @@ export default function VerifyEmailContent() {
               )}
             </button>
           </form>
+        </div>
+      </div>
+
+      {/* RIGHT SECTION */}
+      <div className="flex flex-col items-center justify-center w-full max-w-2xl min-h-screen">
+        <p className="text-3xl font-bold text-center text-emerald-500 text-shadow-md text-shadow-emerald-100">
+          Hoàn thiện đăng ký tài khoản!
+        </p>
+        <p className="text-1xl text-center text-gray-500 text-shadow-md text-shadow-gray-200">
+          Để cần hoàn thiện việc đăng ký tài khoản, bạn phải vào email và nhập
+          mã OTP
+        </p>
+
+        <div className="grid grid-cols-1 w-full max-w-xl gap-4 mt-6">
+          {[
+            {
+              title: "Xác nhận mail",
+              desc: "Vào Email mà bạn đã đăng ký",
+              icon: Mail,
+              detail:
+                "Để hoàn tất việc đăng ký tài khoản, bạn cần phải vào email đã đăng ký, lấy mã OTP và nhập vào để xác nhận.",
+            },
+          ].map((item, index) => {
+            const Icon = item.icon;
+            const isOpen = activeRole === index;
+
+            return (
+              <div
+                key={index}
+                onClick={() => setActiveRole(isOpen ? null : index)}
+                className={`
+          group
+          rounded-2xl
+          border
+          bg-white/60 backdrop-blur-lg
+          px-6 py-5
+          transition-all duration-300
+          cursor-pointer
+          hover:shadow-lg hover:-translate-y-0.5
+          ${isOpen ? "border-emerald-500 shadow-md" : "border-gray-200"}
+        `}
+              >
+                {/* HEADER */}
+                <div className="flex items-center gap-4">
+                  {/* Icon */}
+                  <div
+                    className={`
+              h-12 w-12 flex items-center justify-center
+              rounded-xl transition-all
+              ${
+                isOpen
+                  ? "bg-emerald-500 text-white"
+                  : "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200"
+              }
+            `}
+                  >
+                    <Icon size={22} />
+                  </div>
+
+                  {/* Text */}
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">{item.title}</p>
+                    <p className="text-sm text-gray-500">{item.desc}</p>
+                  </div>
+
+                  {/* Arrow indicator */}
+                  <div
+                    className={`transition-transform duration-300 ${
+                      isOpen ? "rotate-180 text-emerald-600" : "text-gray-400"
+                    }`}
+                  >
+                    <ChevronDown />
+                  </div>
+                </div>
+
+                {/* EXPAND */}
+                <div
+                  className={`
+            grid transition-all duration-300
+            ${
+              isOpen
+                ? "grid-rows-[1fr] opacity-100 mt-4"
+                : "grid-rows-[0fr] opacity-0"
+            }
+          `}
+                >
+                  <div className="overflow-hidden">
+                    <div className="border-t border-gray-200 pt-4 text-sm text-gray-600 leading-relaxed">
+                      {item.detail}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

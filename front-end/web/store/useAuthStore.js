@@ -8,6 +8,7 @@ const BASE_URL = "http://localhost:8080";
 export const useAuthStore = create((set, get) => ({
   authUser: null,
   isSigningUp: false,
+  isCheckingEmail: false,
   isResendingOtp: false,
   isVerifyingEmail: false,
   isRequestingResetOtp: false,
@@ -31,7 +32,10 @@ export const useAuthStore = create((set, get) => ({
       }
     } catch (error) {
       console.log("Error in checkAuth: ", error);
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("auth_token");
       set({ authUser: null });
+      get().disconnectSocket();
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -48,6 +52,24 @@ export const useAuthStore = create((set, get) => ({
       return null;
     } finally {
       set({ isSigningUp: false });
+    }
+  },
+
+  checkEmailExists: async (email) => {
+    set({ isCheckingEmail: true });
+    try {
+      const normalizedEmail = email?.trim().toLowerCase();
+      if (!normalizedEmail) return false;
+
+      const res = await axiosInstance.get("/auth/check-email", {
+        params: { email: normalizedEmail },
+      });
+
+      return Boolean(res?.data?.data?.exists);
+    } catch (error) {
+      return null;
+    } finally {
+      set({ isCheckingEmail: false });
     }
   },
 
@@ -162,13 +184,12 @@ export const useAuthStore = create((set, get) => ({
   },
 
   logout: async () => {
-    console.log("logout");
     try {
       set({ authUser: null });
       await axiosInstance.post("/auth/logout");
       toast.success("Logged out successfully");
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error?.response?.data?.message || "Logout failed");
     } finally {
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
