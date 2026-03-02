@@ -31,7 +31,7 @@ const getDiariesByUser = async (filter = {}) => {
 
 		const diaries = await DiaryModel.find(query)
 			.sort({ created_at: -1 })
-			.populate('garden_id', 'name crop_type')
+			.populate('garden_id', 'name unit_code crop_type')
 			.populate('user_id', 'full_name avatar');
 		return diaries;
 	} catch (error) {
@@ -124,7 +124,7 @@ const finishDiary = async (diaryId, { weight_durian, price }) => {
 const getDiaryDetails = async (diaryId) => {
 	try {
 		const diary = await DiaryModel.findById(diaryId)
-			.populate('garden_id', 'name crop_type')
+			.populate('garden_id', 'name unit_code crop_type')
 			.populate('user_id', 'full_name avatar');
 		if (!diary) return null;
 

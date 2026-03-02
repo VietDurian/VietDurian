@@ -11,6 +11,10 @@ const GardenSchema = new mongoose.Schema(
 			type: String,
 			required: true,
 		},
+		unit_code: {
+			type: String,
+			required: true,
+		},
 		// Loại cây trồng
 		crop_type: {
 			type: [String],

@@ -114,7 +114,7 @@ const geocodeAllMissingGardens = async ({ limit } = {}) => {
 const getAllGardens = async () => {
 	try {
 		const gardens = await GardenModel.find()
-			.select('id user_id name location longitude latitude image area')
+			.select('id user_id name unit_code location longitude latitude image area')
 			.populate('user_id', 'full_name avatar')
 			.lean();
 
@@ -185,6 +185,7 @@ const createGarden = async (userId, gardenData) => {
 	try {
 		const {
 			name,
+			unit_code,
 			crop_type,
 			area,
 			location,
@@ -194,11 +195,13 @@ const createGarden = async (userId, gardenData) => {
 			image,
 		} = gardenData;
 
+		const normalizedUnitCode = String(unit_code || '').trim();
 		const normalizedCropTypes = normalizeCropTypes(crop_type);
 
 		// Validate required fields
 		if (
 			!name ||
+			!normalizedUnitCode ||
 			normalizedCropTypes.length === 0 ||
 			!area ||
 			!location ||
@@ -222,6 +225,7 @@ const createGarden = async (userId, gardenData) => {
 		const newGarden = new GardenModel({
 			user_id: userId,
 			name,
+			unit_code: normalizedUnitCode,
 			crop_type: normalizedCropTypes,
 			area,
 			location,
@@ -241,6 +245,10 @@ const createGarden = async (userId, gardenData) => {
 // Update garden record
 const updateGarden = async (gardenId, updateData) => {
 	try {
+		if (Object.prototype.hasOwnProperty.call(updateData, 'unit_code')) {
+			updateData.unit_code = String(updateData.unit_code || '').trim();
+		}
+
 		if (Object.prototype.hasOwnProperty.call(updateData, 'crop_type')) {
 			updateData.crop_type = normalizeCropTypes(updateData.crop_type);
 		}
