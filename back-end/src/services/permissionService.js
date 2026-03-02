@@ -185,8 +185,9 @@ const submitProofs = async (userId, proofs = []) => {
   const types = new Set(proofs.map((p) => p.type));
   const hasFront = types.has("cccd_front");
   const hasBack = types.has("cccd_back");
-  if (!hasFront || !hasBack) {
-    const error = new Error("CCCD front and back are required");
+  const hasCertificate = types.has("certificate");
+  if (!hasFront || !hasBack || !hasCertificate) {
+    const error = new Error("CCCD front, back, and certificate are required");
     error.status = 400;
     throw error;
   }
@@ -196,6 +197,15 @@ const submitProofs = async (userId, proofs = []) => {
   return request;
 };
 
+const isMyAccountApproved = async (userId) => {
+  const request = await PermissionAccountModel.findOne({
+    user_id: userId,
+  });
+
+  if (!request) return false;
+
+  return request.status === "approved";
+};
 export const permissionService = {
   getPermissionRequests,
   searchPermissionRequests,
@@ -204,4 +214,5 @@ export const permissionService = {
   confirmPermissionRequest,
   rejectPermissionRequest,
   submitProofs,
+  isMyAccountApproved,
 };
