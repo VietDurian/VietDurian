@@ -8,6 +8,7 @@ import {
   ArrowUp,
   Sparkles,
   Plus,
+  ScanSearch,
   MessageCircleMore,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -23,7 +24,8 @@ const initialMessages = [
 export default function AiFloatingButton() {
   const pathname = usePathname();
   const { authUser } = useAuthStore();
-  const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,12 +43,24 @@ export default function AiFloatingButton() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, open]);
+  }, [messages, chatOpen]);
 
   if (!authUser) return null;
   if (pathname?.startsWith("/dashboard")) return null;
 
-  const toggle = () => setOpen((v) => !v);
+  const openMenu = () => {
+    if (chatOpen) return;
+    setMenuOpen(true);
+  };
+
+  const closeMenu = () => setMenuOpen(false);
+
+  const openChat = () => {
+    setChatOpen(true);
+    setMenuOpen(false);
+  };
+
+  const closeChat = () => setChatOpen(false);
 
   const startNewConversation = () => {
     setMessages(initialMessages);
@@ -139,9 +153,9 @@ export default function AiFloatingButton() {
   return (
     <>
       {/* Floating Chat Box */}
-      {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-96 max-w-[92vw] h-[520px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-slide-up">
-          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+      {chatOpen && (
+        <div className="fixed bottom-24 right-6 z-50 w-96 max-w-[92vw] h-130 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-slide-up">
+          <div className="flex items-center justify-between px-4 py-3 bg-linear-to-r from-green-600 to-emerald-600 text-white">
             <div className="font-semibold">Trợ lý AI</div>
             <div className="flex items-center gap-2">
               <button
@@ -154,7 +168,7 @@ export default function AiFloatingButton() {
               </button>
               <button
                 type="button"
-                onClick={toggle}
+                onClick={closeChat}
                 className="p-2 rounded-full hover:bg-white/15 transition-colors"
                 title="Đóng"
               >
@@ -205,7 +219,7 @@ export default function AiFloatingButton() {
                       type="button"
                       key={idx}
                       onClick={() => setInput(s)}
-                      className="relative text-left px-3 py-2 text-sm rounded-xl bg-white/90 border border-emerald-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all text-emerald-800 snap-start shrink-0 min-w-[240px]"
+                      className="relative text-left px-3 py-2 text-sm rounded-xl bg-white/90 border border-emerald-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all text-emerald-800 snap-start shrink-0 min-w-60"
                     >
                       <span
                         className="absolute left-3 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-emerald-500"
@@ -271,20 +285,90 @@ export default function AiFloatingButton() {
         </div>
       )}
 
-      {/* Floating Button */}
-      <button
-        onClick={toggle}
-        type="button"
-        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-15 h-15 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-full shadow-2xl hover:shadow-green-500/50 hover:scale-110 transition-all duration-300 group cursor-pointer font-medium text-3xl"
-        aria-label="Mở trợ lý AI"
+      {/* Hoverable Floating Cluster */}
+      <div
+        className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3"
+        onMouseEnter={openMenu}
+        onMouseLeave={closeMenu}
       >
-        <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-20 animate-ping"></span>
-        <MessageCircleMore size={30} />
-        <div className="absolute right-full mr-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none translate-x-2 group-hover:translate-x-0 duration-200">
-          Hỗ trợ
-          <div className="absolute top-1/2 -right-1 -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>
-        </div>
-      </button>
+        {/* Floating Menu (2 icons) */}
+        {menuOpen && (
+          <div className="flex flex-col gap-3">
+            {/* Icon bên trên (placeholder - bạn sẽ xử lý sau) */}
+            <button
+              type="button"
+              className="group relative flex items-center justify-end gap-3 focus-visible:outline-none"
+              aria-label="Tính năng AI (sẽ xử lý sau)"
+              onClick={() => {
+                // placeholder
+                setMenuOpen(false);
+              }}
+            >
+              <div className="pointer-events-none absolute right-full top-1/2 mr-4 -translate-y-1/2 text-right leading-tight px-4 py-2.5 rounded-xl bg-gray-900/85 backdrop-blur-sm shadow-xl ring-1 ring-white/10 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all whitespace-nowrap">
+                <div className="text-white font-semibold">Scan AI</div>
+                <div className="text-white/80 text-sm">Nhận diện sâu bệnh</div>
+                <div
+                  aria-hidden="true"
+                  className="absolute top-1/2 -right-2 -translate-y-1/2 border-8 border-transparent border-l-gray-900"
+                />
+              </div>
+              <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white text-gray-900 shadow-2xl ring-2 ring-cyan-400/60 transition-transform group-hover:scale-110">
+                {/* Hiệu ứng scan */}
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 bg-cyan-400/10"
+                />
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 scan-sweep"
+                />
+                <ScanSearch size={22} />
+              </div>
+            </button>
+
+            {/* Icon đầu tiên: message -> mở box chat như hiện tại */}
+            <button
+              type="button"
+              className="group relative flex items-center justify-end gap-3 focus-visible:outline-none"
+              aria-label="Mở chat tư vấn sầu riêng"
+              onClick={openChat}
+            >
+              <div className="pointer-events-none absolute right-full top-1/2 mr-4 -translate-y-1/2 text-right leading-tight px-4 py-2.5 rounded-xl bg-gray-900/85 backdrop-blur-sm shadow-xl ring-1 ring-white/10 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all whitespace-nowrap">
+                <div className="text-white font-semibold">Trợ lý AI</div>
+                <div className="text-white/80 text-sm">Giải đáp thắc mắc</div>
+                <div
+                  aria-hidden="true"
+                  className="absolute top-1/2 -right-2 -translate-y-1/2 border-8 border-transparent border-l-gray-900"
+                />
+              </div>
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-r from-green-600 to-emerald-600 text-white shadow-2xl ring-1 ring-white/20 transition-transform group-hover:scale-110">
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -inset-2 rounded-full border border-emerald-200/60 motion-safe:animate-ping"
+                />
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -inset-4 rounded-full border border-green-200/40 motion-safe:animate-pulse"
+                />
+                <MessageCircleMore size={22} />
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* Floating Main Button (AI icon) */}
+        <button
+          type="button"
+          className="flex items-center justify-center w-15 h-15 bg-linear-to-br from-indigo-500 via-purple-500 to-sky-400 text-white rounded-full shadow-2xl ring-1 ring-white/20 hover:scale-110 transition-all duration-300 group cursor-pointer font-medium text-3xl focus-visible:outline-none"
+          aria-label={menuOpen ? "Đóng menu trợ lý AI" : "Mở menu trợ lý AI"}
+        >
+          {menuOpen ? <X size={30} /> : <Sparkles size={30} className="ai-wiggle" />}
+          <div className="absolute right-full mr-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none translate-x-2 group-hover:translate-x-0 duration-200">
+            AI hỗ trợ
+            <div className="absolute top-1/2 -right-1 -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>
+          </div>
+        </button>
+      </div>
     </>
   );
 }
