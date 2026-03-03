@@ -23,6 +23,8 @@ import {
   Eye,
   MapPin,
   Weight,
+  Sprout,
+  CheckCircle2
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import AiFloatingButton from "@/components/AiFloatingButton";
@@ -133,7 +135,36 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-
+      <div className="relative bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-500 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-24 -right-24 w-[28rem] h-[28rem] bg-white/10 rounded-3xl rotate-12"></div>
+          <div className="absolute top-16 -right-6 w-56 h-56 bg-white/5 rounded-2xl rotate-6"></div>
+          <div className="absolute -bottom-28 -left-20 w-96 h-96 bg-white/10 rounded-3xl -rotate-12"></div>
+          <div className="absolute bottom-10 left-1/3 w-36 h-36 bg-white/5 rounded-xl rotate-45"></div>
+          <div className="absolute top-1/3 left-1/6 w-20 h-20 border-2 border-white/20 rounded-xl -rotate-6"></div>
+          <div className="absolute top-1/2 right-1/4 w-14 h-14 border-2 border-white/15 rounded-lg rotate-12"></div>
+        </div>
+        <div className="relative z-10 max-w-5xl mx-auto px-6 pt-28 pb-20 text-center">
+          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-1.5 rounded-lg text-white/90 text-sm mb-6 border border-white/20">
+            <Sprout className="w-4 h-4" />
+            <span>Nền tảng Quản lý Vườn Sầu Riêng #1 Việt Nam</span>
+          </div>
+          <h1 className="text-6xl md:text-7xl font-bold text-white mb-4 leading-tight drop-shadow-sm">
+            Nền tảng Sầu Riêng<br />
+            <span className="text-yellow-300">Minh bạch & Kết nối</span>
+          </h1>
+          <p className="text-emerald-100 text-xl max-w-2xl mx-auto mb-8">
+            Kết nối Nông dân · Thương lái · Dịch vụ · Chuyên gia trong một hệ sinh thái sầu riêng thống nhất
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
+            {[" Minh bạch quy trình", "Kết nối trực tiếp", "Xây dựng niềm tin"].map((t) => (
+              <span key={t} className="inline-flex items-center gap-2 bg-white/15 text-white px-4 py-2 rounded-lg border border-white/20">
+                <CheckCircle2 className="w-4 h-4 text-emerald-300 flex-shrink-0" />{t}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
       {/* Header Title */}
       <div className="text-center pt-28 pb-16 px-8">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
