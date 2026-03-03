@@ -1,5 +1,7 @@
 import { diaryService } from '@/services/diaryService';
 
+const ALLOWED_ACTION_TYPES = ['Vật tư', 'Công việc', 'Chỉ số'];
+
 // Get all diaries
 const getDiariesByUser = async (req, res, next) => {
 	try {
@@ -146,6 +148,16 @@ const updateDiaryStep = async (req, res, next) => {
 		const { stepId } = req.params;
 		const updateData = req.body;
 
+		if (
+			Object.prototype.hasOwnProperty.call(updateData, 'action_type') &&
+			!ALLOWED_ACTION_TYPES.includes(updateData.action_type)
+		) {
+			return res.status(400).json({
+				code: 400,
+				message: 'action_type must be one of: Vật tư, Công việc, Chỉ số',
+			});
+		}
+
 		const updatedStep = await diaryService.updateDiaryStep(stepId, updateData);
 
 		if (!updatedStep) {
@@ -170,6 +182,21 @@ const addDiaryStep = async (req, res, next) => {
 	try {
 		const { diaryId } = req.params;
 		const stepData = req.body;
+
+		if (!stepData.action_type) {
+			return res.status(400).json({
+				code: 400,
+				message: 'action_type is required',
+			});
+		}
+
+		if (!ALLOWED_ACTION_TYPES.includes(stepData.action_type)) {
+			return res.status(400).json({
+				code: 400,
+				message: 'action_type must be one of: Vật tư, Công việc, Chỉ số',
+			});
+		}
+
 		const newStep = await diaryService.addDiaryStep(diaryId, stepData);
 		res.status(201).json({
 			code: 201,
