@@ -202,7 +202,7 @@ const updateDiaryStep = async (stepId, updateData) => {
 		const updatedStep = await DiaryStepModel.findByIdAndUpdate(
 			stepId,
 			updateData,
-			{ new: true },
+			{ new: true, runValidators: true },
 		);
 		return updatedStep;
 	} catch (error) {

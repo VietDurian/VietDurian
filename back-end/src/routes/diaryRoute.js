@@ -238,12 +238,17 @@ const Router = express.Router();
  *           schema:
  *             type: object
  *             required:
+ *               - action_type
  *               - step_name
  *             properties:
  *               stage_id:
  *                 type: string
  *                 description: The ID of the stage (step template)
  *                 example: 6965ea23a28794347e5a459c
+ *               action_type:
+ *                 type: string
+ *                 enum: [Vật tư, Công việc, Chỉ số]
+ *                 example: Vật tư
  *               step_name:
  *                 type: string
  *                 example: Mua 24 bao phân NPK
@@ -253,6 +258,15 @@ const Router = express.Router();
  *               cost:
  *                 type: number
  *                 example: 500000
+ *               item_name:
+ *                 type: string
+ *                 example: Phân NPK 16-16-8
+ *               dosage:
+ *                 type: string
+ *                 example: 200ml/phuy
+ *               supplier:
+ *                 type: string
+ *                 example: Đại lý Nông Nghiệp A
  *               image:
  *                 type: string
  *                 example: https://res.cloudinary.com/di6lwnmsm/image/upload/v1769954669/bao-pp-phan-bon-3_vued15.jpg
@@ -296,6 +310,10 @@ const Router = express.Router();
  *           schema:
  *             type: object
  *             properties:
+ *               action_type:
+ *                 type: string
+ *                 enum: [Vật tư, Công việc, Chỉ số]
+ *                 example: Công việc
  *               step_name:
  *                 type: string
  *                 example: Cập nhật tên bước nhật ký
@@ -305,6 +323,15 @@ const Router = express.Router();
  *               cost:
  *                 type: number
  *                 example: 600000
+ *               item_name:
+ *                 type: string
+ *                 example: Thuốc nấm Ridomil Gold
+ *               dosage:
+ *                 type: string
+ *                 example: 100g/bình 25 lít
+ *               supplier:
+ *                 type: string
+ *                 example: Đại lý VTNN B
  *               image:
  *                 type: string
  *                 example: https://res.cloudinary.com/di6lwnmsm/image/upload/v1769954669/bao-pp-phan-bon-3_vued15.jpg
@@ -389,6 +416,7 @@ const Router = express.Router();
  *       type: object
  *       required:
  *         - diary_id
+ *         - action_type
  *         - step_name
  *       properties:
  *         _id:
@@ -397,12 +425,21 @@ const Router = express.Router();
  *           type: string
  *         stage_id:
  *           type: string
+ *         action_type:
+ *           type: string
+ *           enum: [Vật tư, Công việc, Chỉ số]
  *         step_name:
  *           type: string
  *         description:
  *           type: string
  *         cost:
  *           type: number
+ *         item_name:
+ *           type: string
+ *         dosage:
+ *           type: string
+ *         supplier:
+ *           type: string
  *         image:
  *           type: string
  *         action_date:
