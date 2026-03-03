@@ -122,6 +122,19 @@ const submitProofs = async (req, res, next) => {
         next(err);
     }
 };
+const isMyAccountApproved = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const result = await permissionService.isMyAccountApproved(userId);
+        res.status(200).json({
+            code: 200,
+            message: "Account approval status retrieved successfully",
+            data: result,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
 
 export const permissionController = {
     getPermissionRequests,
@@ -131,4 +144,5 @@ export const permissionController = {
     confirmAccount,
     rejectAccount,
     submitProofs,
+    isMyAccountApproved,
 };

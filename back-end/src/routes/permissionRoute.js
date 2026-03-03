@@ -275,7 +275,7 @@ const Router = express.Router();
  *                   properties:
  *                     type:
  *                       type: string
- *                       enum: [cccd_front, cccd_back, other]
+ *                       enum: [cccd_front, cccd_back, certificate, other]
  *                     url:
  *                       type: string
  *                       format: uri
@@ -284,6 +284,8 @@ const Router = express.Router();
  *                     url: "https://cdn.example.com/cccd-front.jpg"
  *                   - type: cccd_back
  *                     url: "https://cdn.example.com/cccd-back.jpg"
+ *                   - type: certificate
+ *                     url: "https://cdn.example.com/certificate.jpg"
  *     responses:
  *       200:
  *         description: Proofs submitted successfully
@@ -306,6 +308,39 @@ const Router = express.Router();
  *         description: Unauthorized
  *       404:
  *         description: Pending permission request not found
+ */
+/**
+ * @swagger
+ * /permission/my-account/approved:
+ *   get:
+ *     summary: Check current account approval status
+ *     description: Authenticated users verify whether their own upgrade request was approved.
+ *     tags: [Permission]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Approval status retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     approved:
+ *                       type: boolean
+ *                       description: Indicates whether the account has approved roles
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Permission request not found
  */
 Router.post(
   "/requests/proofs",
@@ -347,6 +382,11 @@ Router.patch(
   authMiddleware.protect,
   authorizationMiddleware.isAdmin,
   permissionController.rejectAccount,
+);
+Router.get(
+  "/my-account/approved",
+  authMiddleware.protect,
+  permissionController.isMyAccountApproved,
 );
 
 export const permissionRoute = Router;
