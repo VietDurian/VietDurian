@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 
-import { Plus, MapPin, Ruler, Sprout, ArrowRight } from "lucide-react";
+import { Plus, MapPin, Ruler, Sprout, ArrowRight, X } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useGardenStore } from "@/store/useGardenStore";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export default function ProfileGarden() {
+  const searchParams = useSearchParams();
   const {
     gardens,
     getUserGardens,
@@ -15,12 +17,18 @@ export default function ProfileGarden() {
     isGardenCreating,
   } = useGardenStore();
   const { authUser } = useAuthStore();
+  const [isDiaryGuideOpen, setIsDiaryGuideOpen] = useState(false);
 
   useEffect(() => {
     if (authUser?._id) {
       getUserGardens(authUser._id);
     }
   }, [authUser, getUserGardens]);
+
+  useEffect(() => {
+    const shouldShowGuide = searchParams.get("diaryGuide") === "1";
+    setIsDiaryGuideOpen(shouldShowGuide);
+  }, [searchParams]);
 
   if (isGardensLoading) return <div>Loading gardens...</div>;
   return (
@@ -84,8 +92,29 @@ export default function ProfileGarden() {
           ) : (
             /* Garden Grid */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {gardens.map((garden) => (
-                <GardenCard key={garden._id} garden={garden} />
+              {gardens.map((garden, index) => (
+                <div key={garden._id} className="relative">
+                  <GardenCard garden={garden} />
+
+                  {isDiaryGuideOpen && index === 0 && (
+                    <div className="absolute -top-20 left-1/2 -translate-x-1/2 z-20 w-72 bg-white border border-emerald-200 rounded-xl shadow-xl p-3 ">
+                      <button
+                        type="button"
+                        onClick={() => setIsDiaryGuideOpen(false)}
+                        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors"
+                        aria-label="Đóng hướng dẫn"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                      <p className="text-sm text-gray-700 pr-5">
+                        Để tạo nhật ký, hãy chọn một trong những khu vườn đã tạo
+                        để bắt đầu.
+                      </p>
+
+                      <div className="absolute left-1/2 -translate-x-1/2 -bottom-2 w-4 h-4 bg-white border-r border-b border-emerald-200 rotate-45"></div>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -99,7 +128,7 @@ function GardenCard({ garden }) {
   return (
     <Link
       href={`/profile/gardens/${garden._id}`}
-      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 duration-300 group"
+      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 duration-300 group"
     >
       {/* Card Image */}
       <div className="relative h-48 overflow-hidden">
@@ -109,7 +138,7 @@ function GardenCard({ garden }) {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent"></div>
 
         {/* Crop Type Badge */}
         <div className="absolute top-4 right-4">
