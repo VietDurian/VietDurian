@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import {
   ArrowLeft,
   Edit,
@@ -22,6 +23,10 @@ import {
   TreePine,
 } from "lucide-react";
 import { useGardenStore } from "@/store/useGardenStore";
+
+const LocationViewMap = dynamic(() => import("@/components/LocationViewMap"), {
+  ssr: false,
+});
 
 function formatDate(iso) {
   if (!iso) return "-";
@@ -337,52 +342,17 @@ export default function GardenDetails() {
                   </h2>
                 </div>
 
-                <div className="relative h-64 bg-linear-to-br from-emerald-50/80 to-teal-50/80">
-                  <svg className="absolute inset-0 w-full h-full opacity-20">
-                    <defs>
-                      <pattern
-                        id="mapgrid"
-                        width="32"
-                        height="32"
-                        patternUnits="userSpaceOnUse"
-                      >
-                        <path
-                          d="M 32 0 L 0 0 0 32"
-                          fill="none"
-                          stroke="#10b981"
-                          strokeWidth="0.5"
-                        />
-                      </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#mapgrid)" />
-                  </svg>
+                <div className="p-6 space-y-3">
+                  <LocationViewMap latitude={lat} longitude={lng} />
 
-                  <div className="absolute inset-0 flex flex-col justify-around opacity-10">
-                    {[...Array(5)].map((_, index) => (
-                      <div
-                        key={index}
-                        className="border-t border-emerald-400 w-full"
-                      />
-                    ))}
-                  </div>
-
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="relative inline-block">
-                        <div className="w-14 h-14 bg-emerald-600 rounded-full flex items-center justify-center shadow-2xl shadow-emerald-600/40 mb-2 mx-auto">
-                          <MapPin className="w-7 h-7 text-white" />
-                        </div>
-                        <div className="w-4 h-4 bg-emerald-600/30 rounded-full mx-auto -mt-1 blur-sm"></div>
-                      </div>
-                      <div className="bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg border border-white mt-3 inline-block">
-                        <p className="font-semibold text-gray-900 text-sm">
-                          {garden.name}
-                        </p>
-                        <p className="text-emerald-600 text-xs font-medium">
-                          {garden.location || "-"}
-                        </p>
-                      </div>
-                    </div>
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
+                    <p className="text-emerald-800 font-medium">
+                      Vị trí hiện tại
+                    </p>
+                    <p className="text-emerald-700 wrap-break-word">
+                      {garden.location ||
+                        `Tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}`}
+                    </p>
                   </div>
                 </div>
               </div>
