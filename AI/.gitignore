@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+train/
+val/
+test/
+*.zip
+logs/
+*.csv
+*.txt
+checkpoints/
+*.keras
+*.h5
+runs/
+.DS_Store
+Thumbs.db
