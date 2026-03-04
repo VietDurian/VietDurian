@@ -2,6 +2,7 @@
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AiFloatingButton from "@/components/AiFloatingButton";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -467,6 +468,7 @@ export default function TraderHome() {
             </div>
 
             <Footer />
+            <AiFloatingButton />
         </div>
     );
 }

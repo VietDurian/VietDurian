@@ -1,4 +1,4 @@
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8001";
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://127.0.0.1:8001";
 
 const predictDisease = async ({ buffer, filename, mimetype }) => {
   if (typeof fetch === "undefined" || typeof FormData === "undefined" || typeof Blob === "undefined") {
@@ -16,10 +16,20 @@ const predictDisease = async ({ buffer, filename, mimetype }) => {
   const blob = new Blob([buffer], { type: mimetype || "application/octet-stream" });
   form.append("image", blob, filename || "image");
 
-  const resp = await fetch(url, {
-    method: "POST",
-    body: form,
-  });
+  let resp;
+  try {
+    resp = await fetch(url, {
+      method: "POST",
+      body: form,
+    });
+  } catch (cause) {
+    const err = new Error(
+      `Cannot reach AI service at ${AI_SERVICE_URL}. Start the Python service (uvicorn) or set AI_SERVICE_URL correctly.`,
+    );
+    err.status = 502;
+    err.cause = cause;
+    throw err;
+  }
 
   let payload;
   try {
