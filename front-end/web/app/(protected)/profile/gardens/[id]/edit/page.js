@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, X, Sprout, Check, ImageIcon } from "lucide-react";
+import { ArrowLeft, X, Sprout, Check, ImageIcon, Loader2 } from "lucide-react";
 import { useGardenStore } from "@/store/useGardenStore";
+import { useTypeProductStore } from "@/store/useTypeProduct";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 
@@ -17,6 +18,7 @@ export default function EditGarden() {
   const router = useRouter();
   const params = useParams();
   const gardenId = params.id;
+  const { types, fetchTypes, isTypesLoading } = useTypeProductStore();
 
   const {
     getGardenDetails,
@@ -27,7 +29,8 @@ export default function EditGarden() {
   } = useGardenStore();
   const [formData, setFormData] = useState({
     name: "",
-    crop_type: "",
+    unit_code: "",
+    crop_type: [],
     area: "",
     location: "",
     latitude: "",
@@ -39,16 +42,24 @@ export default function EditGarden() {
   const [imagePreview, setImagePreview] = useState("");
   const fileInputRef = useRef(null);
   const [imageData, setImageData] = useState("");
+  const [selectedCropType, setSelectedCropType] = useState("");
 
   const isSaveDisabled =
+    isGardenEditing ||
     !formData.name.toString().trim() ||
-    !formData.crop_type.toString().trim() ||
+    !formData.unit_code.toString().trim() ||
+    !Array.isArray(formData.crop_type) ||
+    formData.crop_type.length === 0 ||
     !formData.area.toString().trim() ||
     !formData.location.toString().trim() ||
     !formData.latitude.toString().trim() ||
     !formData.longitude.toString().trim() ||
     !formData.description.toString().trim() ||
     !formData.image;
+
+  useEffect(() => {
+    fetchTypes();
+  }, [fetchTypes]);
 
   // 🔽 Load garden data
   useEffect(() => {
@@ -62,7 +73,12 @@ export default function EditGarden() {
     setFormData((prev) => ({
       ...prev,
       name: gardenDetail.name || "",
-      crop_type: gardenDetail.crop_type || "",
+      unit_code: gardenDetail.unit_code || "",
+      crop_type: Array.isArray(gardenDetail.crop_type)
+        ? gardenDetail.crop_type
+        : gardenDetail.crop_type
+          ? [gardenDetail.crop_type]
+          : [],
       area: gardenDetail.area || "",
       location: gardenDetail.location || "",
       latitude: gardenDetail.latitude || "",
@@ -88,11 +104,43 @@ export default function EditGarden() {
     }));
   };
 
-  const handlePickLocation = (latitude, longitude) => {
+  const handlePickLocation = (latitude, longitude, placeDetails) => {
     setFormData((prev) => ({
       ...prev,
       latitude: latitude.toFixed(6),
       longitude: longitude.toFixed(6),
+      location: placeDetails?.locationText || prev.location,
+    }));
+  };
+
+  const handleCropTypeChange = (e) => {
+    const nextType = e.target.value;
+    setSelectedCropType(nextType);
+
+    if (!nextType) return;
+
+    if (formData.crop_type.includes(nextType)) {
+      setSelectedCropType("");
+      return;
+    }
+
+    if (formData.crop_type.length >= 3) {
+      toast.error("Chỉ được chọn tối đa 3 loại cây");
+      setSelectedCropType("");
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      crop_type: [...prev.crop_type, nextType],
+    }));
+    setSelectedCropType("");
+  };
+
+  const handleRemoveCropType = (typeName) => {
+    setFormData((prev) => ({
+      ...prev,
+      crop_type: prev.crop_type.filter((item) => item !== typeName),
     }));
   };
 
@@ -175,6 +223,26 @@ export default function EditGarden() {
               />
             </div>
 
+            {/* Unit Code */}
+            <div>
+              <label
+                htmlFor="unit_code"
+                className="block text-sm font-medium text-gray-900 mb-2"
+              >
+                Mã vườn
+              </label>
+              <input
+                type="text"
+                id="unit_code"
+                name="unit_code"
+                value={formData.unit_code}
+                onChange={handleChange}
+                required
+                placeholder="ví dụ: VTDR-001"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+              />
+            </div>
+
             {/* Crop Type */}
             <div>
               <label
@@ -183,16 +251,49 @@ export default function EditGarden() {
               >
                 Loại cây
               </label>
-              <input
-                type="text"
+              <select
                 id="crop_type"
                 name="crop_type"
-                value={formData.crop_type}
-                onChange={handleChange}
-                required
-                placeholder="ví dụ: Rau cải, Cà chua, Dâu tây..."
+                value={selectedCropType}
+                onChange={handleCropTypeChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-              />
+              >
+                <option value="">
+                  {isTypesLoading
+                    ? "Đang tải loại cây..."
+                    : formData.crop_type.length >= 3
+                      ? "Đã chọn tối đa 3 loại"
+                      : "Chọn loại cây"}
+                </option>
+                {types
+                  ?.filter((type) => {
+                    const typeName = type?.name || "";
+                    return typeName && !formData.crop_type.includes(typeName);
+                  })
+                  .map((type) => (
+                    <option key={type?._id} value={type?.name || ""}>
+                      {type?.name}
+                    </option>
+                  ))}
+              </select>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {formData.crop_type.map((typeName) => (
+                  <span
+                    key={typeName}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-sm font-medium"
+                  >
+                    {typeName}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCropType(typeName)}
+                      className="cursor-pointer rounded-full hover:bg-emerald-200 p-0.5"
+                      aria-label={`Xóa ${typeName}`}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
             </div>
 
             {/* Area */}
@@ -226,33 +327,14 @@ export default function EditGarden() {
               </p>
             </div>
 
-            {/* Location */}
-            <div>
-              <label
-                htmlFor="location"
-                className="block text-sm font-medium text-gray-900 mb-2"
-              >
-                Vị trí
-              </label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                required
-                placeholder="ví dụ: Thanh Hóa, Bình Dương"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-              />
-            </div>
-
             {/* Coordinates */}
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
                 Tọa độ <span className="text-red-500">*</span>
               </label>
               <p className="text-xs text-gray-600 mb-3">
-                Nhấp vào bản đồ để chọn vị trí khu vườn
+                Nhấp vào bản đồ để chọn vị trí khu vườn (hệ thống tự lấy
+                Quận/Huyện, Tỉnh/Thành)
               </p>
               <LocationPickerMap
                 latitude={
@@ -276,6 +358,12 @@ export default function EditGarden() {
                     {formData.longitude || "Chưa chọn"}
                   </span>
                 </div>
+              </div>
+              <div className="mt-3 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm">
+                <span className="text-gray-500">Vị trí (Quận/Tỉnh): </span>
+                <span className="font-medium text-gray-900">
+                  {formData.location || "Chưa chọn trên bản đồ"}
+                </span>
               </div>
             </div>
 
@@ -356,8 +444,17 @@ export default function EditGarden() {
               disabled={isSaveDisabled}
               className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
             >
-              <Check className="w-4 h-4" />
-              Lưu thông tin
+              {isGardenEditing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Đang lưu...
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  Lưu thông tin
+                </>
+              )}
             </button>
             <button
               type="button"

@@ -2,79 +2,13 @@
 
 import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
 import L from "leaflet";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const defaultCenter = [16.0471, 108.2068];
 const vietnamBounds = L.latLngBounds(
   L.latLng(8.18, 102.14),
   L.latLng(23.39, 109.47),
 );
-
-const vietnamProvinces = [
-  "An Giang",
-  "Bà Rịa - Vũng Tàu",
-  "Bắc Giang",
-  "Bắc Kạn",
-  "Bạc Liêu",
-  "Bắc Ninh",
-  "Bến Tre",
-  "Bình Định",
-  "Bình Dương",
-  "Bình Phước",
-  "Bình Thuận",
-  "Cà Mau",
-  "Cần Thơ",
-  "Cao Bằng",
-  "Đà Nẵng",
-  "Đắk Lắk",
-  "Đắk Nông",
-  "Điện Biên",
-  "Đồng Nai",
-  "Đồng Tháp",
-  "Gia Lai",
-  "Hà Giang",
-  "Hà Nam",
-  "Hà Nội",
-  "Hà Tĩnh",
-  "Hải Dương",
-  "Hải Phòng",
-  "Hậu Giang",
-  "Hòa Bình",
-  "Hưng Yên",
-  "Khánh Hòa",
-  "Kiên Giang",
-  "Kon Tum",
-  "Lai Châu",
-  "Lâm Đồng",
-  "Lạng Sơn",
-  "Lào Cai",
-  "Long An",
-  "Nam Định",
-  "Nghệ An",
-  "Ninh Bình",
-  "Ninh Thuận",
-  "Phú Thọ",
-  "Phú Yên",
-  "Quảng Bình",
-  "Quảng Nam",
-  "Quảng Ngãi",
-  "Quảng Ninh",
-  "Quảng Trị",
-  "Sóc Trăng",
-  "Sơn La",
-  "Tây Ninh",
-  "Thái Bình",
-  "Thái Nguyên",
-  "Thanh Hóa",
-  "Thừa Thiên Huế",
-  "Tiền Giang",
-  "TP Hồ Chí Minh",
-  "Trà Vinh",
-  "Tuyên Quang",
-  "Vĩnh Long",
-  "Vĩnh Phúc",
-  "Yên Bái",
-];
 
 const markerIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -114,27 +48,123 @@ export default function LocationPickerMap({ latitude, longitude, onPick }) {
   const hasCoords = Number.isFinite(latitude) && Number.isFinite(longitude);
   const center = hasCoords ? [latitude, longitude] : defaultCenter;
   const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isSuggesting, setIsSuggesting] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedLocationName, setSelectedLocationName] = useState("");
+  const abortRef = useRef(null);
+  const debounceRef = useRef(null);
 
-  const normalizedQuery = query.trim().toLowerCase();
-  const filteredSuggestions = normalizedQuery
-    ? vietnamProvinces
-        .filter((province) => province.toLowerCase().includes(normalizedQuery))
-        .slice(0, 8)
-    : [];
+  const buildSearchUrl = (keyword, limit = 8) =>
+    `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=vn&bounded=1&viewbox=102.14,23.39,109.47,8.18&limit=${limit}&accept-language=vi&q=${encodeURIComponent(
+      `${keyword}, Vietnam`,
+    )}`;
+
+  const buildReverseUrl = (lat, lon) =>
+    `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&accept-language=vi&lat=${lat}&lon=${lon}`;
+
+  const normalizeLocationText = (addressDetails = {}, fallback = "") => {
+    const district =
+      addressDetails.city_district ||
+      addressDetails.district ||
+      addressDetails.county ||
+      addressDetails.suburb ||
+      addressDetails.town ||
+      addressDetails.city ||
+      "";
+
+    const province =
+      addressDetails.state ||
+      addressDetails.province ||
+      addressDetails.city ||
+      addressDetails.region ||
+      "";
+
+    const compact = [district, province].filter(Boolean).join(", ");
+    if (compact) return compact;
+
+    if (fallback) {
+      const chunks = fallback
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean);
+      if (chunks.length >= 2) {
+        return `${chunks[chunks.length - 2]}, ${chunks[chunks.length - 1]}`;
+      }
+      return fallback;
+    }
+
+    return "";
+  };
+
+  const selectSuggestion = (suggestion) => {
+    const lat = Number(suggestion.lat);
+    const lon = Number(suggestion.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+    const displayName = suggestion.display_name || "";
+    const locationText = normalizeLocationText(suggestion.address, displayName);
+    setQuery(displayName);
+    setSelectedLocationName(displayName);
+    setShowSuggestions(false);
+    onPick(lat, lon, {
+      displayName,
+      locationText,
+      address: suggestion.address || null,
+    });
+  };
+
+  const handleMapPick = async (lat, lon) => {
+    setSelectedLocationName(
+      `Tọa độ đã chọn: ${lat.toFixed(6)}, ${lon.toFixed(6)}`,
+    );
+
+    try {
+      const response = await fetch(buildReverseUrl(lat, lon), {
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        onPick(lat, lon);
+        return;
+      }
+
+      const data = await response.json();
+      const displayName = data?.display_name || "";
+      const locationText = normalizeLocationText(
+        data?.address || {},
+        displayName,
+      );
+
+      if (displayName) {
+        setSelectedLocationName(displayName);
+      }
+
+      onPick(lat, lon, {
+        displayName,
+        locationText,
+        address: data?.address || null,
+      });
+    } catch {
+      onPick(lat, lon);
+    }
+  };
 
   const handleSearch = async () => {
     const keyword = query.trim();
     if (!keyword || isSearching) return;
 
+    if (suggestions.length > 0) {
+      selectSuggestion(suggestions[0]);
+      return;
+    }
+
     try {
       setIsSearching(true);
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&countrycodes=vn&bounded=1&viewbox=102.14,23.39,109.47,8.18&limit=1&q=${encodeURIComponent(
-          `${keyword}, Vietnam`,
-        )}`,
-      );
+      const response = await fetch(buildSearchUrl(keyword, 1));
 
       if (!response.ok) return;
 
@@ -146,7 +176,18 @@ export default function LocationPickerMap({ latitude, longitude, onPick }) {
       const lon = Number(result.lon);
 
       if (Number.isFinite(lat) && Number.isFinite(lon)) {
-        onPick(lat, lon);
+        const displayName = result.display_name || keyword;
+        const locationText = normalizeLocationText(
+          result.address || {},
+          displayName,
+        );
+        setQuery(displayName);
+        setSelectedLocationName(displayName);
+        onPick(lat, lon, {
+          displayName,
+          locationText,
+          address: result.address || null,
+        });
       }
     } catch {
     } finally {
@@ -154,10 +195,78 @@ export default function LocationPickerMap({ latitude, longitude, onPick }) {
     }
   };
 
+  useEffect(() => {
+    const keyword = query.trim();
+
+    if (keyword.length < 2) {
+      setIsSuggesting(false);
+      setSuggestions([]);
+      return;
+    }
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        setIsSuggesting(true);
+        if (abortRef.current) {
+          abortRef.current.abort();
+        }
+
+        const controller = new AbortController();
+        abortRef.current = controller;
+
+        const response = await fetch(buildSearchUrl(keyword), {
+          signal: controller.signal,
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          setSuggestions([]);
+          setIsSuggesting(false);
+          return;
+        }
+
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+          setSuggestions([]);
+          setIsSuggesting(false);
+          return;
+        }
+
+        setSuggestions(data.slice(0, 8));
+        setIsSuggesting(false);
+      } catch (error) {
+        if (error?.name !== "AbortError") {
+          setSuggestions([]);
+        }
+        setIsSuggesting(false);
+      }
+    }, 350);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [query]);
+
+  useEffect(() => {
+    return () => {
+      if (abortRef.current) {
+        abortRef.current.abort();
+      }
+    };
+  }, []);
+
   return (
     <div className="space-y-3">
-      <div className="flex items-start gap-2">
-        <div className="relative max-w-lg ml-auto">
+      <div className="flex items-start gap-2 relative z-1000">
+        <div className="relative max-w-lg ml-auto w-full">
           <input
             type="text"
             value={query}
@@ -176,25 +285,37 @@ export default function LocationPickerMap({ latitude, longitude, onPick }) {
                 handleSearch();
               }
             }}
-            placeholder="Tìm tỉnh/thành phố"
+            placeholder="Tìm địa điểm cụ thể (xã/phường, quận/huyện, tỉnh...)"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
           />
 
-          {showSuggestions && filteredSuggestions.length > 0 && (
-            <div className="absolute z-1000 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-56 overflow-auto">
-              {filteredSuggestions.map((province) => (
-                <button
-                  key={province}
-                  type="button"
-                  onClick={() => {
-                    setQuery(province);
-                    setShowSuggestions(false);
-                  }}
-                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50"
-                >
-                  {province}
-                </button>
-              ))}
+          {showSuggestions && query.trim().length >= 2 && (
+            <div className="absolute z-1001 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-64 overflow-auto">
+              {isSuggesting && (
+                <div className="px-3 py-2 text-sm text-gray-500">
+                  Đang tìm gợi ý địa điểm...
+                </div>
+              )}
+
+              {!isSuggesting && suggestions.length === 0 && (
+                <div className="px-3 py-2 text-sm text-gray-500">
+                  Không có gợi ý phù hợp
+                </div>
+              )}
+
+              {!isSuggesting &&
+                suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.place_id}
+                    type="button"
+                    onClick={() => {
+                      selectSuggestion(suggestion);
+                    }}
+                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50"
+                  >
+                    {suggestion.display_name}
+                  </button>
+                ))}
             </div>
           )}
         </div>
@@ -226,13 +347,23 @@ export default function LocationPickerMap({ latitude, longitude, onPick }) {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <ClickToPick onPick={onPick} />
+          <ClickToPick onPick={handleMapPick} />
           <RecenterMap latitude={latitude} longitude={longitude} />
           {hasCoords && (
             <Marker position={[latitude, longitude]} icon={markerIcon} />
           )}
         </MapContainer>
       </div>
+
+      {(selectedLocationName || hasCoords) && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
+          <p className="text-emerald-800 font-medium">Vị trí đã chọn</p>
+          <p className="text-emerald-700 wrap-break-word">
+            {selectedLocationName ||
+              `Tọa độ đã chọn: ${Number(latitude).toFixed(6)}, ${Number(longitude).toFixed(6)}`}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

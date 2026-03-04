@@ -19,8 +19,8 @@ const SidebarItem = ({ icon: Icon, label, href, active }) => (
   <Link
     href={href}
     className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${active
-        ? "bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white scale-105"
-        : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
+      ? "bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white scale-105"
+      : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
       }`}
   >
     {/* Animated background gradient */}
@@ -31,15 +31,15 @@ const SidebarItem = ({ icon: Icon, label, href, active }) => (
     {/* Icon container with animated background */}
     <div
       className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${active
-          ? "bg-white/20 backdrop-blur-sm"
-          : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
+        ? "bg-white/20 backdrop-blur-sm"
+        : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
         }`}
     >
       <Icon
         size={20}
         className={`${active
-            ? "text-white"
-            : "text-emerald-600 group-hover:text-emerald-700 group-hover:scale-110"
+          ? "text-white"
+          : "text-emerald-600 group-hover:text-emerald-700 group-hover:scale-110"
           } transition-all duration-300`}
         strokeWidth={2.5}
       />
@@ -101,7 +101,6 @@ export default function AsideBar({ role }) {
           { icon: User, label: "Thông tin", href: "/profile/details" },
           { icon: FileText, label: "Bài viết", href: "/profile/posts" },
           { icon: FileEdit, label: "Hồ sơ", href: "/profile/resume" },
-          { icon: Briefcase, label: "Dịch vụ", href: "/profile/services" },
         ];
       default:
         return [];

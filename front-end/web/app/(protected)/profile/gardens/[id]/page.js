@@ -1,69 +1,146 @@
 "use client";
-import { useEffect, useState } from "react";
 
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
+import dynamic from "next/dynamic";
 import {
+  ArrowLeft,
+  Edit,
+  Trash2,
   MapPin,
   Ruler,
   Sprout,
-  ChevronLeft,
-  Notebook,
-  Pen,
-  Trash,
-  Loader2,
+  BookOpen,
+  Plus,
+  Hash,
+  Tag,
+  Navigation,
+  CalendarDays,
+  Clock,
+  Copy,
+  ExternalLink,
+  TreePine,
 } from "lucide-react";
-import Link from "next/link";
 import { useGardenStore } from "@/store/useGardenStore";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useParams, useRouter } from "next/navigation";
 
-export default function ProfileGardenDetail() {
-  const { id } = useParams();
+const LocationViewMap = dynamic(() => import("@/components/LocationViewMap"), {
+  ssr: false,
+});
+
+function formatDate(iso) {
+  if (!iso) return "-";
+  return new Date(iso).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatDatetime(iso) {
+  if (!iso) return "-";
+  return new Date(iso).toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function toNumber(value) {
+  const numeric = Number(value);
+  return Number.isNaN(numeric) ? 0 : numeric;
+}
+
+export default function GardenDetails() {
+  const params = useParams();
+  const router = useRouter();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [copied, setCopied] = useState(null);
+
   const {
-    getGardenDetails,
     gardenDetail,
-    isGardenDetailsLoading,
+    getGardenDetails,
     deleteGarden,
+    isGardenDetailsLoading,
     isGardenDeleting,
   } = useGardenStore();
-  const { authUser } = useAuthStore();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [confirmName, setConfirmName] = useState("");
-  const router = useRouter();
+
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
   useEffect(() => {
-    if (authUser?._id) {
-      getGardenDetails(id);
+    if (!id) return;
+    getGardenDetails(id);
+  }, [id, getGardenDetails]);
+
+  const garden = useMemo(() => {
+    if (!gardenDetail?._id) return null;
+    if (id && gardenDetail._id !== id) return null;
+    return gardenDetail;
+  }, [gardenDetail, id]);
+
+  const cropTypes = useMemo(() => {
+    if (!garden?.crop_type) return [];
+    return Array.isArray(garden.crop_type)
+      ? garden.crop_type
+      : [garden.crop_type].filter(Boolean);
+  }, [garden]);
+
+  const lat = toNumber(garden?.latitude);
+  const lng = toNumber(garden?.longitude);
+  const area = toNumber(garden?.area);
+  const mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+
+  const handleDelete = async () => {
+    if (!garden?._id) return;
+    await deleteGarden(garden._id);
+    setShowDeleteModal(false);
+    router.push("/profile/gardens");
+  };
+
+  const handleCopy = async (text, key) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(key);
+      setTimeout(() => setCopied(null), 1500);
+    } catch {
+      setCopied(null);
     }
-  }, [authUser, getGardenDetails, id]);
+  };
 
   if (isGardenDetailsLoading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/40 mt-7 px-4 py-10">
-        <div className="max-w-6xl mx-auto bg-white rounded-3xl border border-gray-100 shadow-sm p-10 flex items-center justify-center gap-3 text-gray-500">
-          <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
-          Đang tải thông tin khu vườn...
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
+          <span className="animate-spin w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full"></span>
+          <span className="text-gray-700 font-medium">
+            Đang tải chi tiết khu vườn...
+          </span>
         </div>
       </div>
     );
   }
 
-  if (!gardenDetail) {
+  if (!garden) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/40 mt-7 px-4 py-10">
-        <div className="max-w-3xl mx-auto bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
-          <p className="text-gray-800 text-lg font-semibold mb-2">
-            Không tìm thấy khu vườn
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Sprout className="w-10 h-10 text-gray-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            Không tìm thấy vườn
+          </h2>
+          <p className="text-gray-500 mb-5">
+            Vườn này không tồn tại hoặc đã bị xóa.
           </p>
-          <p className="text-sm text-gray-500 mb-6">
-            Khu vườn có thể đã bị xóa hoặc bạn không có quyền truy cập.
-          </p>
-          <Link
-            href="/profile/gardens"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors"
+          <button
+            onClick={() => router.push("/profile/gardens")}
+            className="text-emerald-600 hover:text-emerald-700 font-medium"
           >
-            <ChevronLeft className="w-4 h-4" />
-            Quay lại danh sách
-          </Link>
+            ← Quay lại danh sách vườn
+          </button>
         </div>
       </div>
     );
@@ -71,223 +148,357 @@ export default function ProfileGardenDetail() {
 
   return (
     <>
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-center justify-center px-4">
-          <div className="bg-white rounded-2xl p-6 md:p-7 w-full max-w-md shadow-xl border border-gray-100">
-            <h2 className="text-xl font-bold text-gray-900 mb-2 leading-tight">
-              Xác nhận xóa khu vườn
-            </h2>
-            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-              Nhập tên khu vườn <b>{gardenDetail?.name}</b> để xác nhận xóa.
-            </p>
-
-            <input
-              value={confirmName}
-              onChange={(e) => setConfirmName(e.target.value)}
-              placeholder="Nhập tên khu vườn..."
-              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 mb-5 focus:ring-2 focus:ring-red-500 outline-none"
-            />
-
-            <div className="flex justify-end gap-2.5">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setConfirmName("");
-                }}
-                className="cursor-pointer px-4 py-2.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-              >
-                Hủy
-              </button>
-
-              <button
-                disabled={
-                  confirmName !== gardenDetail?.name || isGardenDeleting
-                }
-                onClick={async () => {
-                  await deleteGarden(id);
-                  router.push("/profile/gardens");
-                }}
-                className={`cursor-pointer px-4 py-2.5 rounded-xl text-white font-medium transition-colors ${
-                  confirmName === gardenDetail?.name
-                    ? "bg-red-600 hover:bg-red-700"
-                    : "bg-red-300 cursor-not-allowed"
-                }`}
-              >
-                {isGardenDeleting ? "Đang xóa..." : "Xóa vĩnh viễn"}
-              </button>
-            </div>
+      {isGardenDeleting && (
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
+          <div className="bg-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
+            <span className="animate-spin w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full"></span>
+            <span className="text-gray-700 font-medium">
+              Đang xóa khu vườn...
+            </span>
           </div>
         </div>
       )}
 
-      <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/30 mt-7 px-4 pb-10">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="bg-linear-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl px-6 md:px-8 py-7 md:py-8">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-              <div className="flex items-start gap-3 md:gap-4">
-                <Link
-                  href="/profile/gardens"
-                  className="mt-0.5 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </Link>
+      <div className="min-h-screen bg-gray-50">
+        <div className="relative h-72 md:h-96 bg-gray-800 overflow-hidden">
+          <Image
+            src={garden.image || "/images/Durian1.jpg"}
+            alt={garden.name || "Garden image"}
+            fill
+            sizes="100vw"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-black/10" />
 
-                <div>
-                  <p className="text-emerald-100 text-sm mb-1">
-                    Khu vườn của bạn
-                  </p>
-                  <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight break-words">
-                    {gardenDetail?.name}
-                  </h1>
-                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 text-emerald-50 text-sm">
-                    <Sprout className="w-4 h-4" />
-                    {gardenDetail?.crop_type || "Chưa cập nhật loại cây"}
-                  </div>
+          <button
+            onClick={() => router.push("/profile/gardens")}
+            className="cursor-pointer absolute top-5 left-5 inline-flex items-center gap-2 bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white px-3.5 py-2 rounded-lg text-sm font-medium transition-colors border border-white/10"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Quay lại
+          </button>
+
+          <div className="absolute top-5 right-5 flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 bg-black/40 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-lg font-mono border border-white/10">
+              <Hash className="w-3.5 h-3.5" />
+              {garden.unit_code || "N/A"}
+            </span>
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+            <div className="flex flex-wrap gap-2 mb-3">
+              {cropTypes.map((type) => (
+                <span
+                  key={type}
+                  className="inline-flex items-center gap-1 bg-emerald-500/90 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-md font-semibold"
+                >
+                  <Tag className="w-3 h-3" />
+                  {type}
+                </span>
+              ))}
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg mb-2">
+              {garden.name}
+            </h1>
+            <div className="flex items-center gap-1.5 text-white/80 text-sm">
+              <MapPin className="w-4 h-4" />
+              <span>{garden.location || "-"}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+          <div className="max-w-6xl mx-auto px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Hash className="w-4 h-4 text-emerald-500" />
+              <span className="font-mono text-gray-700">
+                {garden.unit_code || "N/A"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => router.push(`/profile/gardens/${id}/diaries`)}
+                className="cursor-pointer inline-flex items-center gap-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 border border-yellow-300 px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+              >
+                <BookOpen className="w-4 h-4" />
+                Nhật ký vườn
+              </button>
+              <button
+                onClick={() =>
+                  router.push(`/profile/gardens/${id}/diaries/create`)
+                }
+                className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Viết nhật ký
+              </button>
+              <button
+                onClick={() => router.push(`/profile/gardens/${id}/edit`)}
+                className="cursor-pointer inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+              >
+                <Edit className="w-4 h-4" />
+                Chỉnh sửa
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="cursor-pointer inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-4 py-2 rounded-lg font-medium text-sm transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                Xóa
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto px-5 py-5 space-y-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-gray-500">
+                  Diện tích
+                </span>
+                <div className="w-9 h-9 bg-teal-50 rounded-xl flex items-center justify-center">
+                  <Ruler className="w-4 h-4 text-teal-600" />
                 </div>
               </div>
-
-              <div className="flex flex-wrap gap-2.5">
-                <Link
-                  href={`/profile/gardens/${id}/diaries`}
-                  className="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors shadow-sm"
-                >
-                  <Notebook className="w-4 h-4" />
-                  Nhật ký
-                </Link>
-
-                <Link
-                  href={`/profile/gardens/${id}/edit`}
-                  className="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors shadow-sm"
-                >
-                  <Pen className="w-4 h-4" />
-                  Chỉnh sửa
-                </Link>
-
-                <button
-                  onClick={() => setShowDeleteModal(true)}
-                  className="cursor-pointer inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors shadow-sm"
-                >
-                  <Trash className="w-4 h-4" />
-                  Xóa
-                </button>
-              </div>
+              <p className="text-2xl font-black text-gray-900">
+                {area.toLocaleString("vi-VN")}
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">mét vuông (m²)</p>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3">
-                <p className="text-emerald-100 text-xs mb-1">Diện tích</p>
-                <p className="text-white text-lg font-semibold">
-                  {gardenDetail?.area || "-"} m²
-                </p>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-gray-500">
+                  Giống cây
+                </span>
+                <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center">
+                  <TreePine className="w-4 h-4 text-emerald-600" />
+                </div>
               </div>
-              <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3">
-                <p className="text-emerald-100 text-xs mb-1">Vị trí</p>
-                <p className="text-white text-sm font-medium line-clamp-2 min-h-[40px]">
-                  {gardenDetail?.location || "Chưa cập nhật"}
-                </p>
+              <div className="flex flex-wrap gap-1.5">
+                {cropTypes.map((type) => (
+                  <span
+                    key={type}
+                    className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-md font-semibold"
+                  >
+                    {type}
+                  </span>
+                ))}
               </div>
-              <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3">
-                <p className="text-emerald-100 text-xs mb-1">Tọa độ</p>
-                <p className="text-white text-sm font-medium">
-                  {gardenDetail?.latitude || "-"},{" "}
-                  {gardenDetail?.longitude || "-"}
-                </p>
+              <p className="text-xs text-gray-400 mt-1.5">
+                {cropTypes.length} giống
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-gray-500">
+                  Ngày tạo
+                </span>
+                <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
+                  <CalendarDays className="w-4 h-4 text-blue-600" />
+                </div>
               </div>
+              <p className="text-lg font-bold text-gray-900">
+                {formatDate(garden.created_at)}
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">Đã đăng ký</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-gray-500">
+                  Cập nhật lần cuối
+                </span>
+                <div className="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-purple-600" />
+                </div>
+              </div>
+              <p className="text-lg font-bold text-gray-900">
+                {formatDate(garden.updated_at)}
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">Sửa đổi gần nhất</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100">
-                <p className="text-lg font-semibold text-gray-900">
-                  Ảnh khu vườn
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 space-y-6">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h2 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Sprout className="w-5 h-5 text-emerald-600" />
+                  Mô tả vườn
+                </h2>
+                <p className="text-gray-600 leading-relaxed">
+                  {garden.description || "Chưa có mô tả cho khu vườn này."}
                 </p>
               </div>
 
-              {gardenDetail?.image ? (
-                <img
-                  src={gardenDetail.image}
-                  alt={gardenDetail?.name || "Garden"}
-                  className="w-full h-[340px] md:h-[420px] object-cover"
-                />
-              ) : (
-                <div className="h-[340px] md:h-[420px] bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
-                  Chưa có ảnh khu vườn
-                </div>
-              )}
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Thông tin nhanh
-              </h2>
-
-              <div className="space-y-3">
-                <div className="rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3">
-                  <div className="flex items-center gap-2 text-xs font-medium text-emerald-700 mb-1">
-                    <Sprout className="w-3.5 h-3.5" />
-                    Loại cây
-                  </div>
-                  <p className="text-gray-900 font-semibold">
-                    {gardenDetail?.crop_type || "-"}
-                  </p>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <h2 className="font-bold text-gray-900 flex items-center gap-2">
+                    <Navigation className="w-5 h-5 text-emerald-600" />
+                    Bản đồ vị trí
+                  </h2>
                 </div>
 
-                <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3">
-                  <div className="flex items-center gap-2 text-xs font-medium text-blue-700 mb-1">
-                    <Ruler className="w-3.5 h-3.5" />
-                    Diện tích
-                  </div>
-                  <p className="text-gray-900 font-semibold">
-                    {gardenDetail?.area || "-"} m²
-                  </p>
-                </div>
+                <div className="p-6 space-y-3">
+                  <LocationViewMap latitude={lat} longitude={lng} />
 
-                <div className="rounded-xl bg-purple-50 border border-purple-100 px-4 py-3">
-                  <div className="flex items-center gap-2 text-xs font-medium text-purple-700 mb-1">
-                    <MapPin className="w-3.5 h-3.5" />
-                    Vị trí
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
+                    <p className="text-emerald-800 font-medium">
+                      Vị trí hiện tại
+                    </p>
+                    <p className="text-emerald-700 wrap-break-word">
+                      {garden.location ||
+                        `Tọa độ: ${lat.toFixed(6)}, ${lng.toFixed(6)}`}
+                    </p>
                   </div>
-                  <p className="text-gray-900 font-semibold text-sm leading-relaxed">
-                    {gardenDetail?.location || "-"}
-                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <p className="text-lg font-semibold text-gray-900 mb-2">
-                Thông tin mô tả
-              </p>
-              <p className="text-sm text-gray-700 leading-7 whitespace-pre-wrap">
-                {gardenDetail?.description || "Chưa có mô tả cho khu vườn này."}
-              </p>
-            </div>
-
-            <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <p className="text-lg font-semibold text-gray-900 mb-4">Tọa độ</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">
-                    Vĩ độ
-                  </p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {gardenDetail?.latitude || "-"}
-                  </p>
+            <div className="space-y-5">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Navigation className="w-5 h-5 text-emerald-600" />
+                  Tọa độ GPS
+                </h2>
+                <div className="space-y-3">
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-gray-500 font-medium">
+                        Vĩ độ (Latitude)
+                      </span>
+                      <button
+                        onClick={() => handleCopy(String(lat), "lat")}
+                        className="text-gray-400 hover:text-emerald-600 transition-colors"
+                        title="Sao chép"
+                      >
+                        {copied === "lat" ? (
+                          <span className="text-xs text-emerald-600 font-medium">
+                            Đã chép!
+                          </span>
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="font-mono font-bold text-gray-900 text-lg">
+                      {lat.toFixed(6)}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-gray-500 font-medium">
+                        Kinh độ (Longitude)
+                      </span>
+                      <button
+                        onClick={() => handleCopy(String(lng), "lng")}
+                        className="text-gray-400 hover:text-emerald-600 transition-colors"
+                        title="Sao chép"
+                      >
+                        {copied === "lng" ? (
+                          <span className="text-xs text-emerald-600 font-medium">
+                            Đã chép!
+                          </span>
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="font-mono font-bold text-gray-900 text-lg">
+                      {lng.toFixed(6)}
+                    </p>
+                  </div>
+                  <a
+                    href={mapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Xem trên Google Maps
+                  </a>
                 </div>
+              </div>
 
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">
-                    Kinh độ
-                  </p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {gardenDetail?.longitude || "-"}
-                  </p>
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h2 className="font-bold text-gray-900 mb-4">
+                  Thông tin hệ thống
+                </h2>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-gray-500 shrink-0">Mã vườn</span>
+                    <span className="font-mono text-gray-900 font-medium text-xs bg-gray-100 px-2 py-0.5 rounded">
+                      {garden.unit_code || "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-gray-500 shrink-0">Ngày tạo</span>
+                    <span className="text-gray-700 text-xs text-right">
+                      {formatDatetime(garden.created_at)}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-gray-500 shrink-0">Cập nhật</span>
+                    <span className="text-gray-700 text-xs text-right">
+                      {formatDatetime(garden.updated_at)}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-gray-500 shrink-0">ID</span>
+                    <span
+                      className="font-mono text-gray-400 text-xs truncate max-w-30"
+                      title={garden._id}
+                    >
+                      {garden._id ? `${garden._id.slice(-12)}...` : "-"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+                  <Trash2 className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Xóa vườn</h3>
+                  <p className="text-sm text-gray-500">
+                    Hành động này không thể hoàn tác
+                  </p>
+                </div>
+              </div>
+              <p className="text-gray-700 mb-6 bg-gray-50 rounded-xl p-4 text-sm leading-relaxed">
+                Bạn có chắc chắn muốn xóa vườn{" "}
+                <strong className="text-gray-900">
+                  &quot;{garden.name}&quot;
+                </strong>
+                ? Tất cả nhật ký canh tác liên quan cũng sẽ bị xóa vĩnh viễn.
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleDelete}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors"
+                >
+                  Xóa vườn
+                </button>
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-xl font-semibold transition-colors"
+                >
+                  Hủy bỏ
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

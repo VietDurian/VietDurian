@@ -294,8 +294,38 @@ export default function TraderHome() {
                 </div>
             </div>
 
-            {/* ── Platform advantages ─────────────────────────── */}
+            {/* ── Vùng nguyên liệu đang cần thu mua ──────────────── */}
             <div className="bg-gray-50 py-20 px-4">
+                <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-14">
+                        <span className="inline-block bg-emerald-100 text-emerald-700 text-xs font-bold px-4 py-1.5 rounded-full mb-4 border border-emerald-200 uppercase tracking-widest">Cơ hội thu mua</span>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">Vùng nguyên liệu đang cần thu mua</h2>
+                        <p className="text-gray-500 max-w-xl mx-auto">Nông dân khắp các vùng trọng điểm đang chờ thương lái — chọn khu vực và bắt đầu kết nối ngay</p>
+                    </div>
+                    <div className="grid md:grid-cols-3 gap-5">
+                        {[
+                            { icon: <MapPin className="w-6 h-6 text-emerald-600" />, name: "Tây Nguyên", tag: "Vùng trọng điểm", desc: "Ri6, Musang King chất lượng cao — thu hoạch tập trung tháng 7–9, sản lượng dồi dào." },
+                            { icon: <MapPin className="w-6 h-6 text-emerald-600" />, name: "Đồng bằng sông Cửu Long", tag: "Chín sớm", desc: "Monthong, Ri6 vùng Tiền Giang, Bến Tre — chín sớm, phù hợp xuất khẩu tươi." },
+                            { icon: <MapPin className="w-6 h-6 text-emerald-600" />, name: "Đông Nam Bộ", tag: "Rải vụ quanh năm", desc: "Bình Phước, Đồng Nai — giống đa dạng, thu hoạch rải vụ, thuận tiện vận chuyển." },
+                            { icon: <Store className="w-6 h-6 text-emerald-600" />, name: "Sầu riêng hữu cơ", tag: "VietGAP / GlobalGAP", desc: "Vườn không thuốc BVTV hóa học — đạt chuẩn xuất khẩu cao cấp, giá thu mua tốt hơn." },
+                            { icon: <BarChart2 className="w-6 h-6 text-emerald-600" />, name: "Lô số lượng lớn", tag: "Thu mua công nghiệp", desc: "Vườn liên kết sản lượng cao — phù hợp đặt cọc và ký hợp đồng trước vụ thu hoạch." },
+                            { icon: <PhoneCall className="w-6 h-6 text-emerald-600" />, name: "Cần thu mua gấp", tag: "Linh hoạt giá", desc: "Nông dân cần bán nhanh trước thu hoạch — giá thương lượng tốt, chốt ngay trong ngày." },
+                        ].map((t) => (
+                            <div key={t.name} className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all hover:-translate-y-1 border border-gray-100 group cursor-pointer">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center group-hover:bg-emerald-100 transition-colors">{t.icon}</div>
+                                    <h3 className="font-bold text-gray-900 text-sm">{t.name}</h3>
+                                </div>
+                                <p className="text-gray-500 text-sm leading-relaxed mb-3">{t.desc}</p>
+                                <span className="inline-block bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-full">{t.tag}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Platform advantages ─────────────────────────── */}
+            <div className="bg-white py-20 px-4">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-14">
                         <span className="inline-block bg-emerald-100 text-emerald-700 text-xs font-bold px-4 py-1.5 rounded-full mb-4 border border-emerald-200 uppercase tracking-widest">Tại sao chọn chúng tôi</span>
@@ -308,7 +338,7 @@ export default function TraderHome() {
                             { icon: <ClipboardCheck className="w-8 h-8 text-emerald-900" />, iconBg: "bg-yellow-400", num: "02", title: "Nhật ký canh tác minh bạch", desc: "Xem đầy đủ lịch sử phân bón, thuốc BVTV, ngày chăm sóc và sản lượng dự kiến — trước khi quyết định thu mua, không cần đến tận nơi.", tags: ["Lịch sử canh tác", "Sản lượng ước tính"], tagStyle: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
                             { icon: <TrendingDown className="w-8 h-8 text-emerald-900" />, iconBg: "bg-yellow-400", num: "03", title: "Giảm chi phí trung gian", desc: "Chat và thương lượng giá trực tiếp với nông dân. Không qua môi giới, không mất phí hoa hồng — lợi nhuận thu mua tối ưu hơn.", tags: ["Chat trực tiếp", "Không hoa hồng"], tagStyle: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
                         ].map((a) => (
-                            <div key={a.title} className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+                            <div key={a.title} className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
                                 <div className="h-1.5 bg-emerald-500"></div>
                                 <div className="p-7">
                                     <div className="flex items-center gap-4 mb-6">
