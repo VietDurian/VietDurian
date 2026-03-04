@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, X, Sprout, Check, ImageIcon } from "lucide-react";
+import { ArrowLeft, X, Sprout, Check, ImageIcon, Loader2 } from "lucide-react";
 import { useGardenStore } from "@/store/useGardenStore";
 import { useTypeProductStore } from "@/store/useTypeProduct";
 import dynamic from "next/dynamic";
@@ -16,7 +16,7 @@ const LocationPickerMap = dynamic(
 
 export default function CreateGarden() {
   const router = useRouter();
-  const { createGarden } = useGardenStore();
+  const { createGarden, isGardenCreating } = useGardenStore();
   const { types, fetchTypes, isTypesLoading } = useTypeProductStore();
   const [formData, setFormData] = useState({
     name: "",
@@ -33,8 +33,10 @@ export default function CreateGarden() {
   const [imagePreview, setImagePreview] = useState("");
   const fileInputRef = useRef(null);
   const [imageData, setImageData] = useState("");
+  const [selectedCropType, setSelectedCropType] = useState("");
 
   const isCreateDisabled =
+    isGardenCreating ||
     !formData.name.trim() ||
     !formData.unit_code.trim() ||
     !Array.isArray(formData.crop_type) ||
@@ -74,10 +76,33 @@ export default function CreateGarden() {
   };
 
   const handleCropTypeChange = (e) => {
-    const selectedType = e.target.value;
+    const nextType = e.target.value;
+    setSelectedCropType(nextType);
+
+    if (!nextType) return;
+
+    if (formData.crop_type.includes(nextType)) {
+      setSelectedCropType("");
+      return;
+    }
+
+    if (formData.crop_type.length >= 3) {
+      toast.error("Chỉ được chọn tối đa 3 loại cây");
+      setSelectedCropType("");
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
-      crop_type: selectedType ? [selectedType] : [],
+      crop_type: [...prev.crop_type, nextType],
+    }));
+    setSelectedCropType("");
+  };
+
+  const handleRemoveCropType = (typeName) => {
+    setFormData((prev) => ({
+      ...prev,
+      crop_type: prev.crop_type.filter((item) => item !== typeName),
     }));
   };
 
@@ -191,20 +216,46 @@ export default function CreateGarden() {
               <select
                 id="crop_type"
                 name="crop_type"
-                value={formData.crop_type[0] || ""}
+                value={selectedCropType}
                 onChange={handleCropTypeChange}
-                required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
               >
                 <option value="">
-                  {isTypesLoading ? "Đang tải loại cây..." : "Chọn loại cây"}
+                  {isTypesLoading
+                    ? "Đang tải loại cây..."
+                    : formData.crop_type.length >= 3
+                      ? "Đã chọn tối đa 3 loại"
+                      : "Chọn loại cây"}
                 </option>
-                {types?.map((type) => (
-                  <option key={type?._id} value={type?.name || ""}>
-                    {type?.name}
-                  </option>
-                ))}
+                {types
+                  ?.filter((type) => {
+                    const typeName = type?.name || "";
+                    return typeName && !formData.crop_type.includes(typeName);
+                  })
+                  .map((type) => (
+                    <option key={type?._id} value={type?.name || ""}>
+                      {type?.name}
+                    </option>
+                  ))}
               </select>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {formData.crop_type.map((typeName) => (
+                  <span
+                    key={typeName}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-sm font-medium"
+                  >
+                    {typeName}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCropType(typeName)}
+                      className="cursor-pointer rounded-full hover:bg-emerald-200 p-0.5"
+                      aria-label={`Xóa ${typeName}`}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
             </div>
 
             {/* Area */}
@@ -359,8 +410,17 @@ export default function CreateGarden() {
               disabled={isCreateDisabled}
               className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
             >
-              <Check className="w-4 h-4" />
-              Tạo khu vườn
+              {isGardenCreating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Đang tạo...
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  Tạo khu vườn
+                </>
+              )}
             </button>
             <button
               type="button"
