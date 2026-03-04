@@ -60,6 +60,22 @@ apiClient.interceptors.response.use(
   },
 );
 
+// AI API
+export const aiAPI = {
+  async predictDisease(imageFile) {
+    const formData = new FormData();
+    formData.append("image", imageFile);
+
+    // Override default JSON header for multipart.
+    const response = await apiClient.post("/ai/predict", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+};
+
 // User API
 export const usersAPI = {
   async getAllUsers(params = { page: 1, limit: 10 }) {

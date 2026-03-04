@@ -12,6 +12,7 @@ import {
   MessageCircleMore,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import { aiAPI } from "@/lib/api";
 
 const initialMessages = [
   {
@@ -29,11 +30,13 @@ export default function AiFloatingButton() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
+  const [scanLoading, setScanLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [image, setImage] = useState(null);
   const endRef = useRef(null);
   const fileInputRef = useRef(null);
+  const scanFileInputRef = useRef(null);
 
   const suggestions = [
     "Cách chăm sóc sầu riêng mùa hạn mặn ?",
@@ -87,6 +90,80 @@ export default function AiFloatingButton() {
       setError(null);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleScanFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Allow selecting the same file again.
+    e.target.value = "";
+
+    if (!file.type.startsWith("image/")) {
+      setError("Chỉ hỗ trợ ảnh");
+      return;
+    }
+
+    setMenuOpen(false);
+    setChatOpen(true);
+    setShowSuggestions(false);
+    setError(null);
+    setScanLoading(true);
+
+    const userMsg = {
+      id: `scan-u-${Date.now()}`,
+      role: "user",
+      content: `Scan AI: ${file.name}`,
+    };
+    setMessages((prev) => [...prev, userMsg]);
+
+    try {
+      const res = await aiAPI.predictDisease(file);
+
+      if (!res?.success) {
+        throw new Error(res?.message || "Không thể gọi AI nhận diện");
+      }
+
+      const d = res.data;
+      const topKText = Array.isArray(d?.top_k)
+        ? d.top_k
+            .map(
+              (x) =>
+                `- ${x.class_name}: ${(Number(x.probability) * 100).toFixed(2)}%`,
+            )
+            .join("\n")
+        : "";
+
+      const content =
+        `Kết quả nhận diện:\n` +
+        `- Dự đoán: ${d?.predicted_class || "(không rõ)"}\n` +
+        `- Độ tin cậy: ${
+          d?.confidence != null ? (Number(d.confidence) * 100).toFixed(2) + "%" : "(không rõ)"
+        }` +
+        (topKText ? `\n\nTop-5:\n${topKText}` : "");
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `scan-m-${Date.now()}`,
+          role: "model",
+          content,
+        },
+      ]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `scan-e-${Date.now()}`,
+          role: "model",
+          content: "Xin lỗi, không thể nhận diện ảnh lúc này. Vui lòng thử lại.",
+          isError: true,
+        },
+      ]);
+      setError(err.message);
+    } finally {
+      setScanLoading(false);
+    }
   };
 
   const handleSend = async (e) => {
@@ -201,6 +278,9 @@ export default function AiFloatingButton() {
             {isLoading && (
               <div className="text-xs text-gray-500">AI đang trả lời...</div>
             )}
+            {scanLoading && (
+              <div className="text-xs text-gray-500">AI đang phân tích ảnh...</div>
+            )}
             <div ref={endRef} />
           </div>
           <form
@@ -298,11 +378,11 @@ export default function AiFloatingButton() {
             <button
               type="button"
               className="group relative flex items-center justify-end gap-3 focus-visible:outline-none"
-              aria-label="Tính năng AI (sẽ xử lý sau)"
+              aria-label="Scan AI - Nhận diện sâu bệnh"
               onClick={() => {
-                // placeholder
-                setMenuOpen(false);
+                scanFileInputRef.current?.click();
               }}
+              disabled={scanLoading}
             >
               <div className="pointer-events-none absolute right-full top-1/2 mr-4 -translate-y-1/2 text-right leading-tight px-4 py-2.5 rounded-xl bg-gray-900/85 backdrop-blur-sm shadow-xl ring-1 ring-white/10 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all whitespace-nowrap">
                 <div className="text-white font-semibold">Scan AI</div>
@@ -368,6 +448,15 @@ export default function AiFloatingButton() {
             <div className="absolute top-1/2 -right-1 -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>
           </div>
         </button>
+
+        {/* Hidden input for Scan AI */}
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          ref={scanFileInputRef}
+          onChange={handleScanFileChange}
+        />
       </div>
     </>
   );
