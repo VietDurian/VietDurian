@@ -65,9 +65,9 @@ export default function CreatePostPage() {
             <Navbar />
 
             {/* ── Header giống blog ───────────────────────────── */}
-            <section className="pt-12 pb-8 px-4">
+            <section className="pt-10 pb-8 px-4">
                 <div className="max-w-5xl mx-auto">
-                    <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl p-8 md:p-12">
+                    <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl p-4 md:p-4">
                         <button
                             onClick={() => router.back()}
                             className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer"
@@ -92,8 +92,8 @@ export default function CreatePostPage() {
                     <form onSubmit={handleSubmit} className="space-y-4">
 
                         {/* User info */}
-                        <div className="flex items-center gap-3">
-                            <img src={user?.avatar || "/images/avatar.jpg"} className="w-11 h-11 rounded-full border border-gray-200 object-cover" alt="Avatar" />
+                        <div className="flex items-center gap-3 pt-2">
+                            <img src={user?.avatar || "/images/avatar.jpg"} className="w-16 h-16 rounded-full border border-gray-200 object-cover" alt="Avatar" />
                             <div>
                                 <p className="font-semibold text-gray-800">{user?.full_name || user?.name || user?.username || "Bạn"}</p>
                                 <div className="text-xs text-gray-500">Công khai</div>
