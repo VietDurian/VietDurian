@@ -293,7 +293,7 @@ export default function ServiceProviderHome() {
                                                 </li>
                                             ))}
                                         </ul>
-                                        <Link href="/profile/service-provider" className="flex items-center justify-center gap-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3.5 rounded-xl font-bold text-base transition-all shadow-md mt-6">
+                                        <Link href="/profile/resume/create" className="flex items-center justify-center gap-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3.5 rounded-xl font-bold text-base transition-all shadow-md mt-6">
                                             <BadgeCheck className="w-5 h-5" />Tạo hồ sơ năng lực<ArrowRight className="w-5 h-5" />
                                         </Link>
                                     </div>
@@ -526,7 +526,7 @@ export default function ServiceProviderHome() {
                         <Link href="/profile/posts/create" className="inline-flex items-center gap-3 bg-gradient-to-r from-yellow-400 to-amber-400 hover:from-yellow-500 hover:to-amber-500 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-xl">
                             <FileText className="w-5 h-5" />Tạo bài viết dịch vụ<ArrowRight className="w-5 h-5" />
                         </Link>
-                        <Link href="/profile/service-provider" className="inline-flex items-center gap-3 bg-white text-emerald-600 hover:bg-emerald-50 px-8 py-4 rounded-xl font-bold transition-colors shadow-xl">
+                        <Link href="/profile/resume/create" className="inline-flex items-center gap-3 bg-white text-emerald-600 hover:bg-emerald-50 px-8 py-4 rounded-xl font-bold transition-colors shadow-xl">
                             <BadgeCheck className="w-5 h-5" />Tạo hồ sơ năng lực
                         </Link>
                     </div>

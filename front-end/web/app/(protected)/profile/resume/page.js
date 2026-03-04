@@ -17,9 +17,11 @@ import {
   Lock,
   AlertCircle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { capabilityProfileAPI } from "@/lib/api";
 
 const ServiceProviderResume = () => {
+  const router = useRouter();
   const [hasProfile, setHasProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -37,7 +39,6 @@ const ServiceProviderResume = () => {
     description: "",
   });
 
-  // Fetch profile on component mount
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -63,13 +64,10 @@ const ServiceProviderResume = () => {
         setHasProfile(false);
       }
     } catch (error) {
-      // Nếu lỗi 404 (chưa có profile) thì không coi là lỗi, chỉ set hasProfile = false
       if (error?.response?.status === 404) {
         setHasProfile(false);
-        setError(null); // Không hiển thị error
-        // Không log ra console để tránh báo đỏ
+        setError(null);
       } else {
-        // Các lỗi khác mới hiển thị và log
         console.error("Error fetching profile:", error);
         setError("Không thể tải thông tin hồ sơ");
         setHasProfile(false);
@@ -81,20 +79,11 @@ const ServiceProviderResume = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
-    // Special handling for experience_year - only allow numbers
     if (name === 'experience_year') {
-      // Only allow digits
       const numericValue = value.replace(/[^0-9]/g, '');
-      setFormData((prev) => ({
-        ...prev,
-        [name]: numericValue,
-      }));
+      setFormData((prev) => ({ ...prev, [name]: numericValue }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -113,34 +102,20 @@ const ServiceProviderResume = () => {
         description: formData.description,
       };
 
-      if (isEditMode) {
-        // Update existing profile
-        const response = await capabilityProfileAPI.update(payload);
-        if (response.code === 200) {
-          await fetchProfile();
-          setShowForm(false);
-          setIsEditMode(false);
-          alert("Cập nhật hồ sơ thành công!");
-        }
-      } else {
-        // Create new profile
-        const response = await capabilityProfileAPI.create(payload);
-        if (response.code === 201) {
-          await fetchProfile();
-          setShowForm(false);
-          alert("Tạo hồ sơ thành công!");
-        }
+      // Only edit mode here (create is on separate page)
+      const response = await capabilityProfileAPI.update(payload);
+      if (response.code === 200) {
+        await fetchProfile();
+        setShowForm(false);
+        setIsEditMode(false);
+        alert("Cập nhật hồ sơ thành công!");
       }
     } catch (error) {
       console.error("Error submitting profile:", error);
-
       let errorMessage = "Có lỗi xảy ra!";
-      if (error?.response?.status === 409) {
-        errorMessage = "Hồ sơ đã tồn tại! Mỗi tài khoản chỉ tạo được 1 lần.";
-      } else if (error?.response?.data?.message) {
+      if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
-
       setError(errorMessage);
       alert(errorMessage);
     } finally {
@@ -156,7 +131,6 @@ const ServiceProviderResume = () => {
   const handleCancelEdit = () => {
     setShowForm(false);
     setIsEditMode(false);
-    // Reset form về dữ liệu hiện tại
     if (profileData) {
       setFormData({
         business_name: profileData.business_name,
@@ -210,7 +184,7 @@ const ServiceProviderResume = () => {
     );
   }
 
-  // If no profile exists and not showing form
+  // If no profile exists — chỉ đổi onClick thành router.push
   if (!hasProfile && !showForm) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 px-6">
@@ -227,7 +201,7 @@ const ServiceProviderResume = () => {
               Hãy tạo hồ sơ để tăng uy tín và thu hút thêm nhiều khách hàng!
             </p>
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => router.push("/profile/resume/create")}
               className="inline-flex items-center gap-3 px-8 py-4 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               <Plus size={20} strokeWidth={2.5} />
@@ -239,7 +213,7 @@ const ServiceProviderResume = () => {
     );
   }
 
-  // Show form (for both create and edit)
+  // Show form (edit only — giữ nguyên 100% UI gốc)
   if (showForm) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 px-6">
@@ -248,23 +222,10 @@ const ServiceProviderResume = () => {
             {/* Form Header */}
             <div className="bg-emerald-500 text-white p-8">
               <div className="flex items-center gap-3 mb-2">
-                {isEditMode ? (
-                  <>
-                    <Edit2 size={32} strokeWidth={2.5} />
-                    <h2 className="text-3xl font-bold">Chỉnh Sửa Hồ Sơ Năng Lực</h2>
-                  </>
-                ) : (
-                  <>
-                    <Briefcase size={32} strokeWidth={2.5} />
-                    <h2 className="text-3xl font-bold">Tạo Hồ Sơ Năng Lực</h2>
-                  </>
-                )}
+                <Edit2 size={32} strokeWidth={2.5} />
+                <h2 className="text-3xl font-bold">Chỉnh Sửa Hồ Sơ Năng Lực</h2>
               </div>
-              <p className="text-emerald-100">
-                {isEditMode
-                  ? "Cập nhật thông tin dịch vụ của bạn"
-                  : "Điền thông tin dịch vụ của bạn để khách hàng dễ dàng tìm thấy"}
-              </p>
+              <p className="text-emerald-100">Cập nhật thông tin dịch vụ của bạn</p>
             </div>
 
             {/* Form Body */}
@@ -274,19 +235,8 @@ const ServiceProviderResume = () => {
                   Tên Doanh Nghiệp <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Building2
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={20}
-                  />
-                  <input
-                    type="text"
-                    name="business_name"
-                    value={formData.business_name}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
-                    placeholder="Ví dụ: Dịch Vụ Nông Nghiệp Xanh"
-                  />
+                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <input type="text" name="business_name" value={formData.business_name} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder="Ví dụ: Dịch Vụ Nông Nghiệp Xanh" />
                 </div>
               </div>
 
@@ -295,23 +245,10 @@ const ServiceProviderResume = () => {
                   Dịch Vụ Cung Cấp <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Wrench
-                    className="absolute left-4 top-4 text-gray-400"
-                    size={20}
-                  />
-                  <textarea
-                    name="services"
-                    value={formData.services}
-                    onChange={handleInputChange}
-                    required
-                    rows={3}
-                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none"
-                    placeholder="Ví dụ: Phun thuốc, diệt côn trùng, thu hoạch sầu riêng"
-                  />
+                  <Wrench className="absolute left-4 top-4 text-gray-400" size={20} />
+                  <textarea name="services" value={formData.services} onChange={handleInputChange} required rows={3} className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none" placeholder="Ví dụ: Phun thuốc, diệt côn trùng, thu hoạch sầu riêng" />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Liệt kê các dịch vụ, phân cách bằng dấu phẩy
-                </p>
+                <p className="text-xs text-gray-500 mt-1">Liệt kê các dịch vụ, phân cách bằng dấu phẩy</p>
               </div>
 
               <div>
@@ -319,23 +256,10 @@ const ServiceProviderResume = () => {
                   Khu Vực Hoạt Động <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                    size={20}
-                  />
-                  <input
-                    type="text"
-                    name="service_areas"
-                    value={formData.service_areas}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
-                    placeholder="Ví dụ: TP. Hồ Chí Minh, TP. Cần Thơ"
-                  />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <input type="text" name="service_areas" value={formData.service_areas} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder="Ví dụ: TP. Hồ Chí Minh, TP. Cần Thơ" />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Các tỉnh/thành phố bạn cung cấp dịch vụ
-                </p>
+                <p className="text-xs text-gray-500 mt-1">Các tỉnh/thành phố bạn cung cấp dịch vụ</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -344,69 +268,25 @@ const ServiceProviderResume = () => {
                     Số Năm Kinh Nghiệm <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Award
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"
-                      size={20}
-                    />
-                    <input
-                      type="text"
-                      name="experience_year"
-                      value={formData.experience_year}
-                      onChange={handleInputChange}
-                      required
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      className="w-full pl-12 pr-20 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
-                      placeholder="5"
-                    />
-                    {/* Custom increment/decrement buttons */}
+                    <Award className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10" size={20} />
+                    <input type="text" name="experience_year" value={formData.experience_year} onChange={handleInputChange} required inputMode="numeric" pattern="[0-9]*" className="w-full pl-12 pr-20 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder="5" />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newValue = parseInt(formData.experience_year || 0) + 1;
-                          setFormData(prev => ({ ...prev, experience_year: newValue.toString() }));
-                        }}
-                        className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="18 15 12 9 6 15"></polyline>
-                        </svg>
+                      <button type="button" onClick={() => { const newValue = parseInt(formData.experience_year || 0) + 1; setFormData(prev => ({ ...prev, experience_year: newValue.toString() })); }} className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newValue = Math.max(0, parseInt(formData.experience_year || 0) - 1);
-                          setFormData(prev => ({ ...prev, experience_year: newValue.toString() }));
-                        }}
-                        className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
+                      <button type="button" onClick={() => { const newValue = Math.max(0, parseInt(formData.experience_year || 0) - 1); setFormData(prev => ({ ...prev, experience_year: newValue.toString() })); }} className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                       </button>
                     </div>
                   </div>
                 </div>
-
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Số Điện Thoại Liên Hệ <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Phone
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                      size={20}
-                    />
-                    <input
-                      type="tel"
-                      name="contact_phone"
-                      value={formData.contact_phone}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
-                      placeholder="0909123456"
-                    />
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    <input type="tel" name="contact_phone" value={formData.contact_phone} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder="0909123456" />
                   </div>
                 </div>
               </div>
@@ -416,47 +296,15 @@ const ServiceProviderResume = () => {
                   Mô Tả Chi Tiết <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <FileText
-                    className="absolute left-4 top-4 text-gray-400"
-                    size={20}
-                  />
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    required
-                    rows={4}
-                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none"
-                    placeholder="Giới thiệu về dịch vụ của bạn, điểm mạnh, cam kết chất lượng..."
-                  />
+                  <FileText className="absolute left-4 top-4 text-gray-400" size={20} />
+                  <textarea name="description" value={formData.description} onChange={handleInputChange} required rows={4} className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none" placeholder="Giới thiệu về dịch vụ của bạn, điểm mạnh, cam kết chất lượng..." />
                 </div>
               </div>
 
-              {/* Form Actions */}
               <div className="flex gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="flex-1 px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isCreating ? (
-                    <>
-                      <Loader2 size={20} className="animate-spin" />
-                      {isEditMode ? "Đang Cập Nhật..." : "Đang Tạo..."}
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle size={20} />
-                      {isEditMode ? "Cập Nhật Hồ Sơ" : "Tạo Hồ Sơ"}
-                    </>
-                  )}
+                <button type="button" onClick={handleCancelEdit} className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300">Hủy</button>
+                <button type="submit" disabled={isCreating} className="flex-1 px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                  {isCreating ? (<><Loader2 size={20} className="animate-spin" />Đang Cập Nhật...</>) : (<><CheckCircle size={20} />Cập Nhật Hồ Sơ</>)}
                 </button>
               </div>
             </form>
@@ -466,11 +314,10 @@ const ServiceProviderResume = () => {
     );
   }
 
-  // Display profile
+  // Display profile (giữ nguyên 100% UI gốc)
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-6">
       <div className="max-w-5xl mx-auto">
-        {/* Header with Edit button */}
         <div className="bg-white rounded-3xl overflow-hidden border border-gray-200 mb-6">
           <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-8">
             <div className="flex items-center justify-between">
@@ -480,165 +327,102 @@ const ServiceProviderResume = () => {
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold mb-1">Hồ Sơ Năng Lực</h1>
-                  <p className="text-emerald-100">
-                    Thông tin dịch vụ của bạn
-                  </p>
+                  <p className="text-emerald-100">Thông tin dịch vụ của bạn</p>
                 </div>
               </div>
-              <button
-                onClick={handleEdit}
-                className="group flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl font-semibold hover:bg-emerald-50 transition-all duration-300"
-              >
+              <button onClick={handleEdit} className="group flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl font-semibold hover:bg-emerald-50 transition-all duration-300">
                 <Edit2 size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform duration-300" />
                 <span>Chỉnh sửa</span>
               </button>
             </div>
           </div>
 
-          {/* Profile Content */}
           <div className="p-8 space-y-6">
-            {/* Business Name */}
             <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-6 border-2 border-emerald-100">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-emerald-500 rounded-xl">
                   <Building2 size={24} className="text-white" strokeWidth={2.5} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-500 mb-1">
-                    Tên Doanh Nghiệp
-                  </p>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {profileData.business_name}
-                  </h2>
+                  <p className="text-sm font-medium text-gray-500 mb-1">Tên Doanh Nghiệp</p>
+                  <h2 className="text-2xl font-bold text-gray-900">{profileData.business_name}</h2>
                 </div>
               </div>
             </div>
 
-            {/* Services */}
             <div className="bg-white rounded-2xl p-6 border border-gray-200">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-emerald-50 rounded-xl">
                   <Wrench size={22} className="text-emerald-600" strokeWidth={2.5} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-500 mb-2">
-                    Dịch Vụ Cung Cấp
-                  </p>
+                  <p className="text-sm font-semibold text-gray-500 mb-2">Dịch Vụ Cung Cấp</p>
                   <div className="flex flex-wrap gap-2">
                     {profileData.services.split(",").map((service, index) => (
-                      <span
-                        key={index}
-                        className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium border border-emerald-200"
-                      >
-                        {service.trim()}
-                      </span>
+                      <span key={index} className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium border border-emerald-200">{service.trim()}</span>
                     ))}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Grid Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Service Areas */}
               <div className="bg-white rounded-2xl p-6 border border-gray-200">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-emerald-50 rounded-xl">
-                    <MapPin size={22} className="text-emerald-600" strokeWidth={2.5} />
-                  </div>
+                  <div className="p-3 bg-emerald-50 rounded-xl"><MapPin size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 mb-2">
-                      Khu Vực Hoạt Động
-                    </p>
-                    <p className="text-base font-semibold text-gray-900">
-                      {profileData.service_areas}
-                    </p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">Khu Vực Hoạt Động</p>
+                    <p className="text-base font-semibold text-gray-900">{profileData.service_areas}</p>
                   </div>
                 </div>
               </div>
-
-              {/* Experience */}
               <div className="bg-white rounded-2xl p-6 border border-gray-200">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-emerald-50 rounded-xl">
-                    <Award size={22} className="text-emerald-600" strokeWidth={2.5} />
-                  </div>
+                  <div className="p-3 bg-emerald-50 rounded-xl"><Award size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 mb-2">
-                      Kinh Nghiệm
-                    </p>
-                    <p className="text-base font-semibold text-gray-900">
-                      {profileData.experience_year} năm
-                    </p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">Kinh Nghiệm</p>
+                    <p className="text-base font-semibold text-gray-900">{profileData.experience_year} năm</p>
                   </div>
                 </div>
               </div>
-
-              {/* Contact Phone */}
               <div className="bg-white rounded-2xl p-6 border border-gray-200">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-emerald-50 rounded-xl">
-                    <Phone size={22} className="text-emerald-600" strokeWidth={2.5} />
-                  </div>
+                  <div className="p-3 bg-emerald-50 rounded-xl"><Phone size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 mb-2">
-                      Số Điện Thoại
-                    </p>
-                    <p className="text-base font-semibold text-gray-900">
-                      {profileData.contact_phone}
-                    </p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">Số Điện Thoại</p>
+                    <p className="text-base font-semibold text-gray-900">{profileData.contact_phone}</p>
                   </div>
                 </div>
               </div>
-
-              {/* Created Date */}
               <div className="bg-white rounded-2xl p-6 border border-gray-200">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-emerald-50 rounded-xl">
-                    <Calendar size={22} className="text-emerald-600" strokeWidth={2.5} />
-                  </div>
+                  <div className="p-3 bg-emerald-50 rounded-xl"><Calendar size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 mb-2">
-                      Ngày Tạo
-                    </p>
-                    <p className="text-base font-semibold text-gray-900">
-                      {formatDate(profileData.created_at)}
-                    </p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">Ngày Tạo</p>
+                    <p className="text-base font-semibold text-gray-900">{formatDate(profileData.created_at)}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Description */}
             <div className="bg-white rounded-2xl p-6 border border-gray-200">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-emerald-50 rounded-xl">
-                  <FileText size={22} className="text-emerald-600" strokeWidth={2.5} />
-                </div>
+                <div className="p-3 bg-emerald-50 rounded-xl"><FileText size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-500 mb-3">
-                    Mô Tả Chi Tiết
-                  </p>
-                  <p className="text-gray-700 leading-relaxed">
-                    {profileData.description}
-                  </p>
+                  <p className="text-sm font-semibold text-gray-500 mb-3">Mô Tả Chi Tiết</p>
+                  <p className="text-gray-700 leading-relaxed">{profileData.description}</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Info Banner - Updated */}
         <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
           <div className="flex items-start gap-3">
             <CheckCircle className="text-blue-600 flex-shrink-0 mt-1" size={20} strokeWidth={2.5} />
             <div>
-              <h4 className="font-bold text-gray-900 mb-1">
-                Hồ Sơ Năng Lực
-              </h4>
-              <p className="text-sm text-gray-700">
-                Bạn có thể chỉnh sửa thông tin hồ sơ bất cứ lúc nào bằng cách nhấn nút "Chỉnh sửa" ở trên.
-              </p>
+              <h4 className="font-bold text-gray-900 mb-1">Hồ Sơ Năng Lực</h4>
+              <p className="text-sm text-gray-700">Bạn có thể chỉnh sửa thông tin hồ sơ bất cứ lúc nào bằng cách nhấn nút "Chỉnh sửa" ở trên.</p>
             </div>
           </div>
         </div>
