@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, X, Sprout, Check, ImageIcon } from "lucide-react";
 import { useGardenStore } from "@/store/useGardenStore";
+import { useTypeProductStore } from "@/store/useTypeProduct";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 
@@ -17,6 +18,7 @@ export default function EditGarden() {
   const router = useRouter();
   const params = useParams();
   const gardenId = params.id;
+  const { types, fetchTypes, isTypesLoading } = useTypeProductStore();
 
   const {
     getGardenDetails,
@@ -27,7 +29,8 @@ export default function EditGarden() {
   } = useGardenStore();
   const [formData, setFormData] = useState({
     name: "",
-    crop_type: "",
+    unit_code: "",
+    crop_type: [],
     area: "",
     location: "",
     latitude: "",
@@ -42,13 +45,19 @@ export default function EditGarden() {
 
   const isSaveDisabled =
     !formData.name.toString().trim() ||
-    !formData.crop_type.toString().trim() ||
+    !formData.unit_code.toString().trim() ||
+    !Array.isArray(formData.crop_type) ||
+    formData.crop_type.length === 0 ||
     !formData.area.toString().trim() ||
     !formData.location.toString().trim() ||
     !formData.latitude.toString().trim() ||
     !formData.longitude.toString().trim() ||
     !formData.description.toString().trim() ||
     !formData.image;
+
+  useEffect(() => {
+    fetchTypes();
+  }, [fetchTypes]);
 
   // 🔽 Load garden data
   useEffect(() => {
@@ -62,7 +71,12 @@ export default function EditGarden() {
     setFormData((prev) => ({
       ...prev,
       name: gardenDetail.name || "",
-      crop_type: gardenDetail.crop_type || "",
+      unit_code: gardenDetail.unit_code || "",
+      crop_type: Array.isArray(gardenDetail.crop_type)
+        ? gardenDetail.crop_type
+        : gardenDetail.crop_type
+          ? [gardenDetail.crop_type]
+          : [],
       area: gardenDetail.area || "",
       location: gardenDetail.location || "",
       latitude: gardenDetail.latitude || "",
@@ -94,6 +108,14 @@ export default function EditGarden() {
       latitude: latitude.toFixed(6),
       longitude: longitude.toFixed(6),
       location: placeDetails?.locationText || prev.location,
+    }));
+  };
+
+  const handleCropTypeChange = (e) => {
+    const selectedType = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      crop_type: selectedType ? [selectedType] : [],
     }));
   };
 
@@ -176,6 +198,26 @@ export default function EditGarden() {
               />
             </div>
 
+            {/* Unit Code */}
+            <div>
+              <label
+                htmlFor="unit_code"
+                className="block text-sm font-medium text-gray-900 mb-2"
+              >
+                Mã vườn
+              </label>
+              <input
+                type="text"
+                id="unit_code"
+                name="unit_code"
+                value={formData.unit_code}
+                onChange={handleChange}
+                required
+                placeholder="ví dụ: VTDR-001"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+              />
+            </div>
+
             {/* Crop Type */}
             <div>
               <label
@@ -184,16 +226,23 @@ export default function EditGarden() {
               >
                 Loại cây
               </label>
-              <input
-                type="text"
+              <select
                 id="crop_type"
                 name="crop_type"
-                value={formData.crop_type}
-                onChange={handleChange}
+                value={formData.crop_type[0] || ""}
+                onChange={handleCropTypeChange}
                 required
-                placeholder="ví dụ: Rau cải, Cà chua, Dâu tây..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-              />
+              >
+                <option value="">
+                  {isTypesLoading ? "Đang tải loại cây..." : "Chọn loại cây"}
+                </option>
+                {types?.map((type) => (
+                  <option key={type?._id} value={type?.name || ""}>
+                    {type?.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Area */}

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { axiosInstance } from "@/lib/axios";
 
-export const useProductStore = create((set, get) => ({
+export const useTypeProductStore = create((set) => ({
   types: [],
   isTypesLoading: false,
 
@@ -12,8 +12,11 @@ export const useProductStore = create((set, get) => ({
       const res = await axiosInstance.get(`/type-product`);
       set({ types: res.data.data });
     } catch (error) {
+      set({ types: [] });
     } finally {
       set({ isTypesLoading: false });
     }
   },
 }));
+
+export const useProductStore = useTypeProductStore;

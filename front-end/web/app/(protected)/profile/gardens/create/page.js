@@ -1,8 +1,9 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, X, Sprout, Check, ImageIcon } from "lucide-react";
 import { useGardenStore } from "@/store/useGardenStore";
+import { useTypeProductStore } from "@/store/useTypeProduct";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 
@@ -16,9 +17,11 @@ const LocationPickerMap = dynamic(
 export default function CreateGarden() {
   const router = useRouter();
   const { createGarden } = useGardenStore();
+  const { types, fetchTypes, isTypesLoading } = useTypeProductStore();
   const [formData, setFormData] = useState({
     name: "",
-    crop_type: "",
+    unit_code: "",
+    crop_type: [],
     area: "",
     location: "",
     latitude: "",
@@ -33,7 +36,9 @@ export default function CreateGarden() {
 
   const isCreateDisabled =
     !formData.name.trim() ||
-    !formData.crop_type.trim() ||
+    !formData.unit_code.trim() ||
+    !Array.isArray(formData.crop_type) ||
+    formData.crop_type.length === 0 ||
     !formData.area.toString().trim() ||
     !formData.location.trim() ||
     !formData.latitude.toString().trim() ||
@@ -41,9 +46,13 @@ export default function CreateGarden() {
     !formData.description.trim() ||
     !formData.image;
 
+  useEffect(() => {
+    fetchTypes();
+  }, [fetchTypes]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    createGarden(formData);
+    await createGarden(formData);
     router.push("/profile/gardens");
   };
 
@@ -61,6 +70,14 @@ export default function CreateGarden() {
       latitude: latitude.toFixed(6),
       longitude: longitude.toFixed(6),
       location: placeDetails?.locationText || prev.location,
+    }));
+  };
+
+  const handleCropTypeChange = (e) => {
+    const selectedType = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      crop_type: selectedType ? [selectedType] : [],
     }));
   };
 
@@ -143,6 +160,26 @@ export default function CreateGarden() {
               />
             </div>
 
+            {/* Unit Code */}
+            <div>
+              <label
+                htmlFor="unit_code"
+                className="block text-sm font-medium text-gray-900 mb-2"
+              >
+                Mã vườn
+              </label>
+              <input
+                type="text"
+                id="unit_code"
+                name="unit_code"
+                value={formData.unit_code}
+                onChange={handleChange}
+                required
+                placeholder="ví dụ: VTDR-001"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+              />
+            </div>
+
             {/* Crop Type */}
             <div>
               <label
@@ -151,16 +188,23 @@ export default function CreateGarden() {
               >
                 Loại cây
               </label>
-              <input
-                type="text"
+              <select
                 id="crop_type"
                 name="crop_type"
-                value={formData.crop_type}
-                onChange={handleChange}
+                value={formData.crop_type[0] || ""}
+                onChange={handleCropTypeChange}
                 required
-                placeholder="ví dụ: Rau cải, Cà chua, Dâu tây..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-              />
+              >
+                <option value="">
+                  {isTypesLoading ? "Đang tải loại cây..." : "Chọn loại cây"}
+                </option>
+                {types?.map((type) => (
+                  <option key={type?._id} value={type?.name || ""}>
+                    {type?.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Area */}
