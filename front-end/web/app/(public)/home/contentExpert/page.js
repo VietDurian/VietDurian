@@ -21,7 +21,7 @@ const POST_TYPES = [
 ];
 
 const BLOG_FEATURES = [
-    { icon: <Layers className="w-5 h-5 text-emerald-600" />, label: "Cấu trúc rõ ràng theo từng block" },
+    { icon: <Layers className="w-5 h-5 text-emerald-600" />, label: "Cấu trúc rõ ràng theo từng phần" },
     { icon: <Zap className="w-5 h-5 text-emerald-600" />, label: "Thêm hình ảnh, video minh họa" },
     { icon: <CheckCircle2 className="w-5 h-5 text-emerald-600" />, label: "Tài liệu tham khảo khoa học" },
     { icon: <BookMarked className="w-5 h-5 text-emerald-600" />, label: "Cập nhật theo mùa vụ thực tế" },
@@ -42,7 +42,7 @@ const TOPICS = [
 
 const BLOG_STEPS = [
     { step: "01", icon: <PenLine className="w-8 h-8" />, title: "Chọn chủ đề & soạn nội dung", desc: "Chọn chủ đề canh tác bạn am hiểu, viết bài có cấu trúc rõ ràng với hình ảnh và tài liệu tham khảo.", color: "from-emerald-400 to-emerald-600", glow: "shadow-emerald-500/40" },
-    { step: "02", icon: <Layers className="w-8 h-8" />, title: "Tổ chức theo từng block", desc: "Nội dung được chia thành các block — giới thiệu, các bước thực hiện, lưu ý — dễ đọc và dễ áp dụng tại vườn.", color: "from-yellow-400 to-yellow-500", glow: "shadow-yellow-500/40" },
+    { step: "02", icon: <Layers className="w-8 h-8" />, title: "Tổ chức theo từng block", desc: "Nội dung được chia thành các phần — giới thiệu, các bước thực hiện, lưu ý — dễ đọc và dễ áp dụng tại vườn.", color: "from-yellow-400 to-yellow-500", glow: "shadow-yellow-500/40" },
     { step: "03", icon: <BadgeCheck className="w-8 h-8" />, title: "Đăng & lan tỏa", desc: "Bài viết hiển thị cho toàn bộ nông dân trên nền tảng. Nông dân có thể lưu và đặt câu hỏi trực tiếp với bạn.", color: "from-teal-400 to-emerald-500", glow: "shadow-teal-500/40" },
 ];
 
@@ -50,7 +50,7 @@ const EXPERT_ACTIONS = [
     {
         icon: <BookOpen className="w-5 h-5 text-white" />,
         title: "Viết Blog & chuẩn hóa quy trình canh tác",
-        desc: "Soạn bài blog kỹ thuật đầy đủ từ chọn giống, bón phân, tưới nước đến thu hoạch. Nội dung có căn cứ khoa học, cấu trúc theo từng block rõ ràng — giúp nông dân làm đúng ngay từ đầu mà không cần kinh nghiệm nhiều năm.",
+        desc: "Soạn bài blog kỹ thuật đầy đủ từ chọn giống, bón phân, tưới nước đến thu hoạch. Nội dung có căn cứ khoa học, cấu trúc theo từng mục rõ ràng — giúp nông dân làm đúng ngay từ đầu mà không cần kinh nghiệm nhiều năm.",
         tags: ["Blog kiến thức", "Quy trình chuẩn"],
     },
     {
@@ -192,7 +192,7 @@ export default function ContentExpertHome() {
                             </div>
 
                             {/* ── 2 Action cards — SQUARE ── */}
-                            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                            <div className="grid md:grid-cols-2 gap-10 max-w-4xl mx-auto">
 
                                 {/* Card 1 — Tạo bài viết (VÀNG) */}
                                 <div className="bg-white rounded-2xl shadow-2xl overflow-hidden shadow-black/20 flex flex-col" style={{ minHeight: "520px" }}>
@@ -242,7 +242,7 @@ export default function ContentExpertHome() {
                                     </div>
                                     <div className="p-6 bg-white flex flex-col flex-1">
                                         <p className="text-gray-500 text-sm mb-4 leading-relaxed">
-                                            Soạn bài blog chuyên sâu về kỹ thuật canh tác — nội dung được tổ chức thành các block rõ ràng, dễ đọc và dễ áp dụng cho nông dân.
+                                            Soạn bài blog chuyên sâu về kỹ thuật canh tác — nội dung được tổ chức thành các mục rõ ràng, dễ đọc và dễ áp dụng cho nông dân.
                                         </p>
                                         <ul className="space-y-2.5 flex-1">
                                             {BLOG_FEATURES.map((f) => (
