@@ -259,7 +259,7 @@ function GardenCard({ garden }) {
     : [garden.crop_type].filter(Boolean);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300 group flex flex-col">
+    <div className="h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300 group flex flex-col">
       {/* Image */}
       <div
         className="relative h-44 overflow-hidden bg-gray-100 cursor-pointer shrink-0"
