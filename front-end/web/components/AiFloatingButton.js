@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import {
   X,
   RefreshCcw,
@@ -12,6 +13,7 @@ import {
   MessageCircleMore,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import { aiAPI } from "@/lib/api";
 
 const initialMessages = [
   {
@@ -26,14 +28,21 @@ export default function AiFloatingButton() {
   const { authUser } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
+  const [scanLoading, setScanLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [scanError, setScanError] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [image, setImage] = useState(null);
+  const [scanFile, setScanFile] = useState(null);
+  const [scanPreviewUrl, setScanPreviewUrl] = useState(null);
+  const [scanResult, setScanResult] = useState(null);
   const endRef = useRef(null);
   const fileInputRef = useRef(null);
+  const scanFileInputRef = useRef(null);
 
   const suggestions = [
     "Cách chăm sóc sầu riêng mùa hạn mặn ?",
@@ -44,6 +53,16 @@ export default function AiFloatingButton() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, chatOpen]);
+
+  useEffect(() => {
+    if (!scanFile) {
+      setScanPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(scanFile);
+    setScanPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [scanFile]);
 
   if (!authUser) return null;
   if (pathname?.startsWith("/dashboard")) return null;
@@ -61,6 +80,20 @@ export default function AiFloatingButton() {
   };
 
   const closeChat = () => setChatOpen(false);
+
+  const openScan = () => {
+    setScanOpen(true);
+    setMenuOpen(false);
+    setScanError(null);
+  };
+
+  const closeScan = () => setScanOpen(false);
+
+  const resetScan = () => {
+    setScanFile(null);
+    setScanResult(null);
+    setScanError(null);
+  };
 
   const startNewConversation = () => {
     setMessages(initialMessages);
@@ -87,6 +120,41 @@ export default function AiFloatingButton() {
       setError(null);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleScanFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Allow selecting the same file again.
+    e.target.value = "";
+
+    if (!file.type.startsWith("image/")) {
+      setScanError("Chỉ hỗ trợ ảnh");
+      return;
+    }
+
+    setScanFile(file);
+    setScanResult(null);
+    setScanError(null);
+
+    setScanLoading(true);
+    try {
+      const res = await aiAPI.predictDisease(file);
+      if (!res?.success) {
+        throw new Error(res?.message || "Không thể gọi AI nhận diện");
+      }
+      setScanResult(res.data);
+    } catch (err) {
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Không thể nhận diện ảnh lúc này";
+      setScanError(message);
+    } finally {
+      setScanLoading(false);
+    }
   };
 
   const handleSend = async (e) => {
@@ -285,6 +353,114 @@ export default function AiFloatingButton() {
         </div>
       )}
 
+      {/* Floating Scan Popup */}
+      {scanOpen && (
+        <div className="fixed bottom-24 right-6 z-50 w-96 max-w-[92vw] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-slide-up">
+          <div className="flex items-center justify-between px-4 py-3 bg-linear-to-r from-cyan-600 to-sky-500 text-white">
+            <div className="font-semibold">Scan AI</div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={resetScan}
+                className="p-2 rounded-full hover:bg-white/15 transition-colors"
+                title="Làm mới"
+                disabled={scanLoading}
+              >
+                <RefreshCcw size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={closeScan}
+                className="p-2 rounded-full hover:bg-white/15 transition-colors"
+                title="Đóng"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-4 bg-gray-50 space-y-3">
+            <div className="rounded-2xl border border-gray-200 bg-white p-3">
+              <div className="text-sm font-semibold text-gray-800 mb-2">
+                Tải ảnh lá sầu riêng
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => scanFileInputRef.current?.click()}
+                  className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-cyan-200 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 transition-colors text-sm font-medium"
+                  disabled={scanLoading}
+                >
+                  <Plus size={16} strokeWidth={2.5} />
+                  Chọn ảnh
+                </button>
+                <div className="text-xs text-gray-500 truncate flex-1">
+                  {scanFile ? scanFile.name : "Chưa chọn ảnh"}
+                </div>
+              </div>
+            </div>
+
+            {scanPreviewUrl && (
+              <div className="rounded-2xl border border-gray-200 bg-white p-3">
+                <div className="text-xs font-semibold text-gray-600 mb-2">
+                  Xem trước
+                </div>
+                <div className="w-full overflow-hidden rounded-xl bg-gray-100">
+                  <Image
+                    src={scanPreviewUrl}
+                    alt="Scan preview"
+                    width={640}
+                    height={352}
+                    unoptimized
+                    className="w-full h-44 object-contain"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-2xl border border-gray-200 bg-white p-3">
+              <div className="text-xs font-semibold text-gray-600 mb-2">
+                Kết quả
+              </div>
+              {scanLoading ? (
+                <div className="text-sm text-gray-600">AI đang phân tích ảnh...</div>
+              ) : scanError ? (
+                <div className="text-sm text-red-600">{scanError}</div>
+              ) : scanResult ? (
+                <div className="text-sm text-gray-800 whitespace-pre-wrap">
+                  {`- Dự đoán: ${scanResult?.predicted_class || "(không rõ)"}\n- Độ tin cậy: ${
+                    scanResult?.confidence != null
+                      ? (Number(scanResult.confidence) * 100).toFixed(2) + "%"
+                      : "(không rõ)"
+                  }`}
+                  {Array.isArray(scanResult?.top_k) && scanResult.top_k.length > 0 && (
+                    <div className="mt-3">
+                      <div className="text-xs font-semibold text-gray-600 mb-1">
+                        Top-5
+                      </div>
+                      <div className="text-xs text-gray-700 whitespace-pre-wrap">
+                        {scanResult.top_k
+                          .map(
+                            (x) =>
+                              `- ${x.class_name}: ${(Number(x.probability) * 100).toFixed(2)}%`,
+                          )
+                          .join("\n")}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500">Chọn ảnh để bắt đầu.</div>
+              )}
+            </div>
+
+            <p className="text-center text-xs text-gray-500">
+              Do AI tạo. Hãy kiểm tra kỹ độ chính xác.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Hoverable Floating Cluster */}
       <div
         className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3"
@@ -298,11 +474,11 @@ export default function AiFloatingButton() {
             <button
               type="button"
               className="group relative flex items-center justify-end gap-3 focus-visible:outline-none"
-              aria-label="Tính năng AI (sẽ xử lý sau)"
+              aria-label="Scan AI - Nhận diện sâu bệnh"
               onClick={() => {
-                // placeholder
-                setMenuOpen(false);
+                openScan();
               }}
+              disabled={scanLoading}
             >
               <div className="pointer-events-none absolute right-full top-1/2 mr-4 -translate-y-1/2 text-right leading-tight px-4 py-2.5 rounded-xl bg-gray-900/85 backdrop-blur-sm shadow-xl ring-1 ring-white/10 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all whitespace-nowrap">
                 <div className="text-white font-semibold">Scan AI</div>
@@ -368,6 +544,15 @@ export default function AiFloatingButton() {
             <div className="absolute top-1/2 -right-1 -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>
           </div>
         </button>
+
+        {/* Hidden input for Scan AI */}
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          ref={scanFileInputRef}
+          onChange={handleScanFileChange}
+        />
       </div>
     </>
   );

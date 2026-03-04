@@ -1,12 +1,19 @@
-import streamlit as st
-import tensorflow as tf
+from __future__ import annotations
+
+import io
+from pathlib import Path
+from typing import Any
+
 import numpy as np
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
 from PIL import Image
+
+import tensorflow as tf
 from tensorflow.keras.applications.mobilenet_v3 import preprocess_input
 
-# ===============================
-# CONFIG
-# ===============================
+APP_DIR = Path(__file__).resolve().parent
+MODEL_PATH = APP_DIR / "MobileNetV3Large_tendurian_avg_top5.keras"
 IMG_SIZE = (224, 224)
 
 CLASS_NAMES = [
@@ -24,47 +31,89 @@ CLASS_NAMES = [
     "Stem_Blight",
     "Stem_Cracking_Gummosis",
     "Thrips_Disease",
-    "Yellow_Leaf"   
+    "Yellow_Leaf",
 ]
 
-# ===============================
-# LOAD MODEL (cached)
-# ===============================
-@st.cache_resource
-def load_model():
-    model = tf.keras.models.load_model("MobileNetV3Large_tendurian_avg_top5.keras")
-    return model
+app = FastAPI(title="VietDurian AI Service", version="1.0.0")
 
-model = load_model()
 
-# ===============================
-# UI
-# ===============================
-st.title("🌿 Durian Leaf Disease Classification")
-st.write("Upload an image of a durian leaf to analyze disease.")
+def _load_model() -> tf.keras.Model:
+    if not MODEL_PATH.exists():
+        raise RuntimeError(f"Model file not found: {MODEL_PATH}")
+    return tf.keras.models.load_model(str(MODEL_PATH))
 
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-if uploaded_file is not None:
-    image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+MODEL = _load_model()
 
-    # Preprocess
+
+def _predict_from_image(image: Image.Image, top_k: int = 5) -> dict[str, Any]:
+    image = image.convert("RGB")
+
     img = image.resize(IMG_SIZE)
     img_array = np.array(img)
     img_array = preprocess_input(img_array)
     img_array = np.expand_dims(img_array, axis=0)
 
-    # Predict
-    predictions = model.predict(img_array)
-    predicted_class = CLASS_NAMES[np.argmax(predictions)]
-    confidence = np.max(predictions)
+    predictions = MODEL.predict(img_array, verbose=0)[0]
+    predictions = np.asarray(predictions, dtype=np.float32)
 
-    st.subheader("Prediction:")
-    st.success(f"{predicted_class}")
-    st.write(f"Confidence: {confidence:.2%}")
+    best_index = int(np.argmax(predictions))
+    confidence = float(predictions[best_index])
+    predicted_class = CLASS_NAMES[best_index]
 
-    # Show probability for all classes
-    st.subheader("Class Probabilities:")
-    for i, prob in enumerate(predictions[0]):
-        st.write(f"{CLASS_NAMES[i]}: {prob:.2%}")
+    k = max(1, min(int(top_k), len(CLASS_NAMES)))
+    top_indices = np.argsort(predictions)[::-1][:k]
+
+    top = [
+        {
+            "class_name": CLASS_NAMES[int(i)],
+            "probability": float(predictions[int(i)]),
+        }
+        for i in top_indices
+    ]
+
+    probabilities = {
+        CLASS_NAMES[i]: float(predictions[i]) for i in range(len(CLASS_NAMES))
+    }
+
+    return {
+        "predicted_class": predicted_class,
+        "confidence": confidence,
+        "top_k": top,
+        "probabilities": probabilities,
+        "model": MODEL_PATH.name,
+        "image_size": [IMG_SIZE[0], IMG_SIZE[1]],
+    }
+
+
+@app.get("/health")
+def health() -> dict[str, Any]:
+    return {
+        "ok": True,
+        "model_loaded": True,
+        "model": MODEL_PATH.name,
+        "classes": len(CLASS_NAMES),
+    }
+
+
+@app.post("/predict")
+async def predict(image: UploadFile = File(...)) -> JSONResponse:
+    if not image.content_type or not image.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Only image uploads are supported")
+
+    try:
+        raw = await image.read()
+        pil = Image.open(io.BytesIO(raw))
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail="Invalid image file") from exc
+
+    result = _predict_from_image(pil, top_k=5)
+    return JSONResponse({"success": True, "data": result})
+
+
+# Local dev:
+#   uvicorn app:app --host 127.0.0.1 --port 8001
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=False)
