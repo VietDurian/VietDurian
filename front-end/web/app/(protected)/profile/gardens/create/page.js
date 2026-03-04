@@ -55,11 +55,12 @@ export default function CreateGarden() {
     }));
   };
 
-  const handlePickLocation = (latitude, longitude) => {
+  const handlePickLocation = (latitude, longitude, placeDetails) => {
     setFormData((prev) => ({
       ...prev,
       latitude: latitude.toFixed(6),
       longitude: longitude.toFixed(6),
+      location: placeDetails?.locationText || prev.location,
     }));
   };
 
@@ -196,33 +197,14 @@ export default function CreateGarden() {
               </p>
             </div>
 
-            {/* Location */}
-            <div>
-              <label
-                htmlFor="location"
-                className="block text-sm font-medium text-gray-900 mb-2"
-              >
-                Vị trí
-              </label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                required
-                placeholder="ví dụ: Thanh Hóa, Bình Dương"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-              />
-            </div>
-
             {/* Coordinates */}
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
                 Tọa độ <span className="text-red-500">*</span>
               </label>
               <p className="text-xs text-gray-600 mb-3">
-                Nhấp vào bản đồ để chọn vị trí khu vườn
+                Nhấp vào bản đồ để chọn vị trí khu vườn (hệ thống tự lấy
+                Quận/Huyện, Tỉnh/Thành)
               </p>
               <LocationPickerMap
                 latitude={
@@ -246,6 +228,12 @@ export default function CreateGarden() {
                     {formData.longitude || "Chưa chọn"}
                   </span>
                 </div>
+              </div>
+              <div className="mt-3 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm">
+                <span className="text-gray-500">Vị trí (Quận/Tỉnh): </span>
+                <span className="font-medium text-gray-900">
+                  {formData.location || "Chưa chọn trên bản đồ"}
+                </span>
               </div>
             </div>
 

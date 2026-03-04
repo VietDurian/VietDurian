@@ -61,23 +61,96 @@ export default function LocationPickerMap({ latitude, longitude, onPick }) {
       `${keyword}, Vietnam`,
     )}`;
 
+  const buildReverseUrl = (lat, lon) =>
+    `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&accept-language=vi&lat=${lat}&lon=${lon}`;
+
+  const normalizeLocationText = (addressDetails = {}, fallback = "") => {
+    const district =
+      addressDetails.city_district ||
+      addressDetails.district ||
+      addressDetails.county ||
+      addressDetails.suburb ||
+      addressDetails.town ||
+      addressDetails.city ||
+      "";
+
+    const province =
+      addressDetails.state ||
+      addressDetails.province ||
+      addressDetails.city ||
+      addressDetails.region ||
+      "";
+
+    const compact = [district, province].filter(Boolean).join(", ");
+    if (compact) return compact;
+
+    if (fallback) {
+      const chunks = fallback
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean);
+      if (chunks.length >= 2) {
+        return `${chunks[chunks.length - 2]}, ${chunks[chunks.length - 1]}`;
+      }
+      return fallback;
+    }
+
+    return "";
+  };
+
   const selectSuggestion = (suggestion) => {
     const lat = Number(suggestion.lat);
     const lon = Number(suggestion.lon);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
 
     const displayName = suggestion.display_name || "";
+    const locationText = normalizeLocationText(suggestion.address, displayName);
     setQuery(displayName);
     setSelectedLocationName(displayName);
     setShowSuggestions(false);
-    onPick(lat, lon);
+    onPick(lat, lon, {
+      displayName,
+      locationText,
+      address: suggestion.address || null,
+    });
   };
 
-  const handleMapPick = (lat, lon) => {
+  const handleMapPick = async (lat, lon) => {
     setSelectedLocationName(
       `Tọa độ đã chọn: ${lat.toFixed(6)}, ${lon.toFixed(6)}`,
     );
-    onPick(lat, lon);
+
+    try {
+      const response = await fetch(buildReverseUrl(lat, lon), {
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        onPick(lat, lon);
+        return;
+      }
+
+      const data = await response.json();
+      const displayName = data?.display_name || "";
+      const locationText = normalizeLocationText(
+        data?.address || {},
+        displayName,
+      );
+
+      if (displayName) {
+        setSelectedLocationName(displayName);
+      }
+
+      onPick(lat, lon, {
+        displayName,
+        locationText,
+        address: data?.address || null,
+      });
+    } catch {
+      onPick(lat, lon);
+    }
   };
 
   const handleSearch = async () => {
@@ -104,9 +177,17 @@ export default function LocationPickerMap({ latitude, longitude, onPick }) {
 
       if (Number.isFinite(lat) && Number.isFinite(lon)) {
         const displayName = result.display_name || keyword;
+        const locationText = normalizeLocationText(
+          result.address || {},
+          displayName,
+        );
         setQuery(displayName);
         setSelectedLocationName(displayName);
-        onPick(lat, lon);
+        onPick(lat, lon, {
+          displayName,
+          locationText,
+          address: result.address || null,
+        });
       }
     } catch {
     } finally {
