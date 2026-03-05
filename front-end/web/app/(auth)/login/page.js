@@ -53,7 +53,7 @@ export default function LoginPage() {
       {/* Logo */}
       <Link
         href={"/"}
-        className="absolute top-5 left-5 items-center gap-2 mb-16"
+        className="absolute top-5 left-5 z-50 flex items-center gap-2 mb-16 cursor-pointer"
       >
         <Image
           src={"/images/VietDurian-logo.png"}
