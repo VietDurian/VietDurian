@@ -13,7 +13,6 @@ export default function CreateDiary() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    crop_type: "",
     garden_id: id,
   });
 
@@ -84,26 +83,6 @@ export default function CreateDiary() {
                 onChange={handleChange}
                 required
                 placeholder="ví dụ: Khu vườn Thanh Hóa"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
-              />
-            </div>
-
-            {/* Crop Type */}
-            <div>
-              <label
-                htmlFor="crop_type"
-                className="block text-sm font-medium text-gray-900 mb-2"
-              >
-                Loại cây <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="crop_type"
-                name="crop_type"
-                value={formData.crop_type}
-                onChange={handleChange}
-                required
-                placeholder="ví dụ: Rau cải, Cà chua, Dâu tây..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
               />
             </div>
