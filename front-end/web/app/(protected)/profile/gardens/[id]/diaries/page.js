@@ -167,11 +167,6 @@ export default function GardenDiaries() {
                 <div className="w-11 h-11 bg-linear-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
                   <BookOpen className="w-5 h-5 text-white" />
                 </div>
-                {inProgress > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
-                    {inProgress}
-                  </span>
-                )}
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
@@ -181,8 +176,6 @@ export default function GardenDiaries() {
                   <span className="font-medium text-emerald-700">
                     {garden.name}
                   </span>
-                  {" · "}
-                  <span>{gardenDiaries.length} nhật ký</span>
                 </p>
               </div>
             </div>

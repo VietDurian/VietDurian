@@ -135,8 +135,7 @@ export default function TraderHome() {
                   <br />
                 </h1>
                 <p className="text-emerald-50 text-md max-w-3xl mx-auto">
-                  Kết nối trực tiếp với nông dân · Xem nhật ký canh tác minh
-                  bạch · Đảm bảo chất lượng từ vườn
+                  Tạo vườn · Viết nhật ký · Đăng sản phẩm
                 </p>
               </div>
 

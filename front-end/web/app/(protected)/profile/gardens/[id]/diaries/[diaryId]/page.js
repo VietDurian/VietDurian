@@ -30,6 +30,7 @@ import {
   Droplets,
   Beaker,
   Clock,
+  BookOpenCheck,
 } from "lucide-react";
 import { useDiaryStore } from "@/store/useDiaryStore";
 import { useGardenStore } from "@/store/useGardenStore";
@@ -110,14 +111,14 @@ const actionTypeConfig = {
 const statusConfig = {
   "In progressing": {
     label: "Đang tiến hành",
-    bar: "bg-emerald-500",
-    badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    bar: "bg-yellow-500",
+    badge: "bg-yellow-100 text-yellow-700 border-yellow-200",
     icon: CircleDot,
   },
   Completed: {
     label: "Hoàn thành",
-    bar: "bg-blue-500",
-    badge: "bg-blue-100 text-blue-700 border-blue-200",
+    bar: "bg-emerald-500",
+    badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
     icon: BadgeCheck,
   },
   Cancelled: {
@@ -312,7 +313,7 @@ export default function GardenDiaryDetailPage() {
         <div className="max-w-5xl mx-auto px-6 py-4">
           <button
             onClick={() => router.push(`/profile/gardens/${id}/diaries`)}
-            className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors mb-3 text-sm"
+            className="cursor-pointer inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors mb-3 text-sm"
           >
             <ArrowLeft className="w-4 h-4" /> Quay lại nhật ký
           </button>
@@ -327,28 +328,31 @@ export default function GardenDiaryDetailPage() {
                   <h1 className="text-lg font-bold text-gray-900 truncate">
                     {diary.title}
                   </h1>
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border flex-shrink-0 ${status.badge}`}
-                  >
-                    <StatusIcon className="w-3 h-3" /> {status.label}
-                  </span>
                 </div>
                 <p className="text-sm text-gray-500">{garden?.name || "—"}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
-              {diary.status === "In progressing" && (
-                <button
-                  onClick={openFinish}
-                  className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors shadow-sm"
+              {diary.status === "In progressing" ? (
+                <>
+                  <button
+                    onClick={openFinish}
+                    className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-colors shadow-sm"
+                  >
+                    <BookOpenCheck className="w-4 h-4" /> Kết thúc vụ
+                  </button>
+                  <button className="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl font-medium text-sm transition-colors">
+                    <Edit className="w-4 h-4" /> Sửa
+                  </button>
+                </>
+              ) : (
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border flex-shrink-0 ${status.badge}`}
                 >
-                  <Award className="w-4 h-4" /> Kết thúc vụ
-                </button>
+                  <StatusIcon className="w-3 h-3" /> {status.label}
+                </span>
               )}
-              <button className="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl font-medium text-sm transition-colors">
-                <Edit className="w-4 h-4" /> Sửa
-              </button>
             </div>
           </div>
         </div>
@@ -404,7 +408,7 @@ export default function GardenDiaryDetailPage() {
                 <Layers className="w-4 h-4 text-teal-600" />
                 <h2 className="font-bold text-gray-900">Tiến độ giai đoạn</h2>
               </div>
-              <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="grid grid-cols-2 gap-3 mb-5">
                 <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 text-center">
                   <p className="text-2xl font-black text-teal-700">
                     {activeStages.length}
@@ -419,15 +423,6 @@ export default function GardenDiaryDetailPage() {
                     {totalSteps}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">Bước đã ghi</p>
-                </div>
-                <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 text-center">
-                  <p className="text-2xl font-black text-orange-700">
-                    {Number(diary.total_cost || 0) > 0
-                      ? `${(Number(diary.total_cost) / 1000000).toFixed(1)}M`
-                      : "0"}
-                  </p>
-                  <p className="text-xs text-orange-600 mt-0.5">₫</p>
-                  <p className="text-xs text-gray-500 mt-1">Chi phí</p>
                 </div>
               </div>
               <div>
@@ -468,6 +463,7 @@ export default function GardenDiaryDetailPage() {
                   iconBg="bg-red-50"
                   iconColor="text-red-500"
                   label="Chi phí"
+                  valueColor="text-red-600"
                   value={
                     Number(diary.total_cost || 0) > 0
                       ? `${Number(diary.total_cost).toLocaleString("vi-VN")} ₫`
@@ -507,7 +503,7 @@ export default function GardenDiaryDetailPage() {
                       ? `${Number(diary.total_revenue).toLocaleString("vi-VN")} ₫`
                       : "—"
                   }
-                  valueColor="text-teal-700"
+                  valueColor="text-emerald-600"
                 />
                 <div
                   className={`rounded-xl p-4 border ${
@@ -532,9 +528,9 @@ export default function GardenDiaryDetailPage() {
                       </span>
                     </div>
                     <span
-                      className={`font-black text-lg ${
+                      className={`font-black text-sm ${
                         profitPositive
-                          ? "text-emerald-700"
+                          ? "text-emerald-600"
                           : Number(diary.profit || 0) < 0
                             ? "text-red-600"
                             : "text-gray-500"
@@ -546,14 +542,6 @@ export default function GardenDiaryDetailPage() {
                     </span>
                   </div>
                 </div>
-                {diary.status === "In progressing" && (
-                  <button
-                    onClick={openFinish}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Award className="w-4 h-4" /> Kết thúc & nhập sản lượng
-                  </button>
-                )}
               </div>
             </div>
           </div>
@@ -622,24 +610,27 @@ export default function GardenDiaryDetailPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
+                      Tổng chi phí giai đoạn:
                       {stageCost > 0 && (
-                        <span className="text-sm text-gray-500">
-                          <span className="font-semibold text-gray-900">
+                        <span className="text-sm text-red-600">
+                          <span className="font-semibold text-red-600">
                             {stageCost.toLocaleString("vi-VN")}
                           </span>{" "}
                           ₫
                         </span>
                       )}
-                      <button
-                        onClick={() => openAddStep(stage._id)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                          stage.steps.length > 0
-                            ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                            : "bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200"
-                        }`}
-                      >
-                        <Plus className="w-3.5 h-3.5" /> Thêm bước
-                      </button>
+                      {diary.status !== "Completed" && (
+                        <button
+                          onClick={() => openAddStep(stage._id)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                            stage.steps.length > 0
+                              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                              : "bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          }`}
+                        >
+                          <Plus className="w-3.5 h-3.5" /> Thêm bước
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -1216,7 +1207,6 @@ function StepCard({ step, index }) {
                 : "bg-gray-100 text-gray-400"
             }`}
           >
-            <DollarSign className="w-3 h-3" />
             {Number(step.cost || 0) > 0
               ? `${Number(step.cost).toLocaleString("vi-VN")} ₫`
               : "Không có chi phí"}
