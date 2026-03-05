@@ -45,13 +45,16 @@ export default function FinishModal({
                 type="number"
                 value={finishData.weight_durian}
                 onChange={(e) => {
-                  setFinishData({
-                    ...finishData,
-                    weight_durian: e.target.value,
-                  });
-                  if (finishErrors.weight_durian) {
-                    setFinishErrors({ ...finishErrors, weight_durian: "" });
+                  const val = e.target.value;
+                  if (val === "" || Number(val) >= 0) {
+                    setFinishData({ ...finishData, weight_durian: val });
+                    if (finishErrors.weight_durian) {
+                      setFinishErrors({ ...finishErrors, weight_durian: "" });
+                    }
                   }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "e") e.preventDefault();
                 }}
                 placeholder="0"
                 min="0"
@@ -79,10 +82,16 @@ export default function FinishModal({
                 type="number"
                 value={finishData.price}
                 onChange={(e) => {
-                  setFinishData({ ...finishData, price: e.target.value });
-                  if (finishErrors.price) {
-                    setFinishErrors({ ...finishErrors, price: "" });
+                  const val = e.target.value;
+                  if (val === "" || Number(val) >= 0) {
+                    setFinishData({ ...finishData, price: val });
+                    if (finishErrors.price) {
+                      setFinishErrors({ ...finishErrors, price: "" });
+                    }
                   }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "e") e.preventDefault();
                 }}
                 placeholder="0"
                 min="0"
@@ -150,7 +159,7 @@ export default function FinishModal({
             <button
               type="submit"
               disabled={isDiaryCompleting}
-              className="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white py-3 rounded-xl font-semibold transition-colors text-sm"
+              className="cursor-pointer flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white py-3 rounded-xl font-semibold transition-colors text-sm"
             >
               <CheckCircle2 className="w-4 h-4" />{" "}
               {isDiaryCompleting ? "Đang xử lý..." : "Xác nhận hoàn thành"}

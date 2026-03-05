@@ -199,7 +199,9 @@ export default function GardenDiaryDetailPage() {
             Không tìm thấy nhật ký
           </h2>
           <button
-            onClick={() => router.push(`/profile/gardens/${id}/diaries`)}
+            onClick={() =>
+              router.push(`/profile/gardens/${id}/diaries/${diaryId}`)
+            }
             className="text-emerald-600 hover:text-emerald-700 font-medium"
           >
             ← Quay lại danh sách nhật ký
@@ -246,7 +248,14 @@ export default function GardenDiaryDetailPage() {
                   >
                     <BookOpenCheck className="w-4 h-4" /> Kết thúc vụ
                   </button>
-                  <button className="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl font-medium text-sm transition-colors">
+                  <button
+                    onClick={() =>
+                      router.push(
+                        `/profile/gardens/${id}/diaries/${diaryId}/edit`,
+                      )
+                    }
+                    className="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl font-medium text-sm transition-colors"
+                  >
                     <Edit className="w-4 h-4" /> Sửa
                   </button>
                 </>
