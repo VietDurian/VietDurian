@@ -1,25 +1,35 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Save, X, Sprout, Check, ImageIcon } from "lucide-react";
+import { ArrowLeft, X, Sprout, Check } from "lucide-react";
 import { useGardenStore } from "@/store/useGardenStore";
 import { useDiaryStore } from "@/store/useDiaryStore";
 
-export default function CreateDiary() {
-  const { id } = useParams();
+export default function EditDiary() {
+  const params = useParams();
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
+  const diaryId = Array.isArray(params?.diaryId)
+    ? params.diaryId[0]
+    : params?.diaryId;
   const router = useRouter();
   const { getGardenDetails, gardenDetail } = useGardenStore();
-  const { createDiary } = useDiaryStore();
+  const { diaryDetail, getDiaryDetails, editDiary, isDiaryEditing } =
+    useDiaryStore();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     garden_id: id,
   });
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    createDiary(formData);
-    router.push(`/profile/gardens/${id}/diaries`);
+    if (!diaryId) return;
+    await editDiary(diaryId, {
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+    });
+    router.push(`/profile/gardens/${id}/diaries/${diaryId}`);
   };
 
   const handleChange = (e) => {
@@ -31,8 +41,44 @@ export default function CreateDiary() {
   };
 
   useEffect(() => {
+    if (!id) return;
     getGardenDetails(id);
   }, [getGardenDetails, id]);
+
+  useEffect(() => {
+    if (!diaryId) return;
+    getDiaryDetails(diaryId);
+  }, [diaryId, getDiaryDetails]);
+
+  useEffect(() => {
+    if (!diaryDetail?._id || diaryDetail._id !== diaryId || isHydrated) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      title: diaryDetail.title || "",
+      description: diaryDetail.description || "",
+      garden_id: id,
+    }));
+    setIsHydrated(true);
+  }, [diaryDetail, diaryId, id, isHydrated]);
+
+  if (!diaryId) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            Thiếu mã nhật ký
+          </h2>
+          <button
+            onClick={() => router.push(`/profile/gardens/${id}/diaries`)}
+            className="text-emerald-600 hover:text-emerald-700 font-medium"
+          >
+            ← Quay lại danh sách nhật ký
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/30">
@@ -40,7 +86,9 @@ export default function CreateDiary() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-6 py-6">
           <button
-            onClick={() => router.push(`/profile/gardens/${id}/diaries`)}
+            onClick={() =>
+              router.push(`/profile/gardens/${id}/diaries/${diaryId}`)
+            }
             className="cursor-pointer inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -52,7 +100,7 @@ export default function CreateDiary() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Tạo nhật ký mới
+                Chỉnh sửa nhật ký
               </h1>
               <p className="text-gray-600 text-sm">Cho {gardenDetail?.name}</p>
             </div>
@@ -70,7 +118,7 @@ export default function CreateDiary() {
             {/* Name */}
             <div>
               <label
-                htmlFor="name"
+                htmlFor="title"
                 className="block text-sm font-medium text-gray-900 mb-2"
               >
                 Tên nhật ký <span className="text-red-500">*</span>
@@ -112,14 +160,17 @@ export default function CreateDiary() {
           <div className="flex items-center gap-4 mt-8 pt-6 border-t border-gray-200">
             <button
               type="submit"
+              disabled={isDiaryEditing}
               className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
             >
               <Check className="w-4 h-4" />
-              Tạo nhật ký
+              {isDiaryEditing ? "Đang lưu..." : "Lưu thay đổi"}
             </button>
             <button
               type="button"
-              onClick={() => router.push(`/profile/gardens/${id}/diaries`)}
+              onClick={() =>
+                router.push(`/profile/gardens/${id}/diaries/${diaryId}`)
+              }
               className="cursor-pointer inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors border border-gray-300"
             >
               <X className="w-4 h-4" />

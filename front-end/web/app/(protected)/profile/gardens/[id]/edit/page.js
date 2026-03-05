@@ -313,7 +313,7 @@ export default function EditGarden() {
                   onChange={handleChange}
                   required
                   min="0"
-                  step="0.01"
+                  step="any"
                   placeholder="0"
                   className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
                 />
