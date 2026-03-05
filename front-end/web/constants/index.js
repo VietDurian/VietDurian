@@ -1,3 +1,12 @@
+import {
+  BadgeCheck,
+  Ban,
+  BarChart2,
+  CircleDot,
+  Hammer,
+  PackageOpen,
+} from "lucide-react";
+
 export const THEMES = [
   "light",
   "dark",
@@ -32,3 +41,62 @@ export const THEMES = [
   "nord",
   "sunset",
 ];
+
+export const ACTION_TYPES = ["Vật tư", "Công việc", "Chỉ số"];
+
+export const actionTypeConfig = {
+  "Vật tư": {
+    icon: PackageOpen,
+    color: "text-orange-600",
+    bg: "bg-orange-50",
+    border: "border-orange-200",
+    activeBg: "bg-orange-500",
+    activeText: "text-white",
+    dot: "bg-orange-400",
+    badgeBg: "bg-orange-100",
+    badgeText: "text-orange-700",
+  },
+  "Công việc": {
+    icon: Hammer,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    border: "border-blue-200",
+    activeBg: "bg-blue-600",
+    activeText: "text-white",
+    dot: "bg-blue-400",
+    badgeBg: "bg-blue-100",
+    badgeText: "text-blue-700",
+  },
+  "Chỉ số": {
+    icon: BarChart2,
+    color: "text-violet-600",
+    bg: "bg-violet-50",
+    border: "border-violet-200",
+    activeBg: "bg-violet-600",
+    activeText: "text-white",
+    dot: "bg-violet-400",
+    badgeBg: "bg-violet-100",
+    badgeText: "text-violet-700",
+  },
+};
+
+export const statusConfig = {
+  "In progressing": {
+    label: "Đang tiến hành",
+    bar: "bg-yellow-500",
+    badge: "bg-yellow-100 text-yellow-700 border-yellow-200",
+    icon: CircleDot,
+  },
+  Completed: {
+    label: "Hoàn thành",
+    bar: "bg-emerald-500",
+    badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    icon: BadgeCheck,
+  },
+  Cancelled: {
+    label: "Đã hủy",
+    bar: "bg-gray-400",
+    badge: "bg-gray-100 text-gray-600 border-gray-200",
+    icon: Ban,
+  },
+};
