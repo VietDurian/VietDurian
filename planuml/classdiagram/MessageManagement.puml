@@ -1,0 +1,88 @@
+@startuml MessageManagement
+skinparam monochrome true
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+left to right direction
+
+
+' ===== Routes & Middleware =====
+class MessageRoute <<control>> {
+	+sendMessage(req, res): void
+	+viewMessageList(req, res): void
+}
+
+class AuthMiddleware <<control>> {
+	+protect(req): UserInfo
+}
+
+' ===== Controller =====
+class MessageController <<control>> {
+	+sendMessage(req, res): void
+	+viewMessageList(req, res): void
+}
+
+' ===== Service =====
+class MessageService <<service>> {
+	+sendMessage(data): Message
+	+viewMessageList(params): { data: Message[], pagination }
+}
+
+' ===== Models =====
+class MessageModel <<model>> {
+	+find(filter): Message[]
+	+findById(id): Message
+	+countDocuments(filter): number
+	+save(): Message
+}
+
+class ConversationModel <<model>> {
+	+findById(id): Conversation
+}
+
+class UserModel <<model>> {
+	+findById(id): User
+}
+
+' ===== Entities =====
+class Message <<entity>> {
+	+_id: ObjectId
+	+conversationId: ObjectId
+	+senderId: ObjectId
+	+receiverId: ObjectId
+	+text: string
+	+image: string
+	+created_at: Date
+	+updated_at: Date
+}
+
+class Conversation <<entity>> {
+	+_id: ObjectId
+}
+
+class User <<entity>> {
+	+_id: ObjectId
+	+full_name: string
+	+avatar: string
+}
+
+class Database <<database>>
+
+' ===== Relationships =====
+MessageRoute --> AuthMiddleware : uses (send/view)
+MessageRoute --> MessageController : calls handlers
+
+MessageController --> MessageService : orchestration
+
+MessageService --> MessageModel : persistence
+MessageService --> ConversationModel : validate conversation
+MessageService --> UserModel : validate sender/receiver
+
+MessageModel --> Database : queries
+ConversationModel --> Database : queries
+UserModel --> Database : queries
+
+Conversation "1" o-- "0..*" Message : contains
+User "1" o-- "0..*" Message : sends
+User "1" o-- "0..*" Message : receives
+
+@enduml

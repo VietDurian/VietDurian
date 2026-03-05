@@ -11,6 +11,8 @@ class PostRoute <<control>> {
   +viewPostList(req, res): void
   +updatePost(req, res): void
   +deletePost(req, res): void
+  +approvePost(req, res): void
+  +rejectPost(req, res): void
   +searchPost(req, res): void
   +filterPost(req, res): void
 }
@@ -25,6 +27,8 @@ class PostController <<control>> {
   +viewPostList(req, res): void
   +updatePost(req, res): void
   +deletePost(req, res): void
+  +approvePost(req, res): void
+  +rejectPost(req, res): void
   +searchPost(req, res): void
   +filterPost(req, res): void
 }
@@ -35,6 +39,8 @@ class PostService <<service>> {
   +viewPostList(params): { data: Post[], pagination }
   +updatePost(postId, data): Post
   +deletePost(postId): Post
+  +approvePost(postId): Post
+  +rejectPost(postId, reason): Post
   +searchPost(params): { data: Post[], pagination }
   +filterPost(params): { data: Post[], pagination }
 }
@@ -75,7 +81,7 @@ class User <<entity>> {
 class Database <<database>>
 
 ' ===== Relationships =====
-PostRoute --> AuthMiddleware : uses (create/update/delete)
+PostRoute --> AuthMiddleware : uses (create/view/update/delete/approve/reject)
 PostRoute --> PostController : calls handlers
 
 PostController --> PostService : orchestration
