@@ -1,7 +1,6 @@
 import {
   DollarSign,
   Droplets,
-  ImageIcon,
   PackageOpen,
   Plus,
   Store,
@@ -9,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { ACTION_TYPES, actionTypeConfig } from "@/constants";
+import ImageSelect from "@/components/ImageSelect";
 
 export default function AddStepModal({
   closeAddStep,
@@ -207,51 +207,36 @@ export default function AddStepModal({
               <input
                 type="number"
                 value={newStep.cost}
-                onChange={(e) =>
-                  setNewStep({ ...newStep, cost: e.target.value })
-                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "" || Number(val) >= 0) {
+                    setNewStep({ ...newStep, cost: val });
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "e") e.preventDefault();
+                }}
                 placeholder="0"
                 required={actionType !== "Chỉ số"}
                 min="0"
-                step="1000"
+                step="any"
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-gray-50 focus:bg-white"
               />
             </div>
           </div>
 
-          {actionType !== "Chỉ số" && (
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                URL hình ảnh{" "}
-                <span className="text-gray-400 font-normal">(tuỳ chọn)</span>
-              </label>
-              <div className="relative">
-                <ImageIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="url"
-                  value={newStep.image}
-                  onChange={(e) =>
-                    setNewStep({ ...newStep, image: e.target.value })
-                  }
-                  placeholder="https://..."
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-gray-50 focus:bg-white"
-                />
-              </div>
-              {newStep.image && (
-                <div className="mt-3 rounded-xl overflow-hidden border border-gray-200">
-                  <img
-                    src={newStep.image}
-                    alt="Preview"
-                    className="w-full h-36 object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "https://placehold.co/400x200?text=URL+không+hợp+lệ";
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          )}
+          <ImageSelect
+            label="Ảnh minh họa"
+            hint="(tuỳ chọn)"
+            value={newStep.image}
+            onChange={(imageValue) =>
+              setNewStep((prev) => ({
+                ...prev,
+                image: imageValue || "",
+              }))
+            }
+            maxSizeMB={5}
+          />
 
           <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
             <button

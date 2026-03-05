@@ -55,7 +55,7 @@ export default function FinishModal({
                 }}
                 placeholder="0"
                 min="0"
-                step="0.1"
+                step="any"
                 className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-gray-50 focus:bg-white ${
                   finishErrors.weight_durian
                     ? "border-red-400"
@@ -86,7 +86,7 @@ export default function FinishModal({
                 }}
                 placeholder="0"
                 min="0"
-                step="1000"
+                step="any"
                 className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-gray-50 focus:bg-white ${
                   finishErrors.price ? "border-red-400" : "border-gray-200"
                 }`}
