@@ -2,6 +2,8 @@ import { DiaryModel } from '@/model/diaryModel';
 import { DiaryStepModel } from '@/model/diaryStepModel';
 import { StepModel } from '@/model/stepModel';
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // Get all diaries
 const getDiariesByUser = async (filter = {}) => {
 	try {
@@ -42,10 +44,31 @@ const getDiariesByUser = async (filter = {}) => {
 // Create diary
 const createDiary = async ({ user_id, garden_id, title, description }) => {
 	try {
+		
+		const normalizedTitle = String(title || '').trim();
+		if (!normalizedTitle) {
+			const error = new Error('Diary title is required');
+			error.statusCode = 400;
+			throw error;
+		}
+		const titleRegex = new RegExp(`^${escapeRegex(normalizedTitle)}$`, 'i');
+		const duplicatedDiary = await DiaryModel.findOne({
+			user_id,
+			garden_id,
+			title: titleRegex,
+		});
+
+		if (duplicatedDiary) {
+			const error = new Error('Tên nhật ký đã tồn tại trong vườn này');
+			error.statusCode = 409;
+			error.code = 'Vui lòng chọn tên nhật ký khác';
+			throw error;
+		}
+
 		const newDiary = new DiaryModel({
 			user_id,
 			garden_id,
-			title,
+			title: normalizedTitle,
 			description,
 		});
 		await newDiary.save();

@@ -40,7 +40,7 @@ const createDiary = async (req, res, next) => {
 		});
 		res.status(201).json({
 			code: 201,
-			message: 'Diary created successfully',
+			message: 'Thiết lập nhật ký thành công',
 			data: newDiary,
 		});
 	} catch (error) {
@@ -59,7 +59,7 @@ const updateDiary = async (req, res, next) => {
 		});
 		res.status(200).json({
 			code: 200,
-			message: 'Diary updated successfully',
+			message: 'Cập nhật nhật ký thành công',
 			data: updatedDiary,
 		});
 	} catch (error) {
@@ -78,7 +78,7 @@ const finishDiary = async (req, res, next) => {
 		});
 		res.status(200).json({
 			code: 200,
-			message: 'Diary marked as completed successfully',
+			message: 'Cập nhật nhật ký thành công',
 			data: updatedDiary,
 		});
 	} catch (error) {
@@ -99,7 +99,7 @@ const getDiaryDetails = async (req, res, next) => {
 		}
 		res.status(200).json({
 			code: 200,
-			message: 'Diary details retrieved successfully',
+			message: 'Cập nhật nhật ký thành công',
 			data: diary,
 		});
 	} catch (error) {
