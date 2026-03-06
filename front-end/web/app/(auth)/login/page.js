@@ -265,10 +265,11 @@ export default function LoginPage() {
                     className={`
               h-12 w-12 flex items-center justify-center
               rounded-xl transition-all
-              ${isOpen
-                        ? "bg-emerald-500 text-white"
-                        : "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200"
-                      }
+              ${
+                isOpen
+                  ? "bg-emerald-500 text-white"
+                  : "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200"
+              }
             `}
                   >
                     <Icon size={22} />
@@ -282,8 +283,9 @@ export default function LoginPage() {
 
                   {/* Arrow indicator */}
                   <div
-                    className={`transition-transform duration-300 ${isOpen ? "rotate-180 text-emerald-600" : "text-gray-400"
-                      }`}
+                    className={`transition-transform duration-300 ${
+                      isOpen ? "rotate-180 text-emerald-600" : "text-gray-400"
+                    }`}
                   >
                     <ChevronDown />
                   </div>
@@ -293,10 +295,11 @@ export default function LoginPage() {
                 <div
                   className={`
             grid transition-all duration-300
-            ${isOpen
-                      ? "grid-rows-[1fr] opacity-100 mt-4"
-                      : "grid-rows-[0fr] opacity-0"
-                    }
+            ${
+              isOpen
+                ? "grid-rows-[1fr] opacity-100 mt-4"
+                : "grid-rows-[0fr] opacity-0"
+            }
           `}
                 >
                   <div className="overflow-hidden">
