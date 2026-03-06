@@ -24,7 +24,6 @@ export const useDiaryStore = create((set, get) => ({
           year: year,
         },
       });
-      console.log(res.data);
       set({ diaries: res.data.data });
     } catch (error) {
       toast.error(error?.response?.data?.message || "getAllDiariesByGardenId");
@@ -45,7 +44,8 @@ export const useDiaryStore = create((set, get) => ({
       }));
 
       toast.success(res.data.message);
-    } catch {
+    } catch (error) {
+      console.log("AAAAAA", error?.response?.data?.message);
       toast.error(error?.response?.data?.message || "createDiary");
     } finally {
       set({ isDiaryCreating: false });
