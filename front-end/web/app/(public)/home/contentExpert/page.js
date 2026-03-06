@@ -191,74 +191,103 @@ export default function ContentExpertHome() {
                                 </p>
                             </div>
 
-                            {/* ── 2 Action cards — SQUARE ── */}
-                            <div className="grid md:grid-cols-2 gap-10 max-w-4xl mx-auto">
+
+
+                            {/* ── 2 Action cards ── */}
+                            <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto items-stretch">
 
                                 {/* Card 1 — Tạo bài viết (VÀNG) */}
-                                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden shadow-black/20 flex flex-col" style={{ minHeight: "520px" }}>
-                                    <div className="bg-gradient-to-r from-yellow-400 to-amber-400 p-6">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-14 h-14 bg-white/25 rounded-xl flex items-center justify-center flex-shrink-0 ring-4 ring-white/20">
-                                                <Pen className="w-7 h-7 text-white" />
+                                <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-yellow-500/10">
+                                    {/* Header */}
+                                    <div className="relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-500 p-5 overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-xl -mr-8 -mt-8 pointer-events-none"></div>
+
+                                        <div className="relative z-10 flex items-start gap-3">
+                                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 shadow-inner border border-white/30">
+                                                <Pen className="w-6 h-6 text-white drop-shadow-md" />
                                             </div>
                                             <div>
-                                                <div className="inline-flex items-center gap-1 bg-white/25 text-white text-[10px] font-black px-2 py-0.5 rounded-full border border-white/40 mb-1">ĐĂNG BÀI</div>
-                                                <h3 className="text-white font-bold text-xl">Tạo bài viết</h3>
-                                                <p className="text-yellow-100 text-sm mt-1">Đăng bài để chia sẻ với cộng đồng nông dân</p>
+                                                <div className="inline-flex items-center gap-1 bg-white/20 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border border-white/30 mb-1 uppercase tracking-wide">
+                                                    Đăng bài
+                                                </div>
+                                                <h3 className="text-white font-bold text-lg leading-tight">Tạo bài viết</h3>
+                                                <p className="text-yellow-50 text-[13px] mt-0.5">Chia sẻ với cộng đồng nông dân</p>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="p-6 bg-white flex flex-col flex-1">
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 text-center">Bạn có thể đăng loại bài nào?</p>
-                                        <div className="grid grid-cols-2 gap-2.5 flex-1">
+
+                                    {/* Body */}
+                                    <div className="p-5 bg-white flex flex-col flex-1">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mb-3">Bạn có thể đăng loại bài nào?</p>
+
+                                        {/* Đã đưa về lại dạng chữ nhật, nhỏ gọn, tone Vàng */}
+                                        <div className="grid grid-cols-2 gap-4 flex-1 content-start">
                                             {POST_TYPES.map((f) => (
-                                                <div key={f.label} className={`relative ${f.bg} border-2 rounded-xl p-3.5 cursor-pointer transition-all shadow-sm hover:shadow-md flex flex-col items-center justify-center`}>
-                                                    <span className={`absolute -top-2 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full ${f.tagColor}`}>{f.tag}</span>
-                                                    <div className="mb-2 mt-1">{f.icon}</div>
-                                                    <div className="font-bold text-gray-800 text-xs text-center mb-1">{f.label}</div>
-                                                    <div className="text-gray-500 text-[11px] text-center leading-tight">{f.desc}</div>
+                                                <div key={f.label} className="group/item relative bg-yellow-50 border-yellow-200 hover:border-yellow-400 border-2 rounded-xl p-3 cursor-pointer transition-all duration-300 shadow-sm hover:-translate-y-1 hover:shadow-md flex flex-col items-center text-center">
+                                                    <span className={`absolute -top-2 left-2 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm ${f.tagColor}`}>
+                                                        {f.tag}
+                                                    </span>
+                                                    <div className="mb-1 mt-1 text-amber-500 transition-transform transform group-hover/item:scale-110 duration-300">
+                                                        {f.icon}
+                                                    </div>
+                                                    <div className="font-bold text-gray-800 text-xs mb-0.5">{f.label}</div>
+                                                    <div className="text-gray-500 text-[10px] leading-tight line-clamp-2">{f.desc}</div>
                                                 </div>
                                             ))}
                                         </div>
-                                        <Link href="/profile/posts/create" className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-yellow-400 to-amber-400 hover:from-yellow-500 hover:to-amber-500 text-white py-3.5 rounded-xl font-bold text-base transition-all shadow-md mt-6">
-                                            <Pen className="w-5 h-5" />Tạo bài viết ngay<ArrowRight className="w-5 h-5" />
+
+                                        <Link href="/profile/posts/create" className="group/btn flex items-center justify-center gap-2 w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white py-3.5 rounded-xl font-bold text-[15px] transition-all shadow-md mt-6">
+                                            <Pen className="w-5 h-5 transition-transform group-hover/btn:-rotate-6" />
+                                            Tạo bài viết ngay
                                         </Link>
                                     </div>
                                 </div>
 
                                 {/* Card 2 — Viết Blog (XANH SOLID) */}
-                                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden shadow-black/20 flex flex-col" style={{ minHeight: "520px" }}>
-                                    <div className="bg-emerald-500 p-6">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0 ring-4 ring-white/10">
-                                                <Globe className="w-7 h-7 text-white" />
+                                <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10">
+                                    {/* Header */}
+                                    <div className="relative bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 p-5 overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-xl -mr-8 -mt-8 pointer-events-none"></div>
+
+                                        <div className="relative z-10 flex items-start gap-3">
+                                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 shadow-inner border border-white/30">
+                                                <Globe className="w-6 h-6 text-white drop-shadow-md" />
                                             </div>
                                             <div>
-                                                <div className="inline-flex items-center gap-1 bg-white/20 text-white text-[10px] font-black px-2 py-0.5 rounded-full border border-white/40 mb-1">BLOG CHUYÊN SÂU</div>
-                                                <h3 className="text-white font-bold text-xl">Viết Blog kiến thức</h3>
-                                                <p className="text-emerald-100 text-sm mt-1">Chuẩn hóa kiến thức canh tác cho nông dân</p>
+                                                <div className="inline-flex items-center gap-1 bg-white/20 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border border-white/30 mb-1 uppercase tracking-wide">
+                                                    Blog chuyên sâu
+                                                </div>
+                                                <h3 className="text-white font-bold text-lg leading-tight">Viết Blog kiến thức</h3>
+                                                <p className="text-emerald-50 text-[13px] mt-0.5">Chuẩn hóa kiến thức canh tác</p>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="p-6 bg-white flex flex-col flex-1">
-                                        <p className="text-gray-500 text-sm mb-4 leading-relaxed">
-                                            Soạn bài blog chuyên sâu về kỹ thuật canh tác — nội dung được tổ chức thành các mục rõ ràng, dễ đọc và dễ áp dụng cho nông dân.
+
+                                    {/* Body */}
+                                    <div className="p-5 bg-white flex flex-col flex-1">
+                                        <p className="text-gray-500 text-[13px] mb-4 leading-snug">
+                                            Soạn bài blog chuyên sâu về kỹ thuật canh tác — nội dung được tổ chức thành các mục rõ ràng, dễ đọc cho nông dân.
                                         </p>
-                                        <ul className="space-y-2.5 flex-1">
+
+                                        <ul className="space-y-2.5 flex-1 content-start">
                                             {BLOG_FEATURES.map((f) => (
-                                                <li key={f.label} className="flex items-center gap-3 text-sm text-gray-700">
-                                                    <span className="w-8 h-8 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                <li key={f.label} className="group/list flex items-center gap-3 text-[13px] font-medium text-gray-700">
+                                                    <span className="w-7 h-7 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors group-hover/list:bg-emerald-500 group-hover/list:text-white">
                                                         {f.icon}
                                                     </span>
-                                                    {f.label}
+                                                    <span className="group-hover/list:text-emerald-700 transition-colors">{f.label}</span>
                                                 </li>
                                             ))}
                                         </ul>
-                                        <Link href="/profile/blogs/create" className="flex items-center justify-center gap-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3.5 rounded-xl font-bold text-base transition-all shadow-md mt-6">
-                                            <Globe className="w-5 h-5" />Viết Blog kiến thức<ArrowRight className="w-5 h-5" />
+
+                                        {/* Nút bấm 2: Đã tăng py-3.5, text-[15px], rounded-xl, và mt-6 */}
+                                        <Link href="/profile/blogs/create" className="group/btn flex items-center justify-center gap-2 w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-3.5 rounded-xl font-bold text-[15px] transition-all shadow-md mt-6">
+                                            <Globe className="w-5 h-5 transition-transform group-hover/btn:rotate-12" />
+                                            Viết Blog kiến thức
                                         </Link>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>

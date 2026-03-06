@@ -206,48 +206,63 @@ export default function TraderHome() {
                                 </p>
                             </div>
 
-                            {/* Action card */}
-                            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden shadow-black/20 max-w-4xl mx-auto">
-                                <div className="bg-gradient-to-r from-yellow-400 to-amber-400 p-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 bg-white/30 rounded-xl flex items-center justify-center flex-shrink-0 ring-4 ring-white/20">
-                                            <FileText className="w-6 h-6 text-white" />
+                            {/* Action card - TẠO BÀI VIẾT NHU CẦU (Đã thêm hiệu ứng Modern Soft-UI) */}
+                            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-yellow-500/10 max-w-4xl mx-auto">
+
+                                {/* Header */}
+                                <div className="relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-500 p-6 overflow-hidden">
+                                    {/* Hiệu ứng trang trí (Circles) */}
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-xl -mr-10 -mt-10 pointer-events-none"></div>
+                                    <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-amber-600/20 rounded-full blur-xl -mb-10 pointer-events-none"></div>
+
+                                    <div className="relative z-10 flex items-center gap-4">
+                                        <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 shadow-inner border border-white/30">
+                                            <FileText className="w-7 h-7 text-white drop-shadow-md" />
                                         </div>
                                         <div>
-                                            <div className="flex items-center gap-2 mb-0.5">
-                                                <h2 className="text-lg font-bold text-white">Tạo bài viết nhu cầu</h2>
-                                                <span className="bg-white/25 text-white text-[10px] font-black px-2 py-0.5 rounded-full border border-white/40">MỚI</span>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h2 className="text-xl font-bold text-white leading-tight">Tạo bài viết nhu cầu</h2>
                                             </div>
-                                            <p className="text-yellow-100 text-sm">
+                                            <p className="text-yellow-50 text-sm">
                                                 Đăng yêu cầu thu mua để nông dân chủ động liên hệ với bạn
                                             </p>
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Body */}
                                 <div className="p-6 bg-white">
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 text-center">Bạn có thể đăng loại bài nào?</p>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-6">
+                                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest text-center mb-5">
+                                        Bạn có thể đăng loại bài nào?
+                                    </p>
+
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
                                         {[
-                                            { icon: <Search className="w-5 h-5 text-emerald-700" />, bg: "bg-emerald-50 border-emerald-300 hover:border-emerald-500 hover:bg-emerald-100", label: "Tìm nguồn hàng", desc: "Đặt mua lô sầu riêng theo giống, khu vực, sản lượng", tag: "Phổ biến", tagColor: "bg-emerald-600 text-white" },
-                                            { icon: <BookOpen className="w-5 h-5 text-teal-700" />, bg: "bg-teal-50 border-teal-300 hover:border-teal-500 hover:bg-teal-100", label: "Kinh nghiệm", desc: "Chia sẻ bí quyết thu mua, kiểm tra chất lượng sầu riêng", tag: "Cộng đồng", tagColor: "bg-teal-600 text-white" },
-                                            { icon: <Truck className="w-5 h-5 text-emerald-800" />, bg: "bg-emerald-50 border-emerald-300 hover:border-emerald-500 hover:bg-emerald-100", label: "Thuê dịch vụ", desc: "Tìm xe tải vận chuyển, đội bốc xếp sầu riêng", tag: "Hữu ích", tagColor: "bg-emerald-700 text-white" },
-                                            { icon: <MessageCircle className="w-5 h-5 text-teal-800" />, bg: "bg-teal-50 border-teal-300 hover:border-teal-500 hover:bg-teal-100", label: "Khác", desc: "Thông báo giá thị trường, hỏi đáp, tìm đối tác", tag: "Tự do", tagColor: "bg-teal-700 text-white" },
+                                            { icon: <Search className="w-6 h-6 text-emerald-600" />, bg: "bg-emerald-50 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100", label: "Tìm nguồn hàng", desc: "Đặt mua lô sầu riêng theo giống, khu vực, sản lượng", tag: "Phổ biến", tagColor: "bg-emerald-500 text-white" },
+                                            { icon: <BookOpen className="w-6 h-6 text-teal-600" />, bg: "bg-teal-50 border-teal-200 hover:border-teal-400 hover:bg-teal-100", label: "Kinh nghiệm", desc: "Chia sẻ bí quyết thu mua, kiểm tra chất lượng sầu riêng", tag: "Cộng đồng", tagColor: "bg-teal-500 text-white" },
+                                            { icon: <Truck className="w-6 h-6 text-emerald-700" />, bg: "bg-emerald-50 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100", label: "Thuê dịch vụ", desc: "Tìm xe tải vận chuyển, đội bốc xếp sầu riêng", tag: "Hữu ích", tagColor: "bg-emerald-600 text-white" },
+                                            { icon: <MessageCircle className="w-6 h-6 text-teal-700" />, bg: "bg-teal-50 border-teal-200 hover:border-teal-400 hover:bg-teal-100", label: "Khác", desc: "Thông báo giá thị trường, hỏi đáp, tìm đối tác", tag: "Tự do", tagColor: "bg-teal-600 text-white" },
                                         ].map((f) => (
-                                            <div key={f.label} className={`relative ${f.bg} border-2 rounded-xl p-3.5 cursor-pointer transition-all shadow-sm hover:shadow-md`}>
-                                                <span className={`absolute -top-2 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full ${f.tagColor}`}>{f.tag}</span>
-                                                <div className="flex justify-center mb-2 mt-1">{f.icon}</div>
-                                                <div className="font-bold text-gray-800 text-xs text-center mb-1">{f.label}</div>
-                                                <div className="text-gray-500 text-[11px] text-center leading-tight">{f.desc}</div>
+                                            <div key={f.label} className={`group/item relative ${f.bg} border rounded-2xl p-4 cursor-pointer transition-all duration-300 shadow-sm hover:-translate-y-1 hover:shadow-md flex flex-col items-center text-center`}>
+                                                <span className={`absolute -top-2.5 left-4 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm ${f.tagColor}`}>
+                                                    {f.tag}
+                                                </span>
+                                                <div className="mb-2 mt-1 transition-transform transform group-hover/item:scale-110 duration-300">
+                                                    {f.icon}
+                                                </div>
+                                                <div className="font-bold text-gray-800 text-sm mb-1.5">{f.label}</div>
+                                                <div className="text-gray-500 text-[11px] leading-relaxed line-clamp-2">{f.desc}</div>
                                             </div>
                                         ))}
                                     </div>
+
                                     <Link
                                         href="/profile/posts/create"
-                                        className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-yellow-400 to-amber-400 hover:from-yellow-500 hover:to-amber-500 text-white py-3.5 rounded-xl font-bold text-base transition-all shadow-md"
+                                        className="group/btn flex items-center justify-center gap-2 w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white py-3.5 rounded-xl font-bold text-[15px] transition-all shadow-lg shadow-yellow-500/25"
                                     >
-                                        <FileText className="w-5 h-5 text-white" />
+                                        <FileText className="w-5 h-5 transition-transform group-hover/btn:-rotate-6" />
                                         Tạo bài viết nhu cầu ngay
-                                        <ArrowRight className="w-5 h-5 text-white" />
+                                        <ArrowRight className="w-5 h-5 transition-transform group-hover/btn:translate-x-1" />
                                     </Link>
                                 </div>
                             </div>
