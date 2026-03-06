@@ -6,6 +6,7 @@ import { API_v1 } from "@/routes/index";
 import connectDB from "@/config/mongoose";
 import { app, server } from "./lib/socket";
 import cookieParser from "cookie-parser";
+import { postService } from "@/services/postService";
 require("dotenv").config();
 
 // Connect to MongoDB
@@ -30,6 +31,9 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Api V1 Routes
 app.use("/api/v1", API_v1);
+
+// Background jobs
+postService.startPostExpiryJob();
 
 // Error responses
 app.use((err, req, res, next) => {

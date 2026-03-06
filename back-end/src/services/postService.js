@@ -2,6 +2,9 @@ import { GeneralPostModel } from '@/model/generalPostModel';
 import { cloudinary } from '@/config/cloudinary';
 import { notificationService } from '@/services/notificationService';
 import { favoriteService } from '@/services/favoriteService';
+import User from '@/model/userModel';
+
+const TWO_DAYS_IN_MS = 2 * 24 * 60 * 60 * 1000;
 
 const normalizeText = (text = '') =>
 	text
@@ -177,7 +180,7 @@ const approveGeneralPost = async (post_id, adminId, status, reason) => {
 							sender_id: adminId,
 							entity_type: 'Accepted Post',
 							post_id: post_id,
-							message: `Your post has been ${status} by admin.`,
+							message: `Bài viết của bạn đã được admin ${status}.`,
 						});
 					}
 				} catch (error) {
@@ -194,7 +197,7 @@ const approveGeneralPost = async (post_id, adminId, status, reason) => {
 							sender_id: adminId,
 							entity_type: 'Rejected Post',
 							post_id: post_id,
-							message: `Your post has been rejected by admin because ${reason}.`,
+							message: `Bài viết của bạn đã bị từ chối bởi admin.${reason}.`,
 						});
 					}
 				} catch (error) {
@@ -219,6 +222,73 @@ const getGeneralPostDetails = async (post_id) => {
 	}
 };
 
+const getSystemSenderId = async () => {
+	const adminUser = await User.findOne({ role: 'admin' }).select('_id').lean();
+	return adminUser?._id || null;
+};
+
+const expireUnapprovedPosts = async () => {
+	try {
+		const cutoffDate = new Date(Date.now() - TWO_DAYS_IN_MS);
+		const expiredPosts = await GeneralPostModel.find({
+			status: 'progressing',
+			created_at: { $lte: cutoffDate },
+		})
+			.select('_id author_id created_at')
+			.lean();
+
+		if (!expiredPosts.length) {
+			return { processed: 0 };
+		}
+
+		const senderId = await getSystemSenderId();
+
+		for (const post of expiredPosts) {
+			await GeneralPostModel.findByIdAndUpdate(post._id, { status: 'inactive' });
+
+			if (post.author_id) {
+				try {
+					await notificationService.createNotification({
+						receiver_id: post.author_id,
+						sender_id: senderId || post.author_id,
+						entity_type: 'Expired Post',
+						post_id: post._id,
+						message:
+							'Bài viết của bạn đã hết hạn xét duyệt sau 2 ngày. Vui lòng đăng lại nếu bạn vẫn muốn chia sẻ thông tin này.',
+					});
+				} catch (error) {
+					console.error('Notification error (expired post):', error);
+				}
+			}
+
+			await deleteGeneralPost(post._id);
+		}
+
+		return { processed: expiredPosts.length };
+	} catch (error) {
+		throw error;
+	}
+};
+
+const startPostExpiryJob = () => {
+	const run = async () => {
+		try {
+			const result = await expireUnapprovedPosts();
+			if (result.processed > 0) {
+				console.log(`[PostExpiryJob] Processed ${result.processed} expired posts.`);
+			}
+		} catch (error) {
+			console.error('[PostExpiryJob] Failed to process expired posts:', error);
+		}
+	};
+
+	// Run once at startup to avoid waiting for the first interval.
+	run();
+
+	// Re-check periodically for posts that just crossed the 2-day threshold.
+	setInterval(run, 60 * 60 * 1000);
+};
+
 export const postService = {
 	createGeneralPost,
 	getGeneralPost,
@@ -226,4 +296,6 @@ export const postService = {
 	deleteGeneralPost,
 	approveGeneralPost,
 	getGeneralPostDetails,
+	expireUnapprovedPosts,
+	startPostExpiryJob,
 };

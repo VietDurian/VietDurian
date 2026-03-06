@@ -120,10 +120,20 @@ export function AuthProvider({ children }) {
     const interceptorId = apiClient.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error?.response?.status === 401 && !isHandling401.current) {
+        const currentPath = window.location.pathname;
+        const protectedPrefixes = ["/dashboard", "/profile", "/chat", "/home"];
+        const isProtectedPath = protectedPrefixes.some(
+          (prefix) => currentPath === prefix || currentPath.startsWith(`${prefix}/`),
+        );
+
+        if (
+          error?.response?.status === 401 &&
+          isProtectedPath &&
+          !isHandling401.current
+        ) {
           isHandling401.current = true;
 
-          const redirectPath = `${window.location.pathname}${window.location.search}`;
+          const redirectPath = `${currentPath}${window.location.search}`;
           const target =
             redirectPath && redirectPath !== "/login"
               ? `/login?redirect=${encodeURIComponent(redirectPath)}`

@@ -443,12 +443,27 @@ export default function CommentModal({
 
   const textInputRef = useRef(null);
 
+  const autoResizeTextarea = (textarea) => {
+    if (!textarea) return;
+
+    const maxHeight = 120;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
+    textarea.style.overflowY =
+      textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+  };
+
   // Load comments khi mở modal
   useEffect(() => {
     if (isOpen && postId) {
       loadComments();
     }
   }, [isOpen, postId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    autoResizeTextarea(textInputRef.current);
+  }, [commentText, isOpen]);
 
   const loadComments = async () => {
     try {
@@ -687,7 +702,7 @@ export default function CommentModal({
               </div>
             ) : comments.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
-                No comments yet. Be the first to comment!
+                Hiện chưa có bình luận nào. Hãy là người đầu tiên bình luận về bài viết này!
               </div>
             ) : (
               comments.map((comment) => (
@@ -756,7 +771,10 @@ export default function CommentModal({
                 <textarea
                   ref={textInputRef}
                   value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
+                  onChange={(e) => {
+                    setCommentText(e.target.value);
+                    autoResizeTextarea(e.target);
+                  }}
                   placeholder={
                     editingComment
                       ? "Edit your comment..."
