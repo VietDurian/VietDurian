@@ -96,6 +96,29 @@ export function AuthProvider({ children }) {
     useAuthStore.setState({ authUser: userData });
   }, []);
 
+  const loginWithGoogle = useCallback(async (credential) => {
+    try {
+      const res = await apiClient.post("/auth/google-login", {
+        token: credential,
+      });
+
+      const { user, token } = res.data.data;
+
+      localStorage.setItem("auth_user", JSON.stringify(user));
+      localStorage.setItem("auth_token", token);
+
+      setUser(user);
+      setToken(token);
+
+      router.push("/home");
+
+      return res.data;
+    } catch (error) {
+      console.error("Google login error:", error);
+      throw error;
+    }
+  }, [router]);
+
   const logout = useCallback(
     async (redirectTo = "/login") => {
       setUser(null);
@@ -157,6 +180,7 @@ export function AuthProvider({ children }) {
         token,
         loading,
         login,
+        loginWithGoogle,
         logout,
         refreshProfile,
         setUserUnsafe,

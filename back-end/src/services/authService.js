@@ -412,6 +412,13 @@ const resetPasswordWithToken = async (token, newPassword) => {
 
 const googleLogin = async (token) => {
   try {
+    console.log("🔑 Google Login - Token received:", token ? "Yes" : "No");
+    console.log("🔑 Google Client ID:", process.env.YOUR_GOOGLE_CLIENT_ID);
+
+    if (!token) {
+      throw createError(400, "Token is required");
+    }
+
     // Verify Google token
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
@@ -421,19 +428,27 @@ const googleLogin = async (token) => {
     const payload = ticket.getPayload();
     const { email, name, picture } = payload;
 
+    console.log("✅ Google token verified successfully:", email);
+
     // Check if user exists
     let user = await User.findOne({ email });
 
     if (!user) {
+      // Generate a strong random password for Google users
+      // Must have: uppercase, lowercase, number, special char, min 12 chars
+      const randomPwd = crypto.randomBytes(8).toString("hex"); // 16 hex chars
+      const strongPassword = `Google${randomPwd}#1a`;
+
       // Create new user if not exists
       user = await User.create({
         full_name: name || "",
         email,
-        password: crypto.randomBytes(20).toString("hex"),
+        password: strongPassword,
         avatar: picture || "",
         is_verified: true,
         role: "trader",
       });
+      console.log("✅ New user created:", email);
     }
 
     // Generate JWT token
@@ -441,6 +456,7 @@ const googleLogin = async (token) => {
 
     return { user, token: jwtToken };
   } catch (error) {
+    console.error("❌ Google Login Error:", error.message);
     throw createError(401, "Invalid Google token");
   }
 };
