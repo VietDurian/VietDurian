@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { Image, Loader2, Send, X } from "lucide-react";
 import { useRef } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const MessageInput = () => {
   const [text, setText] = useState("");

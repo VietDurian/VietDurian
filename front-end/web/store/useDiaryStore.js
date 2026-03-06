@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export const useDiaryStore = create((set, get) => ({
   diaries: [],
@@ -27,7 +27,7 @@ export const useDiaryStore = create((set, get) => ({
       console.log(res.data);
       set({ diaries: res.data.data });
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load diaries");
+      toast.error(error?.response?.data?.message || "getAllDiariesByGardenId");
     } finally {
       set({ isDiariesLoading: false });
     }
@@ -45,6 +45,8 @@ export const useDiaryStore = create((set, get) => ({
       }));
 
       toast.success(res.data.message);
+    } catch {
+      toast.error(error?.response?.data?.message || "createDiary");
     } finally {
       set({ isDiaryCreating: false });
     }
@@ -59,9 +61,7 @@ export const useDiaryStore = create((set, get) => ({
       return res?.data?.data;
     } catch (error) {
       set({ diaryDetail: {} });
-      toast.error(
-        error?.response?.data?.message || "Không thể tải chi tiết nhật ký",
-      );
+      toast.error(error?.response?.data?.message || "getDiaryDetails");
     } finally {
       set({ isDiaryDetailsLoading: false });
     }
@@ -87,9 +87,7 @@ export const useDiaryStore = create((set, get) => ({
       toast.success(res.data.message);
       return res?.data?.data;
     } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Không thể cập nhật nhật ký",
-      );
+      toast.error(error?.response?.data?.message || "editDiary");
       throw error;
     } finally {
       set({ isDiaryEditing: false });
@@ -128,7 +126,7 @@ export const useDiaryStore = create((set, get) => ({
       toast.success(res?.data?.message || "Thêm bước thành công");
       return res?.data?.data;
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Không thể thêm bước");
+      toast.error(error?.response?.data?.message || "addDiaryStep");
       throw error;
     } finally {
       set({ isDiaryStepAdding: false });
@@ -158,9 +156,7 @@ export const useDiaryStore = create((set, get) => ({
       toast.success(res?.data?.message || "Đã đánh dấu hoàn thành");
       return res?.data?.data;
     } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Không thể hoàn thành nhật ký",
-      );
+      toast.error(error?.response?.data?.message || "completeDiary");
       throw error;
     } finally {
       set({ isDiaryCompleting: false });
