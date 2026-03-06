@@ -12,13 +12,24 @@ import {
   Loader2,
   ScanLine,
   ChevronLeft,
+  IdCard,
+  Scroll,
 } from "lucide-react";
 import { usePermissionStore } from "@/store/usePermissionStore";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // ─── Upload Zone Component ────────────────────────────────────────────────────
 
-function UploadZone({ side, label, description, file, onFileChange }) {
+function UploadZone({
+  hint,
+  label,
+  description,
+  file,
+  onFileChange,
+  className,
+  icon: Icon,
+}) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
 
@@ -39,11 +50,13 @@ function UploadZone({ side, label, description, file, onFileChange }) {
     file && file.type?.startsWith("image/") ? URL.createObjectURL(file) : null;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <div
+      className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-5 ${className}`}
+    >
       {/* Card header */}
       <div className="flex items-center gap-3 mb-4">
         <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-          <ScanLine className="w-4 h-4" />
+          <Icon className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-800">{label}</p>
@@ -81,8 +94,8 @@ function UploadZone({ side, label, description, file, onFileChange }) {
             {previewUrl ? (
               <img
                 src={previewUrl}
-                alt={`${side} preview`}
-                className="w-50 h-full object-cover rounded-lg border border-emerald-100 shrink-0"
+                alt={`${hint} preview`}
+                className="w-50 h-full max-h-33 object-cover rounded-lg border border-emerald-100 shrink-0"
               />
             ) : (
               <div className="w-16 h-11 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
@@ -109,9 +122,7 @@ function UploadZone({ side, label, description, file, onFileChange }) {
             <div className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 shadow-sm mb-1">
               <Upload className="w-[18px] h-[18px]" />
             </div>
-            <p className="text-sm font-medium text-gray-600">
-              Nhấn để tải ảnh mặt {side}
-            </p>
+            <p className="text-sm font-medium text-gray-600">{hint}</p>
             <p className="text-xs text-gray-400">PNG hoặc JPG tối đa 5MB</p>
           </div>
         )}
@@ -133,10 +144,14 @@ function UploadZone({ side, label, description, file, onFileChange }) {
 export default function SubmitProofPage() {
   const [frontFile, setFrontFile] = useState(null);
   const [backFile, setBackFile] = useState(null);
+  const [certificate, setCertificate] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const { submitProof, isSubmittingProof } = usePermissionStore();
+  const router = useRouter();
 
-  const canSubmit = Boolean(frontFile && backFile && !isSubmittingProof);
+  const canSubmit = Boolean(
+    frontFile && backFile && certificate && !isSubmittingProof,
+  );
 
   const fileToDataUrl = (file) =>
     new Promise((resolve, reject) => {
@@ -149,15 +164,17 @@ export default function SubmitProofPage() {
   const handleSubmit = async () => {
     if (!canSubmit) return;
 
-    const [frontUrl, backUrl] = await Promise.all([
+    const [frontUrl, backUrl, certificateUrl] = await Promise.all([
       fileToDataUrl(frontFile),
       fileToDataUrl(backFile),
+      fileToDataUrl(certificate),
     ]);
 
     const payload = {
       proofs: [
         { type: "cccd_front", url: frontUrl },
         { type: "cccd_back", url: backUrl },
+        { type: "certificate", url: certificateUrl },
       ],
     };
 
@@ -170,29 +187,30 @@ export default function SubmitProofPage() {
   const handleReset = () => {
     setFrontFile(null);
     setBackFile(null);
+    setCertificate(null);
     setSubmitted(false);
   };
 
   // ── Success screen ────────────────────────────────────────────────────────
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#f0f4f2] flex items-center justify-center p-6">
-        <div className="bg-white rounded-3xl shadow-lg p-10 max-w-sm w-full flex flex-col items-center text-center gap-4">
+      <div className="min-h-screen flex justify-center items-center px-4 bg-gray-50 font-sans p-5 lg:pt-0 w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
+        <div className="bg-white rounded-3xl shadow-lg p-10 max-w-md w-full flex flex-col items-center text-center gap-4">
           <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-200">
             <CheckCircle className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-xl font-bold text-gray-800">
-            Verification Submitted!
+            Đã gửi thành công!
           </h2>
           <p className="text-sm text-gray-500 leading-relaxed">
-            Your CCCD has been received. We&apos;ll review and verify your
-            identity within 1–2 business days.
+            CCCD của bạn đã được nhận. Chúng tôi sẽ xem xét và xác minh danh
+            tính của bạn trong vòng 1–2 ngày làm việc.
           </p>
           <button
-            onClick={handleReset}
-            className="mt-2 w-full bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white text-sm font-semibold rounded-xl py-3 transition-all"
+            onClick={() => router.push("/")}
+            className="cursor-pointer mt-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl py-3 transition-all"
           >
-            Submit Another
+            Quay về trang chủ
           </button>
         </div>
       </div>
@@ -201,7 +219,7 @@ export default function SubmitProofPage() {
 
   // ── Main form ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center py-10 px-4">
+    <div className="min-h-screen flex flex-col items-center px-4 bg-gray-50 font-sans p-5 lg:pt-0 w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
       <Link
         className="absolute top-5 left-5 flex items-center hover:text-emerald-500 transition-colors duration-300"
         href={"/"}
@@ -210,10 +228,7 @@ export default function SubmitProofPage() {
       </Link>
       <div className="w-full max-w-4xl flex flex-col gap-4">
         {/* Header */}
-        <div className="flex flex-col items-center text-center gap-3 pb-2">
-          <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200">
-            <CreditCard className="w-6 h-6 text-white" />
-          </div>
+        <div className="flex flex-col items-center text-center gap-3 pb-2 pt-10 lg:pt-5">
           <h1 className="text-[22px] font-bold text-gray-800 tracking-tight">
             Xác nhận CCCD
           </h1>
@@ -227,20 +242,33 @@ export default function SubmitProofPage() {
         {/* Front Side Upload */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <UploadZone
-            side="trước"
+            hint="Nhấn để tải ảnh mặt trước"
             label="Mặt trước"
             description="Chọn ảnh CCCD có mặt của bạn"
+            icon={IdCard}
             file={frontFile}
             onFileChange={setFrontFile}
           />
 
           {/* Back Side Upload */}
           <UploadZone
-            side="sau"
+            hint="Nhấn để tải ảnh mặt sau"
             label="Mặt sau"
             description="Chọn ảnh CCCD mặt sau của bạn"
+            icon={CreditCard}
             file={backFile}
             onFileChange={setBackFile}
+          />
+
+          {/* Certificate Upload */}
+          <UploadZone
+            hint="Nhấn để tải ảnh giấy chứng nhận"
+            label="Giấy chứng nhận"
+            description="Chọn ảnh chứng nhận của bạn"
+            file={certificate}
+            icon={Scroll}
+            onFileChange={setCertificate}
+            className={"col-span-1 lg:col-span-2"}
           />
         </div>
 
@@ -285,7 +313,7 @@ export default function SubmitProofPage() {
         {/* Actions */}
         <div className="flex items-center justify-between pt-1">
           <button
-            onClick={handleReset}
+            onClick={() => router.push("/")}
             className="cursor-pointer px-6 py-2.5 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-700 transition-colors"
           >
             Hủy

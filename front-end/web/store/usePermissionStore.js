@@ -7,6 +7,7 @@ const BASE_URL = "http://localhost:8080";
 
 export const usePermissionStore = create((set, get) => ({
   isSubmittingProof: false,
+  isApprovedAccount: false,
 
   // POST: /permission/requests/proofs
   submitProof: async (data) => {
@@ -20,6 +21,19 @@ export const usePermissionStore = create((set, get) => ({
       return null;
     } finally {
       set({ isSubmittingProof: false });
+    }
+  },
+
+  // GET: /permission/my-account/approved - Check current account approval status
+  checkApprovedAccount: async () => {
+    try {
+      const res = await axiosInstance.get("/permission/my-account/approved");
+      const isApproved = Boolean(res?.data?.data);
+      set({ isApprovedAccount: isApproved });
+      return isApproved;
+    } catch (error) {
+      set({ isApprovedAccount: false });
+      return null;
     }
   },
 }));
