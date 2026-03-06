@@ -60,10 +60,12 @@ export default function BlogPage() {
         });
     };
 
-    const filteredBlogs = blogs.filter(blog =>
-        blog.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const normalize = (str) =>
+        str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
+    const filteredBlogs = blogs.filter(blog =>
+        normalize(blog.title).includes(normalize(searchTerm))
+    );
     const sortOptions = [
         { value: "newest", label: "Mới nhất" },
         { value: "oldest", label: "Cũ nhất" },
@@ -163,8 +165,8 @@ export default function BlogPage() {
                                                         key={option.value}
                                                         onClick={() => { setSortOrder(option.value); setIsSortDropdownOpen(false); }}
                                                         className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${sortOrder === option.value
-                                                                ? "bg-emerald-50 text-emerald-700 font-semibold"
-                                                                : "text-gray-700 hover:bg-gray-50"
+                                                            ? "bg-emerald-50 text-emerald-700 font-semibold"
+                                                            : "text-gray-700 hover:bg-gray-50"
                                                             } ${index !== sortOptions.length - 1 ? "border-b border-gray-100" : ""}`}
                                                     >
                                                         {option.label}
