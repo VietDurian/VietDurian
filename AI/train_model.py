@@ -19,23 +19,31 @@ from datetime import datetime
 from tensorflow.keras.callbacks import TensorBoard
 import pandas as pd
 
+
 print("TensorFlow version:", tf.__version__)
 print("GPU devices:", tf.config.list_physical_devices("GPU"))
+
 
 # ============================================================
 # 2. Dataset paths (CHANGE if needed)
 # ============================================================
 # BASE_DIR = "/media/chn/4T-P2/TenClasses/Ten_Classes_of_Durian_Leaf_Diseases"
 
+
 # TRAIN_DIR = os.path.join(BASE_DIR, "Train")
 # VAL_DIR   = os.path.join(BASE_DIR, "Validation")
 # TEST_DIR  = os.path.join(BASE_DIR, "Test")
 
+
 BASE_DIR = r"C:\Users\ADMIN\Downloads\Durian_Leaf_Disease"
+
 
 TRAIN_DIR = os.path.join(BASE_DIR, "train")
 VAL_DIR   = os.path.join(BASE_DIR, "val")
 TEST_DIR  = os.path.join(BASE_DIR, "test")
+
+
+
 
 
 
@@ -45,8 +53,9 @@ TEST_DIR  = os.path.join(BASE_DIR, "test")
 # EPOCHS = 60
 IMG_SIZE = (224, 224)
 BATCH_SIZE = 128
-NUM_CLASSES = 15
+NUM_CLASSES = 13
 EPOCHS = 60
+
 
 # ============================================================
 # 3. Data generators
@@ -60,9 +69,11 @@ train_datagen = ImageDataGenerator(
     horizontal_flip=True
 )
 
+
 val_test_datagen = ImageDataGenerator(
     preprocessing_function=preprocess_input
 )
+
 
 train_generator = train_datagen.flow_from_directory(
     TRAIN_DIR,
@@ -70,6 +81,7 @@ train_generator = train_datagen.flow_from_directory(
     batch_size=BATCH_SIZE,
     class_mode="categorical"
 )
+
 
 val_generator = val_test_datagen.flow_from_directory(
     VAL_DIR,
@@ -79,6 +91,7 @@ val_generator = val_test_datagen.flow_from_directory(
     shuffle=False
 )
 
+
 test_generator = val_test_datagen.flow_from_directory(
     TEST_DIR,
     target_size=IMG_SIZE,
@@ -87,7 +100,9 @@ test_generator = val_test_datagen.flow_from_directory(
     shuffle=False
 )
 
+
 print("Class indices:", train_generator.class_indices)
+
 
 # ============================================================
 # 4. Build MobileNetV3Large model (Transfer Learning)
@@ -98,8 +113,10 @@ base_model = MobileNetV3Large(
     input_shape=(IMG_SIZE[0], IMG_SIZE[1], 3)
 )
 
+
 # for layer in base_model.layers:
 #     layer.trainable = False
+
 
 x = base_model.output
 x = GlobalAveragePooling2D()(x)
@@ -107,13 +124,16 @@ x = Dense(512, activation="relu")(x)
 x = Dropout(0.5)(x)
 output = Dense(NUM_CLASSES, activation="softmax")(x)
 
+
 model = Model(inputs=base_model.input, outputs=output)
+
 
 model.compile(
     optimizer=tf.keras.optimizers.AdamW(learning_rate=1e-4),
     loss="categorical_crossentropy",
     metrics=["accuracy"]
 )
+
 
 #Ghi log
 #Tạo thư mục log
@@ -131,8 +151,10 @@ tensorboard_cb = TensorBoard(
     write_images=False
 )
 
+
 # Ghi log ra file CSV
 from tensorflow.keras.callbacks import CSVLogger
+
 
 csv_logger = CSVLogger(
     filename=os.path.join(log_dir, "training_log.csv"),
@@ -142,7 +164,9 @@ csv_logger = CSVLogger(
 with open(os.path.join(log_dir, "model_summary_phase1.txt"), "w", encoding="utf-8") as f:
     model.summary(print_fn=lambda x: f.write(x + "\n"))
 
+
 model.summary()
+
 
 checkpoint = ModelCheckpoint(
     filepath="checkpoints/MobileNetV3Large/MobileNetV3Large_epoch_{epoch:02d}_valacc_{val_accuracy:.4f}.keras",
@@ -168,6 +192,7 @@ callbacks = [
     csv_logger
 ]
 
+
 # ============================================================
 # 6. Train model
 # ============================================================
@@ -182,6 +207,7 @@ callbacks = [
 for layer in base_model.layers:
     layer.trainable = False
 
+
 model.compile(
     optimizer=tf.keras.optimizers.AdamW(1e-4),
     loss="categorical_crossentropy",
@@ -189,7 +215,8 @@ model.compile(
 )
 #Ghi thông tin model ra file txt
 with open(os.path.join(log_dir, "model_summary_phase1.txt"), "w", encoding="utf-8") as f:
-    model.summary(print_fn=lambda x: f.write(x + "\n")) 
+    model.summary(print_fn=lambda x: f.write(x + "\n"))
+
 
 history_1 = model.fit(
     train_generator,
@@ -198,10 +225,14 @@ history_1 = model.fit(
     callbacks=callbacks
 )
 
+
 #Phase 2: Unfreeze backbone (fine-tuning)
 # Unfreeze all layers
 
+
 #model = load_model("checkpoints/MobileNetV3Large/MobileNetV3Large_epoch_15_valacc_0.8197.keras")
+
+
 
 
 #fine-tune (not better: weighted avg       0.87      0.86      0.86       648)
@@ -210,6 +241,8 @@ history_1 = model.fit(
 # for layer in base_model.layers[-20:]:
 #     layer.trainable = True
 # IMPORTANT: use a lower learning rate for fine-tuning
+
+
 
 
 # for layer in model.layers:
@@ -221,7 +254,8 @@ history_1 = model.fit(
 # )
 # #Ghi thông tin model ra file txt
 # with open(os.path.join(log_dir, "model_summary_phase2.txt"), "w") as f:
-#     model.summary(print_fn=lambda x: f.write(x + "\n")) 
+#     model.summary(print_fn=lambda x: f.write(x + "\n"))
+
 
 # history_2 = model.fit(
 #     train_generator,
@@ -232,11 +266,14 @@ history_1 = model.fit(
 # )
 
 
+
+
 # ============================================================
 # 7. Evaluate on Test set
 # ============================================================
 test_loss, test_acc = model.evaluate(test_generator)
 print(f"\nTest Accuracy: {test_acc:.4f}")
+
 
 # ============================================================
 # 8. Classification Report & Confusion Matrix
@@ -245,13 +282,16 @@ y_true = test_generator.classes
 y_pred_probs = model.predict(test_generator)
 y_pred = np.argmax(y_pred_probs, axis=1)
 
+
 class_names = list(test_generator.class_indices.keys())
+
 
 print("\nClassification Report:")
 report=classification_report(y_true, y_pred, target_names=class_names)
 print(report)
 with open(os.path.join(log_dir, "classification_report.txt"), "w", encoding="utf-8") as f:
     f.write(report)
+
 
 print("\nConfusion Matrix:")
 matrix=confusion_matrix(y_true, y_pred)
@@ -261,12 +301,13 @@ filename=os.path.join(log_dir, "confusion_matrix.csv")
 cm_df.to_csv(filename)
 
 
-
 #Select top-5 models by validation accuracy
 model_files = glob.glob("checkpoints/MobileNetV3Large/*.keras")
 
+
 def extract_val_acc(filename):
     return float(re.search(r"valacc_(\d+\.\d+)", filename).group(1))
+
 
 model_files = sorted(
     model_files,
@@ -274,10 +315,12 @@ model_files = sorted(
     reverse=True
 )
 
+
 top5_models = model_files[:1]
 print("Top-5 models:")
 for m in top5_models:
     print(m)
+
 
 # Keep top 8
 models_to_delete = model_files[8:]
@@ -286,9 +329,11 @@ for m in models_to_delete:
     print(m)
     os.remove(m)
 
+
 #Average weights of top-5 models
 def average_models(model_paths):
     models = [tf.keras.models.load_model(p) for p in model_paths]
+
 
     avg_model = tf.keras.models.clone_model(models[0])
     avg_model.set_weights([
@@ -296,18 +341,22 @@ def average_models(model_paths):
         for i in range(len(models[0].get_weights()))
     ])
 
+
     avg_model.compile(
         optimizer=tf.keras.optimizers.AdamW(1e-4),
         loss="categorical_crossentropy",
         metrics=["accuracy"]
     )
 
+
     return avg_model
+
 
 avg_model = average_models(top5_models)
 avg_model.save("MobileNetV3Large_tendurian_avg_top5.keras")
 avg_loss, avg_acc = avg_model.evaluate(test_generator)
 print(f"Averaged model accuracy: {avg_acc:.4f}")
+
 
 # ============================================================
 # 8. Classification Report & Confusion Matrix
@@ -316,7 +365,9 @@ y_true = test_generator.classes
 y_pred_probs = avg_model.predict(test_generator)
 y_pred = np.argmax(y_pred_probs, axis=1)
 
+
 class_names = list(test_generator.class_indices.keys())
+
 
 print("\nClassification Report:")
 report=classification_report(y_true, y_pred, target_names=class_names)
@@ -324,9 +375,11 @@ print(report)
 with open(os.path.join(log_dir, "classification_report_avg5.txt"), "w", encoding="utf-8") as f:
     f.write(report)
 
+
 print("\nConfusion Matrix:")
 matrix=confusion_matrix(y_true, y_pred)
 print(matrix)
 cm_df = pd.DataFrame(matrix, index=class_names, columns=class_names)
 filename=os.path.join(log_dir, "confusion_matrix_avg5.csv")
 cm_df.to_csv(filename)
+

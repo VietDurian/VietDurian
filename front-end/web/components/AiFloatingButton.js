@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -15,6 +16,7 @@ import {
 import { useAuthStore } from "@/store/useAuthStore";
 import { aiAPI } from "@/lib/api";
 
+
 const initialMessages = [
   {
     id: "welcome",
@@ -22,6 +24,7 @@ const initialMessages = [
     content: "Xin chào! Tôi là trợ lý AI. Bạn cần hỗ trợ gì về sầu riêng?",
   },
 ];
+
 
 export default function AiFloatingButton() {
   const pathname = usePathname();
@@ -44,15 +47,18 @@ export default function AiFloatingButton() {
   const fileInputRef = useRef(null);
   const scanFileInputRef = useRef(null);
 
+
   const suggestions = [
     "Cách chăm sóc sầu riêng mùa hạn mặn ?",
     "Sầu riêng có dễ trồng không ?",
     "Bí quyết xử lý cây sầu riêng bị vàng lá ?",
   ];
 
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, chatOpen]);
+
 
   useEffect(() => {
     if (!scanFile) {
@@ -64,22 +70,28 @@ export default function AiFloatingButton() {
     return () => URL.revokeObjectURL(url);
   }, [scanFile]);
 
+
   if (!authUser) return null;
   if (pathname?.startsWith("/dashboard")) return null;
+
 
   const openMenu = () => {
     if (chatOpen) return;
     setMenuOpen(true);
   };
 
+
   const closeMenu = () => setMenuOpen(false);
+
 
   const openChat = () => {
     setChatOpen(true);
     setMenuOpen(false);
   };
 
+
   const closeChat = () => setChatOpen(false);
+
 
   const openScan = () => {
     setScanOpen(true);
@@ -87,13 +99,16 @@ export default function AiFloatingButton() {
     setScanError(null);
   };
 
+
   const closeScan = () => setScanOpen(false);
+
 
   const resetScan = () => {
     setScanFile(null);
     setScanResult(null);
     setScanError(null);
   };
+
 
   const startNewConversation = () => {
     setMessages(initialMessages);
@@ -102,6 +117,7 @@ export default function AiFloatingButton() {
     setShowSuggestions(true);
     setImage(null);
   };
+
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -122,21 +138,26 @@ export default function AiFloatingButton() {
     reader.readAsDataURL(file);
   };
 
+
   const handleScanFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+
     // Allow selecting the same file again.
     e.target.value = "";
+
 
     if (!file.type.startsWith("image/")) {
       setScanError("Chỉ hỗ trợ ảnh");
       return;
     }
 
+
     setScanFile(file);
     setScanResult(null);
     setScanError(null);
+
 
     setScanLoading(true);
     try {
@@ -157,9 +178,11 @@ export default function AiFloatingButton() {
     }
   };
 
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
+
 
     const userMessage = {
       id: `u-${Date.now()}`,
@@ -174,10 +197,12 @@ export default function AiFloatingButton() {
     setError(null);
     setShowSuggestions(false);
 
+
     try {
       const history = messages
         .filter((m) => m.id !== "welcome" && !m.isError)
         .map((m) => ({ role: m.role, content: m.content }));
+
 
       const res = await fetch("/api/gemini", {
         method: "POST",
@@ -190,6 +215,7 @@ export default function AiFloatingButton() {
             : null,
         }),
       });
+
 
       const data = await res.json();
       if (data.success) {
@@ -217,6 +243,7 @@ export default function AiFloatingButton() {
       setIsLoading(false);
     }
   };
+
 
   return (
     <>
@@ -260,7 +287,7 @@ export default function AiFloatingButton() {
                         ? "bg-red-50 text-red-600 border border-red-100"
                         : "bg-white text-gray-800 border border-gray-100 rounded-bl-none"
                   }
-									`}
+                  `}
                 >
                   {msg.content}
                 </div>
@@ -353,113 +380,180 @@ export default function AiFloatingButton() {
         </div>
       )}
 
+
       {/* Floating Scan Popup */}
-      {scanOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-96 max-w-[92vw] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-slide-up">
+{scanOpen && (
+  <div className="fixed bottom-24 right-6 z-50 w-96 max-w-[92vw] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-slide-up">
+   
+    {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-linear-to-r from-cyan-600 to-sky-500 text-white">
-            <div className="font-semibold">Scan AI</div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={resetScan}
-                className="p-2 rounded-full hover:bg-white/15 transition-colors"
-                title="Làm mới"
-                disabled={scanLoading}
-              >
-                <RefreshCcw size={18} />
-              </button>
-              <button
-                type="button"
-                onClick={closeScan}
-                className="p-2 rounded-full hover:bg-white/15 transition-colors"
-                title="Đóng"
-              >
-                <X size={18} />
-              </button>
-            </div>
+      <div className="font-semibold flex items-center gap-2">
+        <ScanSearch size={18} />
+        Scan AI
+      </div>
+
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={resetScan}
+          className="p-2 rounded-full hover:bg-white/15 transition-colors"
+          disabled={scanLoading}
+        >
+          <RefreshCcw size={18} />
+        </button>
+
+
+        <button
+          type="button"
+          onClick={closeScan}
+          className="p-2 rounded-full hover:bg-white/15 transition-colors"
+        >
+          <X size={18} />
+        </button>
+      </div>
+    </div>
+
+
+    {/* Body */}
+    <div className="p-4 bg-gray-50 space-y-4">
+
+
+      {/* Upload Card */}
+      <div className="rounded-2xl border border-cyan-200 bg-linear-to-br from-cyan-50 to-white p-4 shadow-sm">
+        <div className="text-sm font-semibold text-gray-800 mb-2">
+          Tải hình ảnh lá sầu riêng
+        </div>
+
+
+        <button
+          type="button"
+          onClick={() => scanFileInputRef.current?.click()}
+          disabled={scanLoading}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-medium transition-all"
+        >
+          <Plus size={16} />
+          Chọn ảnh
+        </button>
+
+
+        <div className="text-xs text-gray-500 mt-2 text-center truncate">
+          {scanFile ? scanFile.name : "Chưa chọn ảnh"}
+        </div>
+      </div>
+
+
+      {/* Preview */}
+      {scanPreviewUrl && (
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="text-xs font-semibold text-gray-600 px-3 pt-3">
+            Xem trước ảnh
           </div>
 
-          <div className="p-4 bg-gray-50 space-y-3">
-            <div className="rounded-2xl border border-gray-200 bg-white p-3">
-              <div className="text-sm font-semibold text-gray-800 mb-2">
-                Tải ảnh lá sầu riêng
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => scanFileInputRef.current?.click()}
-                  className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-cyan-200 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 transition-colors text-sm font-medium"
-                  disabled={scanLoading}
-                >
-                  <Plus size={16} strokeWidth={2.5} />
-                  Chọn ảnh
-                </button>
-                <div className="text-xs text-gray-500 truncate flex-1">
-                  {scanFile ? scanFile.name : "Chưa chọn ảnh"}
-                </div>
-              </div>
-            </div>
 
-            {scanPreviewUrl && (
-              <div className="rounded-2xl border border-gray-200 bg-white p-3">
-                <div className="text-xs font-semibold text-gray-600 mb-2">
-                  Xem trước
-                </div>
-                <div className="w-full overflow-hidden rounded-xl bg-gray-100">
-                  <Image
-                    src={scanPreviewUrl}
-                    alt="Scan preview"
-                    width={640}
-                    height={352}
-                    unoptimized
-                    className="w-full h-44 object-contain"
-                  />
-                </div>
-              </div>
-            )}
+          <Image
+            src={scanPreviewUrl}
+            alt="Scan preview"
+            width={640}
+            height={360}
+            unoptimized
+            className="w-full h-56 object-contain bg-gray-100"
+          />
+        </div>
+      )}
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-3">
-              <div className="text-xs font-semibold text-gray-600 mb-2">
-                Kết quả
+
+      {/* Result */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
+
+
+        <div className="text-xs font-semibold text-gray-600">
+          Kết quả AI
+        </div>
+
+
+        {scanLoading && (
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+            AI đang phân tích hình ảnh...
+          </div>
+        )}
+
+
+        {scanError && (
+          <div className="text-sm text-red-600">
+            {scanError}
+          </div>
+        )}
+
+
+        {scanResult && (
+          <div className="space-y-3">
+
+
+            {/* Predicted Disease */}
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+              <div className="text-sm text-gray-800">
+                <b>Dự đoán:</b>{" "}
+                {scanResult.predicted_class_vi || scanResult.predicted_class}
               </div>
-              {scanLoading ? (
-                <div className="text-sm text-gray-600">AI đang phân tích ảnh...</div>
-              ) : scanError ? (
-                <div className="text-sm text-red-600">{scanError}</div>
-              ) : scanResult ? (
-                <div className="text-sm text-gray-800 whitespace-pre-wrap">
-                  {`- Dự đoán: ${scanResult?.predicted_class || "(không rõ)"}\n- Độ tin cậy: ${
-                    scanResult?.confidence != null
-                      ? (Number(scanResult.confidence) * 100).toFixed(2) + "%"
-                      : "(không rõ)"
-                  }`}
-                  {Array.isArray(scanResult?.top_k) && scanResult.top_k.length > 0 && (
-                    <div className="mt-3">
-                      <div className="text-xs font-semibold text-gray-600 mb-1">
-                        Top-5
-                      </div>
-                      <div className="text-xs text-gray-700 whitespace-pre-wrap">
-                        {scanResult.top_k
-                          .map(
-                            (x) =>
-                              `- ${x.class_name}: ${(Number(x.probability) * 100).toFixed(2)}%`,
-                          )
-                          .join("\n")}
-                      </div>
-                    </div>
-                  )}
+
+
+              {/* Confidence bar */}
+              {scanResult.confidence && (
+                <div className="mt-2">
+                  <div className="text-xs text-gray-600 mb-1">
+                    Độ tin cậy {(Number(scanResult.confidence) * 100).toFixed(2)}%
+                  </div>
+
+
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-500"
+                      style={{
+                        width: `${Number(scanResult.confidence) * 100}%`,
+                      }}
+                    />
+                  </div>
                 </div>
-              ) : (
-                <div className="text-sm text-gray-500">Chọn ảnh để bắt đầu.</div>
               )}
             </div>
 
-            <p className="text-center text-xs text-gray-500">
-              Do AI tạo. Hãy kiểm tra kỹ độ chính xác.
-            </p>
+            {/* Solutions */}
+            {Array.isArray(scanResult?.solutions) &&
+              scanResult.solutions.length > 0 && (
+                <div>
+                  <div className="text-xs font-semibold text-gray-600 mb-2">
+                    Giải pháp
+                  </div>
+
+
+                  <ul className="text-xs text-gray-700 space-y-1 list-disc pl-4">
+                    {scanResult.solutions.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
           </div>
-        </div>
-      )}
+        )}
+
+
+        {!scanLoading && !scanResult && !scanError && (
+          <div className="text-sm text-gray-500">
+            Chọn ảnh để bắt đầu nhận diện bệnh.
+          </div>
+        )}
+      </div>
+
+
+      <p className="text-center text-xs text-gray-500">
+        Do AI tạo. Hãy kiểm tra kỹ độ chính xác.
+      </p>
+    </div>
+  </div>
+)}
+
 
       {/* Hoverable Floating Cluster */}
       <div
@@ -502,6 +596,7 @@ export default function AiFloatingButton() {
               </div>
             </button>
 
+
             {/* Icon đầu tiên: message -> mở box chat như hiện tại */}
             <button
               type="button"
@@ -532,6 +627,7 @@ export default function AiFloatingButton() {
           </div>
         )}
 
+
         {/* Floating Main Button (AI icon) */}
         <button
           type="button"
@@ -545,6 +641,7 @@ export default function AiFloatingButton() {
           </div>
         </button>
 
+
         {/* Hidden input for Scan AI */}
         <input
           type="file"
@@ -557,3 +654,6 @@ export default function AiFloatingButton() {
     </>
   );
 }
+
+
+
