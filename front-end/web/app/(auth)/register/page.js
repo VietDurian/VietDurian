@@ -23,6 +23,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useValidatorStore } from "@/store/useValidatorStore";
+import { GoogleLogin } from "@react-oauth/google";
+import { useAuth } from "@/context/AuthContext";
 
 const OTP_RESEND_DELAY_MS = 10 * 60 * 1000;
 
@@ -52,6 +54,7 @@ export default function RegisterPage() {
   });
   const [emailExistsError, setEmailExistsError] = useState("");
   const emailCheckRequestIdRef = useRef(0);
+  const { loginWithGoogle } = useAuth();
 
   const ROLES = [
     { key: "trader", label: "Trader", icon: Briefcase },
@@ -191,6 +194,14 @@ export default function RegisterPage() {
 
     if (!/^\d$/.test(e.key)) {
       e.preventDefault();
+    }
+  };
+
+  const handleSuccess = async (credentialResponse) => {
+    try {
+      await loginWithGoogle(credentialResponse.credential);
+    } catch (err) {
+      console.error("Login failed", err);
     }
   };
 
@@ -558,15 +569,12 @@ export default function RegisterPage() {
 
             {/* Google Button */}
             <div className="space-y-3">
-              <button className="cursor-pointer w-full border border-gray-200 flex items-center justify-center py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700">
-                <img
-                  src="/images/google.png"
-                  alt="Google"
-                  width={50}
-                  height={50}
-                />{" "}
-                Tiếp tục với Google
-              </button>
+              <GoogleLogin
+                onSuccess={(response) => {
+                  loginWithGoogle(response.credential);
+                }}
+                onError={() => console.log("Login Failed")}
+              />
             </div>
           </form>
 
