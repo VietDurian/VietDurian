@@ -32,9 +32,11 @@ export default function RegisterPage() {
   const { validateField, passwordRules, isValidPassword } = useValidatorStore();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [step, setStep] = useState(1); // 1: info entry, 2: role selection
@@ -44,6 +46,7 @@ export default function RegisterPage() {
     fullName: false,
     email: false,
     password: false,
+    confirmPassword: false,
     phone: false,
     role: false,
   });
@@ -61,6 +64,11 @@ export default function RegisterPage() {
   const emailError = validateField("email", email);
   const combinedEmailError = emailError || emailExistsError;
   const passwordError = validateField("password", password);
+  const confirmPasswordError = !confirmPassword.trim()
+    ? "Vui lòng xác nhận mật khẩu"
+    : confirmPassword !== password
+      ? "Mật khẩu xác nhận không khớp"
+      : "";
   const phoneError = validateField("phone", phone);
   const roleError = !selectedRole ? "Vui lòng chọn vai trò" : "";
 
@@ -68,6 +76,7 @@ export default function RegisterPage() {
     !fullNameError &&
     !combinedEmailError &&
     !passwordError &&
+    !confirmPasswordError &&
     !phoneError &&
     !isCheckingEmail;
 
@@ -114,6 +123,7 @@ export default function RegisterPage() {
         fullName: true,
         email: true,
         password: true,
+        confirmPassword: true,
         phone: true,
       }));
 
@@ -204,12 +214,9 @@ export default function RegisterPage() {
           <h1 className="text-3xl font-semibold text-emerald-500 mb-3 text-center text-shadow-md text-shadow-emerald-100">
             Đăng Ký tài khoản
           </h1>
-          <p className="text-gray-500 text-sm mb-10 leading-relaxed text-center text-shadow-md text-shadow-gray-200">
-            Tạo tài khoản mới để bắt đầu trải nghiệm dịch vụ của chúng tôi
-          </p>
 
           <form
-            className="space-y-5 bg-white shadow-xl border border-gray-200 rounded-3xl p-7"
+            className="space-y-3 bg-white shadow-xl border border-gray-200 rounded-3xl p-7"
             onSubmit={handleSubmit}
           >
             {step === 1 && (
@@ -227,7 +234,7 @@ export default function RegisterPage() {
                     <input
                       type="text"
                       placeholder="Nhập họ và tên"
-                      className={`w-full border rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
+                      className={`w-full border rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
                         touched.fullName && fullNameError
                           ? "border-red-400 focus:ring-red-300"
                           : "border-teal-800/30 focus:ring-teal-800"
@@ -256,7 +263,7 @@ export default function RegisterPage() {
                     <input
                       type="email"
                       placeholder="Nhập email"
-                      className={`w-full border rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
+                      className={`w-full border rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
                         touched.email && combinedEmailError
                           ? "border-red-400 focus:ring-red-300"
                           : "border-teal-800/30 focus:ring-teal-800"
@@ -281,6 +288,7 @@ export default function RegisterPage() {
                     </p>
                   )}
                 </div>
+
                 {/* Password */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -294,7 +302,7 @@ export default function RegisterPage() {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Nhập mật khẩu"
-                      className={`w-full border rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
+                      className={`w-full border rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
                         touched.password && passwordError
                           ? "border-red-400 focus:ring-red-300"
                           : "border-teal-800/30 focus:ring-teal-800"
@@ -307,6 +315,7 @@ export default function RegisterPage() {
                     />
                     <button
                       type="button"
+                      tabIndex={-1}
                       aria-label={
                         showPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"
                       }
@@ -315,9 +324,10 @@ export default function RegisterPage() {
                     >
                       {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                     </button>
+
                     {/* Password rules checklist */}
                     {password && !isValidPassword(password) && (
-                      <div className="absolute bg-white mt-3 space-y-1 text-sm z-100 w-full p-5 border-2 border-gray-200 rounded-xl">
+                      <div className="absolute bg-white mt-3 space-y-1 text-sm z-100 w-full p-5 border border-gray-200 rounded-xl">
                         {passwordRules.map((rule) => {
                           const isValid = rule.test(password);
                           let displayLabel = rule.label;
@@ -353,8 +363,60 @@ export default function RegisterPage() {
                       </div>
                     )}
                   </div>
+
                   {touched.password && passwordError && (
                     <p className="mt-1 text-xs text-red-600">{passwordError}</p>
+                  )}
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Xác nhận mật khẩu <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Lock
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-700"
+                      size={18}
+                    />
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Nhập lại mật khẩu"
+                      className={`w-full border rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
+                        touched.confirmPassword && confirmPasswordError
+                          ? "border-red-400 focus:ring-red-300"
+                          : "border-teal-800/30 focus:ring-teal-800"
+                      }`}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onBlur={() => handleBlur("confirmPassword")}
+                      aria-invalid={Boolean(
+                        touched.confirmPassword && confirmPasswordError,
+                      )}
+                      required
+                    />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      aria-label={
+                        showConfirmPassword
+                          ? "Ẩn mật khẩu"
+                          : "Hiển thị mật khẩu"
+                      }
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showConfirmPassword ? (
+                        <Eye size={18} />
+                      ) : (
+                        <EyeOff size={18} />
+                      )}
+                    </button>
+                  </div>
+                  {touched.confirmPassword && confirmPasswordError && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {confirmPasswordError}
+                    </p>
                   )}
                 </div>
                 {/* Phone Number */}
@@ -370,7 +432,7 @@ export default function RegisterPage() {
                     <input
                       type="text"
                       placeholder="Nhập số điện thoại"
-                      className={`w-full border rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
+                      className={`w-full border rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
                         touched.phone && phoneError
                           ? "border-red-400 focus:ring-red-300"
                           : "border-teal-800/30 focus:ring-teal-800"
@@ -458,11 +520,16 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 mt-5">
+              {/* Submit button */}
               <button
                 type="submit"
-                disabled={isSigningUp || (step === 2 && !selectedRole)}
-                className={`flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3.5 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+                disabled={
+                  isSigningUp ||
+                  (step === 1 && !stepOneValid) ||
+                  (step === 2 && !selectedRole)
+                }
+                className={`flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
               >
                 {isSigningUp ? (
                   <>
@@ -476,9 +543,34 @@ export default function RegisterPage() {
                 )}
               </button>
             </div>
+
+            {/* Divider */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-3 text-gray-400 font-medium">
+                  Hoặc
+                </span>
+              </div>
+            </div>
+
+            {/* Google Button */}
+            <div className="space-y-3">
+              <button className="cursor-pointer w-full border border-gray-200 flex items-center justify-center py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700">
+                <img
+                  src="/images/google.png"
+                  alt="Google"
+                  width={50}
+                  height={50}
+                />{" "}
+                Tiếp tục với Google
+              </button>
+            </div>
           </form>
 
-          <p className="mt-8 text-center text-sm text-gray-600">
+          <p className="mt-5 text-center text-sm text-gray-600">
             Đã có tài khoản?{" "}
             <Link
               href={"/login"}

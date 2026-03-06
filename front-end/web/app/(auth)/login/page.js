@@ -166,7 +166,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Social Buttons */}
+            {/* Google Button */}
             <div className="space-y-3">
               <button className="cursor-pointer w-full border border-gray-200 flex items-center justify-center py-3 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700">
                 <img
