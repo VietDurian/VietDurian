@@ -441,6 +441,7 @@ const googleLogin = async (token) => {
 
     return { user, token: jwtToken };
   } catch (error) {
+    console.error("Google token verification failed:", error);
     throw createError(401, "Invalid Google token");
   }
 };

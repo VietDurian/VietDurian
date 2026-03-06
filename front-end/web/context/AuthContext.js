@@ -102,7 +102,7 @@ export function AuthProvider({ children }) {
         token: credential, // sửa dòng này
       });
 
-      const { user, token } = res.data;
+      const { user, token } = res.data.data;
 
       localStorage.setItem("auth_user", JSON.stringify(user));
       localStorage.setItem("auth_token", token);

@@ -187,9 +187,7 @@ export default function LoginPage() {
                 Tiếp tục với Google
               </button>
               <GoogleLogin
-                onSuccess={(response) => {
-                  loginWithGoogle(response.credential);
-                }}
+                onSuccess={handleSuccess}
                 onError={() => console.log("Login Failed")}
               />
             </div>
