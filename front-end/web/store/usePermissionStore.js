@@ -24,12 +24,15 @@ export const usePermissionStore = create((set, get) => ({
     }
   },
 
-  // GET: /permission/my-account/approve - Check current account approval status
+  // GET: /permission/my-account/approved - Check current account approval status
   checkApprovedAccount: async () => {
     try {
-      const res = await axiosInstance.get("/permission/my-account/approve");
-      set({ isApprovedAccount: res?.data });
+      const res = await axiosInstance.get("/permission/my-account/approved");
+      const isApproved = Boolean(res?.data?.data);
+      set({ isApprovedAccount: isApproved });
+      return isApproved;
     } catch (error) {
+      set({ isApprovedAccount: false });
       return null;
     }
   },

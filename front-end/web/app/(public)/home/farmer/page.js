@@ -19,7 +19,8 @@ export default function TraderHome() {
   const { isApprovedAccount, checkApprovedAccount } = usePermissionStore();
 
   useEffect(() => {
-    checkApprovedAccount;
+    checkApprovedAccount();
+    console.log("ASDSADSAD", isApprovedAccount);
   }, [checkApprovedAccount]);
   return (
     <div className="min-h-screen bg-gray-50">
