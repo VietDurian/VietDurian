@@ -18,10 +18,11 @@ import { usePathname } from "next/navigation";
 const SidebarItem = ({ icon: Icon, label, href, active }) => (
   <Link
     href={href}
-    className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${active
-      ? "bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white scale-105"
-      : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
-      }`}
+    className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${
+      active
+        ? "bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white scale-105"
+        : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
+    }`}
   >
     {/* Animated background gradient */}
     {active && (
@@ -30,25 +31,28 @@ const SidebarItem = ({ icon: Icon, label, href, active }) => (
 
     {/* Icon container with animated background */}
     <div
-      className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${active
-        ? "bg-white/20 backdrop-blur-sm"
-        : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
-        }`}
+      className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
+        active
+          ? "bg-white/20 backdrop-blur-sm"
+          : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
+      }`}
     >
       <Icon
         size={20}
-        className={`${active
-          ? "text-white"
-          : "text-emerald-600 group-hover:text-emerald-700 group-hover:scale-110"
-          } transition-all duration-300`}
+        className={`${
+          active
+            ? "text-white"
+            : "text-emerald-600 group-hover:text-emerald-700 group-hover:scale-110"
+        } transition-all duration-300`}
         strokeWidth={2.5}
       />
     </div>
 
     {/* Label with better typography */}
     <span
-      className={`relative z-10 text-[15px] font-semibold tracking-wide ${active ? "text-white" : "text-gray-700 group-hover:text-gray-900"
-        } transition-colors duration-300`}
+      className={`relative z-10 text-[15px] font-semibold tracking-wide ${
+        active ? "text-white" : "text-gray-700 group-hover:text-gray-900"
+      } transition-colors duration-300`}
     >
       {label}
     </span>
@@ -73,7 +77,6 @@ const SidebarItem = ({ icon: Icon, label, href, active }) => (
 );
 
 export default function AsideBar({ role }) {
-  console.log("ROLE", role);
   const pathname = usePathname();
 
   const getMenuItems = (role) => {
