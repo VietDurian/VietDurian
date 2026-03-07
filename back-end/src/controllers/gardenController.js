@@ -50,7 +50,7 @@ const getUserGardens = async (req, res, next) => {
     res.status(200).json({
       code: 200,
       success: true,
-      message: "User gardens retrieved successfully",
+      message: "Danh sách vườn của người dùng được truy xuất thành công",
       data: gardens,
     });
   } catch (error) {
@@ -75,7 +75,7 @@ const getGardenDetails = async (req, res, next) => {
     res.status(200).json({
       code: 200,
       success: true,
-      message: "Garden details retrieved successfully",
+      message: "Thông tin vườn được truy xuất thành công",
       data: garden,
     });
   } catch (error) {
@@ -101,7 +101,7 @@ const registerGarden = async (req, res, next) => {
     res.status(201).json({
       code: 201,
       success: true,
-      message: "Garden record created successfully",
+      message: "Tạo mới vườn thành công",
       data: newGarden,
     });
   } catch (error) {
@@ -130,7 +130,7 @@ const editGarden = async (req, res, next) => {
     res.status(200).json({
       code: 200,
       success: true,
-      message: "Garden record updated successfully",
+      message: "Cập nhật thông tin vườn thành công",
       data: updatedGarden,
     });
   } catch (error) {
@@ -155,7 +155,7 @@ const deleteGarden = async (req, res, next) => {
     res.status(200).json({
       code: 200,
       success: true,
-      message: "Garden record deleted successfully",
+      message: "Xóa thông tin vườn thành công",
       data: deletedGarden,
     });
   } catch (error) {

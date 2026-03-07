@@ -47,6 +47,8 @@ export const useGardenStore = create((set, get) => ({
       }));
 
       toast.success(res.data.message);
+    } catch (error) {
+      toast.error(error.response.data.message);
     } finally {
       set({ isGardenCreating: false });
     }
@@ -67,6 +69,8 @@ export const useGardenStore = create((set, get) => ({
       }));
 
       toast.success(res.data.message);
+    } catch (error) {
+      toast.error(error.response.data.message);
     } finally {
       set({ isGardenEditing: false });
     }

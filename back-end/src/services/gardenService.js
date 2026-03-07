@@ -18,6 +18,20 @@ const NOMINATIM_MAX_PER_REQUEST = Number(
 
 const geocodeCache = new Map();
 
+const escapeRegExp = (value) =>
+	String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const normalizeGardenName = (nameValue) =>
+	String(nameValue || '')
+		.normalize('NFC')
+		.trim()
+		.replace(/\s+/g, ' ');
+
+const buildNameDuplicateRegex = (normalizedName) => {
+	const escaped = escapeRegExp(normalizedName).replace(/\s+/g, '\\s+');
+	return new RegExp(`^${escaped}$`, 'i');
+};
+
 const normalizeCropTypes = (cropTypeValue) => {
 	if (Array.isArray(cropTypeValue)) {
 		return [
@@ -114,7 +128,9 @@ const geocodeAllMissingGardens = async ({ limit } = {}) => {
 const getAllGardens = async () => {
 	try {
 		const gardens = await GardenModel.find()
-			.select('id user_id name unit_code location longitude latitude image area')
+			.select(
+				'id user_id name unit_code location longitude latitude image area',
+			)
 			.populate('user_id', 'full_name avatar')
 			.lean();
 
@@ -160,7 +176,7 @@ const getGardensByUser = async (userId) => {
 	try {
 		const gardens = await GardenModel.find({ user_id: userId });
 		if (!gardens) {
-			throw createError(404, 'Gardens not found');
+			throw createError(404, 'Vườn không tồn tại');
 		}
 		return gardens;
 	} catch (error) {
@@ -173,7 +189,7 @@ const getGardenById = async (gardenId) => {
 	try {
 		const garden = await GardenModel.findById(gardenId);
 		if (!garden) {
-			throw createError(404, 'Garden not found');
+			throw createError(404, 'Vườn không tồn tại');
 		}
 		return garden;
 	} catch (error) {
@@ -195,12 +211,13 @@ const createGarden = async (userId, gardenData) => {
 			image,
 		} = gardenData;
 
+		const normalizedName = normalizeGardenName(name);
 		const normalizedUnitCode = String(unit_code || '').trim();
 		const normalizedCropTypes = normalizeCropTypes(crop_type);
 
 		// Validate required fields
 		if (
-			!name ||
+			!normalizedName ||
 			!normalizedUnitCode ||
 			normalizedCropTypes.length === 0 ||
 			!area ||
@@ -208,7 +225,17 @@ const createGarden = async (userId, gardenData) => {
 			area <= 0 ||
 			!description
 		) {
-			throw createError(400, 'Missing or invalid required fields');
+			throw createError(400, 'Thiếu hoặc không hợp lệ các trường bắt buộc');
+		}
+
+		const existingGarden = await GardenModel.findOne({
+			name: {
+				$regex: buildNameDuplicateRegex(normalizedName),
+			},
+		}).lean();
+
+		if (existingGarden) {
+			throw createError(409, 'Vườn đã tồn tại với tên tương tự');
 		}
 
 		let imageUrl = '';
@@ -224,7 +251,7 @@ const createGarden = async (userId, gardenData) => {
 		}
 		const newGarden = new GardenModel({
 			user_id: userId,
-			name,
+			name: normalizedName,
 			unit_code: normalizedUnitCode,
 			crop_type: normalizedCropTypes,
 			area,
@@ -272,7 +299,7 @@ const updateGarden = async (gardenId, updateData) => {
 		);
 
 		if (!updatedGarden) {
-			throw createError(404, 'Garden not found');
+			throw createError(404, 'Vườn không tồn tại');
 		}
 
 		return updatedGarden;
@@ -286,7 +313,7 @@ const deleteGarden = async (gardenId) => {
 	try {
 		const deletedGarden = await GardenModel.findByIdAndDelete(gardenId);
 		if (!deletedGarden) {
-			throw createError(404, 'Garden not found');
+			throw createError(404, 'Vườn không tồn tại');
 		}
 		return deletedGarden;
 	} catch (error) {
