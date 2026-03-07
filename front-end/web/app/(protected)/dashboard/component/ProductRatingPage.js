@@ -171,9 +171,9 @@ export function ProductRatingWidget({ limit = 50 } = {}) {
 	const rest = useMemo(() => sorted.slice(3), [sorted]);
 
 	return (
-		<div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100">
+		<div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100">
 			{/* Header */}
-			<div className="flex items-start justify-between gap-4 mb-5">
+			<div className="flex items-start justify-between gap-4 mb-4 md:mb-6">
 				<div className="min-w-0">
 					<h2 className="text-base md:text-lg font-bold text-[#1a4d2e]">
 						{t('product_ratings')}
@@ -183,74 +183,69 @@ export function ProductRatingWidget({ limit = 50 } = {}) {
 					</p>
 				</div>
 
-				<div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+				<div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
 					<Star className="w-5 h-5 text-amber-600" />
 				</div>
 			</div>
 
 			{/* Body states */}
 			{loading ? (
-				<div className="h-105 flex items-center justify-center">
+				<div className="h-80 flex items-center justify-center">
 					<div className="flex items-center gap-2 text-gray-500">
 						<Loader2 className="w-5 h-5 animate-spin" />
 						<span>{t('loading')}</span>
 					</div>
 				</div>
 			) : error ? (
-				<div className="h-105 flex items-center justify-center text-red-600">
+				<div className="h-80 flex items-center justify-center text-red-600">
 					{error}
 				</div>
 			) : sorted.length === 0 ? (
-				<div className="h-105 flex items-center justify-center text-gray-500">
+				<div className="h-80 flex items-center justify-center text-gray-500">
 					{t('no_products')}
 				</div>
 			) : (
-				<div className="space-y-5">
-					<div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
-						{top3.map((p, idx) => {
+				<div className="rounded-xl border border-gray-100 overflow-hidden">
+					<div className="h-80 overflow-y-auto divide-y divide-gray-100 bg-white">
+						{[...top3, ...rest].map((p, idx) => {
 							const level = getLevel(p.rating);
 							const levelLabel = t(level);
 
 							const r = clampRating(p.rating);
 							const pct = (r / 5) * 100;
+							const rank = idx + 1;
+							const rankLabel = rank <= 3 ? `TOP ${rank}` : `#${rank}`;
 
 							return (
 								<div
 									key={p.id}
-									className="rounded-2xl border border-gray-100 bg-linear-to-b from-gray-50 to-white p-4 hover:shadow-sm transition"
+									className="p-4 flex items-center gap-3 hover:bg-gray-50 transition"
 								>
-									<div className="flex items-start justify-between gap-3">
-										<div className="flex items-center gap-3 min-w-0 flex-1">
-											<ProductThumb src={p.imageUrl} alt={p.name} />
-											<div className="min-w-0 flex-1">
-												<p className="text-xs font-bold text-gray-400">TOP {idx + 1}</p>
-												<p
-													className="text-base md:text-lg font-bold text-[#1a4d2e]"
-													title={p.name || ''}
-												>
-													{p.name || '—'}
-												</p>
-												<div className="mt-1 flex items-center gap-2">
-													<StarsRow value={r} />
-													<span className="text-sm font-semibold text-gray-700">
-														{r.toFixed(1)}
-													</span>
-												</div>
-											</div>
-										</div>
-
-										<span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${levelBadgeClass(level)}`}>
-											{levelLabel}
-										</span>
+									<div className="w-14 text-center shrink-0">
+										<span className="text-xs md:text-sm font-extrabold text-gray-400">{rankLabel}</span>
 									</div>
 
-									<div className="mt-3">
-										<div className="flex items-center justify-between text-xs text-gray-500">
-											<span>{t('rating')}</span>
-											<span>
-												{r.toFixed(1)} {t('out_of_5')}
+									<ProductThumb src={p.imageUrl} alt={p.name} />
+
+									<div className="min-w-0 flex-1">
+										<div className="flex items-center justify-between gap-3">
+											<p
+												className="font-bold text-[#1a4d2e] whitespace-normal break-normal leading-snug"
+												title={p.name || ''}
+											>
+												{p.name || '—'}
+											</p>
+
+											<span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${levelBadgeClass(level)}`}>
+												{levelLabel}
 											</span>
 										</div>
+
+										<div className="mt-1 flex items-center gap-2">
+											<StarsRow value={r} />
+											<span className="text-sm font-semibold text-gray-700">{r.toFixed(1)}</span>
+										</div>
+
 										<div className="mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
 											<div className={`h-full ${ratingBarClass(level)}`} style={{ width: `${pct}%` }} />
 										</div>
@@ -259,63 +254,6 @@ export function ProductRatingWidget({ limit = 50 } = {}) {
 							);
 						})}
 					</div>
-
-					{/* Rest list */}
-					<div className="rounded-2xl border border-gray-100 overflow-hidden">
-						<div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
-							<p className="text-base md:text-lg font-bold text-[#1a4d2e]">{t('list')}</p>
-						</div>
-
-						<div className="h-80 overflow-y-auto">
-							{rest.map((p, idx) => {
-								const level = getLevel(p.rating);
-								const levelLabel = t(level);
-
-								const r = clampRating(p.rating);
-								const pct = (r / 5) * 100;
-								const rank = idx + 4;
-
-								return (
-									<div
-										key={p.id}
-										className="px-4 py-3 flex items-center gap-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition"
-									>
-										<div className="w-10 text-center shrink-0">
-											<span className="text-sm font-extrabold text-gray-400">#{rank}</span>
-										</div>
-
-										<ProductThumb src={p.imageUrl} alt={p.name} />
-
-										<div className="min-w-0 flex-1">
-											<div className="flex items-center justify-between gap-3">
-														<p
-															className="font-bold text-[#1a4d2e] whitespace-normal break-normal leading-snug"
-															title={p.name || ''}
-														>
-															{p.name || '—'}
-														</p>
-
-												<span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${levelBadgeClass(level)}`}>
-													{levelLabel}
-												</span>
-											</div>
-
-											<div className="mt-1 flex items-center gap-2">
-												<StarsRow value={r} />
-												<span className="text-sm font-semibold text-gray-700">
-													{r.toFixed(1)}
-												</span>
-											</div>
-
-											<div className="mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
-												<div className={`h-full ${ratingBarClass(level)}`} style={{ width: `${pct}%` }} />
-											</div>
-										</div>
-									</div>
-								);
-							})}
-						</div>
-					</div>
 				</div>
 			)}
 		</div>
@@ -323,11 +261,7 @@ export function ProductRatingWidget({ limit = 50 } = {}) {
 }
 
 export function ProductRatingPage() {
-	return (
-		<div className="p-4 md:p-8">
-			<ProductRatingWidget />
-		</div>
-	);
+	return <ProductRatingWidget />;
 }
 
 export default ProductRatingPage;
