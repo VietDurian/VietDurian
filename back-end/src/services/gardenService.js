@@ -229,6 +229,7 @@ const createGarden = async (userId, gardenData) => {
 		}
 
 		const existingGarden = await GardenModel.findOne({
+			user_id: userId,
 			name: {
 				$regex: buildNameDuplicateRegex(normalizedName),
 			},
@@ -272,6 +273,35 @@ const createGarden = async (userId, gardenData) => {
 // Update garden record
 const updateGarden = async (gardenId, updateData) => {
 	try {
+		const currentGarden = await GardenModel.findById(gardenId)
+			.select('_id user_id name')
+			.lean();
+
+		if (!currentGarden) {
+			throw createError(404, 'Vườn không tồn tại');
+		}
+
+		if (Object.prototype.hasOwnProperty.call(updateData, 'name')) {
+			const normalizedName = normalizeGardenName(updateData.name);
+			if (!normalizedName) {
+				throw createError(400, 'Tên vườn không hợp lệ');
+			}
+
+			const duplicatedGarden = await GardenModel.findOne({
+				_id: { $ne: currentGarden._id },
+				user_id: currentGarden.user_id,
+				name: {
+					$regex: buildNameDuplicateRegex(normalizedName),
+				},
+			}).lean();
+
+			if (duplicatedGarden) {
+				throw createError(409, 'Vườn đã tồn tại với tên tương tự');
+			}
+
+			updateData.name = normalizedName;
+		}
+
 		if (Object.prototype.hasOwnProperty.call(updateData, 'unit_code')) {
 			updateData.unit_code = String(updateData.unit_code || '').trim();
 		}
@@ -297,10 +327,6 @@ const updateGarden = async (gardenId, updateData) => {
 				new: true,
 			},
 		);
-
-		if (!updatedGarden) {
-			throw createError(404, 'Vườn không tồn tại');
-		}
 
 		return updatedGarden;
 	} catch (error) {
