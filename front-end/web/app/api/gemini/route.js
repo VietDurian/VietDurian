@@ -1,6 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const BACKEND_API_URL =
+	process.env.NEXT_PUBLIC_API_URL ||
+	process.env.API_URL ||
+	'http://localhost:8080/api/v1';
 
 const systemInstruction = `Bạn là trợ lý nông nghiệp chuyên về sầu riêng.
 - Trả lời ngắn gọn, tiếng Việt hoặc tiếng anh tùy theo câu hỏi, thân thiện.
@@ -34,6 +38,93 @@ const examples = [
 // temperature điều chỉnh độ sáng tạo, maxOutputTokens giới hạn độ dài câu trả lời
 const generationConfig = { temperature: 0.3, maxOutputTokens: 512 };
 
+const imageDataToBase64 = (data) => {
+	if (!data || typeof data !== 'string') return null;
+	return data.includes('base64,') ? data.split('base64,')[1] : data;
+};
+
+const toPercent = (value) => {
+	const num = Number(value);
+	if (!Number.isFinite(num)) return null;
+	return (num * 100).toFixed(2);
+};
+
+const formatDiseaseResultText = (result) => {
+	const disease = result?.predicted_class_vi || result?.predicted_class || 'Không xác định';
+	const confidence = toPercent(result?.confidence);
+	const guardConfidence = toPercent(result?.guard?.confidence);
+	const solutions = Array.isArray(result?.solutions) ? result.solutions : [];
+
+	let text = `Kết quả nhận diện: ${disease}.`;
+	if (confidence) {
+		text += ` Độ tin cậy: ${confidence}%.`;
+	}
+	if (guardConfidence) {
+		text += ` Mức tin cậy ảnh liên quan sầu riêng: ${guardConfidence}%.`;
+	}
+	if (result?.guard?.reason) {
+		text += ` Ghi chú: ${result.guard.reason}.`;
+	}
+	if (solutions.length > 0) {
+		text += ` Gợi ý xử lý: ${solutions.slice(0, 5).join('; ')}.`;
+	}
+
+	return text;
+};
+
+const detectDiseaseViaBackend = async (image) => {
+	const base64 = imageDataToBase64(image?.data);
+	if (!base64 || !image?.mimeType) {
+		return null;
+	}
+
+	const byteArray = Buffer.from(base64, 'base64');
+	const form = new FormData();
+	const blob = new Blob([byteArray], {
+		type: image.mimeType || 'image/jpeg',
+	});
+	form.append('image', blob, 'chat-upload.jpg');
+
+	let response;
+	try {
+		response = await fetch(`${BACKEND_API_URL.replace(/\/$/, '')}/ai/predict`, {
+			method: 'POST',
+			body: form,
+		});
+	} catch {
+		return null;
+	}
+
+	const payload = await response.json().catch(() => null);
+
+	if (response.ok && payload?.success) {
+		return {
+			handled: true,
+			text: formatDiseaseResultText(payload.data),
+		};
+	}
+
+	if (response.status === 422) {
+		const reason = payload?.data?.guard?.reason;
+		return {
+			handled: true,
+			text: reason
+				? `Ảnh bạn gửi không phải ảnh sầu riêng nên mình chưa thể chẩn đoán bệnh. Lý do: ${reason}.`
+				: 'Ảnh bạn gửi không phải ảnh sầu riêng nên mình chưa thể chẩn đoán bệnh.',
+		};
+	}
+
+	if (response.status === 429) {
+		return {
+			handled: true,
+			text:
+				'Hệ thống kiểm tra ảnh bằng Gemini đang tạm hết quota, bạn vui lòng thử lại sau ít phút.',
+		};
+	}
+
+	return null;
+};
+
 export async function POST(request) {
 	try {
 		const { message, history, image } = await request.json();
@@ -45,6 +136,15 @@ export async function POST(request) {
 				{ success: false, error: 'Cần nhập nội dung hoặc đính kèm ảnh' },
 				{ status: 400 },
 			);
+		}
+
+		// If user sends an image in chat, run disease pipeline first.
+		// Backend /ai/predict already applies Gemini durian-image guard.
+		if (hasImage) {
+			const diagnosis = await detectDiseaseViaBackend(image);
+			if (diagnosis?.handled) {
+				return Response.json({ success: true, data: diagnosis.text }, { status: 200 });
+			}
 		}
 
 		// List models via REST to see what this key can access
@@ -91,9 +191,7 @@ export async function POST(request) {
 		const userParts = [];
 		if (hasText) userParts.push({ text: `${message}\n\n${plainTextGuard}` });
 		if (hasImage) {
-			const base64 = image.data.includes('base64,')
-				? image.data.split('base64,')[1]
-				: image.data;
+			const base64 = imageDataToBase64(image.data);
 			userParts.push({
 				inlineData: { data: base64, mimeType: image.mimeType },
 			});
