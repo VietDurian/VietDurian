@@ -18,7 +18,12 @@ from tensorflow.keras.models import load_model
 from datetime import datetime
 from tensorflow.keras.callbacks import TensorBoard
 import pandas as pd
+tf.keras.utils.set_random_seed(42)
 
+class LrLogger(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        lr = self.model.optimizer.learning_rate
+        print(f"\nLearning rate: {float(lr):.8f}")
 
 print("TensorFlow version:", tf.__version__)
 print("GPU devices:", tf.config.list_physical_devices("GPU"))
@@ -51,8 +56,8 @@ TEST_DIR  = os.path.join(BASE_DIR, "test")
 # BATCH_SIZE = 128
 # NUM_CLASSES = 10
 # EPOCHS = 60
-IMG_SIZE = (224, 224)
-BATCH_SIZE = 128
+IMG_SIZE = (256, 256)
+BATCH_SIZE = 32
 NUM_CLASSES = 13
 EPOCHS = 60
 
@@ -62,11 +67,14 @@ EPOCHS = 60
 # ============================================================
 train_datagen = ImageDataGenerator(
     preprocessing_function=preprocess_input,
-    rotation_range=20,
-    width_shift_range=0.1,
-    height_shift_range=0.1,
-    zoom_range=0.2,
-    horizontal_flip=True
+    rotation_range=30,
+    width_shift_range=0.15,
+    height_shift_range=0.15,
+    zoom_range=0.3,
+    shear_range=0.15,
+    horizontal_flip=True,
+    brightness_range=[0.6, 1.4],
+    channel_shift_range=20
 )
 
 
@@ -79,6 +87,7 @@ train_generator = train_datagen.flow_from_directory(
     TRAIN_DIR,
     target_size=IMG_SIZE,
     batch_size=BATCH_SIZE,
+    shuffle=True,
     class_mode="categorical"
 )
 
@@ -102,6 +111,7 @@ test_generator = val_test_datagen.flow_from_directory(
 
 
 print("Class indices:", train_generator.class_indices)
+print("Number of classes:", train_generator.num_classes)
 
 
 # ============================================================
@@ -120,7 +130,7 @@ base_model = MobileNetV3Large(
 
 x = base_model.output
 x = GlobalAveragePooling2D()(x)
-x = Dense(512, activation="relu")(x)
+x = Dense(256, activation="relu")(x)
 x = Dropout(0.5)(x)
 output = Dense(NUM_CLASSES, activation="softmax")(x)
 
@@ -129,8 +139,8 @@ model = Model(inputs=base_model.input, outputs=output)
 
 
 model.compile(
-    optimizer=tf.keras.optimizers.AdamW(learning_rate=1e-4),
-    loss="categorical_crossentropy",
+    optimizer=tf.keras.optimizers.AdamW(1e-5),
+    loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1),
     metrics=["accuracy"]
 )
 
@@ -189,7 +199,8 @@ callbacks = [
     ReduceLROnPlateau(monitor="val_loss", factor=0.3, patience=3, verbose=1),
     checkpoint,
     tensorboard_cb,
-    csv_logger
+    csv_logger,
+    LrLogger()
 ]
 
 
@@ -210,7 +221,7 @@ for layer in base_model.layers:
 
 model.compile(
     optimizer=tf.keras.optimizers.AdamW(1e-4),
-    loss="categorical_crossentropy",
+    loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1),
     metrics=["accuracy"]
 )
 #Ghi thông tin model ra file txt
@@ -220,7 +231,7 @@ with open(os.path.join(log_dir, "model_summary_phase1.txt"), "w", encoding="utf-
 
 history_1 = model.fit(
     train_generator,
-    epochs=EPOCHS,
+    epochs=15,
     validation_data=val_generator,
     callbacks=callbacks
 )
@@ -230,16 +241,26 @@ history_1 = model.fit(
 # Unfreeze all layers
 
 
-#model = load_model("checkpoints/MobileNetV3Large/MobileNetV3Large_epoch_15_valacc_0.8197.keras")
+model_files = glob.glob("checkpoints/MobileNetV3Large/*.keras")
+
+def extract_val_acc(filename):
+    return float(re.search(r"valacc_(\d+\.\d+)", filename).group(1))
+
+best_model = max(model_files, key=extract_val_acc)
+
+print("Loading best model:", best_model)
+
+model = load_model(best_model)
 
 
 
 
 #fine-tune (not better: weighted avg       0.87      0.86      0.86       648)
-# for layer in base_model.layers[:-20]:
-#     layer.trainable = False
-# for layer in base_model.layers[-20:]:
-#     layer.trainable = True
+base_model = model.layers[1]
+for layer in model.layers[:-20]:
+    layer.trainable = False
+for layer in model.layers[-20:]:
+    layer.trainable = True
 # IMPORTANT: use a lower learning rate for fine-tuning
 
 
@@ -247,23 +268,23 @@ history_1 = model.fit(
 
 # for layer in model.layers:
 #     layer.trainable = True
-# model.compile(
-#     optimizer=tf.keras.optimizers.AdamW(1e-5),
-#     loss="categorical_crossentropy",
-#     metrics=["accuracy"]
-# )
+model.compile(
+    optimizer=tf.keras.optimizers.AdamW(1e-5),
+    loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1),
+    metrics=["accuracy"]
+)
 # #Ghi thông tin model ra file txt
 # with open(os.path.join(log_dir, "model_summary_phase2.txt"), "w") as f:
 #     model.summary(print_fn=lambda x: f.write(x + "\n"))
 
 
-# history_2 = model.fit(
-#     train_generator,
-#     epochs=EPOCHS,          # total epochs (e.g. 30)
-#     initial_epoch=15,       # resume from epoch 15
-#     validation_data=val_generator,
-#     callbacks=callbacks
-# )
+history_2 = model.fit(
+    train_generator,
+    epochs=45,          # total epochs (e.g. 30)
+    initial_epoch=15,       # resume from epoch 15
+    validation_data=val_generator,
+    callbacks=callbacks
+)
 
 
 
@@ -271,6 +292,16 @@ history_1 = model.fit(
 # ============================================================
 # 7. Evaluate on Test set
 # ============================================================
+def tta_predict(model, generator, tta_steps=5):
+    preds = []
+
+    for i in range(tta_steps):
+        generator.reset()
+        pred = model.predict(generator, verbose=0)
+        preds.append(pred)
+
+    preds = np.mean(preds, axis=0)
+    return preds
 test_loss, test_acc = model.evaluate(test_generator)
 print(f"\nTest Accuracy: {test_acc:.4f}")
 
@@ -279,7 +310,7 @@ print(f"\nTest Accuracy: {test_acc:.4f}")
 # 8. Classification Report & Confusion Matrix
 # ============================================================
 y_true = test_generator.classes
-y_pred_probs = model.predict(test_generator)
+y_pred_probs = tta_predict(model, test_generator)
 y_pred = np.argmax(y_pred_probs, axis=1)
 
 
@@ -301,6 +332,10 @@ filename=os.path.join(log_dir, "confusion_matrix.csv")
 cm_df.to_csv(filename)
 
 
+
+
+
+
 #Select top-5 models by validation accuracy
 model_files = glob.glob("checkpoints/MobileNetV3Large/*.keras")
 
@@ -316,7 +351,7 @@ model_files = sorted(
 )
 
 
-top5_models = model_files[:1]
+top5_models = model_files[:5]
 print("Top-5 models:")
 for m in top5_models:
     print(m)
@@ -343,8 +378,8 @@ def average_models(model_paths):
 
 
     avg_model.compile(
-        optimizer=tf.keras.optimizers.AdamW(1e-4),
-        loss="categorical_crossentropy",
+        optimizer=tf.keras.optimizers.AdamW(1e-5),
+        loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1),
         metrics=["accuracy"]
     )
 
@@ -362,7 +397,7 @@ print(f"Averaged model accuracy: {avg_acc:.4f}")
 # 8. Classification Report & Confusion Matrix
 # ============================================================
 y_true = test_generator.classes
-y_pred_probs = avg_model.predict(test_generator)
+y_pred_probs = tta_predict(avg_model, test_generator)
 y_pred = np.argmax(y_pred_probs, axis=1)
 
 
@@ -382,4 +417,5 @@ print(matrix)
 cm_df = pd.DataFrame(matrix, index=class_names, columns=class_names)
 filename=os.path.join(log_dir, "confusion_matrix_avg5.csv")
 cm_df.to_csv(filename)
+model.save("MobileNetV3Large_durian_disease_final.keras")
 

@@ -18,7 +18,7 @@ from tensorflow.keras.applications.mobilenet_v3 import preprocess_input
 
 APP_DIR = Path(__file__).resolve().parent
 MODEL_PATH = APP_DIR / "MobileNetV3Large_tendurian_avg_top5.keras"
-IMG_SIZE = (224, 224)
+IMG_SIZE = (256, 256)
 
 
 CLASS_NAMES = [

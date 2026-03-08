@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet';
 
 import { useLanguage } from '../context/LanguageContext';
 import { gardenAPI } from '@/lib/api';
@@ -143,6 +143,7 @@ export function GardenHeatmap({ points }) {
 				const longitude = Number(p?.longitude ?? p?.lng);
 				const areaHa = Number(p?.areaHa ?? p?.area ?? p?.area_ha);
 				const safeAreaHa = Number.isFinite(areaHa) ? areaHa : 0;
+				const hasLatLng = Number.isFinite(latitude) && Number.isFinite(longitude);
 				const fromXY = {
 					x: Number(p?.x),
 					y: Number(p?.y),
@@ -156,6 +157,8 @@ export function GardenHeatmap({ points }) {
 					id: p?.id ?? p?._id ?? `p-${idx}`,
 					x,
 					y,
+					lat: hasLatLng ? latitude : null,
+					lng: hasLatLng ? longitude : null,
 					areaHa: safeAreaHa,
 					bucket: getAreaBucket(safeAreaHa),
 					name: p?.name ?? 'Vườn',
@@ -167,7 +170,38 @@ export function GardenHeatmap({ points }) {
 			.filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
 	}, [data]);
 
-	const bucketByKey = useMemo(() => new Map(BUCKETS.map((b) => [b.key, b])), []);
+	const mapPoints = useMemo(
+		() => normalized.filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng)),
+		[normalized]
+	);
+
+	const bucketStyle = useMemo(
+		() =>
+			new Map([
+				['lt3', { className: 'fill-emerald-200 stroke-emerald-600', radius: 6, fillOpacity: 0.7 }],
+				['3to5', { className: 'fill-emerald-400 stroke-emerald-800', radius: 7, fillOpacity: 0.7 }],
+				['5to7', { className: 'fill-emerald-700 stroke-emerald-950', radius: 8, fillOpacity: 0.7 }],
+				['gte7', { className: 'fill-emerald-950 stroke-emerald-200', radius: 9, fillOpacity: 0.7 }],
+			]),
+		[]
+	);
+
+	function FitAllBounds({ points: pts }) {
+		const map = useMap();
+		useEffect(() => {
+			if (!map || !Array.isArray(pts) || pts.length === 0) return;
+			const latLngs = pts
+				.map((p) => [p.lat, p.lng])
+				.filter(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng));
+			if (latLngs.length === 0) return;
+			if (latLngs.length === 1) {
+				map.setView(latLngs[0], 11, { animate: false });
+				return;
+			}
+			map.fitBounds(latLngs, { padding: [24, 24] });
+		}, [map, pts]);
+		return null;
+	}
 
 	return (
 		<div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100">
@@ -177,60 +211,49 @@ export function GardenHeatmap({ points }) {
 			</div>
 
 			<div className="relative w-full h-65 md:h-75 rounded-xl border border-emerald-100 overflow-hidden bg-emerald-50/70">
-				{/* Grid background */}
-				<svg
-					className="absolute inset-0 w-full h-full text-emerald-200/60"
-					xmlns="http://www.w3.org/2000/svg"
-					aria-hidden="true"
-					preserveAspectRatio="none"
+				<MapContainer
+					center={[15.8, 107.1]}
+					zoom={6}
+					scrollWheelZoom
+					className="w-full h-full"
 				>
-					<defs>
-						<pattern id="garden-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-							<path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" />
-						</pattern>
-					</defs>
-					<rect width="100%" height="100%" fill="url(#garden-grid)" />
-				</svg>
+					<TileLayer
+						attribution="&copy; OpenStreetMap contributors"
+						url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+					/>
 
-				{/* Markers */}
-				{normalized.map((p) => {
-					const bucket = bucketByKey.get(p.bucket) || BUCKETS[0];
-					const locationLine = p.location?.trim() ? p.location : `${fmtCoord(p.latitude, 'N', 'S')}, ${fmtCoord(p.longitude, 'E', 'W')}`;
-					return (
-						<div
-							key={p.id}
-							className="group absolute"
-							style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -70%)' }}
-							aria-label={`${p.name} - ${t('area')}: ${p.areaHa.toFixed(1)} ha`}
-						>
-							<div className={`absolute ${bucket.haloInsetClass} rounded-full ${bucket.haloClass}`} />
-							<MapPin className="relative w-6 h-6" stroke="#1a4d2e" strokeWidth={2.2} fill="#ffd93d" />
-							<span
-								className={`absolute left-1/2 top-6 h-3.5 w-3.5 -translate-x-1/2 rounded-full ${bucket.dotClass}`}
-								aria-hidden="true"
-							/>
+					<FitAllBounds points={mapPoints} />
 
-							{/* Hover tooltip */}
-							<div
-								className="pointer-events-none absolute left-1/2 top-0 z-20 hidden -translate-x-1/2 -translate-y-[120%] group-hover:block"
-								role="tooltip"
+					{mapPoints.map((p) => {
+						const style = bucketStyle.get(p.bucket) || bucketStyle.get('lt3');
+						const locationLine = p.location?.trim()
+							? p.location
+							: `${fmtCoord(p.latitude, 'N', 'S')}, ${fmtCoord(p.longitude, 'E', 'W')}`;
+						return (
+							<CircleMarker
+								key={p.id}
+								center={[p.lat, p.lng]}
+								radius={style.radius}
+								pathOptions={{
+									weight: 2,
+									opacity: 1,
+									fillOpacity: style.fillOpacity,
+									className: style.className,
+								}}
 							>
-								<div className="min-w-50 max-w-65 rounded-xl bg-[#1a4d2e] px-4 py-3 shadow-lg">
-									<p className="text-base md:text-lg font-bold text-[#ffd93d]">
-										{p.name}
-									</p>
-									<p className="text-xs text-emerald-50/90 leading-snug">
-										{t('area')}: {p.areaHa.toFixed(1)} ha
-									</p>
-									<p className="text-xs text-emerald-50/90 leading-snug whitespace-normal wrap-break-word">
-										{locationLine}
-									</p>
-								</div>
-								<div className="mx-auto h-0 w-0 border-x-10 border-x-transparent border-t-12 border-t-[#1a4d2e]" />
-							</div>
-						</div>
-					);
-				})}
+								<Tooltip direction="top" offset={[0, -8]} opacity={1} sticky>
+									<div>
+										<div className="font-bold text-[#1a4d2e]">{p.name}</div>
+										<div className="text-sm">
+											{t('area')}: {p.areaHa.toFixed(1)} ha
+										</div>
+										<div className="text-xs text-gray-600">{locationLine}</div>
+									</div>
+								</Tooltip>
+							</CircleMarker>
+						);
+					})}
+				</MapContainer>
 			</div>
 
 			<div className="mt-3 flex items-center justify-between gap-3">

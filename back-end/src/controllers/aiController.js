@@ -3,7 +3,7 @@ import { aiService } from "@/services/aiService.js";
 const DISEASE_INFO = {
   Fruit_Rot: {
     viName: "Bệnh thối trái",
-    solutions: ["Không để trái chạm đất", "Bao trái"],
+    solutions: ["Bao trái", "Thu hoạch đúng thời điểm", "Thu gom trái bệnh"],
   },
   Leaf_Algal: {
     viName: "Bệnh đốm lá do tảo ký sinh",
@@ -12,57 +12,61 @@ const DISEASE_INFO = {
   Leaf_Blight: {
     viName: "Bệnh cháy lá",
     solutions: [
-      "Tỉa cành tạo tán cho vườn thông thoáng",
-      "Không tưới nước lên lá vào chiều tối",
-      "Thu gom lá bệnh đem tiêu hủy",
+      "Tỉa cành tạo tán cho vườn thông thoáng và giảm ẩm",
+      "Không bón quá nhiều đạm",
+      "Cắt bỏ lá bệnh và tiêu hủy",
+      "Trồng với mật độ hợp lý",
+      "Bón phân hữu cơ hoai mục + vi sinh",
+      "Vệ sinh vườn định kỳ"
     ],
   },
   Leaf_Colletotrichum: {
     viName: "Bệnh thán thư trên lá",
     solutions: [
-      "Tỉa cành giảm ẩm độ",
-      "Không trồng quá dày",
-      "Thu gom lá bệnh",
+      "Bón phân cân đối NPK + trung vi lượng",
+      "Giảm độ ẩm vườn",
+      "Tỉa bỏ cành bệnh",
+      "Không để lá bệnh tồn tại trong vườn"
     ],
   },
   Leaf_Healthy: {
-    viName: "Lá khỏe mạnh",
-    solutions: ["Tiếp tục theo dõi và chăm sóc định kỳ"],
+    viName: "Lá khỏe mạnh"
   },
   Leaf_Phomopsis: {
     viName: "Bệnh đốm lá Phomopsis",
-    solutions: ["Cắt bỏ lá bị bệnh", "Bón phân hữu cơ + vi sinh"],
+    solutions: ["Trồng cây giống sạch bệnh", "Tránh tưới nước lên tán lá buổi tối", "Tăng cường Kali và Canxi để tăng sức đề kháng của cây", "Thu gom lá bệnh đem đốt", "Khử trùng dụng cụ cắt tỉa"],
   },
   Leaf_Rhizoctonia: {
     viName: "Bệnh cháy lá do nấm Rhizoctonia",
-    solutions: ["Thoát nước tốt", "Không để lá rụng tích tụ"],
+    solutions: ["Không trồng quá dày", "Kiểm soát độ ẩm đất", "Loại bỏ lá bệnh"],
   },
   Mealybug_Infestation: {
     viName: "Bệnh gây hại của rệp sáp",
-    solutions: ["Nấm xanh (Metarhizium)"],
+    solutions: ["Kiểm soát kiến", "Cắt bỏ cành bị nặng", "Rửa bằng nước áp lực cao"],
   },
   Pink_Disease: {
     viName: "Bệnh nấm hồng",
-    solutions: ["Cắt bỏ cành bệnh", "Bôi vôi + thuốc đồng"],
+    solutions: ["Tỉa cành tạo thông thoáng", "Cắt bỏ cành bệnh"],
   },
   Sooty_Mold: {
     viName: "Bệnh mốc bồ hóng",
-    solutions: ["Rửa lá bằng nước", "Kiểm soát côn trùng gây mật"],
+    solutions: ["Kiểm soát rệp, bọ trĩ", "Rửa lá bằng nước"],
   },
   Stem_Cracking_Gummosis: {
     viName: "Bệnh nứt thân chảy nhựa",
-    solutions: ["Thoát nước tốt", "Không làm tổn thương thân"],
+    solutions: ["Tránh ngập úng", "Bón phân cân đối", "Cạo sạch vết bệnh"],
   },
   Thrips_Disease: {
     viName: "Bệnh do bọ trĩ gây hại",
-    solutions: ["Beauveria bassiana"],
+    solutions: ["Vệ sinh vườn", "Bẫy dính xanh"],
   },
   Yellow_Leaf: {
     viName: "Bệnh vàng lá",
     solutions: [
-      "Bón hữu cơ + humic",
+      "Bón phân hữu cơ + vi sinh",
       "Bổ sung Mg, Zn, Fe",
-      "Kiểm tra pH đất (5.5–6.5)",
+      "Cải tạo đất thoát nước tốt",
+      "Tỉa cành yếu"
     ],
   },
 };
@@ -94,6 +98,8 @@ const localizeAiResult = (aiResult) => {
 };
 
 const predict = async (req, res, next) => {
+  const bypassOnQuota = String(process.env.AI_GUARD_BYPASS_ON_QUOTA || "false").toLowerCase() === "true";
+
   try {
     const file = req.file;
 
@@ -113,6 +119,66 @@ const predict = async (req, res, next) => {
       });
     }
 
+    let guardResult;
+    try {
+      guardResult = await aiService.guardDurianImage({
+        buffer: file.buffer,
+        mimetype: file.mimetype,
+        filename: file.originalname || "image",
+      });
+    } catch (guardError) {
+      if (guardError?.code === "GUARD_NOT_CONFIGURED") {
+        return res.status(500).json({
+          code: 500,
+          success: false,
+          message: "He thong dang thieu cau hinh AI guard. Vui long kiem tra GEMINI_API_KEY.",
+        });
+      }
+
+      if (guardError?.code === "GUARD_PROVIDER_ERROR") {
+        if (guardError?.status === 429) {
+          if (bypassOnQuota) {
+            guardResult = {
+              provider: "gemini",
+              isDurianRelated: true,
+              confidence: null,
+              reason: "Guard bypassed due to Gemini quota (AI_GUARD_BYPASS_ON_QUOTA=true).",
+              bypassed: true,
+              retryAfterSeconds: guardError?.retryAfterSeconds || null,
+            };
+          } else {
+          return res.status(429).json({
+            code: 429,
+            success: false,
+            message: "Gemini da het quota tam thoi. Vui long thu lai sau.",
+            data: {
+              retryAfterSeconds: guardError?.retryAfterSeconds || null,
+            },
+          });
+          }
+        }
+
+        return res.status(502).json({
+          code: 502,
+          success: false,
+          message: "Khong the kiem tra anh voi AI guard luc nay. Vui long thu lai sau.",
+        });
+      }
+
+      throw guardError;
+    }
+
+    if (!guardResult?.isDurianRelated) {
+      return res.status(422).json({
+        code: 422,
+        success: false,
+        message: "Ảnh bạn tải lên chưa phải ảnh sầu riêng. Vui lòng chọn ảnh liên quan đến sầu riêng để hệ thống chẩn đoán chính xác hơn.",
+        data: {
+          guard: guardResult,
+        },
+      });
+    }
+
     const aiResult = await aiService.predictDisease({
       buffer: file.buffer,
       filename: file.originalname || "image",
@@ -125,7 +191,10 @@ const predict = async (req, res, next) => {
       code: 200,
       success: true,
       message: "AI prediction success",
-      data: localized,
+      data: {
+        ...localized,
+        guard: guardResult,
+      },
     });
   } catch (error) {
     next(error);
