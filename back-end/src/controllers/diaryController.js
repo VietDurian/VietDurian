@@ -169,7 +169,7 @@ const updateDiaryStep = async (req, res, next) => {
 
 		res.status(200).json({
 			code: 200,
-			message: 'Diary step updated successfully',
+			message: 'Cập nhật bước nhật ký thành công',
 			data: updatedStep,
 		});
 	} catch (error) {
@@ -200,7 +200,7 @@ const addDiaryStep = async (req, res, next) => {
 		const newStep = await diaryService.addDiaryStep(diaryId, stepData);
 		res.status(201).json({
 			code: 201,
-			message: 'Diary step added successfully',
+			message: 'Thêm bước nhật ký thành công',
 			data: newStep,
 		});
 	} catch (error) {
@@ -221,7 +221,7 @@ const deleteDiaryStep = async (req, res, next) => {
 		}
 		res.status(200).json({
 			code: 200,
-			message: 'Diary step deleted successfully',
+			message: 'Cập nhật bước nhật ký thành công',
 		});
 	} catch (error) {
 		next(error);
@@ -234,7 +234,7 @@ const statisticsDiary = async (req, res, next) => {
 		const stats = await diaryService.statisticsDiary(diaryId);
 		res.status(200).json({
 			code: 200,
-			message: 'Diary statistics retrieved successfully',
+			message: 'Thống kê nhật ký thành công',
 			data: stats,
 		});
 	} catch (error) {

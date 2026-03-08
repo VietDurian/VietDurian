@@ -1,8 +1,19 @@
 import { DiaryModel } from '@/model/diaryModel';
 import { DiaryStepModel } from '@/model/diaryStepModel';
 import { StepModel } from '@/model/stepModel';
+import createError from 'http-errors';
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const normalizeDiaryTitle = (titleValue) =>
+	String(titleValue || '')
+		.normalize('NFC')
+		.trim()
+		.replace(/\s+/g, ' ');
+
+const buildDiaryTitleRegex = (normalizedTitle) => {
+	const escaped = escapeRegex(normalizedTitle).replace(/\s+/g, '\\s+');
+	return new RegExp(`^${escaped}$`, 'i');
+};
 
 // Get all diaries
 const getDiariesByUser = async (filter = {}) => {
@@ -44,25 +55,19 @@ const getDiariesByUser = async (filter = {}) => {
 // Create diary
 const createDiary = async ({ user_id, garden_id, title, description }) => {
 	try {
-		
-		const normalizedTitle = String(title || '').trim();
+		const normalizedTitle = normalizeDiaryTitle(title);
 		if (!normalizedTitle) {
-			const error = new Error('Diary title is required');
-			error.statusCode = 400;
-			throw error;
+			throw createError(400, 'Diary title is required');
 		}
-		const titleRegex = new RegExp(`^${escapeRegex(normalizedTitle)}$`, 'i');
+		const titleRegex = buildDiaryTitleRegex(normalizedTitle);
 		const duplicatedDiary = await DiaryModel.findOne({
 			user_id,
 			garden_id,
 			title: titleRegex,
-		});
+		}).lean();
 
 		if (duplicatedDiary) {
-			const error = new Error('Tên nhật ký đã tồn tại trong vườn này');
-			error.statusCode = 409;
-			error.code = 'Vui lòng chọn tên nhật ký khác';
-			throw error;
+			throw createError(409, 'Tên nhật ký đã tồn tại trong vườn này');
 		}
 
 		const newDiary = new DiaryModel({
@@ -82,11 +87,51 @@ const createDiary = async ({ user_id, garden_id, title, description }) => {
 const updateDiary = async (diaryId, { title, description }) => {
 	try {
 		if (!diaryId) throw new Error('Diary ID is required for update');
+
+		const updatePayload = {};
+
+		if (title !== undefined) {
+			const normalizedTitle = normalizeDiaryTitle(title);
+			if (!normalizedTitle) {
+				throw createError(400, 'Diary title is required');
+			}
+
+			const currentDiary = await DiaryModel.findById(diaryId)
+				.select('_id user_id garden_id')
+				.lean();
+
+			if (!currentDiary) {
+				throw createError(404, 'Diary not found');
+			}
+
+			const duplicatedDiary = await DiaryModel.findOne({
+				_id: { $ne: currentDiary._id },
+				user_id: currentDiary.user_id,
+				garden_id: currentDiary.garden_id,
+				title: buildDiaryTitleRegex(normalizedTitle),
+			}).lean();
+
+			if (duplicatedDiary) {
+				throw createError(409, 'Tên nhật ký đã tồn tại trong vườn này');
+			}
+
+			updatePayload.title = normalizedTitle;
+		}
+
+		if (description !== undefined) {
+			updatePayload.description = description;
+		}
+
 		const updatedDiary = await DiaryModel.findByIdAndUpdate(
 			diaryId,
-			{ title, description },
+			updatePayload,
 			{ new: true },
 		);
+
+		if (!updatedDiary) {
+			throw createError(404, 'Diary not found');
+		}
+
 		return updatedDiary;
 	} catch (error) {
 		throw error;
