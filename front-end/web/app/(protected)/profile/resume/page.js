@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { capabilityProfileAPI } from "@/lib/api";
+import { toast } from "sonner"
 
 const ServiceProviderResume = () => {
   const router = useRouter();
@@ -108,7 +109,7 @@ const ServiceProviderResume = () => {
         await fetchProfile();
         setShowForm(false);
         setIsEditMode(false);
-        alert("Cập nhật hồ sơ thành công!");
+        toast.success("Cập nhật hồ sơ thành công!");
       }
     } catch (error) {
       console.error("Error submitting profile:", error);
@@ -117,7 +118,7 @@ const ServiceProviderResume = () => {
         errorMessage = error.response.data.message;
       }
       setError(errorMessage);
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsCreating(false);
     }

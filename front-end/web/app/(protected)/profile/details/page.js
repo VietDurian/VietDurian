@@ -21,7 +21,8 @@ import {
   Camera,
 } from "lucide-react";
 import { profileAPI, authAPI } from "@/lib/api";
-import FavoritePostsModal from "@/components/FavoritePostsModal"
+import FavoritePostsModal from "@/components/FavoritePostsModal";
+import { toast } from "sonner"
 
 const TabButton = ({ icon: Icon, label, active, onClick }) => (
   <button
@@ -114,7 +115,7 @@ export default function ProfileDetails() {
     const file = event.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      alert("Ảnh quá lớn. Tối đa 5MB");
+      toast.error("Ảnh quá lớn. Tối đa 5MB")
       return;
     }
     const reader = new FileReader();
@@ -216,11 +217,11 @@ export default function ProfileDetails() {
         // Refresh profile data
         await fetchProfile();
         setIsEditModalOpen(false);
-        alert("Cập nhật thông tin thành công!");
+        toast.success("Cập nhật thông tin thành công!")
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("Có lỗi xảy ra khi cập nhật thông tin!");
+      toast.error("Có lỗi xảy ra khi cập nhật thông tin!")
     } finally {
       setIsSaving(false);
     }
@@ -258,7 +259,7 @@ export default function ProfileDetails() {
       const response = await authAPI.changePassword(payload);
 
       if (response.success) {
-        alert("Đổi mật khẩu thành công!");
+        toast.success("Đổi mật khẩu thành công!")
 
         // Reset form
         setPasswordForm({

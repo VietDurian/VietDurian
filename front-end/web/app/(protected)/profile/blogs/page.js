@@ -21,6 +21,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { blogAPI } from "@/lib/api";
+import { toast } from "sonner";
+
+// ==================== CONFIRM MODAL ====================
+const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+        <p className="text-gray-800 text-sm mb-6 text-center">{message}</p>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm">Hủy</button>
+          <button onClick={onConfirm} className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm">Xóa</button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ==================== MODAL COMPONENT ====================
 const Modal = ({ isOpen, onClose, title, children }) => {
@@ -105,7 +122,7 @@ const KnowledgeBlockCard = ({ block, index, onEdit, onDelete, displayIndex }) =>
 };
 
 // ==================== BLOG CARD ====================
-const BlogCard = ({ blog, onEdit, onDelete, onAddBlock, onView }) => {
+const BlogCard = ({ blog, onEdit, onDelete, onAddBlock, onView, onDeleteConfirm }) => {
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
   return (
     <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 group">
@@ -121,7 +138,7 @@ const BlogCard = ({ blog, onEdit, onDelete, onAddBlock, onView }) => {
           <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <button onClick={(e) => { e.stopPropagation(); onAddBlock(blog); }} className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-all" title="Thêm chương"><Plus size={16} /></button>
             <button onClick={(e) => { e.stopPropagation(); onEdit(blog); }} className="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-lg transition-all" title="Chỉnh sửa"><Edit2 size={16} /></button>
-            <button onClick={(e) => { e.stopPropagation(); if (window.confirm("Bạn có chắc chắn muốn xóa blog này?")) { onDelete(blog._id); } }} className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-all" title="Xóa"><Trash2 size={16} /></button>
+            <button onClick={(e) => { e.stopPropagation(); onDeleteConfirm(blog._id); }} className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-all" title="Xóa"><Trash2 size={16} /></button>
           </div>
         </div>
       </div>
@@ -150,11 +167,16 @@ export default function BlogManagementContent() {
   const { user } = useAuth();
   const router = useRouter();
 
-  // View: list | edit | addBlock | detail
   const [view, setView] = useState("list");
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Confirm modal state
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, message: "", onConfirm: null });
+
+  const openConfirm = (message, onConfirm) => setConfirmModal({ isOpen: true, message, onConfirm });
+  const closeConfirm = () => setConfirmModal({ isOpen: false, message: "", onConfirm: null });
 
   // Edit blog state
   const [currentStep, setCurrentStep] = useState(1);
@@ -253,22 +275,29 @@ export default function BlogManagementContent() {
     setBlockImageChanged(false); setEditingBlockIndex(index); setIsAddingBlock(true);
   };
 
-  const handleDeleteBlock = async (index) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa chương này?")) return;
-    try {
-      const blocks = view === "addBlock" ? newBlocks : knowledgeBlocks;
-      const block = blocks[index];
-      if (block?._id) {
-        const result = await blogAPI.deleteKnowledgeBlock(block._id);
-        if (result.code === 200) {
+  const handleDeleteBlock = (index) => {
+    openConfirm("Bạn có chắc chắn muốn xóa chương này?", async () => {
+      closeConfirm();
+      try {
+        const blocks = view === "addBlock" ? newBlocks : knowledgeBlocks;
+        const block = blocks[index];
+        if (block?._id) {
+          const result = await blogAPI.deleteKnowledgeBlock(block._id);
+          if (result.code === 200) {
+            if (view === "addBlock") setNewBlocks(newBlocks.filter((_, i) => i !== index));
+            else setKnowledgeBlocks(knowledgeBlocks.filter((_, i) => i !== index));
+          } else {
+            toast.error("Không thể xóa chương");
+          }
+        } else {
           if (view === "addBlock") setNewBlocks(newBlocks.filter((_, i) => i !== index));
           else setKnowledgeBlocks(knowledgeBlocks.filter((_, i) => i !== index));
-        } else alert("Không thể xóa chương");
-      } else {
-        if (view === "addBlock") setNewBlocks(newBlocks.filter((_, i) => i !== index));
-        else setKnowledgeBlocks(knowledgeBlocks.filter((_, i) => i !== index));
+        }
+      } catch (err) {
+        console.error("Error deleting block:", err);
+        toast.error(err.message || "Không thể xóa chương");
       }
-    } catch (err) { console.error("Error deleting block:", err); alert(err.message || "Không thể xóa chương"); }
+    });
   };
 
   const handleCancelBlock = () => {
@@ -302,7 +331,7 @@ export default function BlogManagementContent() {
           try { await blogAPI.deleteKnowledgeBlock(ob._id); } catch (e) { console.error(e); }
         }
       }
-      alert("Blog đã được cập nhật thành công!");
+      toast.success("Blog đã được cập nhật thành công!");
       setView("list"); resetForm();
     } catch (err) { console.error("Error saving blog:", err); setError(err.message || "Có lỗi xảy ra khi lưu blog"); }
     finally { setIsSubmitting(false); }
@@ -315,7 +344,7 @@ export default function BlogManagementContent() {
       for (const block of newBlocks) {
         await blogAPI.addKnowledgeBlock(selectedBlog._id, { title: block.title, content: block.content, image: block.image });
       }
-      alert(`Đã thêm ${newBlocks.length} chương mới vào blog!`);
+      toast.success(`Đã thêm ${newBlocks.length} chương mới vào blog!`);
       setView("list"); resetForm();
     } catch (err) { console.error("Error adding blocks:", err); setError(err.message || "Có lỗi xảy ra khi thêm chương"); }
     finally { setIsSubmitting(false); }
@@ -328,12 +357,22 @@ export default function BlogManagementContent() {
     setKnowledgeBlocks(blog.knowledgeBlocks || []); setView("edit"); setCurrentStep(2);
   };
 
-  const handleDeleteBlog = async (blogId) => {
-    try {
-      const result = await blogAPI.deleteBlog(blogId);
-      if (result.code === 200) { setBlogs((prev) => prev.filter((b) => b._id !== blogId)); alert("Xóa blog thành công!"); }
-      else alert("Không thể xóa blog");
-    } catch (err) { console.error("Error deleting blog:", err); alert(err.message || "Không thể xóa blog"); }
+  const handleDeleteBlog = (blogId) => {
+    openConfirm("Bạn có chắc chắn muốn xóa blog này?", async () => {
+      closeConfirm();
+      try {
+        const result = await blogAPI.deleteBlog(blogId);
+        if (result.code === 200) {
+          setBlogs((prev) => prev.filter((b) => b._id !== blogId));
+          toast.success("Xóa blog thành công!");
+        } else {
+          toast.error("Không thể xóa blog");
+        }
+      } catch (err) {
+        console.error("Error deleting blog:", err);
+        toast.error(err.message || "Không thể xóa blog");
+      }
+    });
   };
 
   const handleAddBlockToBlog = (blog) => { setSelectedBlog(blog); setNewBlocks([]); setView("addBlock"); };
@@ -405,7 +444,7 @@ export default function BlogManagementContent() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {blogs.map((blog) => (
-                      <BlogCard key={blog._id} blog={blog} onEdit={handleEditBlog} onDelete={handleDeleteBlog} onAddBlock={handleAddBlockToBlog} onView={handleViewBlog} />
+                      <BlogCard key={blog._id} blog={blog} onEdit={handleEditBlog} onDelete={handleDeleteBlog} onDeleteConfirm={handleDeleteBlog} onAddBlock={handleAddBlockToBlog} onView={handleViewBlog} />
                     ))}
                   </div>
                 </>
@@ -676,6 +715,14 @@ export default function BlogManagementContent() {
           </section>
         </>
       )}
+
+      {/* ========== CONFIRM MODAL ========== */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={closeConfirm}
+        onConfirm={confirmModal.onConfirm}
+        message={confirmModal.message}
+      />
     </div>
   );
 }

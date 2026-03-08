@@ -3,7 +3,7 @@
 import {
   Heart, ImageIcon, MessageCircle, MoreHorizontal, X,
   CheckCircle, Clock, XCircle, AlertCircle, Share2, Loader2,
-  Wrench, BookOpen, Leaf, HandCoins, Grid, Search, Plus,
+  Wrench, BookOpen, Leaf, HandCoins, Grid, Plus,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -11,6 +11,7 @@ import { getOwnPosts, updatePost, deletePost, favoriteAPI, commentAPI } from "@/
 import CommentModal from "@/components/CommentModal";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 const getCategoriesByRole = (role) => {
   switch (role) {
@@ -20,6 +21,22 @@ const getCategoriesByRole = (role) => {
     case "contentExpert": return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
     default: return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
   }
+};
+
+// ── Confirm Modal ─────────────────────────────────────────
+const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+        <p className="text-gray-800 text-sm mb-6 text-center">{message}</p>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm">Hủy</button>
+          <button onClick={onConfirm} className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm">Xóa</button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // ── Status Badge ─────────────────────────────────────────
@@ -39,7 +56,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// ── Edit Post Modal — custom dropdown giống code gốc ─────
+// ── Edit Post Modal ───────────────────────────────────────
 const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const fileInputRef = useRef(null);
   const categories = getCategoriesByRole(user?.role);
@@ -108,7 +125,6 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-          {/* User */}
           <div className="flex items-center gap-3">
             <img src={user?.avatar || "/images/avatar.jpg"} className="w-11 h-11 rounded-full border border-gray-200" alt="Avatar" />
             <div>
@@ -117,53 +133,34 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
             </div>
           </div>
 
-          {/* Category — custom dropdown giống bản gốc */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Danh mục</label>
             <div className="relative">
-              <button
-                type="button"
-                onClick={() => setDropdownOpen((o) => !o)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white transition-all cursor-pointer text-left flex justify-between items-center"
-              >
+              <button type="button" onClick={() => setDropdownOpen((o) => !o)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white transition-all cursor-pointer text-left flex justify-between items-center">
                 <span>{category}</span>
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </button>
               {dropdownOpen && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
                   {categories.map((item) => (
-                    <div
-                      key={item}
-                      onClick={() => { setCategory(item); setDropdownOpen(false); }}
-                      className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item
-                        ? "bg-emerald-600 text-white font-medium"
-                        : "text-gray-900 hover:bg-emerald-500 hover:text-white"
-                        }`}
-                    >
-                      {item}
-                    </div>
+                    <div key={item} onClick={() => { setCategory(item); setDropdownOpen(false); }} className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item ? "bg-emerald-600 text-white font-medium" : "text-gray-900 hover:bg-emerald-500 hover:text-white"}`}>{item}</div>
                   ))}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Content */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Nội dung</label>
             <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Bạn đang nghĩ gì?" className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-600" maxLength={1000} />
             <div className="text-xs text-gray-500 text-right">{content.length}/1000</div>
           </div>
 
-          {/* Contact */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Thông tin liên hệ</label>
             <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Số điện thoại hoặc email" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white" />
           </div>
 
-          {/* Image */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Ảnh</label>
             {!imagePreview ? (
@@ -201,7 +198,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
 };
 
 // ── Post Card ─────────────────────────────────────────────
-const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
+const Post = ({ post, onLikeUpdate, onDelete, onEdit, onDeleteConfirm }) => {
   const router = useRouter();
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments || 0);
@@ -224,7 +221,7 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
       onLikeUpdate?.(post.id, newState);
     } catch (err) {
       setIsLiked(!newState);
-      alert(err?.response?.data?.message || err?.message || "Không thể cập nhật yêu thích");
+      toast.error(err?.response?.data?.message || err?.message || "Không thể cập nhật yêu thích");
     } finally {
       setIsTogglingFavorite(false);
     }
@@ -269,7 +266,7 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                   Chỉnh sửa
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); setShowMenu(false); if (window.confirm("Bạn có chắc chắn muốn xóa?")) onDelete?.(post.id); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-2">
+                <button onClick={(e) => { e.stopPropagation(); setShowMenu(false); onDeleteConfirm?.(post.id); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                   Xóa
                 </button>
@@ -333,6 +330,8 @@ export default function PostsPage() {
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState(null);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [deletingPostId, setDeletingPostId] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -379,9 +378,21 @@ export default function PostsPage() {
   const handleLikeUpdate = (postId, isLiked) => { setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, isLiked, likes: isLiked ? p.likes + 1 : p.likes - 1 } : p)); };
   const handleEdit = (post) => { setEditingPost(post); setIsEditModalOpen(true); };
   const handlePostUpdated = (updated) => { setPosts((prev) => prev.map((p) => p.id === updated.id ? updated : p)); };
-  const handleDelete = async (postId) => {
-    try { await deletePost(postId); setPosts((prev) => prev.filter((p) => p.id !== postId)); }
-    catch (err) { alert(err?.message || "Không thể xóa bài viết"); }
+
+  const handleDeleteConfirm = (postId) => {
+    setDeletingPostId(postId);
+    setConfirmModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deletePost(deletingPostId);
+      setPosts((prev) => prev.filter((p) => p.id !== deletingPostId));
+      setConfirmModalOpen(false);
+      setDeletingPostId(null);
+    } catch (err) {
+      toast.error(err?.message || "Không thể xóa bài viết");
+    }
   };
 
   return (
@@ -429,10 +440,17 @@ export default function PostsPage() {
             </div>
           )}
           {posts.map((post) => (
-            <Post key={post.id || post._id} post={post} onLikeUpdate={handleLikeUpdate} onEdit={handleEdit} onDelete={handleDelete} />
+            <Post key={post.id || post._id} post={post} onLikeUpdate={handleLikeUpdate} onEdit={handleEdit} onDelete={handleDelete} onDeleteConfirm={handleDeleteConfirm} />
           ))}
         </div>
       </main>
+
+      <ConfirmModal
+        isOpen={confirmModalOpen}
+        onClose={() => { setConfirmModalOpen(false); setDeletingPostId(null); }}
+        onConfirm={handleDelete}
+        message="Bạn có chắc chắn muốn xóa bài viết này?"
+      />
     </div>
   );
 }

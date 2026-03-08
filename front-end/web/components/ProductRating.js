@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ratingAPI } from "@/lib/api";
 import { Edit2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ProductRating({ productId, userId }) {
     const [userRating, setUserRating] = useState(0);
@@ -19,9 +20,6 @@ export default function ProductRating({ productId, userId }) {
 
     const [ratingContent, setRatingContent] = useState('');
     const [selectedReview, setSelectedReview] = useState(null);
-
-    const [success, setSuccess] = useState('');
-    const [error, setError] = useState('');
 
     useEffect(() => {
         if (productId) {
@@ -105,8 +103,7 @@ export default function ProductRating({ productId, userId }) {
             }
         } catch (error) {
             console.error('Error fetching ratings:', error);
-            setError('Không thể tải đánh giá');
-            setTimeout(() => setError(''), 5000);
+            toast.error('Không thể tải đánh giá');
         }
     };
 
@@ -114,22 +111,19 @@ export default function ProductRating({ productId, userId }) {
         e.preventDefault();
 
         if (!ratingContent.trim() || ratingContent.trim().length < 10) {
-            setError('Vui lòng nhập nội dung đánh giá (tối thiểu 10 ký tự)');
+            toast.error('Vui lòng nhập nội dung đánh giá (tối thiểu 10 ký tự)');
             handleCloseRatingModal();
-            setTimeout(() => setError(''), 5000);
             return;
         }
 
         if (!userId) {
-            setError('Vui lòng đăng nhập để đánh giá');
+            toast.error('Vui lòng đăng nhập để đánh giá');
             handleCloseRatingModal();
-            setTimeout(() => setError(''), 5000);
             return;
         }
 
         if (userRating === 0) {
-            setError('Vui lòng chọn số sao đánh giá');
-            setTimeout(() => setError(''), 5000);
+            toast.error('Vui lòng chọn số sao đánh giá');
             return;
         }
 
@@ -150,21 +144,16 @@ export default function ProductRating({ productId, userId }) {
             }
 
             if (response.success) {
-                setSuccess(isEditMode ? 'Cập nhật đánh giá thành công!' : 'Gửi đánh giá thành công!');
+                toast.success(isEditMode ? 'Cập nhật đánh giá thành công!' : 'Gửi đánh giá thành công!');
                 handleCloseRatingModal();
                 await fetchRatings();
-                setTimeout(() => setSuccess(''), 5000);
             } else {
                 throw new Error(response.message);
             }
         } catch (err) {
             console.error('Failed to submit rating:', err);
-            setError(isEditMode
-                ? 'Không thể cập nhật đánh giá. Vui lòng thử lại.'
-                : 'Bạn đã đánh giá sản phẩm này rồi!'
-            );
+            toast.error(isEditMode ? 'Không thể cập nhật đánh giá. Vui lòng thử lại.' : 'Bạn đã đánh giá sản phẩm này rồi!');
             handleCloseRatingModal();
-            setTimeout(() => setError(''), 5000);
         }
     };
 
@@ -175,15 +164,13 @@ export default function ProductRating({ productId, userId }) {
             const response = await ratingAPI.deleteRating(ratingId);
 
             if (response.success) {
-                setSuccess('Xóa đánh giá thành công!');
+                toast.success('Xóa đánh giá thành công!');
                 setIsReviewDetailModalVisible(false);
                 await fetchRatings();
-                setTimeout(() => setSuccess(''), 5000);
             }
         } catch (error) {
             console.error('Failed to delete rating:', error);
-            setError('Không thể xóa đánh giá. Vui lòng thử lại.');
-            setTimeout(() => setError(''), 5000);
+            toast.error('Không thể xóa đánh giá. Vui lòng thử lại.');
         }
     };
 
@@ -504,19 +491,6 @@ export default function ProductRating({ productId, userId }) {
                 </div>
             )}
 
-            {/* Success Message */}
-            {success && (
-                <div className="fixed right-8 top-8 bg-emerald-100 border border-emerald-600 text-emerald-600 px-6 py-4 rounded-lg shadow-lg z-[9999] text-lg">
-                    {success}
-                </div>
-            )}
-
-            {/* Error Message */}
-            {error && (
-                <div className="fixed right-8 top-8 bg-red-100 border border-red-600 text-red-600 px-6 py-4 rounded-lg shadow-lg z-[9999] text-lg">
-                    {error}
-                </div>
-            )}
         </div>
     );
 }
