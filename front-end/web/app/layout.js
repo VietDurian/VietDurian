@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "sonner";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,8 +35,22 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Toaster />
-        <AuthProvider>{children}</AuthProvider>
+        <GoogleOAuthProvider
+          clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+        >
+          <Toaster
+            expand={true} // show all toasts expanded
+            richColors // enable semantic colors (green success, red error, etc.)
+            closeButton // show X button on each toast
+            duration={4000} // default duration in ms
+            visibleToasts={3} // max toasts visible at once
+            offset="24px" // distance from screen edge
+            gap={8} // gap between toasts
+            theme="light" // light | dark | system
+            invert // invert colors
+          />
+          <AuthProvider>{children}</AuthProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

@@ -96,6 +96,32 @@ export function AuthProvider({ children }) {
     useAuthStore.setState({ authUser: userData });
   }, []);
 
+  const loginWithGoogle = useCallback(
+    async (credential) => {
+      try {
+        const res = await apiClient.post("/auth/google-login", {
+          token: credential,
+        });
+
+        const { user, token } = res.data.data;
+
+        localStorage.setItem("auth_user", JSON.stringify(user));
+        localStorage.setItem("auth_token", token);
+
+        setUser(user);
+        setToken(token);
+
+        router.push("/home/trader");
+
+        return res.data;
+      } catch (error) {
+        console.error("Google login error:", error);
+        throw error;
+      }
+    },
+    [router],
+  );
+
   const logout = useCallback(
     async (redirectTo = "/login") => {
       setUser(null);
@@ -123,7 +149,8 @@ export function AuthProvider({ children }) {
         const currentPath = window.location.pathname;
         const protectedPrefixes = ["/dashboard", "/profile", "/chat", "/home"];
         const isProtectedPath = protectedPrefixes.some(
-          (prefix) => currentPath === prefix || currentPath.startsWith(`${prefix}/`),
+          (prefix) =>
+            currentPath === prefix || currentPath.startsWith(`${prefix}/`),
         );
 
         if (
@@ -157,6 +184,7 @@ export function AuthProvider({ children }) {
         token,
         loading,
         login,
+        loginWithGoogle,
         logout,
         refreshProfile,
         setUserUnsafe,

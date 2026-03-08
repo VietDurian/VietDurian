@@ -91,6 +91,32 @@ const Router = express.Router();
  *                   example: Diary created successfully
  *                 data:
  *                   $ref: '#/components/schemas/Diary'
+ *       400:
+ *         description: Invalid request payload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Diary title is required
+ *       409:
+ *         description: Diary title already exists in the same garden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Tên nhật ký đã tồn tại trong vườn này
  */
 
 /**

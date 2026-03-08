@@ -232,72 +232,99 @@ export default function ServiceProviderHome() {
                                 </p>
                             </div>
 
-                            {/* ── 2 Action cards ── */}
-                            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                            {/* ── 2 Action cards — đồng bộ style với ContentExpert ── */}
+                            <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto items-stretch">
 
                                 {/* Card 1 — Tạo bài viết dịch vụ (VÀNG) */}
-                                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden shadow-black/20 flex flex-col" style={{ minHeight: "520px" }}>
-                                    <div className="bg-gradient-to-r from-yellow-400 to-amber-400 p-6">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-14 h-14 bg-white/25 rounded-xl flex items-center justify-center flex-shrink-0 ring-4 ring-white/20">
-                                                <FileText className="w-7 h-7 text-white" />
+                                <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-yellow-500/10">
+                                    {/* Header */}
+                                    <div className="relative bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-500 p-5 overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-xl -mr-8 -mt-8 pointer-events-none"></div>
+
+                                        <div className="relative z-10 flex items-start gap-3">
+                                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 shadow-inner border border-white/30">
+                                                <FileText className="w-6 h-6 text-white drop-shadow-md" />
                                             </div>
                                             <div>
-                                                <div className="inline-flex items-center gap-1 bg-white/25 text-white text-[10px] font-black px-2 py-0.5 rounded-full border border-white/40 mb-1">ĐĂNG BÀI</div>
-                                                <h3 className="text-white font-bold text-xl">Tạo bài viết dịch vụ</h3>
-                                                <p className="text-yellow-100 text-sm mt-1">Giới thiệu dịch vụ đến hàng nghìn nông dân</p>
+                                                <div className="inline-flex items-center gap-1 bg-white/20 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border border-white/30 mb-1 uppercase tracking-wide">
+                                                    Đăng bài
+                                                </div>
+                                                <h3 className="text-white font-bold text-lg leading-tight">Tạo bài viết dịch vụ</h3>
+                                                <p className="text-yellow-50 text-[13px] mt-0.5">Giới thiệu dịch vụ đến hàng nghìn nông dân</p>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="p-6 bg-white flex flex-col flex-1">
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 text-center">Bạn có thể đăng loại bài nào?</p>
-                                        <div className="grid grid-cols-2 gap-2.5 flex-1">
+
+                                    {/* Body */}
+                                    <div className="p-5 bg-white flex flex-col flex-1">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mb-3">Bạn có thể đăng loại bài nào?</p>
+
+                                        <div className="grid grid-cols-2 gap-4 flex-1 content-start">
                                             {SP_POST_TYPES.map((f) => (
-                                                <div key={f.label} className={`relative ${f.bg} border-2 rounded-xl p-3.5 cursor-pointer transition-all shadow-sm hover:shadow-md flex flex-col items-center justify-center`}>
-                                                    <span className={`absolute -top-2 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full ${f.tagColor}`}>{f.tag}</span>
-                                                    <div className="mb-2 mt-1">{f.icon}</div>
-                                                    <div className="font-bold text-gray-800 text-xs text-center mb-1">{f.label}</div>
-                                                    <div className="text-gray-500 text-[11px] text-center leading-tight">{f.desc}</div>
+                                                <div key={f.label} className="group/item relative bg-yellow-50 border-yellow-200 hover:border-yellow-400 border-2 rounded-xl p-3 cursor-pointer transition-all duration-300 shadow-sm hover:-translate-y-1 hover:shadow-md flex flex-col items-center text-center">
+                                                    <span className={`absolute -top-2 left-2 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm ${f.tagColor}`}>
+                                                        {f.tag}
+                                                    </span>
+                                                    <div className="mb-1 mt-1 text-amber-500 transition-transform transform group-hover/item:scale-110 duration-300">
+                                                        {f.icon}
+                                                    </div>
+                                                    <div className="font-bold text-gray-800 text-xs mb-0.5">{f.label}</div>
+                                                    <div className="text-gray-500 text-[10px] leading-tight line-clamp-2">{f.desc}</div>
                                                 </div>
                                             ))}
                                         </div>
-                                        <Link href="/profile/posts/create" className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-yellow-400 to-amber-400 hover:from-yellow-500 hover:to-amber-500 text-white py-3.5 rounded-xl font-bold text-base transition-all shadow-md mt-6">
-                                            <FileText className="w-5 h-5" />Tạo bài viết ngay<ArrowRight className="w-5 h-5" />
+
+                                        <Link href="/profile/posts/create" className="group/btn flex items-center justify-center gap-2 w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-white py-3.5 rounded-xl font-bold text-[15px] transition-all shadow-md mt-6">
+                                            <FileText className="w-5 h-5 transition-transform group-hover/btn:-rotate-6" />
+                                            Tạo bài viết ngay
                                         </Link>
                                     </div>
                                 </div>
 
-                                {/* Card 2 — Hồ sơ năng lực (XANH SOLID) */}
-                                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden shadow-black/20 flex flex-col" style={{ minHeight: "520px" }}>
-                                    <div className="bg-emerald-500 p-6">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0 ring-4 ring-white/10">
-                                                <BadgeCheck className="w-7 h-7 text-white" />
+                                {/* Card 2 — Hồ sơ năng lực (XANH) */}
+                                <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10">
+                                    {/* Header */}
+                                    <div className="relative bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 p-5 overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-xl -mr-8 -mt-8 pointer-events-none"></div>
+
+                                        <div className="relative z-10 flex items-start gap-3">
+                                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0 shadow-inner border border-white/30">
+                                                <BadgeCheck className="w-6 h-6 text-white drop-shadow-md" />
                                             </div>
                                             <div>
-                                                <div className="inline-flex items-center gap-1 bg-white/20 text-white text-[10px] font-black px-2 py-0.5 rounded-full border border-white/40 mb-1">HỒ SƠ CHUYÊN NGHIỆP</div>
-                                                <h3 className="text-white font-bold text-xl">Hồ sơ năng lực</h3>
-                                                <p className="text-emerald-100 text-sm mt-1">Chứng minh uy tín và kinh nghiệm chuyên môn</p>
+                                                <div className="inline-flex items-center gap-1 bg-white/20 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border border-white/30 mb-1 uppercase tracking-wide">
+                                                    Hồ sơ chuyên nghiệp
+                                                </div>
+                                                <h3 className="text-white font-bold text-lg leading-tight">Hồ sơ năng lực</h3>
+                                                <p className="text-emerald-50 text-[13px] mt-0.5">Chứng minh uy tín và kinh nghiệm chuyên môn</p>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="p-6 bg-white flex flex-col flex-1">
-                                        <p className="text-gray-500 text-sm mb-4 leading-relaxed">
+
+                                    {/* Body */}
+                                    <div className="p-5 bg-white flex flex-col flex-1">
+                                        <p className="text-gray-500 text-[13px] mb-4 leading-snug">
                                             Xây dựng hồ sơ chuyên nghiệp để tạo niềm tin với nông dân — đính kèm chứng chỉ, hình ảnh thực tế và đánh giá từ khách hàng cũ.
                                         </p>
-                                        <ul className="space-y-2.5 flex-1">
+
+                                        <ul className="space-y-2.5 flex-1 content-start">
                                             {SERVICE_FEATURES.map((f) => (
-                                                <li key={f.label} className="flex items-center gap-3 text-sm text-gray-700">
-                                                    <span className="w-8 h-8 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-center flex-shrink-0">{f.icon}</span>
-                                                    {f.label}
+                                                <li key={f.label} className="group/list flex items-center gap-3 text-[13px] font-medium text-gray-700">
+                                                    <span className="w-7 h-7 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors group-hover/list:bg-emerald-500 group-hover/list:text-white">
+                                                        {f.icon}
+                                                    </span>
+                                                    <span className="group-hover/list:text-emerald-700 transition-colors">{f.label}</span>
                                                 </li>
                                             ))}
                                         </ul>
-                                        <Link href="/profile/resume/create" className="flex items-center justify-center gap-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3.5 rounded-xl font-bold text-base transition-all shadow-md mt-6">
-                                            <BadgeCheck className="w-5 h-5" />Tạo hồ sơ năng lực<ArrowRight className="w-5 h-5" />
+
+                                        <Link href="/profile/resume/create" className="group/btn flex items-center justify-center gap-2 w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-3.5 rounded-xl font-bold text-[15px] transition-all shadow-md mt-6">
+                                            <BadgeCheck className="w-5 h-5 transition-transform group-hover/btn:rotate-12" />
+                                            Tạo hồ sơ năng lực
                                         </Link>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>
