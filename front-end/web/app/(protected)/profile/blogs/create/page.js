@@ -17,26 +17,35 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { blogAPI } from "@/lib/api";
 
+// ==================== CONFIRM MODAL ====================
+const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                <p className="text-gray-800 text-sm mb-6 text-center">{message}</p>
+                <div className="flex gap-3">
+                    <button onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm">Hủy</button>
+                    <button onClick={onConfirm} className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm">Xóa</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ==================== MODAL COMPONENT ====================
 const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
-
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
             <div className="bg-white text-black w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
                 <div className="relative flex items-center justify-center p-4 border-b border-gray-200">
                     <h2 className="text-xl font-bold text-center flex-1">{title}</h2>
-                    <button
-                        onClick={onClose}
-                        className="absolute right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition"
-                        aria-label="Đóng"
-                    >
+                    <button onClick={onClose} className="absolute right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition" aria-label="Đóng">
                         <X size={20} className="text-gray-600" />
                     </button>
                 </div>
-                <div className="p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-                    {children}
-                </div>
+                <div className="p-4 max-h-[calc(100vh-200px)] overflow-y-auto">{children}</div>
             </div>
         </div>
     );
@@ -48,38 +57,18 @@ const StepIndicator = ({ currentStep }) => {
         { number: 1, title: "Thông tin blog" },
         { number: 2, title: "Thêm chương" },
     ];
-
     return (
         <div className="flex items-center justify-center mb-8">
             {steps.map((step, index) => (
                 <div key={step.number} className="flex items-center">
                     <div className="flex flex-col items-center">
-                        <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${currentStep >= step.number
-                                ? "bg-emerald-600 text-white"
-                                : "bg-gray-200 text-gray-500"
-                                }`}
-                        >
-                            {currentStep > step.number ? (
-                                <CheckCircle size={20} />
-                            ) : (
-                                step.number
-                            )}
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${currentStep >= step.number ? "bg-emerald-600 text-white" : "bg-gray-200 text-gray-500"}`}>
+                            {currentStep > step.number ? <CheckCircle size={20} /> : step.number}
                         </div>
-                        <span
-                            className={`text-xs mt-2 font-medium ${currentStep >= step.number
-                                ? "text-emerald-600"
-                                : "text-gray-500"
-                                }`}
-                        >
-                            {step.title}
-                        </span>
+                        <span className={`text-xs mt-2 font-medium ${currentStep >= step.number ? "text-emerald-600" : "text-gray-500"}`}>{step.title}</span>
                     </div>
                     {index < steps.length - 1 && (
-                        <div
-                            className={`w-24 h-1 mx-4 transition-all ${currentStep > step.number ? "bg-emerald-600" : "bg-gray-200"
-                                }`}
-                        />
+                        <div className={`w-24 h-1 mx-4 transition-all ${currentStep > step.number ? "bg-emerald-600" : "bg-gray-200"}`} />
                     )}
                 </div>
             ))}
@@ -90,42 +79,22 @@ const StepIndicator = ({ currentStep }) => {
 // ==================== IMAGE UPLOAD COMPONENT ====================
 const ImageUpload = ({ image, onImageChange, onImageRemove, label }) => {
     const fileInputRef = useRef(null);
-
     return (
         <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">{label}</label>
             {!image ? (
-                <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all"
-                >
+                <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
                     <ImageIcon className="mx-auto text-gray-400 mb-2" size={40} />
                     <p className="text-sm font-medium text-gray-600">Nhấp để chọn ảnh</p>
                     <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF tối đa 5MB</p>
                 </div>
             ) : (
                 <div className="relative rounded-xl overflow-hidden border-2 border-gray-200">
-                    <img
-                        src={image}
-                        alt="Preview"
-                        className="w-full h-64 object-cover bg-gray-50"
-                    />
-                    <button
-                        type="button"
-                        onClick={onImageRemove}
-                        className="absolute top-3 right-3 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition-all"
-                    >
-                        <X size={18} />
-                    </button>
+                    <img src={image} alt="Preview" className="w-full h-64 object-cover bg-gray-50" />
+                    <button type="button" onClick={onImageRemove} className="absolute top-3 right-3 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition-all"><X size={18} /></button>
                 </div>
             )}
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={onImageChange}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onImageChange} />
         </div>
     );
 };
@@ -136,46 +105,20 @@ const KnowledgeBlockCard = ({ block, index, onEdit, onDelete }) => {
         <div className="bg-white border-2 border-gray-200 rounded-xl p-5 hover:border-emerald-400 transition-all">
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3 flex-1">
-                    <div className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
-                        {index + 1}
-                    </div>
-                    <h4 className="font-bold text-gray-900 text-lg line-clamp-1">
-                        {block.title}
-                    </h4>
+                    <div className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">{index + 1}</div>
+                    <h4 className="font-bold text-gray-900 text-lg line-clamp-1">{block.title}</h4>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => onEdit(index)}
-                        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                        title="Sửa"
-                    >
-                        <Edit2 size={18} />
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => onDelete(index)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Xóa"
-                    >
-                        <Trash2 size={18} />
-                    </button>
+                    <button type="button" onClick={() => onEdit(index)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Sửa"><Edit2 size={18} /></button>
+                    <button type="button" onClick={() => onDelete(index)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Xóa"><Trash2 size={18} /></button>
                 </div>
             </div>
-
             {block.image && (
                 <div className="mb-3 rounded-lg overflow-hidden">
-                    <img
-                        src={block.image}
-                        alt={block.title}
-                        className="w-full h-40 object-cover"
-                    />
+                    <img src={block.image} alt={block.title} className="w-full h-40 object-cover" />
                 </div>
             )}
-
-            <p className="text-gray-600 text-sm line-clamp-3 whitespace-pre-wrap">
-                {block.content}
-            </p>
+            <p className="text-gray-600 text-sm line-clamp-3 whitespace-pre-wrap">{block.content}</p>
         </div>
     );
 };
@@ -185,10 +128,14 @@ export default function CreateBlogPage() {
     const router = useRouter();
     const { user } = useAuth();
 
-    // Step state
     const [currentStep, setCurrentStep] = useState(1);
     const [error, setError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Confirm modal state
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, message: "", onConfirm: null });
+    const openConfirm = (message, onConfirm) => setConfirmModal({ isOpen: true, message, onConfirm });
+    const closeConfirm = () => setConfirmModal({ isOpen: false, message: "", onConfirm: null });
 
     // Blog info state
     const [blogTitle, setBlogTitle] = useState("");
@@ -211,46 +158,26 @@ export default function CreateBlogPage() {
     const handleBlogImageChange = (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
-            setError("Ảnh quá lớn. Tối đa 5MB");
-            return;
-        }
+        if (file.size > 5 * 1024 * 1024) { setError("Ảnh quá lớn. Tối đa 5MB"); return; }
         const reader = new FileReader();
-        reader.onload = () => {
-            const result = reader.result?.toString() || "";
-            setBlogImageData(result);
-            setBlogImage(result);
-        };
+        reader.onload = () => { const result = reader.result?.toString() || ""; setBlogImageData(result); setBlogImage(result); };
         reader.readAsDataURL(file);
     };
 
     const handleBlockImageChange = (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
-            setError("Ảnh quá lớn. Tối đa 5MB");
-            return;
-        }
+        if (file.size > 5 * 1024 * 1024) { setError("Ảnh quá lớn. Tối đa 5MB"); return; }
         const reader = new FileReader();
-        reader.onload = () => {
-            const result = reader.result?.toString() || "";
-            setBlockImageData(result);
-            setBlockImage(result);
-        };
+        reader.onload = () => { const result = reader.result?.toString() || ""; setBlockImageData(result); setBlockImage(result); };
         reader.readAsDataURL(file);
     };
 
     // ==================== STEP 1 ====================
-    const canProceedToStep2 = () =>
-        blogTitle.trim() !== "" &&
-        blogContent.trim() !== "" &&
-        blogImageData !== "";
+    const canProceedToStep2 = () => blogTitle.trim() !== "" && blogContent.trim() !== "" && blogImageData !== "";
 
     const handleProceedToStep2 = () => {
-        if (!canProceedToStep2()) {
-            setError("Vui lòng điền đầy đủ thông tin blog và chọn ảnh");
-            return;
-        }
+        if (!canProceedToStep2()) { setError("Vui lòng điền đầy đủ thông tin blog và chọn ảnh"); return; }
         setError("");
         setCurrentStep(2);
     };
@@ -261,13 +188,7 @@ export default function CreateBlogPage() {
             setError("Vui lòng điền đầy đủ thông tin chương và chọn ảnh");
             return;
         }
-
-        const newBlock = {
-            title: blockTitle.trim(),
-            content: blockContent.trim(),
-            image: blockImageData,
-        };
-
+        const newBlock = { title: blockTitle.trim(), content: blockContent.trim(), image: blockImageData };
         if (editingBlockIndex !== null) {
             const updated = [...knowledgeBlocks];
             updated[editingBlockIndex] = newBlock;
@@ -276,51 +197,34 @@ export default function CreateBlogPage() {
         } else {
             setKnowledgeBlocks([...knowledgeBlocks, newBlock]);
         }
-
-        setBlockTitle("");
-        setBlockContent("");
-        setBlockImage("");
-        setBlockImageData("");
-        setIsAddingBlock(false);
-        setError("");
+        setBlockTitle(""); setBlockContent(""); setBlockImage(""); setBlockImageData("");
+        setIsAddingBlock(false); setError("");
     };
 
     const handleEditBlock = (index) => {
         const block = knowledgeBlocks[index];
         if (!block) return;
-        setBlockTitle(block.title);
-        setBlockContent(block.content);
-        setBlockImage(block.image);
-        setBlockImageData(block.image);
-        setEditingBlockIndex(index);
-        setIsAddingBlock(true);
+        setBlockTitle(block.title); setBlockContent(block.content);
+        setBlockImage(block.image); setBlockImageData(block.image);
+        setEditingBlockIndex(index); setIsAddingBlock(true);
     };
 
     const handleDeleteBlock = (index) => {
-        if (!window.confirm("Bạn có chắc chắn muốn xóa chương này?")) return;
-        setKnowledgeBlocks(knowledgeBlocks.filter((_, i) => i !== index));
+        openConfirm("Bạn có chắc chắn muốn xóa chương này?", () => {
+            setKnowledgeBlocks(knowledgeBlocks.filter((_, i) => i !== index));
+            closeConfirm();
+        });
     };
 
     const handleCancelBlock = () => {
-        setBlockTitle("");
-        setBlockContent("");
-        setBlockImage("");
-        setBlockImageData("");
-        setIsAddingBlock(false);
-        setEditingBlockIndex(null);
-        setError("");
+        setBlockTitle(""); setBlockContent(""); setBlockImage(""); setBlockImageData("");
+        setIsAddingBlock(false); setEditingBlockIndex(null); setError("");
     };
 
     // ==================== SUBMIT ====================
     const handleSubmitBlog = async () => {
-        if (knowledgeBlocks.length === 0) {
-            setError("Vui lòng thêm ít nhất một chương");
-            return;
-        }
-
-        setIsSubmitting(true);
-        setError("");
-
+        if (knowledgeBlocks.length === 0) { setError("Vui lòng thêm ít nhất một chương"); return; }
+        setIsSubmitting(true); setError("");
         try {
             const blogData = {
                 title: blogTitle,
@@ -332,13 +236,8 @@ export default function CreateBlogPage() {
                     image: block.image,
                 })),
             };
-
             const result = await blogAPI.createBlog(blogData);
-
-            if (result.code !== 201) {
-                throw new Error("Không thể tạo blog");
-            }
-
+            if (result.code !== 201) throw new Error("Không thể tạo blog");
             router.push("/profile/blogs");
         } catch (err) {
             console.error("Error creating blog:", err);
@@ -353,33 +252,25 @@ export default function CreateBlogPage() {
         <div className="min-h-screen bg-gray-50">
             <Navbar />
 
-            {/* ── Header ───────────────────────────────────────── */}
+            {/* ── Header ── */}
             <section className="pt-10 pb-8 px-4">
                 <div className="max-w-4xl mx-auto">
                     <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl p-4 md:p-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer"
-                        >
-                            <ArrowLeft size={20} />
-                            <span>Quay lại</span>
+                        <button onClick={() => router.back()} className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer">
+                            <ArrowLeft size={20} /><span>Quay lại</span>
                         </button>
                         <div className="text-center">
                             <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
                                 <BookOpen className="w-10 h-10 text-white" />
                             </div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                                Tạo Blog Mới
-                            </h1>
-                            <p className="text-emerald-50 text-lg">
-                                Chia sẻ kiến thức của bạn với cộng đồng
-                            </p>
+                            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Tạo Blog Mới</h1>
+                            <p className="text-emerald-50 text-lg">Chia sẻ kiến thức của bạn với cộng đồng</p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* ── Form ─────────────────────────────────────────── */}
+            {/* ── Form ── */}
             <section className="pb-16 px-4">
                 <div className="max-w-4xl mx-auto">
                     <StepIndicator currentStep={currentStep} />
@@ -388,12 +279,7 @@ export default function CreateBlogPage() {
                         <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-center gap-3">
                             <X className="text-red-600 flex-shrink-0" size={20} />
                             <p className="text-red-700 font-medium">{error}</p>
-                            <button
-                                onClick={() => setError("")}
-                                className="ml-auto text-red-600 hover:text-red-800"
-                            >
-                                <X size={18} />
-                            </button>
+                            <button onClick={() => setError("")} className="ml-auto text-red-600 hover:text-red-800"><X size={18} /></button>
                         </div>
                     )}
 
@@ -401,67 +287,23 @@ export default function CreateBlogPage() {
                     {currentStep === 1 && (
                         <div className="bg-white rounded-2xl shadow-lg p-8">
                             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                <BookOpen className="text-emerald-600" size={28} />
-                                Thông tin Blog
+                                <BookOpen className="text-emerald-600" size={28} />Thông tin Blog
                             </h2>
-
                             <div className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Tiêu đề Blog <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={blogTitle}
-                                        onChange={(e) => setBlogTitle(e.target.value)}
-                                        placeholder="Nhập tiêu đề blog..."
-                                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent"
-                                        maxLength={200}
-                                    />
-                                    <div className="text-xs text-gray-500 text-right mt-1">
-                                        {blogTitle.length}/200
-                                    </div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Tiêu đề Blog <span className="text-red-500">*</span></label>
+                                    <input type="text" value={blogTitle} onChange={(e) => setBlogTitle(e.target.value)} placeholder="Nhập tiêu đề blog..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent" maxLength={200} />
+                                    <div className="text-xs text-gray-500 text-right mt-1">{blogTitle.length}/200</div>
                                 </div>
-
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Giới thiệu <span className="text-red-500">*</span>
-                                    </label>
-                                    <textarea
-                                        value={blogContent}
-                                        onChange={(e) => setBlogContent(e.target.value)}
-                                        placeholder="Giới thiệu tổng quan về blog..."
-                                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent resize-none"
-                                        rows={6}
-                                        maxLength={1000}
-                                    />
-                                    <div className="text-xs text-gray-500 text-right mt-1">
-                                        {blogContent.length}/1000
-                                    </div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Giới thiệu <span className="text-red-500">*</span></label>
+                                    <textarea value={blogContent} onChange={(e) => setBlogContent(e.target.value)} placeholder="Giới thiệu tổng quan về blog..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent resize-none" rows={6} maxLength={1000} />
+                                    <div className="text-xs text-gray-500 text-right mt-1">{blogContent.length}/1000</div>
                                 </div>
-
-                                <ImageUpload
-                                    image={blogImage}
-                                    onImageChange={handleBlogImageChange}
-                                    onImageRemove={() => {
-                                        setBlogImage("");
-                                        setBlogImageData("");
-                                    }}
-                                    label={
-                                        <>
-                                            Ảnh đại diện <span className="text-red-500">*</span>
-                                        </>
-                                    }
-                                />
-
+                                <ImageUpload image={blogImage} onImageChange={handleBlogImageChange} onImageRemove={() => { setBlogImage(""); setBlogImageData(""); }} label={<>Ảnh đại diện <span className="text-red-500">*</span></>} />
                                 <div className="flex justify-end pt-4">
-                                    <button
-                                        onClick={handleProceedToStep2}
-                                        disabled={!canProceedToStep2()}
-                                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                    >
-                                        Tiếp theo
-                                        <ChevronRight size={20} />
+                                    <button onClick={handleProceedToStep2} disabled={!canProceedToStep2()} className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                        Tiếp theo<ChevronRight size={20} />
                                     </button>
                                 </div>
                             </div>
@@ -471,53 +313,29 @@ export default function CreateBlogPage() {
                     {/* ── STEP 2 ── */}
                     {currentStep === 2 && (
                         <div className="space-y-6">
-                            {/* Blog Preview */}
                             <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-emerald-200">
                                 <div className="flex items-center gap-2 mb-4">
                                     <CheckCircle className="text-emerald-600" size={24} />
-                                    <h3 className="text-lg font-bold text-gray-900">
-                                        Thông tin Blog
-                                    </h3>
-                                    <button
-                                        onClick={() => setCurrentStep(1)}
-                                        className="ml-auto text-emerald-600 hover:text-emerald-700 text-sm font-medium"
-                                    >
-                                        Chỉnh sửa
-                                    </button>
+                                    <h3 className="text-lg font-bold text-gray-900">Thông tin Blog</h3>
+                                    <button onClick={() => setCurrentStep(1)} className="ml-auto text-emerald-600 hover:text-emerald-700 text-sm font-medium">Chỉnh sửa</button>
                                 </div>
                                 <div className="flex gap-4">
-                                    {blogImage && (
-                                        <img
-                                            src={blogImage}
-                                            alt={blogTitle}
-                                            className="w-32 h-32 object-cover rounded-lg flex-shrink-0"
-                                        />
-                                    )}
+                                    {blogImage && <img src={blogImage} alt={blogTitle} className="w-32 h-32 object-cover rounded-lg flex-shrink-0" />}
                                     <div className="flex-1">
-                                        <h4 className="font-bold text-gray-900 text-xl mb-2">
-                                            {blogTitle}
-                                        </h4>
-                                        <p className="text-gray-600 text-sm line-clamp-3">
-                                            {blogContent}
-                                        </p>
+                                        <h4 className="font-bold text-gray-900 text-xl mb-2">{blogTitle}</h4>
+                                        <p className="text-gray-600 text-sm line-clamp-3">{blogContent}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Knowledge Blocks */}
                             <div className="bg-white rounded-2xl shadow-lg p-8">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                        <BookOpen className="text-emerald-600" size={28} />
-                                        Các chương ({knowledgeBlocks.length})
+                                        <BookOpen className="text-emerald-600" size={28} />Các chương ({knowledgeBlocks.length})
                                     </h2>
                                     {!isAddingBlock && (
-                                        <button
-                                            onClick={() => setIsAddingBlock(true)}
-                                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2"
-                                        >
-                                            <Plus size={20} />
-                                            Thêm chương
+                                        <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2">
+                                            <Plus size={20} />Thêm chương
                                         </button>
                                     )}
                                 </div>
@@ -525,135 +343,60 @@ export default function CreateBlogPage() {
                                 {knowledgeBlocks.length > 0 && (
                                     <div className="grid grid-cols-1 gap-4 mb-6">
                                         {knowledgeBlocks.map((block, index) => (
-                                            <KnowledgeBlockCard
-                                                key={index}
-                                                block={block}
-                                                index={index}
-                                                onEdit={handleEditBlock}
-                                                onDelete={handleDeleteBlock}
-                                            />
+                                            <KnowledgeBlockCard key={index} block={block} index={index} onEdit={handleEditBlock} onDelete={handleDeleteBlock} />
                                         ))}
                                     </div>
                                 )}
 
                                 {knowledgeBlocks.length === 0 && !isAddingBlock && (
                                     <div className="text-center py-12">
-                                        <BookOpen
-                                            className="mx-auto text-gray-300 mb-4"
-                                            size={64}
-                                        />
-                                        <p className="text-gray-500 text-lg mb-4">
-                                            Chưa có chương nào
-                                        </p>
-                                        <button
-                                            onClick={() => setIsAddingBlock(true)}
-                                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all inline-flex items-center gap-2"
-                                        >
-                                            <Plus size={20} />
-                                            Thêm chương đầu tiên
+                                        <BookOpen className="mx-auto text-gray-300 mb-4" size={64} />
+                                        <p className="text-gray-500 text-lg mb-4">Chưa có chương nào</p>
+                                        <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all inline-flex items-center gap-2">
+                                            <Plus size={20} />Thêm chương đầu tiên
                                         </button>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Modal Add/Edit Block */}
-                            <Modal
-                                isOpen={isAddingBlock}
-                                onClose={handleCancelBlock}
-                                title={
-                                    editingBlockIndex !== null
-                                        ? "Chỉnh sửa chương"
-                                        : "Thêm chương mới"
-                                }
-                            >
+                            <Modal isOpen={isAddingBlock} onClose={handleCancelBlock} title={editingBlockIndex !== null ? "Chỉnh sửa chương" : "Thêm chương mới"}>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Tiêu đề chương <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={blockTitle}
-                                            onChange={(e) => setBlockTitle(e.target.value)}
-                                            placeholder="Nhập tiêu đề chương..."
-                                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white"
-                                            maxLength={200}
-                                        />
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Tiêu đề chương <span className="text-red-500">*</span></label>
+                                        <input type="text" value={blockTitle} onChange={(e) => setBlockTitle(e.target.value)} placeholder="Nhập tiêu đề chương..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white" maxLength={200} />
                                     </div>
-
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Nội dung chương <span className="text-red-500">*</span>
-                                        </label>
-                                        <textarea
-                                            value={blockContent}
-                                            onChange={(e) => setBlockContent(e.target.value)}
-                                            placeholder="Nhập nội dung chương..."
-                                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent resize-none bg-white"
-                                            rows={6}
-                                            maxLength={5000}
-                                        />
-                                        <div className="text-xs text-gray-500 text-right mt-1">
-                                            {blockContent.length}/5000
-                                        </div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Nội dung chương <span className="text-red-500">*</span></label>
+                                        <textarea value={blockContent} onChange={(e) => setBlockContent(e.target.value)} placeholder="Nhập nội dung chương..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent resize-none bg-white" rows={6} maxLength={5000} />
+                                        <div className="text-xs text-gray-500 text-right mt-1">{blockContent.length}/5000</div>
                                     </div>
-
-                                    <ImageUpload
-                                        image={blockImage}
-                                        onImageChange={handleBlockImageChange}
-                                        onImageRemove={() => {
-                                            setBlockImage("");
-                                            setBlockImageData("");
-                                        }}
-                                        label={
-                                            <>
-                                                Ảnh chương <span className="text-red-500">*</span>
-                                            </>
-                                        }
-                                    />
-
+                                    <ImageUpload image={blockImage} onImageChange={handleBlockImageChange} onImageRemove={() => { setBlockImage(""); setBlockImageData(""); }} label={<>Ảnh chương <span className="text-red-500">*</span></>} />
                                     <div className="pt-4">
-                                        <button
-                                            type="button"
-                                            onClick={handleSaveBlock}
-                                            className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition"
-                                        >
+                                        <button type="button" onClick={handleSaveBlock} className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition">
                                             {editingBlockIndex !== null ? "Cập nhật" : "Thêm"}
                                         </button>
                                     </div>
                                 </div>
                             </Modal>
 
-                            {/* Action Buttons */}
                             <div className="flex justify-between items-center">
-                                <button
-                                    onClick={() => setCurrentStep(1)}
-                                    className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all"
-                                >
-                                    Quay lại
-                                </button>
-                                <button
-                                    onClick={handleSubmitBlog}
-                                    disabled={knowledgeBlocks.length === 0 || isSubmitting}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            Đang lưu...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <CheckCircle size={20} />
-                                            Tạo Blog
-                                        </>
-                                    )}
+                                <button onClick={() => setCurrentStep(1)} className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">Quay lại</button>
+                                <button onClick={handleSubmitBlog} disabled={knowledgeBlocks.length === 0 || isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                    {isSubmitting ? (<><Loader2 className="w-5 h-5 animate-spin" />Đang lưu...</>) : (<><CheckCircle size={20} />Tạo Blog</>)}
                                 </button>
                             </div>
                         </div>
                     )}
                 </div>
             </section>
+
+            {/* ========== CONFIRM MODAL ========== */}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={closeConfirm}
+                onConfirm={confirmModal.onConfirm}
+                message={confirmModal.message}
+            />
         </div>
     );
 }

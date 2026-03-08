@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { capabilityProfileAPI } from "@/lib/api";
+import { toast } from "sonner"
 
 export default function CreateResumePage() {
     const router = useRouter();
@@ -56,7 +57,7 @@ export default function CreateResumePage() {
 
             const response = await capabilityProfileAPI.create(payload);
             if (response.code === 201) {
-                alert("Tạo hồ sơ thành công!");
+                toast.success("Tạo hồ sơ thành công!");
                 router.push("/profile/resume");
             }
         } catch (error) {
@@ -68,7 +69,7 @@ export default function CreateResumePage() {
                 errorMessage = error.response.data.message;
             }
             setError(errorMessage);
-            alert(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setIsCreating(false);
         }
