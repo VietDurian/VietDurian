@@ -50,7 +50,7 @@ export default function CreateProduct() {
   useEffect(() => {
     if (!selectedGardenId) return;
 
-    getAllDiariesByGardenId(selectedGardenId, null);
+    getAllDiariesByGardenId(selectedGardenId, null, "Completed");
   }, [selectedGardenId, getAllDiariesByGardenId]);
 
   const priceValue = Number(formData.price);
@@ -468,39 +468,6 @@ export default function CreateProduct() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
                 />
               </div>
-            </div>
-          </div>
-
-          {/* Third block */}
-          <div className="bg-white rounded-xl shadow-sm p-8 mt-5">
-            <p className="font-bold mb-5">Trạng thái sản phẩm</p>
-            <div className="flex gap-4">
-              <button
-                type="button"
-                onClick={() =>
-                  setFormData((prev) => ({ ...prev, status: "active" }))
-                }
-                className={`flex-1 py-3 rounded-lg text-sm font-semibold border transition-all ${
-                  formData.status === "active"
-                    ? "bg-emerald-50 border-emerald-500 text-emerald-600"
-                    : "bg-white border-gray-300 text-gray-400 hover:bg-gray-50"
-                }`}
-              >
-                Active
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  setFormData((prev) => ({ ...prev, status: "inactive" }))
-                }
-                className={`flex-1 py-3 rounded-lg text-sm font-semibold border transition-all ${
-                  formData.status === "inactive"
-                    ? "bg-red-50 border-red-400 text-red-500"
-                    : "bg-white border-gray-300 text-gray-400 hover:bg-gray-50"
-                }`}
-              >
-                Inactive
-              </button>
             </div>
           </div>
 

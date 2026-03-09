@@ -64,7 +64,7 @@ const createProduct = async (req, res, next) => {
     res.status(201).json({
       code: 201,
       success: true,
-      message: "Product created successfully",
+      message: "Tạo sản phẩm thành công",
       data: newProduct,
     });
   } catch (error) {
@@ -106,7 +106,7 @@ const getAllProducts = async (req, res, next) => {
     res.status(200).json({
       code: 200,
       success: true,
-      message: "Products retrieved successfully",
+      message: "Sản phẩm được truy xuất thành công",
       data: products.data,
       pagination: products.pagination,
     });
@@ -127,7 +127,7 @@ const getOwnProducts = async (req, res, next) => {
     return res.status(200).json({
       code: 200,
       success: true,
-      message: "Own products retrieved successfully",
+      message: "Sản phẩm của bạn được truy xuất thành công",
       data: products,
     });
   } catch (err) {
@@ -152,7 +152,7 @@ const getProductDetail = async (req, res, next) => {
     res.status(200).json({
       code: 200,
       success: true,
-      message: "Product retrieved successfully",
+      message: "Sản phẩm được truy xuất thành công",
       data: product,
     });
   } catch (error) {
@@ -197,7 +197,7 @@ const updateProduct = async (req, res, next) => {
     res.status(200).json({
       code: 200,
       success: true,
-      message: "Product updated successfully",
+      message: "Cập nhật sản phẩm thành công",
       data: updatedProduct,
     });
   } catch (error) {
@@ -230,7 +230,7 @@ const deleteProduct = async (req, res, next) => {
     res.status(200).json({
       code: 200,
       success: true,
-      message: "Product deleted successfully",
+      message: "Xóa sản phẩm thành công",
     });
   } catch (error) {
     next(error);
