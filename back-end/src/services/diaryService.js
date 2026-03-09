@@ -19,12 +19,16 @@ const buildDiaryTitleRegex = (normalizedTitle) => {
 const getDiariesByUser = async (filter = {}) => {
 	try {
 		// filter theo dd-mm-yyyy hoặc theo năm, áp dụng trên start_date
-		const { garden_id, year } = filter;
+		const { garden_id, year, status } = filter;
 
 		const query = {};
 
 		if (garden_id) {
 			query.garden_id = garden_id;
+		}
+
+		if (status && status !== 'all') {
+			query.status = status;
 		}
 
 		// Date filters applied on start_date

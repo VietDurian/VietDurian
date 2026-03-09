@@ -39,7 +39,7 @@ const checkEmailExists = async (req, res, next) => {
     if (!email) {
       return res.status(400).json({
         code: 400,
-        message: "Please provide email",
+        message: "Vui lòng cung cấp địa chỉ email",
       });
     }
 
@@ -61,7 +61,7 @@ const verifyEmail = async (req, res, next) => {
     if (!email || !otp) {
       return res.status(400).json({
         code: 400,
-        message: "Please provide email and otp",
+        message: "Vui lòng cung cấp địa chỉ email và mã OTP",
       });
     }
 
@@ -134,7 +134,7 @@ const login = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Logged in successfully",
+      message: "Đăng nhập thành công",
       data: {
         user: result.user,
         token: result.token,
@@ -156,7 +156,7 @@ const logout = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Logged out successfully",
+      message: "Đăng xuất thành công",
     });
   } catch (error) {
     next(error);
@@ -170,7 +170,7 @@ const forgotPassword = async (req, res, next) => {
     if (!email) {
       return res.status(400).json({
         code: 400,
-        message: "Please provide email",
+        message: "Vui lòng cung cấp địa chỉ email",
       });
     }
 
@@ -178,7 +178,7 @@ const forgotPassword = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "OTP sent to your email if it exists",
+      message: "OTP đã được gửi đến email của bạn nếu nó tồn tại",
     });
   } catch (error) {
     next(error);
