@@ -13,6 +13,7 @@ export const useDiaryStore = create((set, get) => ({
   isDiaryDeleting: false,
   isDiaryStepAdding: false,
   isDiaryCompleting: false,
+  isStepEditing: false,
 
   // Get all diaries by garden_id
   getAllDiariesByGardenId: async (garden_id, year) => {
@@ -160,6 +161,36 @@ export const useDiaryStore = create((set, get) => ({
       throw error;
     } finally {
       set({ isDiaryCompleting: false });
+    }
+  },
+
+  editStep: async (diaryId, stepId, data) => {
+    set({ isStepEditing: true });
+    try {
+      const res = await axiosInstance.patch(`/diary/step/${stepId}`, data);
+      const updatedDiary = res?.data?.data;
+
+      if (updatedDiary?._id) {
+        set((state) => ({
+          diaries: state.diaries.map((d) =>
+            d._id === updatedDiary._id ? updatedDiary : d,
+          ),
+          diaryDetail: updatedDiary,
+        }));
+      }
+
+      // Refresh detail to ensure nested data (stages/steps) stays in sync
+      if (diaryId) {
+        await get().getDiaryDetails(diaryId);
+      }
+
+      toast.success(res.data.message);
+      return res?.data?.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "editStep");
+      throw error;
+    } finally {
+      set({ isStepEditing: false });
     }
   },
 }));

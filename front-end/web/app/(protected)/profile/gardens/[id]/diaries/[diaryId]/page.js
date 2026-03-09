@@ -566,7 +566,13 @@ export default function GardenDiaryDetailPage() {
                     ) : (
                       <div className="space-y-3">
                         {stage.steps.map((step, idx) => (
-                          <StepCard key={step._id} step={step} index={idx} />
+                          <StepCard
+                            key={step._id}
+                            step={step}
+                            index={idx}
+                            diaryId={diaryId}
+                            canEdit={diary.status !== "Completed"}
+                          />
                         ))}
                       </div>
                     )}
