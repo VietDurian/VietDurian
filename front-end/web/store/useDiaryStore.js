@@ -97,20 +97,22 @@ export const useDiaryStore = create((set, get) => ({
   },
 
   // Delete diary
-  deleteGarden: async (diaryId) => {
+  deleteDiary: async (diaryId) => {
     set({ isDiaryDeleting: true });
     try {
       const res = await axiosInstance.delete(`/diary/${diaryId}`);
 
-      //  Update the edited garden in state
+      // Remove deleted diary from list and clear current detail
       set((state) => ({
-        diaries: state.diaries.map((d) =>
-          d._id === diaryId ? res.data.data : d,
-        ),
-        diaryDetail: res.data.data,
+        diaries: state.diaries.filter((d) => d._id !== diaryId),
+        diaryDetail:
+          state.diaryDetail?._id === diaryId ? {} : state.diaryDetail,
       }));
 
       toast.success(res.data.message);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "deleteDiary");
+      throw error;
     } finally {
       set({ isDiaryDeleting: false });
     }
