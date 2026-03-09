@@ -170,7 +170,7 @@ export const useAuthStore = create((set, get) => ({
       localStorage.setItem("auth_token", token);
 
       set({ authUser: user });
-      toast.success("Logged in successfully");
+      toast.success("Đăng nhập thành công");
       get().connectSocket();
 
       return { user, token };
@@ -187,9 +187,9 @@ export const useAuthStore = create((set, get) => ({
     try {
       set({ authUser: null });
       await axiosInstance.post("/auth/logout");
-      toast.success("Logged out successfully");
+      toast.success("Đăng xuất thành công");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Logout failed");
+      toast.error(error?.response?.data?.message || "Đăng xuất thất bại");
     } finally {
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
@@ -203,7 +203,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await axiosInstance.put("/auth/update-profile", data);
       set({ authUser: res.data });
-      toast.success("Profile updated successfully");
+      toast.success("Hồ sơ đã được cập nhật thành công");
     } catch (error) {
       console.log("error in update profile:", error);
       toast.error(error.response.data.message);
