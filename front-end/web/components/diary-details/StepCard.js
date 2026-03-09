@@ -1,12 +1,21 @@
 import { useState } from "react";
-import { Beaker, Calendar, Droplets, Store, Pencil } from "lucide-react";
+import {
+  Beaker,
+  Calendar,
+  Droplets,
+  Store,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { actionTypeConfig } from "@/constants";
 import { useDiaryStore } from "@/store/useDiaryStore";
 import EditStepModal from "@/components/diary-details/EditStepModal";
 
 export function StepCard({ step, index, diaryId, canEdit = true }) {
-  const { editStep, isStepEditing } = useDiaryStore();
+  const { editStep, isStepEditing, deleteStep, isStepDeleting } =
+    useDiaryStore();
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [formData, setFormData] = useState({
     step_name: step.step_name || "",
     description: step.description || "",
@@ -45,6 +54,12 @@ export function StepCard({ step, index, diaryId, canEdit = true }) {
 
   const closeEditModal = () => {
     setShowEditModal(false);
+  };
+
+  const handleDeleteStep = async () => {
+    if (!diaryId || !step?._id) return;
+    await deleteStep(diaryId, step._id);
+    setShowDeleteModal(false);
   };
 
   const handleSaveEdit = async (e) => {
@@ -100,6 +115,13 @@ export function StepCard({ step, index, diaryId, canEdit = true }) {
                 className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-700 bg-emerald-100 hover:bg-emerald-200 cursor-pointer"
               >
                 <Pencil className="w-3.5 h-3.5" /> Sửa bước
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-700 bg-red-100 hover:bg-red-200 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Xóa bước
               </button>
             </div>
           )}
@@ -198,6 +220,47 @@ export function StepCard({ step, index, diaryId, canEdit = true }) {
           submitLabel="Lưu thay đổi"
           isActionTypeLocked
         />
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Xóa bước</h3>
+                <p className="text-sm text-gray-500">
+                  Hành động này không thể hoàn tác
+                </p>
+              </div>
+            </div>
+            <p className="text-gray-700 mb-6 bg-gray-50 rounded-xl p-4 text-sm leading-relaxed">
+              Bạn có chắc chắn muốn xóa bước{" "}
+              <strong className="text-gray-900">
+                &quot;{step.step_name}&quot;
+              </strong>
+              ? Thông tin công việc và chi phí của bước này sẽ bị xóa vĩnh viễn.
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleDeleteStep}
+                disabled={isStepDeleting}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors disabled:opacity-60"
+              >
+                {isStepDeleting ? "Đang xóa..." : "Xóa bước"}
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isStepDeleting}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-xl font-semibold transition-colors disabled:opacity-60"
+              >
+                Hủy bỏ
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

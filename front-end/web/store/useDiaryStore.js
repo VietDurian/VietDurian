@@ -14,6 +14,7 @@ export const useDiaryStore = create((set, get) => ({
   isDiaryStepAdding: false,
   isDiaryCompleting: false,
   isStepEditing: false,
+  isStepDeleting: false,
 
   // Get all diaries by garden_id
   getAllDiariesByGardenId: async (garden_id, year, status) => {
@@ -115,6 +116,24 @@ export const useDiaryStore = create((set, get) => ({
       throw error;
     } finally {
       set({ isDiaryDeleting: false });
+    }
+  },
+  // Delete step
+  deleteStep: async (diaryId, stepId) => {
+    set({ isStepDeleting: true });
+    try {
+      const res = await axiosInstance.delete(`/diary/step/${stepId}`);
+
+      if (diaryId) {
+        await get().getDiaryDetails(diaryId);
+      }
+
+      toast.success(res.data.message);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "deleteStep");
+      throw error;
+    } finally {
+      set({ isStepDeleting: false });
     }
   },
 
