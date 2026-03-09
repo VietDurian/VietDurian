@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -85,12 +85,24 @@ export default function GardenDiaries() {
     useGardenStore();
   const { diaries, isDiariesLoading, getAllDiariesByGardenId } =
     useDiaryStore();
+  const [selectedYear, setSelectedYear] = useState("all");
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = useMemo(
+    () => Array.from({ length: 6 }, (_, index) => String(currentYear - index)),
+    [currentYear],
+  );
 
   useEffect(() => {
     if (!id) return;
     getGardenDetails(id);
-    getAllDiariesByGardenId(id);
-  }, [id, getGardenDetails, getAllDiariesByGardenId]);
+  }, [id, getGardenDetails]);
+
+  useEffect(() => {
+    if (!id) return;
+    const year = selectedYear === "all" ? undefined : selectedYear;
+    getAllDiariesByGardenId(id, year);
+  }, [id, selectedYear, getAllDiariesByGardenId]);
 
   const garden = useMemo(() => {
     if (!gardenDetail?._id) return null;
@@ -192,7 +204,7 @@ export default function GardenDiaries() {
 
       {/* ── Content ─────────────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-6 py-8">
-        {gardenDiaries.length === 0 ? (
+        {gardenDiaries.length === 0 && selectedYear === "all" ? (
           /* Empty State */
           <div className="flex flex-col items-center justify-center py-24 px-4">
             <div className="w-24 h-24 bg-emerald-50 rounded-2xl flex items-center justify-center mb-5 border-2 border-dashed border-emerald-200">
@@ -215,6 +227,27 @@ export default function GardenDiaries() {
           </div>
         ) : (
           <>
+            <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">
+                  Lọc theo năm:
+                </span>
+              </div>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+              >
+                <option value="all">Tất cả năm</option>
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    Năm {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Status overview */}
             {gardenDiaries.length > 0 && (
               <div className="flex items-center gap-3 mb-6 flex-wrap">
@@ -241,11 +274,17 @@ export default function GardenDiaries() {
             )}
 
             {/* Diary list */}
-            <div className="space-y-4">
-              {gardenDiaries.map((diary) => (
-                <DiaryCard key={diary._id} diary={diary} gardenId={id} />
-              ))}
-            </div>
+            {gardenDiaries.length === 0 ? (
+              <div className="bg-white border border-dashed border-gray-200 rounded-2xl p-8 text-center text-sm text-gray-500">
+                Không có nhật ký nào trong năm đã chọn.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {gardenDiaries.map((diary) => (
+                  <DiaryCard key={diary._id} diary={diary} gardenId={id} />
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>

@@ -55,7 +55,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 bg-white backdrop-blur-md border-b border-gray-200">
+    <nav className="fixed top-0 inset-x-0 z-1001 bg-white backdrop-blur-md border-b border-gray-200">
       <div className=" mx-auto px-5">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}

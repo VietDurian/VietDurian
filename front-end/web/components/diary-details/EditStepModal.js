@@ -10,7 +10,7 @@ import {
 import { ACTION_TYPES, actionTypeConfig } from "@/constants";
 import ImageSelect from "@/components/ImageSelect";
 
-export default function AddStepModal({
+export default function EditStepModal({
   closeAddStep,
   handleAddStep,
   isDiaryStepAdding,
@@ -18,6 +18,9 @@ export default function AddStepModal({
   setActionType,
   newStep,
   setNewStep,
+  title = "Chỉnh sửa bước thực hiện",
+  submitLabel = "Lưu thay đổi",
+  isActionTypeLocked = true,
 }) {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -27,7 +30,7 @@ export default function AddStepModal({
             <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
               <Plus className="w-4 h-4 text-emerald-700" />
             </div>
-            <h3 className="font-bold text-gray-900">Thêm bước thực hiện</h3>
+            <h3 className="font-bold text-gray-900">{title}</h3>
           </div>
           <button
             onClick={closeAddStep}
@@ -51,12 +54,18 @@ export default function AddStepModal({
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setActionType(type)}
-                    className={`cursor-pointer flex flex-col items-center gap-2 py-3.5 px-3 rounded-xl border-2 transition-all font-medium text-sm ${
+                    onClick={() => {
+                      if (isActionTypeLocked) return;
+                      setActionType(type);
+                    }}
+                    disabled={isActionTypeLocked}
+                    className={`flex flex-col items-center gap-2 py-3.5 px-3 rounded-xl border-2 transition-all font-medium text-sm ${
                       isActive
                         ? `${cfg.activeBg} ${cfg.activeText} border-transparent shadow-sm`
-                        : "bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300 hover:bg-gray-100"
-                    }`}
+                        : isActionTypeLocked
+                          ? "bg-gray-50 text-gray-500 border-gray-200"
+                          : "bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300 hover:bg-gray-100"
+                    } ${isActionTypeLocked ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
                   >
                     <TypeIcon
                       className={`w-5 h-5 ${isActive ? cfg.activeText : cfg.color}`}
@@ -252,7 +261,7 @@ export default function AddStepModal({
               className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors text-sm"
             >
               <Plus className="w-4 h-4" />{" "}
-              {isDiaryStepAdding ? "Đang lưu..." : "Lưu bước"}
+              {isDiaryStepAdding ? "Đang lưu..." : submitLabel}
             </button>
           </div>
         </form>
