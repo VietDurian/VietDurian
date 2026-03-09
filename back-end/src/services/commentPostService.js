@@ -58,7 +58,7 @@ const createComment = async (payload) => {
 						sender_id: userId,
 						entity_type: 'comment',
 						post_id: post_id,
-						message: `${senderName} commented on your post.`,
+						message: `${senderName} đã bình luận vào bài viết của bạn.`,
 					});
 				} else {
 					console.log('Sender is the post owner. No notification.');
@@ -77,7 +77,7 @@ const createComment = async (payload) => {
 						sender_id: userId,
 						entity_type: 'reply',
 						post_id: post_id,
-						message: `${senderName} replied to your comment.`,
+						message: `${senderName} đã trả lời bình luận của bạn.`,
 					});
 				}
 			}

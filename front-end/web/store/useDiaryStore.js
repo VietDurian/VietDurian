@@ -16,13 +16,14 @@ export const useDiaryStore = create((set, get) => ({
   isStepEditing: false,
 
   // Get all diaries by garden_id
-  getAllDiariesByGardenId: async (garden_id, year) => {
+  getAllDiariesByGardenId: async (garden_id, year, status) => {
     set({ isDiariesLoading: true });
     try {
       const res = await axiosInstance.get(`/diary`, {
         params: {
           garden_id: garden_id,
           year: year,
+          status: status,
         },
       });
       set({ diaries: res.data.data });

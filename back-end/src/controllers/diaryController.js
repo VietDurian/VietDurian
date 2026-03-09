@@ -9,6 +9,7 @@ const getDiariesByUser = async (req, res, next) => {
 		const diaries = await diaryService.getDiariesByUser({
 			garden_id: filter.garden_id,
 			year: filter.year,
+			status: filter.status,
 		});
 		res.status(200).json({
 			code: 200,
