@@ -37,7 +37,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
 const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div className="fixed inset-0 z-[1002] flex items-center justify-center p-4 bg-black/50">
             <div className="bg-white text-black w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
                 <div className="relative flex items-center justify-center p-4 border-b border-gray-200">
                     <h2 className="text-xl font-bold text-center flex-1">{title}</h2>
@@ -372,7 +372,11 @@ export default function CreateBlogPage() {
                                     </div>
                                     <ImageUpload image={blockImage} onImageChange={handleBlockImageChange} onImageRemove={() => { setBlockImage(""); setBlockImageData(""); }} label={<>Ảnh chương <span className="text-red-500">*</span></>} />
                                     <div className="pt-4">
-                                        <button type="button" onClick={handleSaveBlock} className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition">
+                                        <button
+                                            type="button"
+                                            onClick={handleSaveBlock}
+                                            disabled={!blockTitle.trim() || !blockContent.trim() || !blockImageData}
+                                            className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition disabled:opacity-50 disabled:cursor-not-allowed">
                                             {editingBlockIndex !== null ? "Cập nhật" : "Thêm"}
                                         </button>
                                     </div>
