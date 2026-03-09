@@ -6,6 +6,7 @@ import {
   Store,
   X,
 } from "lucide-react";
+import { useState } from "react";
 
 import { ACTION_TYPES, actionTypeConfig } from "@/constants";
 import ImageSelect from "@/components/ImageSelect";
@@ -22,6 +23,57 @@ export default function EditStepModal({
   submitLabel = "Lưu thay đổi",
   isActionTypeLocked = true,
 }) {
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const clearFieldError = (fieldName) => {
+    setFieldErrors((prev) => {
+      if (!prev[fieldName]) return prev;
+      const next = { ...prev };
+      delete next[fieldName];
+      return next;
+    });
+  };
+
+  const validateBeforeSubmit = () => {
+    const nextErrors = {};
+
+    if (!newStep.step_name?.trim()) {
+      nextErrors.step_name = "Vui lòng nhập tên bước";
+    }
+
+    if (!newStep.description?.trim()) {
+      nextErrors.description = "Vui lòng nhập mô tả";
+    }
+
+    if (actionType !== "Chỉ số") {
+      const costNumber = Number(newStep.cost);
+      if (newStep.cost === "" || Number.isNaN(costNumber) || costNumber < 0) {
+        nextErrors.cost = "Chi phí phải là số không âm";
+      }
+    }
+
+    if (actionType === "Vật tư") {
+      if (!newStep.item_name?.trim()) {
+        nextErrors.item_name = "Vui lòng nhập tên sản phẩm";
+      }
+      if (!newStep.dosage?.trim()) {
+        nextErrors.dosage = "Vui lòng nhập liều lượng";
+      }
+      if (!newStep.supplier?.trim()) {
+        nextErrors.supplier = "Vui lòng nhập nhà cung cấp";
+      }
+    }
+
+    setFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    if (!validateBeforeSubmit()) return;
+    handleAddStep(e);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto mt-10">
@@ -40,7 +92,7 @@ export default function EditStepModal({
           </button>
         </div>
 
-        <form onSubmit={handleAddStep} className="p-6 space-y-5">
+        <form onSubmit={onSubmit} className="p-6 space-y-5">
           <div>
             <p className="text-sm font-semibold text-gray-800 mb-2.5">
               Loại hành động
@@ -110,6 +162,7 @@ export default function EditStepModal({
               onChange={(e) =>
                 setNewStep({ ...newStep, step_name: e.target.value })
               }
+              onBlur={() => validateBeforeSubmit()}
               placeholder={
                 actionType === "Vật tư"
                   ? "VD: Xử lý vôi bột"
@@ -118,8 +171,13 @@ export default function EditStepModal({
                     : "VD: Kiểm tra mắt cua"
               }
               required
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-gray-50 focus:bg-white"
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-gray-50 focus:bg-white ${
+                fieldErrors.step_name ? "border-red-300" : "border-gray-200"
+              }`}
             />
+            {fieldErrors.step_name && (
+              <p className="mt-1 text-xs text-red-600">{fieldErrors.step_name}</p>
+            )}
           </div>
 
           {actionType === "Vật tư" && (
@@ -139,10 +197,16 @@ export default function EditStepModal({
                   onChange={(e) =>
                     setNewStep({ ...newStep, item_name: e.target.value })
                   }
+                  onInput={() => clearFieldError("item_name")}
                   placeholder="VD: Vôi bột nông nghiệp"
                   required={actionType === "Vật tư"}
-                  className="w-full px-4 py-2.5 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all bg-white text-sm"
+                  className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all bg-white text-sm ${
+                    fieldErrors.item_name ? "border-red-300" : "border-orange-200"
+                  }`}
                 />
+                {fieldErrors.item_name && (
+                  <p className="mt-1 text-xs text-red-600">{fieldErrors.item_name}</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -156,9 +220,15 @@ export default function EditStepModal({
                     onChange={(e) =>
                       setNewStep({ ...newStep, dosage: e.target.value })
                     }
+                    onInput={() => clearFieldError("dosage")}
                     placeholder="VD: 2kg/gốc"
-                    className="w-full px-3 py-2.5 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all bg-white text-sm"
+                    className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all bg-white text-sm ${
+                      fieldErrors.dosage ? "border-red-300" : "border-orange-200"
+                    }`}
                   />
+                  {fieldErrors.dosage && (
+                    <p className="mt-1 text-xs text-red-600">{fieldErrors.dosage}</p>
+                  )}
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-gray-800 mb-1.5 flex items-center gap-1">
@@ -171,9 +241,15 @@ export default function EditStepModal({
                     onChange={(e) =>
                       setNewStep({ ...newStep, supplier: e.target.value })
                     }
+                    onInput={() => clearFieldError("supplier")}
                     placeholder="VD: Đại lý VTNN Hòa Bình"
-                    className="w-full px-3 py-2.5 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all bg-white text-sm"
+                    className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all bg-white text-sm ${
+                      fieldErrors.supplier ? "border-red-300" : "border-orange-200"
+                    }`}
                   />
+                  {fieldErrors.supplier && (
+                    <p className="mt-1 text-xs text-red-600">{fieldErrors.supplier}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -188,6 +264,7 @@ export default function EditStepModal({
               onChange={(e) =>
                 setNewStep({ ...newStep, description: e.target.value })
               }
+              onInput={() => clearFieldError("description")}
               placeholder={
                 actionType === "Vật tư"
                   ? "VD: Rải vôi khử trùng đất và nâng pH."
@@ -197,8 +274,13 @@ export default function EditStepModal({
               }
               required
               rows={3}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none bg-gray-50 focus:bg-white"
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none bg-gray-50 focus:bg-white ${
+                fieldErrors.description ? "border-red-300" : "border-gray-200"
+              }`}
             />
+            {fieldErrors.description && (
+              <p className="mt-1 text-xs text-red-600">{fieldErrors.description}</p>
+            )}
           </div>
 
           <div>
@@ -220,6 +302,7 @@ export default function EditStepModal({
                   const val = e.target.value;
                   if (val === "" || Number(val) >= 0) {
                     setNewStep({ ...newStep, cost: val });
+                    clearFieldError("cost");
                   }
                 }}
                 onKeyDown={(e) => {
@@ -229,9 +312,14 @@ export default function EditStepModal({
                 required={actionType !== "Chỉ số"}
                 min="0"
                 step="any"
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-gray-50 focus:bg-white"
+                className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-gray-50 focus:bg-white ${
+                  fieldErrors.cost ? "border-red-300" : "border-gray-200"
+                }`}
               />
             </div>
+            {fieldErrors.cost && (
+              <p className="mt-1 text-xs text-red-600">{fieldErrors.cost}</p>
+            )}
           </div>
 
           <ImageSelect
