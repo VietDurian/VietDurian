@@ -10,7 +10,7 @@ export default function ProfileLayout({ children }) {
     <>
       <Navbar />
       <AsideBar role={authUser?.role} />
-      <main className="mt-14 ml-64 overflow-y-auto bg-gray-100">
+      <main className="mt-14 md:ml-64 overflow-y-auto bg-gray-100">
         {children}
       </main>
     </>
