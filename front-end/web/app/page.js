@@ -35,7 +35,6 @@ export default function Home() {
   const { authUser, isCheckingAuth } = useAuthStore();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [products, setProducts] = useState([]);
-  const [blogs, setBlogs] = useState([]);
   const [imageErrors, setImageErrors] = useState({});
   useEffect(() => {
     if (isCheckingAuth) return;
@@ -73,19 +72,19 @@ export default function Home() {
   }, []);
 
   // Fetch 4 blog mới nhất
-  useEffect(() => {
-    const fetchLatestBlogs = async () => {
-      try {
-        const result = await blogAPI.getAllBlogs({ sort: "newest" });
-        if (result.code === 200 && result.data) {
-          setBlogs(result.data.slice(0, 4));
-        }
-      } catch (err) {
-        console.error("Error fetching blogs:", err);
-      }
-    };
-    fetchLatestBlogs();
-  }, []);
+  // useEffect(() => {
+  //   const fetchLatestBlogs = async () => {
+  //     try {
+  //       const result = await blogAPI.getAllBlogs({ sort: "newest" });
+  //       if (result.code === 200 && result.data) {
+  //         setBlogs(result.data.slice(0, 4));
+  //       }
+  //     } catch (err) {
+  //       console.error("Error fetching blogs:", err);
+  //     }
+  //   };
+  //   fetchLatestBlogs();
+  // }, []);
 
   const handleImageError = (productId) => {
     setImageErrors((prev) => ({ ...prev, [productId]: true }));
@@ -121,8 +120,6 @@ export default function Home() {
     setCurrentSlide((prev) => (prev - 1 + (maxSlide + 1)) % (maxSlide + 1));
   };
 
-  const featuredBlog = blogs[0] || null;
-  const otherBlogs = blogs.slice(1);
   if (isCheckingAuth) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
@@ -713,74 +710,86 @@ export default function Home() {
       {/* Blog Section */}
       <section className="py-16 px-4 lg:px-6 bg-gray-50">
         <div className="max-w-[1400px] mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-4">
             Blog Mới
           </h2>
+          <p className="text-center text-gray-500 mb-12">
+            Kiến thức canh tác sầu riêng từ các chuyên gia hàng đầu
+          </p>
 
-          {blogs.length === 0 ? (
-            <div className="text-center text-gray-400 py-10">Đang tải bài viết...</div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-              {/* Featured Blog */}
-              {featuredBlog && (
-                <Link href={`/blogs/${featuredBlog._id}`} className="block h-full">
-                  <div className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-emerald-300 hover:shadow-lg transition-all duration-300 cursor-pointer h-full flex flex-col">
-                    <div className="relative w-full overflow-hidden bg-gray-100" style={{ aspectRatio: '16/9' }}>
-                      <Image
-                        src={featuredBlog.image || "/images/Durian1.jpg"}
-                        alt={featuredBlog.title}
-                        fill
-                        className="object-cover"
-                      />
+          {/* Blogs bị khóa - hiện mock data mờ + overlay */}
+          <div className="relative">
+            {/* Mock blogs - blur để tạo hiệu ứng preview */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch select-none pointer-events-none"
+              style={{ filter: "blur(3px)", opacity: 0.6 }}>
+
+              {/* Featured mock blog */}
+              <div className="bg-white rounded-lg overflow-hidden border border-gray-200 h-full flex flex-col">
+                <div className="relative w-full bg-gradient-to-br from-emerald-100 to-emerald-200" style={{ aspectRatio: '16/9' }}>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <BookOpen className="w-16 h-16 text-emerald-400" />
+                  </div>
+                </div>
+                <div className="p-6 flex-1">
+                  <div className="h-6 bg-gray-200 rounded mb-3 w-3/4"></div>
+                  <div className="h-4 bg-gray-100 rounded mb-2 w-full"></div>
+                  <div className="h-4 bg-gray-100 rounded mb-4 w-2/3"></div>
+                  <div className="flex justify-between items-center">
+                    <div className="h-4 bg-gray-100 rounded w-24"></div>
+                    <div className="h-4 bg-emerald-100 rounded w-20"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Other mock blogs */}
+              <div className="flex flex-col gap-4 h-full">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-white rounded-lg overflow-hidden border border-gray-200 flex flex-1">
+                    <div className="w-32 flex-shrink-0 bg-gradient-to-br from-lime-100 to-emerald-100 flex items-center justify-center">
+                      <BookOpen className="w-8 h-8 text-emerald-300" />
                     </div>
-                    <div className="p-6 flex-shrink-0">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4 line-clamp-2">
-                        {featuredBlog.title}
-                      </h3>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">
-                          {formatDate(featuredBlog.created_at)}
-                        </span>
-                        <span className="text-emerald-600 font-medium">Đọc thêm</span>
+                    <div className="p-4 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="h-4 bg-gray-200 rounded mb-2 w-3/4"></div>
+                        <div className="h-3 bg-gray-100 rounded w-1/2"></div>
                       </div>
+                      <div className="h-3 bg-gray-100 rounded w-20 mt-2"></div>
                     </div>
                   </div>
-                </Link>
-              )}
-
-              {/* Other Blogs - stretch to match featured height */}
-              <div className="flex flex-col gap-0 h-full">
-                {otherBlogs.map((blog, idx) => (
-                  <Link href={`/blogs/${blog._id}`} key={blog._id} className={`block flex-1 ${idx < otherBlogs.length - 1 ? "mb-4" : ""}`}>
-                    <div className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-emerald-300 hover:shadow-lg transition-all duration-300 flex cursor-pointer h-full">
-                      <div className="relative w-70 flex-shrink-0 overflow-hidden bg-gray-100">
-                        <Image
-                          src={blog.image || "/images/Durian2.jpg"}
-                          alt={blog.title}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="p-4 flex flex-col justify-between flex-1 min-w-0">
-                        <h3 className="text-base font-bold text-gray-900 line-clamp-2">
-                          {blog.title}
-                        </h3>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-sm text-gray-500">
-                            {formatDate(blog.created_at)}
-                          </span>
-                          <span className="text-emerald-600 font-medium text-sm flex-shrink-0 ml-2">Đọc thêm</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
                 ))}
               </div>
             </div>
-          )}
+
+            {/* Overlay đăng nhập */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4 max-w-md w-full text-center border border-emerald-100">
+                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Đăng nhập để đọc Blog
+                </h3>
+                <p className="text-gray-500 text-sm mb-6">
+                  Truy cập hàng trăm bài viết chuyên sâu về kỹ thuật canh tác, thị trường sầu riêng từ các chuyên gia.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link href="/login"
+                    className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">
+                    Đăng nhập ngay
+                  </Link>
+                  <Link href="/register"
+                    className="px-6 py-2.5 border border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors text-sm">
+                    Tạo tài khoản
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
-
       {<AiFloatingButton />}
       <Footer />
     </div>

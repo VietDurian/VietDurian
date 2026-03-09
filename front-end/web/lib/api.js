@@ -54,7 +54,12 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.error("Token hết hạn hoặc không hợp lệ");
+      const token = getToken();
+      if (token) {
+        // Chỉ log khi có token mà vẫn bị 401 (token thực sự hết hạn)
+        console.error("Token hết hạn hoặc không hợp lệ");
+      }
+      // Nếu không có token = đã logout rồi, bỏ qua silently
     }
     return Promise.reject(error);
   },
@@ -246,7 +251,9 @@ export const blogAPI = {
       const response = await apiClient.get("/blog/knowledge", { params });
       return response.data;
     } catch (error) {
-      console.error("Error fetching blogs:", error);
+      if (error.response?.status !== 401) {
+        console.error("Error fetching blogs:", error);
+      }
       throw error;
     }
   },
