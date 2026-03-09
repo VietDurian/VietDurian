@@ -31,7 +31,6 @@ const getDiariesByUser = async (filter = {}) => {
 			query.status = status;
 		}
 
-
 		// Date filters applied on start_date
 		const dateRange = {};
 
