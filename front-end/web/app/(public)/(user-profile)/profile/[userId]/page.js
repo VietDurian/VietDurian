@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { profileAPI } from "@/lib/api";
+import { profileAPI, capabilityProfileAPI } from "@/lib/api";
 import {
     User, Mail, Phone, Calendar,
     Crown, CheckCircle, XCircle, Loader2,
     ArrowLeft, Star, MessageCircle,
-    ShieldCheck, Clock
+    ShieldCheck, Clock, Briefcase, Building2, Wrench, Award, FileText,
+    MapPin
 } from "lucide-react";
 
 const RoleBadge = ({ role }) => {
@@ -54,7 +55,7 @@ export default function PublicProfilePage() {
 
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
-
+    const [resumeData, setResumeData] = useState(null);
     useEffect(() => {
         const fetchPublicProfile = async () => {
             try {
@@ -62,6 +63,18 @@ export default function PublicProfilePage() {
                 const response = await profileAPI.getPublicProfile(userId);
                 if (response.success) {
                     setProfileData(response.data);
+
+                    // Nếu là serviceProvider thì fetch thêm resume
+                    if (response.data.role === "serviceProvider") {
+                        try {
+                            const resumeRes = await capabilityProfileAPI.get(userId);
+                            if (resumeRes.code === 200 && resumeRes.data) {
+                                setResumeData(resumeRes.data);
+                            }
+                        } catch {
+                            // Không có resume thì bỏ qua
+                        }
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching public profile:", error);
@@ -135,14 +148,15 @@ export default function PublicProfilePage() {
 
                     <div className="relative z-10 p-8">
                         <div className="flex items-center gap-6 mb-8">
-                            <div className="relative flex-shrink-0">
+                            <div className="relative group">
                                 <img
                                     src={profileData.avatar || "/images/default-avatar.png"}
                                     alt={profileData.full_name}
-                                    className="w-28 h-28 rounded-2xl border-4 border-white/30 object-cover shadow-xl"
+                                    className="relative w-35 h-35 rounded-full border-4 border-white object-cover"
+                                    onError={(e) => { e.target.src = "/images/default-avatar.png"; }}
                                 />
-                                <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1.5 shadow-lg">
-                                    <CheckCircle size={18} className="text-emerald-500" strokeWidth={2.5} />
+                                <div className="absolute -bottom-0.5 -right-0.5 p-2 bg-white rounded-full">
+                                    <CheckCircle size={20} className="text-emerald-600" strokeWidth={2.5} />
                                 </div>
                             </div>
 
@@ -197,6 +211,104 @@ export default function PublicProfilePage() {
                         <InfoCard icon={Calendar} label="Ngày tham gia" value={formatDate(profileData.created_at)} />
                     </div>
                 </div>
+
+                {/* Resume Section - chỉ hiện với serviceProvider */}
+                {resumeData && (
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <Briefcase size={20} className="text-emerald-600" strokeWidth={2.5} />
+                            Hồ Sơ Năng Lực
+                        </h2>
+
+                        <div className="space-y-4">
+                            {/* Tên doanh nghiệp */}
+                            <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-6 border-2 border-emerald-100">
+                                <div className="flex items-start gap-4">
+                                    <div className="p-3 bg-emerald-500 rounded-xl">
+                                        <Building2 size={22} className="text-white" strokeWidth={2.5} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Tên Doanh Nghiệp</p>
+                                        <h3 className="text-xl font-bold text-gray-900">{resumeData.business_name}</h3>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Dịch vụ */}
+                                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-3 bg-emerald-50 rounded-xl">
+                                            <Wrench size={20} className="text-emerald-600" strokeWidth={2.5} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Dịch Vụ</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {resumeData.services.split(",").map((s, i) => (
+                                                    <span key={i} className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium border border-emerald-200">
+                                                        {s.trim()}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Khu vực */}
+                                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-3 bg-emerald-50 rounded-xl">
+                                            <MapPin size={20} className="text-emerald-600" strokeWidth={2.5} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Khu Vực</p>
+                                            <p className="font-semibold text-gray-900">{resumeData.service_areas}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Kinh nghiệm */}
+                                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-3 bg-emerald-50 rounded-xl">
+                                            <Award size={20} className="text-emerald-600" strokeWidth={2.5} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Kinh Nghiệm</p>
+                                            <p className="font-semibold text-gray-900">{resumeData.experience_year} năm</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Số điện thoại */}
+                                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-3 bg-emerald-50 rounded-xl">
+                                            <Phone size={20} className="text-emerald-600" strokeWidth={2.5} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Liên Hệ</p>
+                                            <p className="font-semibold text-gray-900">{resumeData.contact_phone}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Mô tả */}
+                            <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                                <div className="flex items-start gap-4">
+                                    <div className="p-3 bg-emerald-50 rounded-xl">
+                                        <FileText size={20} className="text-emerald-600" strokeWidth={2.5} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Mô Tả</p>
+                                        <p className="text-gray-700 leading-relaxed">{resumeData.description}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Contact CTA */}
                 <div className="bg-white rounded-2xl p-6 border border-gray-200 flex items-center justify-between">
