@@ -12,6 +12,9 @@ import {
   Plus,
   ScanSearch,
   MessageCircleMore,
+  Leaf,
+  Upload,
+  TriangleAlert,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { aiAPI } from "@/lib/api";
@@ -73,6 +76,10 @@ export default function AiFloatingButton() {
 
   if (!authUser) return null;
   if (pathname?.startsWith("/dashboard")) return null;
+
+  const isNotDurianImageError =
+    typeof scanError === "string" &&
+    /chua phai anh sau rieng|chưa phải ảnh sầu riêng|liên quan đến sầu riêng/i.test(scanError);
 
 
   const openMenu = () => {
@@ -326,7 +333,7 @@ export default function AiFloatingButton() {
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-2 rounded-full border border-purple-300 bg-white shadow-sm px-3 py-1.5 focus-within:border-purple-500">
+            <div className="flex items-center gap-2 rounded-full border border-emerald-300 bg-white shadow-sm px-3 py-1.5 focus-within:border-emerald-500">
               <input
                 type="text"
                 value={input}
@@ -383,150 +390,167 @@ export default function AiFloatingButton() {
 
       {/* Floating Scan Popup */}
 {scanOpen && (
-  <div className="fixed bottom-24 right-6 z-50 w-96 max-w-[92vw] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-slide-up">
-   
-    {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-linear-to-r from-cyan-600 to-sky-500 text-white">
-      <div className="font-semibold flex items-center gap-2">
-        <ScanSearch size={18} />
-        Scan AI
-      </div>
-
-
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={resetScan}
-          className="p-2 rounded-full hover:bg-white/15 transition-colors"
-          disabled={scanLoading}
-        >
-          <RefreshCcw size={18} />
-        </button>
-
-
-        <button
-          type="button"
-          onClick={closeScan}
-          className="p-2 rounded-full hover:bg-white/15 transition-colors"
-        >
-          <X size={18} />
-        </button>
-      </div>
-    </div>
-
-
-    {/* Body */}
-    <div className="p-4 bg-gray-50 space-y-4">
-
-
-      {/* Upload Card */}
-      <div className="rounded-2xl border border-cyan-200 bg-linear-to-br from-cyan-50 to-white p-4 shadow-sm">
-        <div className="text-sm font-semibold text-gray-800 mb-2">
-          Tải hình ảnh lá sầu riêng
+  <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/35 backdrop-blur-[2px]">
+    <div className="w-[min(680px,96vw)] max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-emerald-200 flex flex-col overflow-hidden animate-slide-up">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 bg-linear-to-r from-emerald-700 via-green-600 to-lime-500 text-white">
+        <div className="font-semibold flex items-center gap-2">
+          <ScanSearch size={18} />
+          Scan AI
         </div>
 
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={resetScan}
+            className="p-2 rounded-full hover:bg-white/15 transition-colors"
+            disabled={scanLoading}
+            title="Quét mới"
+          >
+            <RefreshCcw size={18} />
+          </button>
 
-        <button
-          type="button"
-          onClick={() => scanFileInputRef.current?.click()}
-          disabled={scanLoading}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-medium transition-all"
-        >
-          <Plus size={16} />
-          Chọn ảnh
-        </button>
-
-
-        <div className="text-xs text-gray-500 mt-2 text-center truncate">
-          {scanFile ? scanFile.name : "Chưa chọn ảnh"}
+          <button
+            type="button"
+            onClick={closeScan}
+            className="p-2 rounded-full hover:bg-white/15 transition-colors"
+            title="Đóng"
+          >
+            <X size={18} />
+          </button>
         </div>
       </div>
 
-
-      {/* Preview */}
-      {scanPreviewUrl && (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-          <div className="text-xs font-semibold text-gray-600 px-3 pt-3">
-            Xem trước ảnh
+      {/* Body */}
+      <div className="relative overflow-y-auto p-4 md:p-5 bg-linear-to-b from-emerald-50/70 via-lime-50/40 to-white space-y-4">
+        {/* Upload Card */}
+        <div className="rounded-2xl border border-emerald-200 bg-linear-to-br from-emerald-50 via-lime-50 to-white p-4 shadow-sm">
+          <div className="text-sm font-semibold text-gray-800 mb-2">
+            Tải hình ảnh bệnh của sầu riêng
           </div>
 
+          <button
+            type="button"
+            onClick={() => scanFileInputRef.current?.click()}
+            disabled={scanLoading}
+            className="group relative w-full rounded-2xl border-2 border-dashed border-emerald-300 bg-white/90 p-4 text-left transition-all hover:border-emerald-500 hover:bg-emerald-50/50 disabled:opacity-70"
+          >
+            <span className="absolute right-4 top-4 rounded-full bg-emerald-100 p-2 text-emerald-700 group-hover:bg-emerald-200">
+              <Upload size={16} />
+            </span>
 
-          <Image
-            src={scanPreviewUrl}
-            alt="Scan preview"
-            width={640}
-            height={360}
-            unoptimized
-            className="w-full h-56 object-contain bg-gray-100"
-          />
+            <div className="flex items-start gap-3 pr-10">
+              <span className="mt-0.5 rounded-full bg-lime-100 p-2 text-lime-700">
+                <Leaf size={16} />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-emerald-900">
+                  Tải ảnh lá hoặc vùng bệnh sầu riêng
+                </p>
+                <p className="text-xs text-emerald-700/90 mt-1">
+                  Nhấn để chọn ảnh rõ nét, đủ sáng.
+                </p>
+              </div>
+            </div>
+          </button>
+
+          <div className="text-xs text-gray-500 mt-2 text-center truncate">
+            {scanFile ? scanFile.name : "Chưa chọn ảnh"}
+          </div>
+
+          <div className="mt-3 rounded-xl border border-emerald-100 bg-white/80 p-3 text-xs text-emerald-900 space-y-1.5">
+            <div className="font-semibold">Mẹo ảnh rõ nét để AI nhận diện tốt hơn</div>
+            <div>- Chụp gần vùng lá bị bệnh, chiếm ít nhất 70% khung hình.</div>
+            <div>- Ảnh đủ sáng, không rung tay, không bị ngược sáng.</div>
+            <div>- Tránh mờ nhòe, tránh che khuất bởi tay hoặc vật khác.</div>
+          </div>
+
         </div>
-      )}
 
+        {/* Preview */}
+        {scanPreviewUrl && (
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="text-xs font-semibold text-gray-600 px-3 pt-3">Xem trước ảnh</div>
 
-      {/* Result */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 space-y-3">
-
-
-        <div className="text-xs font-semibold text-gray-600">
-          Kết quả AI
-        </div>
-
-
-        {scanLoading && (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-            AI đang phân tích hình ảnh...
+            <Image
+              src={scanPreviewUrl}
+              alt="Scan preview"
+              width={900}
+              height={500}
+              unoptimized
+              className="w-full h-64 md:h-72 object-contain bg-gray-100"
+            />
           </div>
         )}
 
+        {/* Result */}
+        <div className="rounded-2xl border border-emerald-100 bg-white p-4 space-y-3">
+          <div className="text-xs font-semibold text-gray-600">Kết quả AI</div>
 
-        {scanError && (
-          <div className="text-sm text-red-600">
-            {scanError}
-          </div>
-        )}
+          {scanError && (
+            <div
+              className={`rounded-xl border p-3 ${
+                isNotDurianImageError
+                  ? "border-amber-200 bg-linear-to-r from-amber-50 to-lime-50"
+                  : "border-red-200 bg-red-50"
+              }`}
+            >
+              <div className="flex items-start gap-2.5">
+                <span
+                  className={`mt-0.5 rounded-full p-1.5 ${
+                    isNotDurianImageError ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  <TriangleAlert size={14} />
+                </span>
+                <div className="space-y-1">
+                  <p className={`text-sm font-semibold ${isNotDurianImageError ? "text-amber-900" : "text-red-800"}`}>
+                    {isNotDurianImageError ? "Ảnh chưa phù hợp để chẩn đoán" : "Không thể phân tích ảnh"}
+                  </p>
+                  <p className={`text-sm ${isNotDurianImageError ? "text-amber-800" : "text-red-700"}`}>
+                    {scanError}
+                  </p>
+                  {isNotDurianImageError && (
+                    <p className="text-xs text-emerald-800">
+                      Gợi ý: Chụp cận cảnh lá hoặc vùng bệnh trên cây sầu riêng, tránh nền quá nhiều chi tiết.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
+          {scanResult && (
+            <div className="space-y-3">
+              {/* Predicted Disease */}
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                <div className="text-sm text-gray-800">
+                  <b>Dự đoán:</b> {scanResult.predicted_class_vi || scanResult.predicted_class}
+                </div>
 
-        {scanResult && (
-          <div className="space-y-3">
+                {/* Confidence bar */}
+                {scanResult.confidence && (
+                  <div className="mt-2">
+                    <div className="text-xs text-gray-600 mb-1">
+                      Độ tin cậy {(Number(scanResult.confidence) * 100).toFixed(2)}%
+                    </div>
 
-
-            {/* Predicted Disease */}
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-              <div className="text-sm text-gray-800">
-                <b>Dự đoán:</b>{" "}
-                {scanResult.predicted_class_vi || scanResult.predicted_class}
+                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-500"
+                        style={{
+                          width: `${Number(scanResult.confidence) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
-
-              {/* Confidence bar */}
-              {scanResult.confidence && (
-                <div className="mt-2">
-                  <div className="text-xs text-gray-600 mb-1">
-                    Độ tin cậy {(Number(scanResult.confidence) * 100).toFixed(2)}%
-                  </div>
-
-
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-emerald-500"
-                      style={{
-                        width: `${Number(scanResult.confidence) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Solutions */}
-            {Array.isArray(scanResult?.solutions) &&
-              scanResult.solutions.length > 0 && (
+              {/* Solutions */}
+              {Array.isArray(scanResult?.solutions) && scanResult.solutions.length > 0 && (
                 <div>
-                  <div className="text-xs font-semibold text-gray-600 mb-2">
-                    Giải pháp
-                  </div>
-
+                  <div className="text-xs font-semibold text-gray-600 mb-2">Giải pháp</div>
 
                   <ul className="text-xs text-gray-700 space-y-1 list-disc pl-4">
                     {scanResult.solutions.map((s, i) => (
@@ -535,21 +559,34 @@ export default function AiFloatingButton() {
                   </ul>
                 </div>
               )}
-          </div>
-        )}
+            </div>
+          )}
 
+          {!scanLoading && !scanResult && !scanError && (
+            <div className="text-sm text-gray-500">Chọn ảnh để bắt đầu nhận diện bệnh.</div>
+          )}
+        </div>
 
-        {!scanLoading && !scanResult && !scanError && (
-          <div className="text-sm text-gray-500">
-            Chọn ảnh để bắt đầu nhận diện bệnh.
+        <p className="text-center text-xs text-gray-500">
+          Do AI tạo. Hãy kiểm tra kỹ độ chính xác.
+        </p>
+
+        {/* Loading overlay */}
+        {scanLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/75 backdrop-blur-[1px]">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative h-44 w-44 flex items-center justify-center">
+              <span className="absolute h-40 w-40 rounded-full border-4 border-emerald-200 border-t-emerald-600 animate-spin" />
+              <span className="absolute h-28 w-28 rounded-full border-4 border-lime-200 border-b-lime-500 animate-spin [animation-direction:reverse] [animation-duration:900ms]" />
+              </div>
+              <div className="text-center px-4 py-2.5 rounded-xl bg-white/95 border border-emerald-200 shadow-sm">
+                <p className="text-base font-extrabold tracking-tight text-emerald-900">VietDurian</p>
+                <p className="text-sm font-semibold text-emerald-950">đang phân tích hình ảnh của bạn</p>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-
-      <p className="text-center text-xs text-gray-500">
-        Do AI tạo. Hãy kiểm tra kỹ độ chính xác.
-      </p>
     </div>
   </div>
 )}
@@ -582,11 +619,11 @@ export default function AiFloatingButton() {
                   className="absolute top-1/2 -right-2 -translate-y-1/2 border-8 border-transparent border-l-gray-900"
                 />
               </div>
-              <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white text-gray-900 shadow-2xl ring-2 ring-cyan-400/60 transition-transform group-hover:scale-110">
+              <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white text-emerald-900 shadow-2xl ring-2 ring-emerald-400/60 transition-transform group-hover:scale-110">
                 {/* Hiệu ứng scan */}
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 bg-cyan-400/10"
+                  className="pointer-events-none absolute inset-0 bg-emerald-400/10"
                 />
                 <span
                   aria-hidden="true"
@@ -631,7 +668,7 @@ export default function AiFloatingButton() {
         {/* Floating Main Button (AI icon) */}
         <button
           type="button"
-          className="flex items-center justify-center w-15 h-15 bg-linear-to-br from-indigo-500 via-purple-500 to-sky-400 text-white rounded-full shadow-2xl ring-1 ring-white/20 hover:scale-110 transition-all duration-300 group cursor-pointer font-medium text-3xl focus-visible:outline-none"
+          className="flex items-center justify-center w-15 h-15 bg-linear-to-br from-emerald-700 via-green-600 to-lime-500 text-white rounded-full shadow-2xl ring-1 ring-white/20 hover:scale-110 transition-all duration-300 group cursor-pointer font-medium text-3xl focus-visible:outline-none"
           aria-label={menuOpen ? "Đóng menu trợ lý AI" : "Mở menu trợ lý AI"}
         >
           {menuOpen ? <X size={30} /> : <Sparkles size={30} className="ai-wiggle" />}

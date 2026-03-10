@@ -4,10 +4,12 @@ import RegisterScreen from "./screens/RegisterScreen";
 import HomeScreen from "./screens/HomeScreen";
 import BlogsScreen from "./screens/BlogsScreen";
 import ProductsScreen from "./screens/ProductsScreen";
+import ProductDetailScreen from "./screens/ProductDetailScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 import ChatListScreen from "./screens/ChatListScreen";
 import ChatDetailScreen from "./screens/ChatDetailScreen";
 import NotificationsScreen from "./screens/NotificationsScreen";
+import AIScanScreen from "./screens/AIScanScreen";
 
 function ScreenRouter() {
   const { currentScreen } = useAppStore();
@@ -23,6 +25,8 @@ function ScreenRouter() {
       return <BlogsScreen />;
     case "products":
       return <ProductsScreen />;
+    case "product-detail":
+      return <ProductDetailScreen />;
     case "profile":
       return <ProfileScreen />;
     case "chat-list":
@@ -31,6 +35,8 @@ function ScreenRouter() {
       return <ChatDetailScreen />;
     case "notifications":
       return <NotificationsScreen />;
+    case "AI":
+      return <AIScanScreen />;
     default:
       return <LoginScreen />;
   }
