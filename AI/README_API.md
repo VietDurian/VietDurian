@@ -13,6 +13,15 @@ This folder contains two entrypoints:
 
 From `AI/`:
 
+```bash Install package 
+pip install fastapi
+pip install uvicorn
+pip install pillow
+pip install tensorflow (required python version 3.11)
+```
+```bash Run 
+python app.py
+```
 
 ```bash
 pip install -r requirements_api.txt
