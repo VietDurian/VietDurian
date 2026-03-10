@@ -67,7 +67,6 @@ function MessageBubble({ msg, avatar }) {
             </Text>
           </View>
         </View>
-        {isMe && <View style={{ width: 32 }} />}
       </View>
     );
   }
@@ -87,7 +86,6 @@ function MessageBubble({ msg, avatar }) {
           {msg.time}
         </Text>
       </View>
-      {isMe && <View style={{ width: 32 }} />}
     </View>
   );
 }
