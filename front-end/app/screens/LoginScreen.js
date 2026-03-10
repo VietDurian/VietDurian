@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "@/store/useAppStore";
@@ -29,17 +30,18 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Logo */}
-        <View style={styles.logoRow}>
-          <View style={styles.logoIconWrapper}>
-            <Text style={styles.logoIconEmoji}>🌿</Text>
-          </View>
-          <Text style={styles.logoText}>VietDurian</Text>
+        <View style={{ justifyContent: "center", alignItems: "center" }}>
+          <Image
+            source={require("../assets/VietDurian-logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
         {/* Heading */}
         <Text style={styles.heading}>Chào mừng quay trở lại</Text>
         <Text style={styles.subheading}>
-          Đăng nhập để tiếp tục hành trình của bạn cùng chúng tôi
+          Đăng nhập để tiếp tục hành trình cùng chúng tôi
         </Text>
 
         {/* Card */}
@@ -170,12 +172,14 @@ const styles = StyleSheet.create({
     color: "#16A34A",
     lineHeight: 38,
     marginBottom: 10,
+    textAlign: "center",
   },
   subheading: {
     fontSize: 14,
     color: "#6B7280",
     lineHeight: 22,
     marginBottom: 28,
+    textAlign: "center",
   },
   // Card
   card: {
@@ -257,4 +261,8 @@ const styles = StyleSheet.create({
   },
   footerText: { color: "#6B7280", fontSize: 14 },
   footerLink: { color: "#16A34A", fontSize: 14, fontWeight: "700" },
+  logo: {
+    width: 100,
+    height: 80,
+  },
 });
