@@ -271,11 +271,10 @@ export default function ProductsPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedType("")}
-                  className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${
-                    selectedType === ""
+                  className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === ""
                       ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   <span className="flex items-center gap-2">
                     <List className="w-4 h-4" />
@@ -286,11 +285,10 @@ export default function ProductsPage() {
                   <button
                     key={type._id}
                     onClick={() => setSelectedType(type._id)}
-                    className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${
-                      selectedType === type._id
+                    className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === type._id
                         ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                      }`}
                   >
                     {type.name}
                   </button>
@@ -324,11 +322,10 @@ export default function ProductsPage() {
                           <button
                             key={option.value}
                             onClick={() => handleSortChange(option.value)}
-                            className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${
-                              sortBy === option.value
+                            className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${sortBy === option.value
                                 ? "bg-emerald-50 text-emerald-700 font-semibold"
                                 : "text-gray-700 hover:bg-gray-50"
-                            } ${index !== sortOptions.length - 1 ? "border-b border-gray-100" : ""}`}
+                              } ${index !== sortOptions.length - 1 ? "border-b border-gray-100" : ""}`}
                           >
                             {option.label}
                           </button>
@@ -341,22 +338,20 @@ export default function ProductsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setSortOrder("asc")}
-                      className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${
-                        sortOrder === "asc"
+                      className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "asc"
                           ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
                           : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                      }`}
+                        }`}
                       title="Tăng dần"
                     >
                       <ChevronUp className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => setSortOrder("desc")}
-                      className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${
-                        sortOrder === "desc"
+                      className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "desc"
                           ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
                           : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                      }`}
+                        }`}
                       title="Giảm dần"
                     >
                       <ChevronDown className="w-5 h-5" />
@@ -415,7 +410,7 @@ export default function ProductsPage() {
                     liveRatings[product._id] !== undefined
                       ? liveRatings[product._id]
                       : typeof product.rating === "object" &&
-                          product.rating.$numberDecimal
+                        product.rating.$numberDecimal
                         ? parseFloat(product.rating.$numberDecimal)
                         : parseFloat(product.rating || 0);
 
@@ -530,11 +525,10 @@ export default function ProductsPage() {
                         <button
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
-                          className={`px-4 py-2 rounded-lg border-2 transition-colors ${
-                            pagination.currentPage === pageNum
+                          className={`px-4 py-2 rounded-lg border-2 transition-colors ${pagination.currentPage === pageNum
                               ? "bg-emerald-600 text-white border-emerald-600"
                               : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                          }`}
+                            }`}
                         >
                           {pageNum}
                         </button>
