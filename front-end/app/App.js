@@ -8,6 +8,7 @@ import ProfileScreen from "./screens/ProfileScreen";
 import ChatListScreen from "./screens/ChatListScreen";
 import ChatDetailScreen from "./screens/ChatDetailScreen";
 import NotificationsScreen from "./screens/NotificationsScreen";
+import AIScanScreen from "./screens/AIScanScreen";
 
 function ScreenRouter() {
   const { currentScreen } = useAppStore();
@@ -31,6 +32,8 @@ function ScreenRouter() {
       return <ChatDetailScreen />;
     case "notifications":
       return <NotificationsScreen />;
+    case "AI":
+      return <AIScanScreen />;
     default:
       return <LoginScreen />;
   }
