@@ -14,14 +14,15 @@ import {
     X,
     Wrench,
     BookOpen,
-    Leaf,
+    Package,
+    LayoutGrid,
     HandCoins,
-    Grid
 } from "lucide-react";
 import { favoriteAPI, deletePost, updatePost, commentAPI } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { useChatStore } from "@/store/useChatStore";
 import { toast } from "sonner";
 
 const POST_CATEGORIES = ["Dịch vụ", "Kinh nghiệm", "Sản phẩm", "Thuê dịch vụ", "Khác"];
@@ -213,7 +214,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
     );
 };
 
-const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDeleteConfirm }) => {
+const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDeleteConfirm, onContact }) => {
     const router = useRouter();
     const [isLiked, setIsLiked] = useState(true);
     const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
@@ -323,11 +324,11 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDeleteConfirm }) =
                     const categoryConfig = {
                         "Dịch vụ": { icon: Wrench, bg: "from-blue-500 to-cyan-500" },
                         "Kinh nghiệm": { icon: BookOpen, bg: "from-amber-500 to-orange-500" },
-                        "Sản phẩm": { icon: Leaf, bg: "from-emerald-500 to-teal-500" },
+                        "Sản phẩm": { icon: Package, bg: "from-emerald-500 to-teal-500" },
                         "Thuê dịch vụ": { icon: HandCoins, bg: "from-purple-500 to-violet-500" },
-                        "Khác": { icon: Grid, bg: "from-gray-500 to-slate-500" },
+                        "Khác": { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" },
                     };
-                    const config = categoryConfig[post.post_id.category] || { icon: Grid, bg: "from-emerald-500 to-teal-500" };
+                    const config = categoryConfig[post.post_id.category] || { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" };
                     const Icon = config.icon;
                     return (
                         <div className="mb-4">
@@ -364,9 +365,8 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDeleteConfirm }) =
                         <MessageCircle size={20} />
                         {commentCount > 0 && <span className="text-sm font-medium">{commentCount}</span>}
                     </button>
-                    <button className="flex items-center gap-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition px-3 py-1.5 rounded-lg">
-                        <Share2 size={20} />
-                        {post.post_id?.shares_count > 0 && <span className="text-sm font-medium">{post.post_id.shares_count}</span>}
+                    <button onClick={() => onContact?.(post)} className="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">
+                        Liên Hệ
                     </button>
                 </div>
             </article>
@@ -385,6 +385,8 @@ export default function FavoritePostsModal() {
     const [confirmModalOpen, setConfirmModalOpen] = useState(false);
     const [deletingPostId, setDeletingPostId] = useState(null);
     const { user } = useAuth();
+    const router = useRouter();
+    const { setSelectedUser, addContact } = useChatStore();
 
     useEffect(() => { loadFavorites(); }, []);
 
@@ -446,6 +448,18 @@ export default function FavoritePostsModal() {
             toast.error(err?.message || "Không thể xóa bài viết");
         }
     };
+    const handleContact = (post) => {
+        const authorId = post.post_id?.author_id?._id || post.post_id?.author_id;
+        if (!authorId) return;
+        const chatUser = {
+            _id: authorId,
+            full_name: post.post_id?.author_id?.full_name || "Người bán",
+            avatar: post.post_id?.author_id?.avatar || "/images/avatar.jpg",
+        };
+        addContact(chatUser);
+        setSelectedUser(chatUser);
+        router.push(`/chat/${authorId}`);
+    };
 
     if (loading) {
         return (
@@ -491,13 +505,7 @@ export default function FavoritePostsModal() {
 
             <div className="w-full max-w-4xl mx-auto">
                 {favorites.map((favorite) => (
-                    <FavoritePostCard
-                        key={favorite._id}
-                        post={favorite}
-                        onToggleFavorite={handleToggleFavorite}
-                        onEdit={handleEdit}
-                        onDeleteConfirm={handleDeleteConfirm}
-                    />
+                    <FavoritePostCard key={favorite._id} post={favorite} onToggleFavorite={handleToggleFavorite} onEdit={handleEdit} onDeleteConfirm={handleDeleteConfirm} onContact={handleContact} />
                 ))}
             </div>
 
