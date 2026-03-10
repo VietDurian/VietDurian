@@ -6,6 +6,21 @@ import { useGardenStore } from "@/store/useGardenStore";
 import { useTypeProductStore } from "@/store/useTypeProduct";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
+import { z } from "zod";
+
+// Format: VN-XXOR-YYYY
+// XX   = mã tỉnh (2 chữ hoa)
+// OR   = cố định
+// YYYY = số thứ tự 0001-5999
+const GARDEN_CODE_REGEX = /^VN-[A-Z]{2}OR-([0-9]{4})$/;
+
+const gardenCodeSchema = z
+  .string()
+  .regex(GARDEN_CODE_REGEX, "Sai định dạng (VD: VN-BLOR-0001)")
+  .refine((val) => {
+    const num = parseInt(val.split("-")[2], 10);
+    return num >= 1 && num <= 5999;
+  }, "Mã số phải trong khoảng 0001-5999");
 
 const LocationPickerMap = dynamic(
   () => import("@/components/LocationPickerMap"),
@@ -34,11 +49,20 @@ export default function CreateGarden() {
   const fileInputRef = useRef(null);
   const [imageData, setImageData] = useState("");
   const [selectedCropType, setSelectedCropType] = useState("");
+  const [unitCodeTouched, setUnitCodeTouched] = useState(false);
+
+  const unitCodeValidation = gardenCodeSchema.safeParse(
+    formData.unit_code.trim(),
+  );
+  const unitCodeError = unitCodeValidation.success
+    ? ""
+    : unitCodeValidation.error.issues[0]?.message || "Mã vườn không hợp lệ";
 
   const isCreateDisabled =
     isGardenCreating ||
     !formData.name.trim() ||
     !formData.unit_code.trim() ||
+    !!unitCodeError ||
     !Array.isArray(formData.crop_type) ||
     formData.crop_type.length === 0 ||
     !formData.area.toString().trim() ||
@@ -54,15 +78,27 @@ export default function CreateGarden() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const parsedCode = gardenCodeSchema.safeParse(formData.unit_code.trim());
+    if (!parsedCode.success) {
+      setUnitCodeTouched(true);
+      toast.error(
+        parsedCode.error.issues[0]?.message || "Mã vườn không hợp lệ",
+      );
+      return;
+    }
+
     await createGarden(formData);
     router.push("/profile/gardens");
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    const nextValue = name === "unit_code" ? value.toUpperCase() : value;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: nextValue,
     }));
   };
 
@@ -199,10 +235,18 @@ export default function CreateGarden() {
                 name="unit_code"
                 value={formData.unit_code}
                 onChange={handleChange}
+                onBlur={() => setUnitCodeTouched(true)}
                 required
-                placeholder="ví dụ: VTDR-001"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                placeholder="ví dụ: VN-BLOR-0001"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 outline-none transition-colors ${
+                  unitCodeTouched && unitCodeError
+                    ? "border-red-300 focus:ring-red-200 focus:border-red-400"
+                    : "border-gray-300 focus:ring-emerald-500 focus:border-emerald-500"
+                }`}
               />
+              {unitCodeTouched && unitCodeError && (
+                <p className="text-xs text-red-600 mt-1">{unitCodeError}</p>
+              )}
             </div>
 
             {/* Crop Type */}

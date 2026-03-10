@@ -21,7 +21,8 @@ import {
   Camera,
 } from "lucide-react";
 import { profileAPI, authAPI } from "@/lib/api";
-import FavoritePostsModal from "@/components/FavoritePostsModal"
+import FavoritePostsModal from "@/components/FavoritePostsModal";
+import { toast } from "sonner"
 
 const TabButton = ({ icon: Icon, label, active, onClick }) => (
   <button
@@ -105,6 +106,7 @@ export default function ProfileDetails() {
     avatar: "",
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
 
   // Avatar upload ref
   const avatarInputRef = useRef(null);
@@ -114,7 +116,7 @@ export default function ProfileDetails() {
     const file = event.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      alert("Ảnh quá lớn. Tối đa 5MB");
+      toast.error("Ảnh quá lớn. Tối đa 5MB")
       return;
     }
     const reader = new FileReader();
@@ -202,12 +204,19 @@ export default function ProfileDetails() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+    setEditForm((prev) => ({ ...prev, [name]: value }));
 
+    if (name === "phone") {
+      const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+      if (!value.trim()) {
+        setPhoneError("Vui lòng nhập số điện thoại");
+      } else if (!phoneRegex.test(value)) {
+        setPhoneError("Số điện thoại không hợp lệ (phải có 10 số, bắt đầu bằng 03, 05, 07, 08, 09)");
+      } else {
+        setPhoneError("");
+      }
+    }
+  };
   const handleSaveProfile = async () => {
     try {
       setIsSaving(true);
@@ -216,11 +225,11 @@ export default function ProfileDetails() {
         // Refresh profile data
         await fetchProfile();
         setIsEditModalOpen(false);
-        alert("Cập nhật thông tin thành công!");
+        toast.success("Cập nhật thông tin thành công!")
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("Có lỗi xảy ra khi cập nhật thông tin!");
+      toast.error("Có lỗi xảy ra khi cập nhật thông tin!")
     } finally {
       setIsSaving(false);
     }
@@ -258,7 +267,7 @@ export default function ProfileDetails() {
       const response = await authAPI.changePassword(payload);
 
       if (response.success) {
-        alert("Đổi mật khẩu thành công!");
+        toast.success("Đổi mật khẩu thành công!")
 
         // Reset form
         setPasswordForm({
@@ -699,6 +708,12 @@ export default function ProfileDetails() {
                     className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
                     placeholder="Nhập số điện thoại"
                   />
+                  {phoneError && (
+                    <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+                      <XCircle size={14} strokeWidth={2.5} />
+                      {phoneError}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -707,7 +722,7 @@ export default function ProfileDetails() {
             <div className="bg-gray-50 p-6 flex justify-center rounded-b-2xl border-t border-gray-200">
               <button
                 onClick={handleSaveProfile}
-                disabled={isSaving ||
+                disabled={isSaving || phoneError ||
                   (editForm.full_name === profileData.full_name && editForm.phone === profileData.phone && editForm.avatar === profileData.avatar) ||
                   !editForm.full_name.trim() ||
                   !editForm.phone.trim()

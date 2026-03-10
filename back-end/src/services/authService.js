@@ -22,7 +22,7 @@ const register = async (userData) => {
   try {
     const existingUser = await User.findOne({ email: userData.email });
     if (existingUser) {
-      throw createError(400, "Email already in use");
+      throw createError(400, "Email đã được sử dụng");
     }
 
     const requestedRole = userData.role || "trader";
@@ -82,7 +82,7 @@ const checkEmailExists = async (email) => {
   try {
     const normalizedEmail = email?.trim().toLowerCase();
     if (!normalizedEmail) {
-      throw createError(400, "Please provide email");
+      throw createError(400, "Vui lòng cung cấp địa chỉ email");
     }
 
     const existingUser = await User.findOne({ email: normalizedEmail }).lean();
@@ -96,7 +96,7 @@ const verifyEmail = async (email, otp) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      throw createError(404, "No user found with that email");
+      throw createError(404, "Không tìm thấy người dùng với email đó");
     }
 
     const otpRecord = await OTP.findOne({
@@ -108,7 +108,7 @@ const verifyEmail = async (email, otp) => {
     });
 
     if (!otpRecord) {
-      throw createError(400, "Invalid or expired OTP");
+      throw createError(400, "OTP không hợp lệ hoặc đã hết hạn");
     }
 
     // Update user verification status
@@ -141,11 +141,11 @@ const resendVerificationOtp = async (email) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      throw createError(404, "No user found with that email");
+      throw createError(404, "Không tìm thấy người dùng với email đó");
     }
 
     if (user.is_verified) {
-      throw createError(400, "Email is already verified");
+      throw createError(400, "Email đã được xác minh trước đó");
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -166,7 +166,7 @@ const resendVerificationOtp = async (email) => {
         "verify",
       );
     } else {
-      console.warn("⚠️ Email credentials not configured. OTP: " + otp);
+      console.warn("Email credentials not configured. OTP: " + otp);
     }
 
     return { message: "OTP resent successfully" };
@@ -184,7 +184,7 @@ const sendVerificationEmail = async (
 ) => {
   try {
     if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
-      console.warn(`⚠️ Email not sent (missing credentials). OTP: ${otpCode}`);
+      console.warn(`Email không được gửi (thiếu thông tin đăng nhập). OTP: ${otpCode}`);
       return true;
     }
 
@@ -254,26 +254,26 @@ const sendVerificationEmail = async (
 const login = async (email, password) => {
   try {
     if (!email || !password) {
-      throw createError(400, "Please provide email and password");
+      throw createError(400, "Vui lòng cung cấp địa chỉ email và mật khẩu");
     }
 
     const user = await User.findOne({ email }).select("+password");
 
     if (!user || !(await user.comparePassword(password))) {
-      throw createError(401, "Incorrect email or password");
+      throw createError(401, "Sai địa chỉ email hoặc mật khẩu");
     }
 
     if (user.is_banned) {
       throw createError(
         403,
-        "Your account has been banned. Please contact support.",
+        "Tài khoản của bạn đã bị cấm. Vui lòng liên hệ hỗ trợ.",
       );
     }
 
     if (!user.is_verified) {
       throw createError(
         403,
-        "Please verify your email address before logging in",
+        "Vui lòng xác minh địa chỉ email của bạn trước khi đăng nhập",
       );
     }
 
@@ -284,11 +284,11 @@ const login = async (email, password) => {
     if (permission && permission.status === "pending") {
       throw createError(
         403,
-        "Your account upgrade request is still pending approval.",
+        "Yêu cầu nâng cấp tài khoản của bạn vẫn đang chờ duyệt.",
       );
     }
     if (permission && permission.status === "rejected") {
-      throw createError(403, "Your account upgrade request has been rejected.");
+      throw createError(403, "Yêu cầu nâng cấp tài khoản của bạn đã bị từ chối.");
     }
     console.log("Đăng nhập thành công user logged in:", user._id);
     const token = generateToken(user._id);
@@ -329,7 +329,7 @@ const forgotPassword = async (email) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      throw createError(404, "No user found with that email");
+      throw createError(404, "Không tìm thấy người dùng với email đó");
     }
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiryTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes

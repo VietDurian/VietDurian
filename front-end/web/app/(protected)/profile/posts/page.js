@@ -2,15 +2,18 @@
 
 import {
   Heart, ImageIcon, MessageCircle, MoreHorizontal, X,
-  CheckCircle, Clock, XCircle, AlertCircle, Share2, Loader2,
-  Wrench, BookOpen, Leaf, HandCoins, Grid, Search, Plus,
+  CheckCircle, Clock, XCircle, AlertCircle, Loader2,
+  Wrench, BookOpen, Package, HandCoins, LayoutGrid, Plus, ChevronDown,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getOwnPosts, updatePost, deletePost, favoriteAPI, commentAPI } from "@/lib/api";
+import { getOwnPosts, updatePost, deletePost, favoriteAPI, commentAPI, setPostInactive, setPostActive } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useChatStore } from "@/store/useChatStore";
 import Link from "next/link";
+import { toast } from "sonner";
 
 const getCategoriesByRole = (role) => {
   switch (role) {
@@ -22,15 +25,38 @@ const getCategoriesByRole = (role) => {
   }
 };
 
+const STATUS_OPTIONS = [
+  { value: "all", label: "Tất cả" },
+  { value: "active", label: "Đã duyệt" },
+  { value: "progressing", label: "Đang chờ duyệt" },
+  { value: "inactive", label: "Ngưng hoạt động" },
+];
+
+// ── Confirm Modal ─────────────────────────────────────────
+const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+        <p className="text-gray-800 text-sm mb-6 text-center">{message}</p>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm">Hủy</button>
+          <button onClick={onConfirm} className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm">Xóa</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Status Badge ─────────────────────────────────────────
 const StatusBadge = ({ status }) => {
   const map = {
-    pending: { icon: Clock, text: "Đang chờ duyệt", bg: "bg-amber-50", text_c: "text-amber-700", icon_c: "text-amber-500", border: "border-amber-200" },
+    progressing: { icon: Clock, text: "Đang chờ duyệt", bg: "bg-amber-50", text_c: "text-amber-700", icon_c: "text-amber-500", border: "border-amber-200" },
     active: { icon: CheckCircle, text: "Đã duyệt", bg: "bg-emerald-50", text_c: "text-emerald-700", icon_c: "text-emerald-500", border: "border-emerald-200" },
     rejected: { icon: XCircle, text: "Bị từ chối", bg: "bg-red-50", text_c: "text-red-700", icon_c: "text-red-500", border: "border-red-200" },
     inactive: { icon: AlertCircle, text: "Ngưng hoạt động", bg: "bg-gray-50", text_c: "text-red-700", icon_c: "text-red-500", border: "border-red-200" },
   };
-  const cfg = map[status] || map.pending;
+  const cfg = map[status] || map.progressing;
   const Icon = cfg.icon;
   return (
     <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${cfg.bg} ${cfg.border} ${cfg.text_c} text-xs font-medium`}>
@@ -39,7 +65,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// ── Edit Post Modal — custom dropdown giống code gốc ─────
+// ── Edit Post Modal ───────────────────────────────────────
 const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const fileInputRef = useRef(null);
   const categories = getCategoriesByRole(user?.role);
@@ -108,7 +134,6 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-          {/* User */}
           <div className="flex items-center gap-3">
             <img src={user?.avatar || "/images/avatar.jpg"} className="w-11 h-11 rounded-full border border-gray-200" alt="Avatar" />
             <div>
@@ -117,53 +142,34 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
             </div>
           </div>
 
-          {/* Category — custom dropdown giống bản gốc */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Danh mục</label>
             <div className="relative">
-              <button
-                type="button"
-                onClick={() => setDropdownOpen((o) => !o)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white transition-all cursor-pointer text-left flex justify-between items-center"
-              >
+              <button type="button" onClick={() => setDropdownOpen((o) => !o)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white transition-all cursor-pointer text-left flex justify-between items-center">
                 <span>{category}</span>
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </button>
               {dropdownOpen && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
                   {categories.map((item) => (
-                    <div
-                      key={item}
-                      onClick={() => { setCategory(item); setDropdownOpen(false); }}
-                      className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item
-                        ? "bg-emerald-600 text-white font-medium"
-                        : "text-gray-900 hover:bg-emerald-500 hover:text-white"
-                        }`}
-                    >
-                      {item}
-                    </div>
+                    <div key={item} onClick={() => { setCategory(item); setDropdownOpen(false); }} className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item ? "bg-emerald-600 text-white font-medium" : "text-gray-900 hover:bg-emerald-500 hover:text-white"}`}>{item}</div>
                   ))}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Content */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Nội dung</label>
             <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Bạn đang nghĩ gì?" className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-600" maxLength={1000} />
             <div className="text-xs text-gray-500 text-right">{content.length}/1000</div>
           </div>
 
-          {/* Contact */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Thông tin liên hệ</label>
             <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Số điện thoại hoặc email" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white" />
           </div>
 
-          {/* Image */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Ảnh</label>
             {!imagePreview ? (
@@ -201,7 +207,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
 };
 
 // ── Post Card ─────────────────────────────────────────────
-const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
+const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm }) => {
   const router = useRouter();
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments || 0);
@@ -224,7 +230,7 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
       onLikeUpdate?.(post.id, newState);
     } catch (err) {
       setIsLiked(!newState);
-      alert(err?.response?.data?.message || err?.message || "Không thể cập nhật yêu thích");
+      toast.error(err?.response?.data?.message || err?.message || "Không thể cập nhật yêu thích");
     } finally {
       setIsTogglingFavorite(false);
     }
@@ -238,9 +244,9 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
   const categoryConfig = {
     "Dịch vụ": { icon: Wrench, bg: "from-blue-500 to-cyan-500" },
     "Kinh nghiệm": { icon: BookOpen, bg: "from-amber-500 to-orange-500" },
-    "Sản phẩm": { icon: Leaf, bg: "from-emerald-500 to-teal-500" },
+    "Sản phẩm": { icon: Package, bg: "from-emerald-500 to-teal-500" },
     "Thuê dịch vụ": { icon: HandCoins, bg: "from-purple-500 to-violet-500" },
-    "Khác": { icon: Grid, bg: "from-gray-500 to-slate-500" },
+    "Khác": { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" },
   };
 
   return (
@@ -269,7 +275,7 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                   Chỉnh sửa
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); setShowMenu(false); if (window.confirm("Bạn có chắc chắn muốn xóa?")) onDelete?.(post.id); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-2">
+                <button onClick={(e) => { e.stopPropagation(); setShowMenu(false); onDeleteConfirm?.(post.id); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                   Xóa
                 </button>
@@ -279,7 +285,7 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
         </div>
 
         {post.category && (() => {
-          const cfg = categoryConfig[post.category] || { icon: Grid, bg: "from-gray-500 to-slate-500" };
+          const cfg = categoryConfig[post.category] || { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" };
           const Icon = cfg.icon;
           return (
             <div className="mb-4">
@@ -314,9 +320,8 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
             <MessageCircle size={20} />
             {commentCount > 0 && <span className="text-sm font-medium">{commentCount}</span>}
           </button>
-          <button className="flex items-center gap-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition px-3 py-1.5 rounded-lg">
-            <Share2 size={20} />
-            {post.shares > 0 && <span className="text-sm font-medium">{post.shares}</span>}
+          <button onClick={() => onContact?.(post)} className="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">
+            Liên Hệ
           </button>
         </div>
       </article>
@@ -328,11 +333,28 @@ const Post = ({ post, onLikeUpdate, onDelete, onEdit }) => {
 // ── Main ──────────────────────────────────────────────────
 export default function PostsPage() {
   const { user } = useAuth();
+  const router = useRouter();
+  const { setSelectedUser, addContact } = useChatStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState(null);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [deletingPostId, setDeletingPostId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (isStatusDropdownOpen && !e.target.closest(".status-dropdown")) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isStatusDropdownOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -342,7 +364,10 @@ export default function PostsPage() {
       setPostsError(null);
       try {
         const [postsData, favoritesResponse] = await Promise.all([
-          getOwnPosts({ author_id: user._id || user.id }),
+          getOwnPosts({
+            author_id: user._id || user.id,
+            status: statusFilter === "all" ? undefined : statusFilter,
+          }),
           favoriteAPI.getFavorites().catch(() => ({ data: [] })),
         ]);
         if (cancelled) return;
@@ -355,7 +380,7 @@ export default function PostsPage() {
           timestamp: post.created_at ? new Date(post.created_at).toLocaleString("vi-VN") : "Vừa xong",
           content: post.content, link: post.contact, image: post.image, category: post.category,
           likes: post.likes_count || 0, comments: post.comments_count || 0, shares: post.shares_count || 0,
-          status: post.status || "pending", isLiked: favoritePostIds.has(post._id),
+          status: post.status || "progressing", isLiked: favoritePostIds.has(post._id),
         }));
         setPosts(normalized);
         const withComments = await Promise.all(normalized.map(async (post) => {
@@ -374,15 +399,42 @@ export default function PostsPage() {
     };
     load();
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user, statusFilter]);
 
   const handleLikeUpdate = (postId, isLiked) => { setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, isLiked, likes: isLiked ? p.likes + 1 : p.likes - 1 } : p)); };
   const handleEdit = (post) => { setEditingPost(post); setIsEditModalOpen(true); };
   const handlePostUpdated = (updated) => { setPosts((prev) => prev.map((p) => p.id === updated.id ? updated : p)); };
-  const handleDelete = async (postId) => {
-    try { await deletePost(postId); setPosts((prev) => prev.filter((p) => p.id !== postId)); }
-    catch (err) { alert(err?.message || "Không thể xóa bài viết"); }
+
+  const handleDeleteConfirm = (postId) => {
+    setDeletingPostId(postId);
+    setConfirmModalOpen(true);
   };
+
+  const handleContact = (post) => {
+    const receiverId = post.authorId;
+    if (!receiverId) return;
+    const chatUser = {
+      _id: receiverId,
+      full_name: post.userName || "Người bán",
+      avatar: post.userAvatar || "/images/avatar.jpg",
+    };
+    addContact(chatUser);
+    setSelectedUser(chatUser);
+    router.push(`/chat/${receiverId}`);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deletePost(deletingPostId);
+      setPosts((prev) => prev.filter((p) => p.id !== deletingPostId));
+      setConfirmModalOpen(false);
+      setDeletingPostId(null);
+    } catch (err) {
+      toast.error(err?.message || "Không thể xóa bài viết");
+    }
+  };
+
+  const currentStatusLabel = STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label || "Tất cả";
 
   return (
     <div className="min-h-screen bg-white">
@@ -404,6 +456,42 @@ export default function PostsPage() {
         <EditPostModal isOpen={isEditModalOpen} onClose={() => { setIsEditModalOpen(false); setEditingPost(null); }} post={editingPost} user={user || {}} onPostUpdated={handlePostUpdated} />
 
         <div className="w-full max-w-4xl mt-8">
+
+          {/* Status Filter */}
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-gray-600">
+              Tìm thấy <span className="font-semibold text-emerald-600">{posts.length}</span> bài viết
+            </p>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Trạng thái:</span>
+              <div className="relative status-dropdown">
+                <button
+                  onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                  className="min-w-[170px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
+                >
+                  <span>{currentStatusLabel}</span>
+                  <ChevronDown className={`w-4 h-4 text-gray-500 transition-all duration-200 ${isStatusDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isStatusDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-full bg-white border-2 border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
+                    {STATUS_OPTIONS.map((opt, index) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => { setStatusFilter(opt.value); setIsStatusDropdownOpen(false); }}
+                        className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${statusFilter === opt.value
+                            ? "bg-emerald-50 text-emerald-700 font-semibold"
+                            : "text-gray-700 hover:bg-gray-50"
+                          } ${index !== STATUS_OPTIONS.length - 1 ? "border-b border-gray-100" : ""}`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {loadingPosts && (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
@@ -429,10 +517,17 @@ export default function PostsPage() {
             </div>
           )}
           {posts.map((post) => (
-            <Post key={post.id || post._id} post={post} onLikeUpdate={handleLikeUpdate} onEdit={handleEdit} onDelete={handleDelete} />
+            <Post key={post.id || post._id} post={post} onLikeUpdate={handleLikeUpdate} onEdit={handleEdit} onDelete={handleDelete} onDeleteConfirm={handleDeleteConfirm} onContact={handleContact} />
           ))}
         </div>
       </main>
+
+      <ConfirmModal
+        isOpen={confirmModalOpen}
+        onClose={() => { setConfirmModalOpen(false); setDeletingPostId(null); }}
+        onConfirm={handleDelete}
+        message="Bạn có chắc chắn muốn xóa bài viết này?"
+      />
     </div>
   );
 }

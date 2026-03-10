@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { commentAPI, reactionCommentAPI, reportCommentAPI } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const REACTION_TYPES = ["like", "love", "haha", "angry"];
 
@@ -82,6 +83,33 @@ const getTimeAgo = (dateString) => {
   if (months < 12) return `${months}mo`;
   const years = Math.floor(days / 365);
   return `${years}y`;
+};
+
+// Confirm Modal Component
+const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+        <p className="text-gray-800 text-sm mb-6 text-center">{message}</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm"
+          >
+            Hủy
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm"
+          >
+            Xóa
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // Report Modal Component
@@ -186,7 +214,6 @@ const ReactionModal = ({ isOpen, onClose, commentId, reactions }) => {
         {/* Users List */}
         <div className="flex-1 overflow-y-auto p-5">
           {commentReactions.reactions?.map((reaction) => {
-            // Xử lý cả trường hợp user_id là object hoặc string
             const userInfo =
               typeof reaction.user_id === "object" ? reaction.user_id : null;
             const avatar = userInfo?.avatar || "/images/avatar.jpg";
@@ -230,7 +257,6 @@ const CommentItem = ({
   onShowReactionModal,
 }) => {
   const router = useRouter();
-  // Kiểm tra author_id có thể là object hoặc string
   const authorId =
     typeof comment.author_id === "object"
       ? comment.author_id?._id
@@ -244,7 +270,6 @@ const CommentItem = ({
   const avatarUrl = comment.author_id?.avatar;
 
   const commentReactions = reactions[comment._id];
-  // FIX: Kiểm tra cả trường hợp user_id là object hoặc string
   const userReaction = commentReactions?.reactions?.find((r) => {
     const reactionUserId =
       typeof r.user_id === "object" ? r.user_id?._id : r.user_id;
@@ -335,7 +360,7 @@ const CommentItem = ({
             </div>
           )}
 
-          {/* Reaction Summary - Clickable to show modal */}
+          {/* Reaction Summary */}
           {commentReactions && commentReactions.total > 0 && (
             <button
               onClick={() => onShowReactionModal(comment._id)}
@@ -352,7 +377,7 @@ const CommentItem = ({
             </button>
           )}
 
-          {/* Reply Button (only for root comments) */}
+          {/* Reply Button */}
           {!isReply && (
             <button
               onClick={() => onReply(comment)}
@@ -380,7 +405,7 @@ const CommentItem = ({
             </>
           )}
 
-          {/* Report button for other's comments */}
+          {/* Report button */}
           {!isOwnComment && (
             <button
               onClick={() => onReport(comment._id)}
@@ -441,11 +466,14 @@ export default function CommentModal({
   const [reportCommentId, setReportCommentId] = useState(null);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
+  // Confirm delete states
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState(null);
+
   const textInputRef = useRef(null);
 
   const autoResizeTextarea = (textarea) => {
     if (!textarea) return;
-
     const maxHeight = 120;
     textarea.style.height = "auto";
     textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
@@ -453,7 +481,6 @@ export default function CommentModal({
       textarea.scrollHeight > maxHeight ? "auto" : "hidden";
   };
 
-  // Load comments khi mở modal
   useEffect(() => {
     if (isOpen && postId) {
       loadComments();
@@ -473,7 +500,6 @@ export default function CommentModal({
       if (response.data) {
         setComments(response.data);
 
-        // Hàm đệ quy để đếm tổng số comment (bao gồm cả replies)
         const countComments = (commentsList) => {
           let count = commentsList.length;
           commentsList.forEach((comment) => {
@@ -484,16 +510,13 @@ export default function CommentModal({
           return count;
         };
 
-        // Tính tổng comment
         const total = countComments(response.data);
         setTotalComment(total);
 
-        // CẬP NHẬT SỐ COMMENT RA NGOÀI POST (component cha)
         if (onCommentCountChange) {
           onCommentCountChange(total);
         }
 
-        // Load reactions cho tất cả comments (đệ quy)
         const loadReactionsRecursive = async (commentsList) => {
           for (const comment of commentsList) {
             await loadReactions(comment._id);
@@ -546,30 +569,26 @@ export default function CommentModal({
     try {
       if (userReaction) {
         if (userReaction.type === reactionType) {
-          // Remove reaction
           await reactionCommentAPI.deleteReaction(userReaction._id);
         } else {
-          // Update reaction
           await reactionCommentAPI.updateReaction(
             userReaction._id,
             reactionType,
           );
         }
       } else {
-        // Add new reaction - GỬI userId thay vì user_id
         await reactionCommentAPI.addReaction({
           comment_id: commentId,
-          userId: authUser._id, // ĐỔI TỪ user_id THÀNH userId
+          userId: authUser._id,
           type: reactionType,
         });
       }
 
-      // Reload reactions
       await loadReactions(commentId);
       setShowReactionOptions((prev) => ({ ...prev, [commentId]: false }));
     } catch (error) {
       console.error("Failed to handle reaction:", error);
-      alert("Failed to update reaction. Please try again.");
+      toast.error("Không thể cập nhật reaction. Vui lòng thử lại.");
     }
   };
 
@@ -607,7 +626,7 @@ export default function CommentModal({
       setCommentText("");
     } catch (error) {
       console.error("Failed to update comment:", error);
-      alert("Failed to update comment. Please try again.");
+      toast.error("Không thể cập nhật bình luận. Vui lòng thử lại.");
     }
   };
 
@@ -628,35 +647,34 @@ export default function CommentModal({
       setReplyingTo(null);
     } catch (error) {
       console.error("Failed to create comment:", error);
-      alert("Failed to post comment. Please try again.");
+      toast.error("Không thể đăng bình luận. Vui lòng thử lại.");
     }
   };
 
-  const handleDeleteComment = async (commentId) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this comment? All replies will also be deleted.",
-      )
-    ) {
-      return;
-    }
+  const openDeleteConfirm = (commentId) => {
+    setDeletingCommentId(commentId);
+    setConfirmModalOpen(true);
+  };
+
+  const handleDeleteComment = async () => {
+    if (!deletingCommentId) return;
 
     try {
-      await commentAPI.deleteComment(commentId);
+      await commentAPI.deleteComment(deletingCommentId);
       await loadComments();
+      setConfirmModalOpen(false);
+      setDeletingCommentId(null);
     } catch (error) {
       console.error("Failed to delete comment:", error);
-      alert("Failed to delete comment. Please try again.");
+      toast.error("Không thể xóa bình luận. Vui lòng thử lại.");
     }
   };
 
-  // Open report modal
   const handleReportComment = (commentId) => {
     setReportCommentId(commentId);
     setReportModalOpen(true);
   };
 
-  // Submit report
   const handleSubmitReport = async (reason) => {
     if (!reason.trim()) return;
 
@@ -668,10 +686,10 @@ export default function CommentModal({
       });
       setReportModalOpen(false);
       setReportCommentId(null);
-      alert("Báo cáo đã được gửi thành công. Cảm ơn bạn!");
+      toast.success("Báo cáo đã được gửi thành công. Cảm ơn bạn!");
     } catch (error) {
       console.error("Failed to report comment:", error);
-      alert("Không thể gửi báo cáo. Vui lòng thử lại.");
+      toast.error("Không thể gửi báo cáo. Vui lòng thử lại.");
     } finally {
       setIsSubmittingReport(false);
     }
@@ -712,7 +730,7 @@ export default function CommentModal({
                   authUser={authUser}
                   onReply={handleReply}
                   onEdit={handleEdit}
-                  onDelete={handleDeleteComment}
+                  onDelete={openDeleteConfirm}
                   onReport={handleReportComment}
                   reactions={reactions}
                   onReactionPress={handleReactionPress}
@@ -777,9 +795,9 @@ export default function CommentModal({
                   }}
                   placeholder={
                     editingComment
-                      ? "Edit your comment..."
+                      ? "Chỉnh sửa bình luận..."
                       : replyingTo
-                        ? `Reply to ${replyingTo.author_id?.username || "authUser"}...`
+                        ? `Trả lời ${replyingTo.author_id?.username || ""}...`
                         : "Viết bình luận..."
                   }
                   className="w-full bg-gray-100 rounded-2xl px-4 py-2.5 text-sm text-black resize-none focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white border border-gray-300 min-h-[44px] max-h-[120px]"
@@ -821,6 +839,17 @@ export default function CommentModal({
         }}
         onSubmit={handleSubmitReport}
         isSubmitting={isSubmittingReport}
+      />
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={confirmModalOpen}
+        onClose={() => {
+          setConfirmModalOpen(false);
+          setDeletingCommentId(null);
+        }}
+        onConfirm={handleDeleteComment}
+        message="Bạn có chắc muốn xóa bình luận này? Tất cả trả lời cũng sẽ bị xóa."
       />
     </>
   );

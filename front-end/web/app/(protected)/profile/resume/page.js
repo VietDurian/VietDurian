@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { capabilityProfileAPI } from "@/lib/api";
+import { toast } from "sonner"
 
 const ServiceProviderResume = () => {
   const router = useRouter();
@@ -29,6 +30,7 @@ const ServiceProviderResume = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [error, setError] = useState(null);
+  const [phoneError, setPhoneError] = useState("");
 
   const [formData, setFormData] = useState({
     business_name: "",
@@ -85,6 +87,17 @@ const ServiceProviderResume = () => {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
+
+    if (name === 'contact_phone') {
+      const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+      if (!value.trim()) {
+        setPhoneError("Vui lòng nhập số điện thoại");
+      } else if (!phoneRegex.test(value)) {
+        setPhoneError("Số điện thoại không hợp lệ (10 số, bắt đầu 03/05/07/08/09)");
+      } else {
+        setPhoneError("");
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -108,7 +121,7 @@ const ServiceProviderResume = () => {
         await fetchProfile();
         setShowForm(false);
         setIsEditMode(false);
-        alert("Cập nhật hồ sơ thành công!");
+        toast.success("Cập nhật hồ sơ thành công!");
       }
     } catch (error) {
       console.error("Error submitting profile:", error);
@@ -117,7 +130,7 @@ const ServiceProviderResume = () => {
         errorMessage = error.response.data.message;
       }
       setError(errorMessage);
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsCreating(false);
     }
@@ -288,6 +301,12 @@ const ServiceProviderResume = () => {
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input type="tel" name="contact_phone" value={formData.contact_phone} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder="0909123456" />
                   </div>
+                  {phoneError && (
+                    <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+                      <XCircle size={14} strokeWidth={2.5} />
+                      {phoneError}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -303,7 +322,14 @@ const ServiceProviderResume = () => {
 
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={handleCancelEdit} className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300">Hủy</button>
-                <button type="submit" disabled={isCreating} className="flex-1 px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <button type="submit" disabled={isCreating || !!phoneError ||
+                  !formData.business_name.trim() ||
+                  !formData.services.trim() ||
+                  !formData.service_areas.trim() ||
+                  !formData.experience_year ||
+                  !formData.contact_phone.trim() ||
+                  !formData.description.trim()
+                } className="flex-1 px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                   {isCreating ? (<><Loader2 size={20} className="animate-spin" />Đang Cập Nhật...</>) : (<><CheckCircle size={20} />Cập Nhật Hồ Sơ</>)}
                 </button>
               </div>

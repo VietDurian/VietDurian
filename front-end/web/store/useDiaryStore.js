@@ -13,15 +13,18 @@ export const useDiaryStore = create((set, get) => ({
   isDiaryDeleting: false,
   isDiaryStepAdding: false,
   isDiaryCompleting: false,
+  isStepEditing: false,
+  isStepDeleting: false,
 
   // Get all diaries by garden_id
-  getAllDiariesByGardenId: async (garden_id, year) => {
+  getAllDiariesByGardenId: async (garden_id, year, status) => {
     set({ isDiariesLoading: true });
     try {
       const res = await axiosInstance.get(`/diary`, {
         params: {
           garden_id: garden_id,
           year: year,
+          status: status,
         },
       });
       set({ diaries: res.data.data });
@@ -95,22 +98,42 @@ export const useDiaryStore = create((set, get) => ({
   },
 
   // Delete diary
-  deleteGarden: async (diaryId) => {
+  deleteDiary: async (diaryId) => {
     set({ isDiaryDeleting: true });
     try {
       const res = await axiosInstance.delete(`/diary/${diaryId}`);
 
-      //  Update the edited garden in state
+      // Remove deleted diary from list and clear current detail
       set((state) => ({
-        diaries: state.diaries.map((d) =>
-          d._id === diaryId ? res.data.data : d,
-        ),
-        diaryDetail: res.data.data,
+        diaries: state.diaries.filter((d) => d._id !== diaryId),
+        diaryDetail:
+          state.diaryDetail?._id === diaryId ? {} : state.diaryDetail,
       }));
 
       toast.success(res.data.message);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "deleteDiary");
+      throw error;
     } finally {
       set({ isDiaryDeleting: false });
+    }
+  },
+  // Delete step
+  deleteStep: async (diaryId, stepId) => {
+    set({ isStepDeleting: true });
+    try {
+      const res = await axiosInstance.delete(`/diary/step/${stepId}`);
+
+      if (diaryId) {
+        await get().getDiaryDetails(diaryId);
+      }
+
+      toast.success(res.data.message);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "deleteStep");
+      throw error;
+    } finally {
+      set({ isStepDeleting: false });
     }
   },
 
@@ -160,6 +183,36 @@ export const useDiaryStore = create((set, get) => ({
       throw error;
     } finally {
       set({ isDiaryCompleting: false });
+    }
+  },
+
+  editStep: async (diaryId, stepId, data) => {
+    set({ isStepEditing: true });
+    try {
+      const res = await axiosInstance.patch(`/diary/step/${stepId}`, data);
+      const updatedDiary = res?.data?.data;
+
+      if (updatedDiary?._id) {
+        set((state) => ({
+          diaries: state.diaries.map((d) =>
+            d._id === updatedDiary._id ? updatedDiary : d,
+          ),
+          diaryDetail: updatedDiary,
+        }));
+      }
+
+      // Refresh detail to ensure nested data (stages/steps) stays in sync
+      if (diaryId) {
+        await get().getDiaryDetails(diaryId);
+      }
+
+      toast.success(res.data.message);
+      return res?.data?.data;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "editStep");
+      throw error;
+    } finally {
+      set({ isStepEditing: false });
     }
   },
 }));

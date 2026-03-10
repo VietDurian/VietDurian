@@ -422,39 +422,6 @@ export default function EditProduct() {
             </div>
           </div>
 
-          {/* Third block */}
-          <div className="bg-white rounded-xl shadow-sm p-8 mt-5">
-            <p className="font-bold mb-5">Trạng thái sản phẩm</p>
-            <div className="flex gap-4">
-              <button
-                type="button"
-                onClick={() =>
-                  setFormData((prev) => ({ ...prev, status: "active" }))
-                }
-                className={`flex-1 py-3 rounded-lg text-sm font-semibold border transition-all ${
-                  formData.status === "active"
-                    ? "bg-emerald-50 border-emerald-500 text-emerald-600"
-                    : "bg-white border-gray-300 text-gray-400 hover:bg-gray-50"
-                }`}
-              >
-                Active
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  setFormData((prev) => ({ ...prev, status: "inactive" }))
-                }
-                className={`flex-1 py-3 rounded-lg text-sm font-semibold border transition-all ${
-                  formData.status === "inactive"
-                    ? "bg-red-50 border-red-400 text-red-500"
-                    : "bg-white border-gray-300 text-gray-400 hover:bg-gray-50"
-                }`}
-              >
-                Inactive
-              </button>
-            </div>
-          </div>
-
           {/* Image Upload */}
           <div className="bg-white rounded-xl shadow-sm p-8 mt-5 space-y-2">
             <label className="text-sm font-semibold text-gray-700">

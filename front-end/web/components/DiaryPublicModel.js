@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Image from 'next/image';
+import { Scale } from 'lucide-react';
 import { useDiaryStore } from '@/store/useDiaryStore';
 
 const formatDate = (dateString) => {
@@ -58,6 +59,8 @@ export default function DiaryPublicModel({ diaryId }) {
 		diaryDetail.status === 'Completed'
 			? 'bg-green-100 text-green-700'
 			: 'bg-yellow-100 text-yellow-700';
+	const totalYield = Number(diaryDetail.weight_durian || 0);
+	const totalYieldLabel = `${formatNumber(totalYield)} kg`;
 
 	return (
 		<div className="space-y-6 rounded-2xl bg-gray-50 p-4 md:p-6">
@@ -71,6 +74,22 @@ export default function DiaryPublicModel({ diaryId }) {
 					>
 						{statusVi}
 					</span>
+				</div>
+
+				<div className="mb-5 overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 p-4 md:p-5">
+					<div className="flex items-start justify-between gap-4">
+						<div>
+							<p className="text-sm font-semibold text-emerald-800 uppercase tracking-wide">
+								Tổng sản lượng ước tính
+							</p>
+							<p className="mt-1 text-3xl md:text-4xl font-extrabold text-emerald-900 leading-none">
+								{totalYieldLabel}
+							</p>
+						</div>
+						<div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white/80 text-emerald-700 border border-emerald-200 shadow-sm">
+							<Scale className="h-6 w-6" />
+						</div>
+					</div>
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
