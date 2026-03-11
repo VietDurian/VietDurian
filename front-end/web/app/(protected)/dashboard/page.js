@@ -1,153 +1,170 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Menu, LogOut } from 'lucide-react';
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Menu, LogOut, MessageCircle } from "lucide-react";
 
-import { useAuth } from '@/context/AuthContext';
-import { LanguageProvider } from './context/LanguageContext';
-import { AdminSidebar } from './component/AdminSidebar';
-import { DashboardPage } from './component/DashboardPage';
-import { UsersPage } from './component/UsersPage';
-import { PostsPage } from './component/PostsPage';
-import { PostRequestPage } from './component/PostRequestPage';
-import { ReportPage } from './component/ReportPage';
-import { ProductsPage } from './component/ProductManagement/ProductsPage';
-import { ReportCommentPage } from './component/ReportCommentPage';
-import { BlogPage } from './component/BlogPage';
-import { StagePage } from './component/StagePage';
-import { TypePage } from './component/TypePage';
-import { LanguageSwitcher } from './component/LanguageSwitcher';
-import PermissionPage from './component/PermissionManagement/PermissionPage.js';
-import { AdminProfilePage } from './component/AdminProfilePage';
+import { useAuth } from "@/context/AuthContext";
+import { LanguageProvider } from "./context/LanguageContext";
+import { AdminSidebar } from "./component/AdminSidebar";
+import { DashboardPage } from "./component/DashboardPage";
+import { UsersPage } from "./component/UsersPage";
+import { PostsPage } from "./component/PostsPage";
+import { PostRequestPage } from "./component/PostRequestPage";
+import { ReportPage } from "./component/ReportPage";
+import { ProductsPage } from "./component/ProductManagement/ProductsPage";
+import { ReportCommentPage } from "./component/ReportCommentPage";
+import { BlogPage } from "./component/BlogPage";
+import { StagePage } from "./component/StagePage";
+import { TypePage } from "./component/TypePage";
+import { LanguageSwitcher } from "./component/LanguageSwitcher";
+import PermissionPage from "./component/PermissionManagement/PermissionPage.js";
+import { AdminProfilePage } from "./component/AdminProfilePage";
+import AdminChatPage from "./component/AdminChatPage";
 
 export default function App() {
-	const { user, loading, logout } = useAuth();
-	const router = useRouter();
-	const [currentPage, setCurrentPage] = useState('dashboard');
-	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, loading, logout } = useAuth();
+  const router = useRouter();
+  const [currentPage, setCurrentPage] = useState("dashboard");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-	useEffect(() => {
-		if (loading) return;
-		if (!user || user.role !== 'admin') {
-			router.push('/login');
-		}
-	}, [loading, router, user]);
+  useEffect(() => {
+    if (loading) return;
+    if (!user || user.role !== "admin") {
+      router.push("/login");
+    }
+  }, [loading, router, user]);
 
-	if (loading) {
-		return (
-			<div className="flex items-center justify-center h-screen text-[#1a4d2e] font-semibold">
-				Đang kiểm tra quyền truy cập...
-			</div>
-		);
-	}
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-[#1a4d2e] font-semibold">
+        Đang kiểm tra quyền truy cập...
+      </div>
+    );
+  }
 
-	if (!user || user.role !== 'admin') {
-		return (
-			<div className="flex items-center justify-center h-screen bg-gray-50 text-gray-700">
-				Bạn không có quyền truy cập trang này.
-			</div>
-		);
-	}
+  if (!user || user.role !== "admin") {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50 text-gray-700">
+        Bạn không có quyền truy cập trang này.
+      </div>
+    );
+  }
 
-	const renderPage = () => {
-		switch (currentPage) {
-			case 'dashboard':
-				return <DashboardPage onNavigate={setCurrentPage} />;
-			case 'users':
-				return <UsersPage />;
-			case 'types':
-				return <TypePage />;
-			case 'products':
-				return <ProductsPage />;
-			case 'posts':
-				return <PostsPage />;
-			case 'postRequests':
-				return <PostRequestPage />;
-			case 'blogs':
-				return <BlogPage />;
-			case 'stages':
-				return <StagePage />;
-			case 'moderation':
-				return (
-					<div className="p-8 text-center">
-						<h1 className="text-2xl font-bold text-[#1a4d2e]">
-							Trang Kiểm duyệt
-						</h1>
-						<p className="text-gray-600 mt-2">Đang phát triển...</p>
-					</div>
-				);
+  const renderPage = () => {
+    switch (currentPage) {
+      case "dashboard":
+        return <DashboardPage onNavigate={setCurrentPage} />;
+      case "users":
+        return <UsersPage />;
+      case "types":
+        return <TypePage />;
+      case "products":
+        return <ProductsPage />;
+      case "posts":
+        return <PostsPage />;
+      case "postRequests":
+        return <PostRequestPage />;
+      case "blogs":
+        return <BlogPage />;
+      case "stages":
+        return <StagePage />;
+      case "moderation":
+        return (
+          <div className="p-8 text-center">
+            <h1 className="text-2xl font-bold text-[#1a4d2e]">
+              Trang Kiểm duyệt
+            </h1>
+            <p className="text-gray-600 mt-2">Đang phát triển...</p>
+          </div>
+        );
 
-			case 'reports':
-				return <ReportPage />;
-			case 'reportComments':
-				return <ReportCommentPage />;
-			case 'moderation_users':
-				return <PermissionPage />;
-			case 'profile':
-				return <AdminProfilePage />;
-			default:
-				return <DashboardPage onNavigate={setCurrentPage} />;
-		}
-	};
+      case "reports":
+        return <ReportPage />;
+      case "reportComments":
+        return <ReportCommentPage />;
+      case "moderation_users":
+        return <PermissionPage />;
+      case "profile":
+        return <AdminProfilePage />;
+      case "chat":
+        return <AdminChatPage />;
+      default:
+        return <DashboardPage onNavigate={setCurrentPage} />;
+    }
+  };
 
-	return (
-		<LanguageProvider>
-			<div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
-				{/* Sidebar */}
-				<AdminSidebar
-					currentPage={currentPage}
-					onNavigate={setCurrentPage}
-					isMobileOpen={isMobileMenuOpen}
-					onMobileClose={() => setIsMobileMenuOpen(false)}
-					adminUser={user}
-				/>
+  return (
+    <LanguageProvider>
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+        {/* Sidebar */}
+        <AdminSidebar
+          currentPage={currentPage}
+          onNavigate={setCurrentPage}
+          isMobileOpen={isMobileMenuOpen}
+          onMobileClose={() => setIsMobileMenuOpen(false)}
+          adminUser={user}
+        />
 
-				{/* Main Content */}
-				<div className="flex-1 flex flex-col overflow-hidden">
-					{/* Mobile Header */}
-					<div className="lg:hidden bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-						<button
-							onClick={() => setIsMobileMenuOpen(true)}
-							className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-						>
-							<Menu className="w-6 h-6 text-[#1a4d2e]" />
-						</button>
-						<div className="flex items-center gap-2">
-							<div className="w-8 h-8 bg-[#ffd93d] rounded-lg flex items-center justify-center">
-								<span className="text-[#1a4d2e] font-bold text-sm">VD</span>
-							</div>
-							<span className="font-bold text-[#1a4d2e]">VietDurian</span>
-						</div>
-						<div className="flex">
-							<LanguageSwitcher />
-							<button
-								onClick={() => logout('/login')}
-								className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer"
-							>
-								<LogOut className="w-4 h-4" />
-								Logout
-							</button>
-						</div>
-					</div>
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Mobile Header */}
+          <div className="lg:hidden bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <Menu className="w-6 h-6 text-[#1a4d2e]" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-[#ffd93d] rounded-lg flex items-center justify-center">
+                <span className="text-[#1a4d2e] font-bold text-sm">VD</span>
+              </div>
+              <span className="font-bold text-[#1a4d2e]">VietDurian</span>
+            </div>
+            <div className="flex">
+              <LanguageSwitcher />
+              <button
+                onClick={() => setCurrentPage("chat")}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Chat
+              </button>
+              <button
+                onClick={() => logout("/login")}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          </div>
 
-					{/* Desktop Header with Language Switcher */}
-					<div className="hidden lg:flex bg-white border-b border-gray-200 p-4 justify-between items-center gap-3">
-						<LanguageSwitcher />
-						<div className="flex items-center gap-3">
-							<button
-								onClick={() => logout('/login')}
-								className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer"
-							>
-								<LogOut className="w-4 h-4" />
-								Logout
-							</button>
-						</div>
-					</div>
+          {/* Desktop Header with Language Switcher */}
+          <div className="hidden lg:flex bg-white border-b border-gray-200 p-4 justify-between items-center gap-3">
+            <LanguageSwitcher />
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setCurrentPage("chat")}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Chat
+              </button>
+              <button
+                onClick={() => logout("/login")}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          </div>
 
-					{/* Page Content */}
-					<div className="flex-1 overflow-auto">{renderPage()}</div>
-				</div>
-			</div>
-		</LanguageProvider>
-	);
+          {/* Page Content */}
+          <div className="flex-1 overflow-auto">{renderPage()}</div>
+        </div>
+      </div>
+    </LanguageProvider>
+  );
 }

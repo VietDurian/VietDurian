@@ -10,10 +10,13 @@ import {
   User,
   LogOut,
   MessageCircle,
+  Info,
 } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import NotificationPost from "@/components/NotificationPost";
+import { axiosInstance } from "@/lib/axios";
+import { useChatStore } from "@/store/useChatStore";
 
 const NAV_LINKS = [
   { label: "Trang Chủ", href: "/" },
@@ -27,6 +30,7 @@ const NAV_LINKS = [
 export default function Navbar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { setSelectedUser, addContact } = useChatStore();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -52,6 +56,38 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logout("/login");
+  };
+
+  const handleSupportClick = async () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const res = await axiosInstance.get("/messages/users");
+      const users = Array.isArray(res?.data) ? res.data : [];
+      const adminUser = users.find((u) => u.role === "admin");
+
+      if (!adminUser?._id) {
+        router.push("/chat");
+        return;
+      }
+
+      const chatAdmin = {
+        _id: adminUser._id,
+        full_name: adminUser.full_name || "Admin hỗ trợ",
+        email: adminUser.email || "",
+        avatar: adminUser.avatar || "/images/avatar.jpg",
+      };
+
+      addContact(chatAdmin);
+      setSelectedUser(chatAdmin);
+      setProfileOpen(false);
+      router.push(`/chat/${adminUser._id}`);
+    } catch (error) {
+      router.push("/chat");
+    }
   };
 
   return (
@@ -147,6 +183,12 @@ export default function Navbar() {
                     >
                       <User className="w-4 h-4" /> Trang cá nhân
                     </Link>
+                    <button
+                      onClick={handleSupportClick}
+                      className="flex w-full items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer"
+                    >
+                      <Info className="w-4 h-4" /> Hỗ trợ
+                    </button>
 
                     <div className="my-2 border-t border-gray-200" />
 
