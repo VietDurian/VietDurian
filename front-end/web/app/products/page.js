@@ -258,107 +258,40 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      {/* Filter & Sort Section */}
+      {/* Filter & Sort Section — chỉ giữ phần Loại sản phẩm + đường kẻ dưới */}
       <section className="bg-white border-b border-gray-200 py-6 px-4 shadow-sm">
         <div className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col gap-6">
-            {/* Product Type Filter */}
-            <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                <Tag className="w-5 h-5 text-emerald-600" />
-                Loại sản phẩm
-              </h3>
-              <div className="flex flex-wrap gap-2">
+          {/* Product Type Filter */}
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+              <Tag className="w-5 h-5 text-emerald-600" />
+              Loại sản phẩm
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedType("")}
+                className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === ""
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+              >
+                <span className="flex items-center gap-2">
+                  <List className="w-4 h-4" />
+                  Tất cả
+                </span>
+              </button>
+              {productTypes.map((type) => (
                 <button
-                  onClick={() => setSelectedType("")}
-                  className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === ""
+                  key={type._id}
+                  onClick={() => setSelectedType(type._id)}
+                  className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === type._id
                       ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <List className="w-4 h-4" />
-                    Tất cả
-                  </span>
+                  {type.name}
                 </button>
-                {productTypes.map((type) => (
-                  <button
-                    key={type._id}
-                    onClick={() => setSelectedType(type._id)}
-                    className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === type._id
-                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                  >
-                    {type.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Sort Options */}
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end pt-4 border-t border-gray-200">
-              <div className="flex flex-wrap gap-3 items-center">
-                <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-                  Sắp xếp:
-                </span>
-                <div className="flex items-center gap-3 sort-dropdown-container">
-                  {/* Custom Dropdown */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
-                      className="min-w-[160px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
-                    >
-                      <span>{getCurrentSortLabel()}</span>
-                      <ChevronDown
-                        className={`w-4 h-4 text-gray-500 transition-all duration-200 ${isSortDropdownOpen ? "rotate-180" : ""}`}
-                      />
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    {isSortDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-full bg-white border-2 border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
-                        {sortOptions.map((option, index) => (
-                          <button
-                            key={option.value}
-                            onClick={() => handleSortChange(option.value)}
-                            className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${sortBy === option.value
-                                ? "bg-emerald-50 text-emerald-700 font-semibold"
-                                : "text-gray-700 hover:bg-gray-50"
-                              } ${index !== sortOptions.length - 1 ? "border-b border-gray-100" : ""}`}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Sort Order Buttons */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setSortOrder("asc")}
-                      className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "asc"
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
-                      title="Tăng dần"
-                    >
-                      <ChevronUp className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setSortOrder("desc")}
-                      className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "desc"
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
-                      title="Giảm dần"
-                    >
-                      <ChevronDown className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -397,13 +330,83 @@ export default function ProductsPage() {
             </div>
           ) : (
             <>
-              <div className="mb-6 text-gray-600">
-                Tìm thấy{" "}
-                <span className="font-semibold text-emerald-600">
-                  {pagination.totalItems}
-                </span>{" "}
-                sản phẩm
+              {/* ── Sort bar nằm ngang với "Tìm thấy" — giống Blog ── */}
+              <div className="flex items-center justify-between mb-6">
+                <p className="text-gray-600">
+                  Tìm thấy{" "}
+                  <span className="font-semibold text-emerald-600">
+                    {pagination.totalItems}
+                  </span>{" "}
+                  sản phẩm
+                </p>
+
+                <div className="flex flex-wrap gap-3 items-center">
+                  <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    Sắp xếp:
+                  </span>
+                  <div className="flex items-center gap-3 sort-dropdown-container">
+                    {/* Custom Dropdown */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                        className="min-w-[160px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
+                      >
+                        <span>{getCurrentSortLabel()}</span>
+                        <ChevronDown
+                          className={`w-4 h-4 text-gray-500 transition-all duration-200 ${isSortDropdownOpen ? "rotate-180" : ""
+                            }`}
+                        />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {isSortDropdownOpen && (
+                        <div className="absolute top-full left-0 mt-2 w-full bg-white border-2 border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
+                          {sortOptions.map((option, index) => (
+                            <button
+                              key={option.value}
+                              onClick={() => handleSortChange(option.value)}
+                              className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${sortBy === option.value
+                                  ? "bg-emerald-50 text-emerald-700 font-semibold"
+                                  : "text-gray-700 hover:bg-gray-50"
+                                } ${index !== sortOptions.length - 1
+                                  ? "border-b border-gray-100"
+                                  : ""
+                                }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Sort Order Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setSortOrder("asc")}
+                        className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "asc"
+                            ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
+                            : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                          }`}
+                        title="Tăng dần"
+                      >
+                        <ChevronUp className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => setSortOrder("desc")}
+                        className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "desc"
+                            ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
+                            : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                          }`}
+                        title="Giảm dần"
+                      >
+                        <ChevronDown className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {products.map((product) => {
                   const rating =

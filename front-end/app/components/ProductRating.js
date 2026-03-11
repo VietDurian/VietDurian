@@ -1,12 +1,3 @@
-/**
- * ProductRating.js (component)
- * - Fix bàn phím che modal: dùng KeyboardAvoidingView + ScrollView bên trong modal
- * - Tích hợp backend qua useProductStore
- * - Dãy sao tương tác lớn bên ngoài → bấm → mở modal
- * - Horizontal scroll cards
- * - Rating modal + Detail modal
- */
-
 import {
     StyleSheet, Text, View, ScrollView, TouchableOpacity,
     TextInput, Modal, Alert, Dimensions, Platform,
