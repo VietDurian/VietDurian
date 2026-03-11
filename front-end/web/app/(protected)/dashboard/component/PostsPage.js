@@ -498,6 +498,15 @@ export function PostsPage() {
 				))}
 			</div>
 
+			{/* Empty State */}
+			{!isLoading && sortedPosts.length === 0 && (
+				<div className="bg-white rounded-xl border border-dashed border-gray-200 p-8 text-center text-gray-600">
+					<p className="text-base font-medium text-gray-700 mb-1">
+						{t('no_posts') || 'Không có bài viết nào'}
+					</p>
+				</div>
+			)}
+
 			{/* Delete Confirmation Modal */}
 			{postToDelete && (
 				<div

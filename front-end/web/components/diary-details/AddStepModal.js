@@ -37,6 +37,9 @@ export default function AddStepModal({
     if (!newStep.step_name?.trim()) {
       nextErrors.step_name = "Vui lòng nhập tên bước";
     }
+    else if (newStep.step_name.trim().length > 50) {
+      nextErrors.step_name = "Tên bước không được vượt quá 50 ký tự";
+    }
 
     if (!newStep.description?.trim()) {
       nextErrors.description = "Vui lòng nhập mô tả";
@@ -154,6 +157,7 @@ export default function AddStepModal({
                 setNewStep({ ...newStep, step_name: e.target.value });
                 clearFieldError("step_name");
               }}
+              maxLength={50}
               placeholder={
                 actionType === "Vật tư"
                   ? "VD: Xử lý vôi bột"

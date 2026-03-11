@@ -1,4 +1,4 @@
-@startuml LoginPage
+bottomparticipants
 hide footbox
 
 actor User as "Users"
@@ -15,6 +15,7 @@ User -> View : 2. Submit login form
 
 View -> View : 3. Validate input
 activate View
+space
 deactivate View
 
 opt Empty or malformed information

@@ -76,6 +76,7 @@ const translations = {
 		image: 'Hình ảnh',
 		contact: 'Liên hệ',
 		showing_range: 'Hiển thị',
+		no_posts: 'Không có bài viết nào',
 
 		// Charts
 		market_trend: 'Xu hướng thị trường sầu riêng',
@@ -363,6 +364,7 @@ const translations = {
 		close: 'Close',
 		image: 'Image',
 		contact: 'Contact',
+		no_posts: 'No posts found',
 
 		// Charts
 		market_trend: 'Durian Market Trend',
