@@ -40,7 +40,7 @@ export default function VerifyResetOTPContent() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-screen bg-gray-50 font-sans p-5 pt-15 lg:pt-0 absolute inset-0 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-screen bg-gray-50 font-sans p-5 pt-15 lg:pt-0 w-full overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
       {/* Logo */}
       <Link
         href={"/"}
@@ -78,7 +78,7 @@ export default function VerifyResetOTPContent() {
                 />
                 <input
                   placeholder="vd: 0123456"
-                  className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all"
+                  className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                   required
@@ -104,7 +104,7 @@ export default function VerifyResetOTPContent() {
         </div>
       </div>
       {/* RIGHT SECTION */}
-      <div className="flex flex-col items-center justify-center w-full max-w-2xl min-h-screen">
+      <div className="flex flex-col items-center justify-center w-full lg:max-w-2xl">
         <p className="text-3xl font-bold text-center text-emerald-500 text-shadow-md text-shadow-emerald-100">
           Đừng lo lắng!
         </p>

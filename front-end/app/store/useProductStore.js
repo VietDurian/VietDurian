@@ -1,18 +1,9 @@
 import { create } from "zustand";
 import axios from "axios";
-import { Platform } from "react-native";
 
-// ── API base URL ──────────────────────────────────────────────────────────────
-const getBaseURL = () => {
-    if (__DEV__) {
-        if (Platform.OS === "android") return "http://10.0.2.2:8080/api/v1";
-        return "http://192.168.1.7:8080/api/v1"; // ← IP máy tính của bạn
-    }
-    return "https://your-production-api.com/api/v1";
-};
-
+// ── API client (dùng ENV) ─────────────────────────────────────────────────────
 const apiClient = axios.create({
-    baseURL: getBaseURL(),
+    baseURL: process.env.EXPO_PUBLIC_API_URL,
     headers: { "Content-Type": "application/json" },
     timeout: 15000,
 });
@@ -48,7 +39,6 @@ export const useProductStore = create((set, get) => ({
     // STATE
     // ════════════════════════════════════════
 
-    // Products list
     products: [],
     productTypes: [],
     pagination: {
@@ -61,7 +51,6 @@ export const useProductStore = create((set, get) => ({
     typesLoading: false,
     productsError: null,
 
-    // Product detail
     productDetail: null,
     productDetailLoading: false,
     productDetailError: null,
@@ -75,7 +64,10 @@ export const useProductStore = create((set, get) => ({
         try {
             const res = await apiClient.get("/type-product", { params: { limit: 20 } });
             const data = res.data?.data ?? res.data ?? [];
-            set({ productTypes: Array.isArray(data) ? data : [], typesLoading: false });
+            set({
+                productTypes: Array.isArray(data) ? data : [],
+                typesLoading: false,
+            });
         } catch (err) {
             console.error("[useProductStore] fetchProductTypes:", err.message);
             set({ typesLoading: false });
@@ -103,7 +95,11 @@ export const useProductStore = create((set, get) => ({
             const res = await apiClient.get("/products", { params });
             const body = res.data;
 
-            const raw = body?.data ?? body?.products ?? (Array.isArray(body) ? body : []);
+            const raw =
+                body?.data ??
+                body?.products ??
+                (Array.isArray(body) ? body : []);
+
             const products = raw.map(normalizeProduct);
             const pag = body?.pagination ?? {};
 
@@ -126,7 +122,7 @@ export const useProductStore = create((set, get) => ({
         }
     },
 
-    // Infinite scroll — append vào list hiện tại
+    // Infinite scroll
     appendProducts: async ({
         page = 2,
         limit = 9,
@@ -143,7 +139,11 @@ export const useProductStore = create((set, get) => ({
             const res = await apiClient.get("/products", { params });
             const body = res.data;
 
-            const raw = body?.data ?? body?.products ?? (Array.isArray(body) ? body : []);
+            const raw =
+                body?.data ??
+                body?.products ??
+                (Array.isArray(body) ? body : []);
+
             const newItems = raw.map(normalizeProduct);
             const pag = body?.pagination ?? {};
 
@@ -170,7 +170,11 @@ export const useProductStore = create((set, get) => ({
         try {
             const res = await apiClient.get(`/products/${productId}`);
             const product = normalizeProduct(res.data?.data ?? res.data);
-            set({ productDetail: product, productDetailLoading: false });
+
+            set({
+                productDetail: product,
+                productDetailLoading: false,
+            });
         } catch (err) {
             console.error("[useProductStore] fetchProductById:", err.message);
             set({
@@ -181,5 +185,8 @@ export const useProductStore = create((set, get) => ({
     },
 
     clearProductDetail: () =>
-        set({ productDetail: null, productDetailError: null }),
+        set({
+            productDetail: null,
+            productDetailError: null,
+        }),
 }));

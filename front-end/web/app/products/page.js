@@ -258,107 +258,40 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      {/* Filter & Sort Section */}
+      {/* Filter & Sort Section — chỉ giữ phần Loại sản phẩm + đường kẻ dưới */}
       <section className="bg-white border-b border-gray-200 py-6 px-4 shadow-sm">
         <div className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col gap-6">
-            {/* Product Type Filter */}
-            <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                <Tag className="w-5 h-5 text-emerald-600" />
-                Loại sản phẩm
-              </h3>
-              <div className="flex flex-wrap gap-2">
+          {/* Product Type Filter */}
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+              <Tag className="w-5 h-5 text-emerald-600" />
+              Loại sản phẩm
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedType("")}
+                className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === ""
+                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+              >
+                <span className="flex items-center gap-2">
+                  <List className="w-4 h-4" />
+                  Tất cả
+                </span>
+              </button>
+              {productTypes.map((type) => (
                 <button
-                  onClick={() => setSelectedType("")}
-                  className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === ""
-                      ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  key={type._id}
+                  onClick={() => setSelectedType(type._id)}
+                  className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === type._id
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <List className="w-4 h-4" />
-                    Tất cả
-                  </span>
+                  {type.name}
                 </button>
-                {productTypes.map((type) => (
-                  <button
-                    key={type._id}
-                    onClick={() => setSelectedType(type._id)}
-                    className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === type._id
-                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 scale-105"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                  >
-                    {type.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Sort Options */}
-            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-end pt-4 border-t border-gray-200">
-              <div className="flex flex-wrap gap-3 items-center">
-                <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-                  Sắp xếp:
-                </span>
-                <div className="flex items-center gap-3 sort-dropdown-container">
-                  {/* Custom Dropdown */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
-                      className="min-w-[160px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
-                    >
-                      <span>{getCurrentSortLabel()}</span>
-                      <ChevronDown
-                        className={`w-4 h-4 text-gray-500 transition-all duration-200 ${isSortDropdownOpen ? "rotate-180" : ""}`}
-                      />
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    {isSortDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-full bg-white border-2 border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
-                        {sortOptions.map((option, index) => (
-                          <button
-                            key={option.value}
-                            onClick={() => handleSortChange(option.value)}
-                            className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${sortBy === option.value
-                                ? "bg-emerald-50 text-emerald-700 font-semibold"
-                                : "text-gray-700 hover:bg-gray-50"
-                              } ${index !== sortOptions.length - 1 ? "border-b border-gray-100" : ""}`}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Sort Order Buttons */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setSortOrder("asc")}
-                      className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "asc"
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
-                      title="Tăng dần"
-                    >
-                      <ChevronUp className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setSortOrder("desc")}
-                      className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "desc"
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
-                      title="Giảm dần"
-                    >
-                      <ChevronDown className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -397,13 +330,83 @@ export default function ProductsPage() {
             </div>
           ) : (
             <>
-              <div className="mb-6 text-gray-600">
-                Tìm thấy{" "}
-                <span className="font-semibold text-emerald-600">
-                  {pagination.totalItems}
-                </span>{" "}
-                sản phẩm
+              {/* ── Sort bar nằm ngang với "Tìm thấy" — giống Blog ── */}
+              <div className="flex items-center justify-between mb-6">
+                <p className="text-gray-600">
+                  Tìm thấy{" "}
+                  <span className="font-semibold text-emerald-600">
+                    {pagination.totalItems}
+                  </span>{" "}
+                  sản phẩm
+                </p>
+
+                <div className="flex flex-wrap gap-3 items-center">
+                  <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    Sắp xếp:
+                  </span>
+                  <div className="flex items-center gap-3 sort-dropdown-container">
+                    {/* Custom Dropdown */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                        className="min-w-[160px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
+                      >
+                        <span>{getCurrentSortLabel()}</span>
+                        <ChevronDown
+                          className={`w-4 h-4 text-gray-500 transition-all duration-200 ${isSortDropdownOpen ? "rotate-180" : ""
+                            }`}
+                        />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {isSortDropdownOpen && (
+                        <div className="absolute top-full left-0 mt-2 w-full bg-white border-2 border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
+                          {sortOptions.map((option, index) => (
+                            <button
+                              key={option.value}
+                              onClick={() => handleSortChange(option.value)}
+                              className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${sortBy === option.value
+                                ? "bg-emerald-50 text-emerald-700 font-semibold"
+                                : "text-gray-700 hover:bg-gray-50"
+                                } ${index !== sortOptions.length - 1
+                                  ? "border-b border-gray-100"
+                                  : ""
+                                }`}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Sort Order Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setSortOrder("asc")}
+                        className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "asc"
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                          }`}
+                        title="Tăng dần"
+                      >
+                        <ChevronUp className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => setSortOrder("desc")}
+                        className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "desc"
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-600/30"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                          }`}
+                        title="Giảm dần"
+                      >
+                        <ChevronDown className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {products.map((product) => {
                   const rating =
@@ -415,89 +418,93 @@ export default function ProductsPage() {
                         : parseFloat(product.rating || 0);
 
                   return (
-                    <Link href={`/products/${product._id}`} key={product._id}>
-                      <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 cursor-pointer group">
-                        <div className="p-5">
-                          {/* Hình ảnh không scale khi hover */}
-                          <div
-                            className="relative rounded-xl overflow-hidden bg-gray-100 mb-3"
-                            style={{ aspectRatio: "16/9" }}
-                          >
-                            {product.images && product.images.length > 0 ? (
-                              <Image
-                                src={
-                                  imageErrors[product._id]
-                                    ? "/images/Durian1.jpg"
-                                    : product.images[0].url
-                                }
-                                alt={product.name}
-                                fill
-                                unoptimized
-                                className="object-cover"
-                                onError={() => handleImageError(product._id)}
-                              />
-                            ) : (
-                              <Image
-                                src="/images/Durian1.jpg"
-                                alt={product.name}
-                                fill
-                                className="object-cover"
-                              />
-                            )}
+                    <div key={product._id} className={`relative group/card ${!authUser ? "cursor-not-allowed" : ""}`}>
+                      {!authUser && (
+                        <div className="absolute inset-0 z-10 rounded-lg bg-black/40 backdrop-blur-[2px] opacity-0 group-hover/card:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 pointer-events-none">
+                          <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white flex items-center justify-center">
+                            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
                           </div>
-
-                          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors">
-                            {product.name}
-                          </h3>
-
-                          <p className="text-base text-gray-600 mb-4 line-clamp-1">
-                            {product.description}
-                          </p>
-
-                          <div className="flex items-center gap-5 mb-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-1.5">
-                              <Eye className="w-4 h-4 text-emerald-600" />
-                              <span>{product.view_count}</span>
+                          <span className="text-white text-sm font-semibold bg-black/30 px-4 py-1.5 rounded-full">
+                            Đăng nhập để xem
+                          </span>
+                        </div>
+                      )}
+                      <Link
+                        href={authUser ? `/products/${product._id}` : "#"}
+                        onClick={(e) => { if (!authUser) e.preventDefault(); }}
+                        className={!authUser ? "pointer-events-none" : ""}
+                      >
+                        <div className={`bg-white rounded-lg overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 group ${!authUser ? "cursor-not-allowed" : "cursor-pointer"}`}>
+                          <div className="p-5">
+                            <div className="relative rounded-xl overflow-hidden bg-gray-100 mb-3" style={{ aspectRatio: "16/9" }}>
+                              {product.images && product.images.length > 0 ? (
+                                <Image
+                                  src={imageErrors[product._id] ? "/images/Durian1.jpg" : product.images[0].url}
+                                  alt={product.name}
+                                  fill
+                                  unoptimized
+                                  className="object-cover"
+                                  onError={() => handleImageError(product._id)}
+                                />
+                              ) : (
+                                <Image src="/images/Durian1.jpg" alt={product.name} fill className="object-cover" />
+                              )}
                             </div>
-                            <div className="flex items-center gap-1.5">
-                              <MapPin className="w-4 h-4 text-emerald-600" />
-                              <span>{product.origin}</span>
+
+                            <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors">
+                              {product.name}
+                            </h3>
+
+                            <p className="text-base text-gray-600 mb-4 line-clamp-1">
+                              {product.description}
+                            </p>
+
+                            <div className="flex items-center gap-5 mb-4 text-sm text-gray-600">
+                              <div className="flex items-center gap-1.5">
+                                <Eye className="w-4 h-4 text-emerald-600" />
+                                <span>{product.view_count}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <MapPin className="w-4 h-4 text-emerald-600" />
+                                <span>{product.origin}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Weight className="w-4 h-4 text-emerald-600" />
+                                <span>{product.weight}kg</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                              <Weight className="w-4 h-4 text-emerald-600" />
-                              <span>{product.weight}kg</span>
-                            </div>
-                          </div>
-                          <div className="mb-4">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className="text-sm text-gray-500">
-                                Giá tham khảo
-                              </p>
-                              <span className="text-xs bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-md font-medium">
-                                1 sản phẩm
+
+                            <div className="mb-4">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="text-sm text-gray-500">Giá tham khảo</p>
+                                <span className="text-xs bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-md font-medium">
+                                  1 sản phẩm
+                                </span>
+                              </div>
+                              <span className="text-2xl font-bold text-emerald-600">
+                                {formatPrice(product.price)}
                               </span>
                             </div>
-                            <span className="text-2xl font-bold text-emerald-600">
-                              {formatPrice(product.price)}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                              <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                              <span className="font-medium">
-                                {rating.toFixed(1)}
-                              </span>
+
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                                <span className="font-medium">{rating.toFixed(1)}</span>
+                              </div>
+                              <button
+                                onClick={(e) => handleContact(e, product)}
+                                className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors"
+                              >
+                                Liên Hệ
+                              </button>
                             </div>
-                            <button
-                              onClick={(e) => handleContact(e, product)}
-                              className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors"
-                            >
-                              Liên Hệ
-                            </button>
                           </div>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
+                    </div>
                   );
                 })}
               </div>
@@ -526,8 +533,8 @@ export default function ProductsPage() {
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
                           className={`px-4 py-2 rounded-lg border-2 transition-colors ${pagination.currentPage === pageNum
-                              ? "bg-emerald-600 text-white border-emerald-600"
-                              : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                            ? "bg-emerald-600 text-white border-emerald-600"
+                            : "border-gray-300 text-gray-700 hover:bg-gray-50"
                             }`}
                         >
                           {pageNum}

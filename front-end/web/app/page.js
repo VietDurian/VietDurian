@@ -221,9 +221,9 @@ export default function Home() {
 
           <div className="absolute flex flex-col items-center z-10" style={{ top: '561px', left: '111px' }}>
             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-yellow-400 shadow-2xl">
-              <img src="/images/Durian5.jpg" alt="Vật Tư" className="w-full h-full object-cover" />
+              <img src="/images/Durian5.jpg" alt="sản phẩm" className="w-full h-full object-cover" />
             </div>
-            <span className="mt-2 px-3 py-1 bg-yellow-400 text-emerald-900 text-xs font-bold rounded-full shadow">Vật Tư</span>
+            <span className="mt-2 px-3 py-1 bg-yellow-400 text-emerald-900 text-xs font-bold rounded-full shadow">Sản phẩm</span>
           </div>
 
           <div className="absolute flex flex-col items-center z-10" style={{ top: '231px', left: '111px' }}>
@@ -630,8 +630,21 @@ export default function Home() {
 
                     return (
                       <div key={product._id} className="w-1/3 flex-shrink-0 px-3">
-                        <Link href={`/products/${product._id}`}>
-                          <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-100 cursor-pointer group">
+                        <div className="relative group/card cursor-not-allowed">
+                          {/* Overlay lock khi hover */}
+                          <div className="absolute inset-0 z-10 rounded-lg bg-black/40 backdrop-blur-[2px] opacity-0 group-hover/card:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 pointer-events-none">
+                            <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white flex items-center justify-center">
+                              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                            </div>
+                            <span className="text-white text-sm font-semibold bg-black/30 px-4 py-1.5 rounded-full">
+                              Đăng nhập để xem
+                            </span>
+                          </div>
+
+                          <div className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-100">
                             <div className="p-5">
                               <div className="relative rounded-xl overflow-hidden bg-gray-100 mb-3" style={{ aspectRatio: '16/9' }}>
                                 {product.images && product.images.length > 0 ? (
@@ -689,7 +702,7 @@ export default function Home() {
                               </div>
                             </div>
                           </div>
-                        </Link>
+                        </div>
                       </div>
                     );
                   })}

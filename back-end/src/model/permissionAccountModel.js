@@ -10,7 +10,7 @@ const permissionAccountSchema = new mongoose.Schema(
     },
     requested_role: {
       type: String,
-      enum: ["serviceProvider", "contentExpert"],
+      enum: ["serviceProvider", "contentExpert", "farmer"],
       required: true,
     },
     description: {
@@ -29,8 +29,12 @@ const permissionAccountSchema = new mongoose.Schema(
         uploaded_at: { type: Date, default: Date.now },
       },
     ],
-
     status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    verify_cccd: {
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "pending",
@@ -39,11 +43,11 @@ const permissionAccountSchema = new mongoose.Schema(
   {
     collection: "permission_accounts",
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
-  }
+  },
 );
 
 const PermissionAccountModel = mongoose.model(
   "PermissionAccount",
-  permissionAccountSchema
+  permissionAccountSchema,
 );
 export { PermissionAccountModel };

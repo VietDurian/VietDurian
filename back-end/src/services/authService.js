@@ -16,7 +16,7 @@ import { PermissionAccountModel } from "@/model/permissionAccountModel.js";
 const GOOGLE_CLIENT_ID = process.env.YOUR_GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-const retricedRoles = ["serviceProvider", "contentExpert"];
+const retricedRoles = ["serviceProvider", "contentExpert", "farmer"];
 
 const register = async (userData) => {
   try {
@@ -184,7 +184,9 @@ const sendVerificationEmail = async (
 ) => {
   try {
     if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
-      console.warn(`Email không được gửi (thiếu thông tin đăng nhập). OTP: ${otpCode}`);
+      console.warn(
+        `Email không được gửi (thiếu thông tin đăng nhập). OTP: ${otpCode}`,
+      );
       return true;
     }
 
@@ -288,7 +290,10 @@ const login = async (email, password) => {
       );
     }
     if (permission && permission.status === "rejected") {
-      throw createError(403, "Yêu cầu nâng cấp tài khoản của bạn đã bị từ chối.");
+      throw createError(
+        403,
+        "Yêu cầu nâng cấp tài khoản của bạn đã bị từ chối.",
+      );
     }
     console.log("Đăng nhập thành công user logged in:", user._id);
     const token = generateToken(user._id);

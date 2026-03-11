@@ -24,6 +24,7 @@ import Navbar from "@/components/Navbar";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
+import Link from "next/link";
 
 const POST_CATEGORIES = [
   "Tất cả",
@@ -241,8 +242,8 @@ const FilterBar = ({
                   key={option.value}
                   onClick={() => { onSortChange(option.value); setShowSortDropdown(false); }}
                   className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${selectedSort === option.value
-                      ? "bg-emerald-50 text-emerald-700 font-semibold"
-                      : "text-gray-700 hover:bg-gray-50"
+                    ? "bg-emerald-50 text-emerald-700 font-semibold"
+                    : "text-gray-700 hover:bg-gray-50"
                     } ${index !== SORT_OPTIONS.length - 1 ? "border-b border-gray-100" : ""}`}
                 >
                   {option.label}
@@ -612,14 +613,26 @@ export default function PostsContent() {
               <p className="text-gray-500 font-medium">Đang tải bài viết...</p>
             </div>
           )}
-
           {postsError && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-              <AlertCircle className="mx-auto text-red-500 mb-3" size={32} />
-              <p className="text-red-600 font-medium">{postsError}</p>
+            <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-emerald-100">
+              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Đăng nhập để xem bài viết</h3>
+              <p className="text-gray-500 text-sm mb-6">Bạn cần đăng nhập để truy cập nội dung này.</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link href="/login" className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">
+                  Đăng nhập ngay
+                </Link>
+                <Link href="/register" className="px-6 py-2.5 border border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors text-sm">
+                  Tạo tài khoản
+                </Link>
+              </div>
             </div>
           )}
-
           {!loadingPosts && !postsError && posts.length === 0 && (
             <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
