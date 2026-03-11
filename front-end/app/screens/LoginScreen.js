@@ -11,13 +11,29 @@ import {
   Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
 import { useAppStore } from "@/store/useAppStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 export default function LoginScreen() {
-  const { navigate, login } = useAppStore();
+  const { navigate } = useAppStore();
+  const { login, isLoggingIn } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+
+  const handleLogin = async () => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
+      Toast.show({
+        type: "error",
+        text1: "Vui lòng nhập email và mật khẩu",
+      });
+      return;
+    }
+
+    await login({ email: trimmedEmail, password });
+  };
 
   return (
     <KeyboardAvoidingView
@@ -80,6 +96,7 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
                 secureTextEntry={!showPass}
                 autoCapitalize="none"
+                onSubmitEditing={handleLogin}
               />
               <TouchableOpacity onPress={() => setShowPass(!showPass)}>
                 <Ionicons
@@ -102,10 +119,13 @@ export default function LoginScreen() {
           {/* Login Button */}
           <TouchableOpacity
             style={styles.loginBtn}
-            onPress={login}
+            onPress={handleLogin}
+            disabled={isLoggingIn}
             activeOpacity={0.85}
           >
-            <Text style={styles.loginBtnText}>Đăng Nhập</Text>
+            <Text style={styles.loginBtnText}>
+              {isLoggingIn ? "Đang đăng nhập..." : "Đăng Nhập"}
+            </Text>
           </TouchableOpacity>
 
           {/* Divider */}
