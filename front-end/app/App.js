@@ -1,4 +1,8 @@
+import { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
+import Toast from "react-native-toast-message";
 import { useAppStore } from "./store/useAppStore";
+import { useAuthStore } from "./store/useAuthStore";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import HomeScreen from "./screens/HomeScreen";
@@ -43,5 +47,31 @@ function ScreenRouter() {
 }
 
 export default function App() {
-  return <ScreenRouter />;
+  const { checkAuth, isCheckingAuth } = useAuthStore();
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  if (isCheckingAuth) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#F0F4F0",
+        }}
+      >
+        <ActivityIndicator size="large" color="#16A34A" />
+      </View>
+    );
+  }
+
+  return (
+    <>
+      <ScreenRouter />
+      <Toast />
+    </>
+  );
 }
