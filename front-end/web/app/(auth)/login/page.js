@@ -58,7 +58,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-screen bg-gray-50 font-sans p-5 pt-15 lg:pt-0 absolute inset-0 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-screen bg-gray-50 font-sans p-5 pt-15 lg:pt-0 w-full overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
       {/* Logo */}
       <Link
         href={"/"}
@@ -199,7 +199,7 @@ export default function LoginPage() {
       </div>
 
       {/* RIGHT SECTION: Branding & Testimonial */}
-      <div className="flex flex-col items-center justify-center w-full max-w-2xl min-h-screen">
+      <div className="flex flex-col items-center justify-center w-full lg:max-w-2xl">
         <p className="text-3xl font-bold text-center text-emerald-500 text-shadow-md text-shadow-emerald-100">
           Vai trò của chúng tôi
         </p>

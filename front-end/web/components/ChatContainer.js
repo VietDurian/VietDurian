@@ -188,7 +188,7 @@ const ChatContainer = () => {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Nhập tin nhắn..."
-            className="flex-1 border border-gray-200 rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+            className="placeholder:text-gray-400 text-black flex-1 border border-gray-200 rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
           />
 
           <input

@@ -104,7 +104,7 @@ const Sidebar = () => {
             placeholder="Tìm theo tên hoặc email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-full border border-gray-200 py-2 pl-9 pr-9 text-sm outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
+            className="placeholder:text-gray-400 text-black w-full rounded-full border border-gray-200 py-2 pl-9 pr-9 text-sm outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
           />
           {search && (
             <button

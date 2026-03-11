@@ -152,7 +152,7 @@ export default function Navbar() {
                   </div>
 
                   <ChevronDown
-                    className={`w-4 h-4 transition ${
+                    className={`w-4 h-4 text-black transition ${
                       profileOpen ? "rotate-180" : ""
                     }`}
                   />
@@ -170,7 +170,9 @@ export default function Navbar() {
                         />
                       </div>
                       <div>
-                        <p className="font-semibold">{user.full_name}</p>
+                        <p className="font-semibold text-black">
+                          {user.full_name}
+                        </p>
                         <p className="text-xs text-gray-500">{user.email}</p>
                       </div>
                     </div>
@@ -179,13 +181,13 @@ export default function Navbar() {
 
                     <Link
                       href="/profile/details"
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100"
+                      className="text-black flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100"
                     >
                       <User className="w-4 h-4" /> Trang cá nhân
                     </Link>
                     <button
                       onClick={handleSupportClick}
-                      className="flex w-full items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer"
+                      className="text-black flex w-full items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer"
                     >
                       <Info className="w-4 h-4" /> Hỗ trợ
                     </button>
