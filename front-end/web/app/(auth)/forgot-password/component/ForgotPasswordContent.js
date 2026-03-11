@@ -30,7 +30,7 @@ export default function ForgotPasswordContent() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-screen bg-gray-50 font-sans p-5 pt-15 lg:pt-0 absolute inset-0 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-screen bg-gray-50 font-sans p-5 pt-15 lg:pt-0 w-full overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
       {/* Logo */}
       <Link href="/" className="absolute top-6 left-6">
         <Image
@@ -74,7 +74,7 @@ export default function ForgotPasswordContent() {
                   w-full border border-emerald-200
                   rounded-lg pl-10 pr-4 py-3 text-sm
                   focus:ring-2 focus:ring-emerald-500
-                  outline-none transition-all
+                  outline-none transition-all placeholder:text-gray-400 text-black
                 "
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -120,7 +120,7 @@ export default function ForgotPasswordContent() {
       </div>
 
       {/* RIGHT SECTION */}
-      <div className="flex flex-col items-center justify-center w-full max-w-2xl min-h-screen">
+      <div className="flex flex-col items-center justify-center w-full lg:max-w-2xl">
         <p className="text-3xl font-bold text-center text-emerald-500 text-shadow-md text-shadow-emerald-100">
           Đừng lo lắng!
         </p>
