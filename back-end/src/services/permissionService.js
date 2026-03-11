@@ -204,7 +204,7 @@ const isMyAccountApproved = async (userId) => {
 
   if (!request) return false;
 
-  return request.status === "approved";
+  return request.verify_cccd === "approved";
 };
 export const permissionService = {
   getPermissionRequests,
