@@ -234,8 +234,17 @@ export default function AdminChatPage() {
                     return (
                       <div
                         key={message._id}
-                        className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+                        className={`flex items-end gap-2 ${
+                          isMine ? "justify-end" : "justify-start"
+                        }`}
                       >
+                        {!isMine && (
+                          <img
+                            src={selectedUser.avatar || "/images/avatar.jpg"}
+                            alt={selectedUser.full_name}
+                            className="w-8 h-8 rounded-full object-cover shrink-0"
+                          />
+                        )}
                         <div
                           className={`max-w-[80%] rounded-2xl px-3 py-2 shadow-sm ${
                             isMine
