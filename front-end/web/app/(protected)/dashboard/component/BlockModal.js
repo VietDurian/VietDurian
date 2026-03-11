@@ -1,3 +1,4 @@
+"use client";
 import { X, AlertTriangle, ShieldOff } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';

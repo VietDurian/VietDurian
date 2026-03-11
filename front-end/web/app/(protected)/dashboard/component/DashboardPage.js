@@ -1,13 +1,19 @@
+"use client";
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { Users, UserCheck, MessageSquareText, Newspaper, Loader2 } from 'lucide-react';
 
-import { GardenHeatmap } from './GardenHeatmap';
 import { UserChart } from './UserChart';
 import { PostBlogChart } from './PostBlogChart';
 import { ProductRatingPage } from './ProductRatingPage';
 import { StatsCard } from './StatsCard';
 import { useLanguage } from '../context/LanguageContext';
 import { usersAPI, blogAPI, getOwnPosts } from '../../../../lib/api';
+
+const GardenHeatmap = dynamic(
+    () => import('./GardenHeatmap').then((mod) => mod.GardenHeatmap),
+    { ssr: false }
+);
 
 export function DashboardPage({ onNavigate }) {
     const { t } = useLanguage();
