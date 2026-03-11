@@ -13,7 +13,8 @@ import { useAppStore } from "../store/useAppStore";
 import { useProductStore } from "../store/useProductStore";
 
 const { width: SCREEN_W } = Dimensions.get("window");
-const CARD_W = SCREEN_W - 32;
+// Card thon hơn: giảm margin và width
+const CARD_W = SCREEN_W - 48;
 
 const SORT_OPTIONS = [
   { value: "created_at", label: "Mới nhất" },
@@ -48,14 +49,16 @@ function ProductCard({ product, onPress, onContact }) {
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.93}>
-      {/* Ảnh 16:9 */}
-      <Image
-        source={{ uri: product.images?.[0]?.url }}
-        style={styles.cardImage}
-        resizeMode="cover"
-      />
-
       <View style={styles.cardBody}>
+        {/* Ảnh 16:9 — nằm bên trong padding của card, bo góc */}
+        <View style={styles.cardImageWrapper}>
+          <Image
+            source={{ uri: product.images?.[0]?.url }}
+            style={styles.cardImage}
+            resizeMode="cover"
+          />
+        </View>
+
         {/* Tên */}
         <Text style={styles.cardName} numberOfLines={2}>{product.name}</Text>
 
@@ -149,7 +152,7 @@ export default function ProductsScreen() {
   const getCurrentSortLabel = () =>
     SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? "Sắp xếp";
 
-  // ── Header component cho FlatList (filter + sort scroll theo list) ──
+  // ── Header component cho FlatList ──
   const ListHeader = (
     <View>
       {/* ── Filter: Loại sản phẩm ── */}
@@ -410,27 +413,44 @@ const styles = StyleSheet.create({
   sheetOptionActive: { color: "#059669", fontWeight: "700" },
 
   // List
-  listContent: { paddingBottom: 96 },
+  listContent: { paddingBottom: 96, paddingHorizontal: 0 },
   resultCount: { fontSize: 12, color: "#6B7280", paddingHorizontal: 16, paddingVertical: 12 },
 
-  // Card
+  // Card — thon hơn, image nằm trong padding
   card: {
-    width: CARD_W, backgroundColor: "#FFF", borderRadius: 12,
-    marginBottom: 14, overflow: "hidden", alignSelf: "center",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07, shadowRadius: 6, elevation: 3,
-    borderWidth: 1, borderColor: "#F3F4F6",
+    width: CARD_W,
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    marginBottom: 14,
+    alignSelf: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
   },
-  cardImage: { width: "100%", height: Math.round(CARD_W * 9 / 16) },
+  // Toàn bộ nội dung nằm trong padding
   cardBody: { padding: 14 },
-  cardName: { fontSize: 16, fontWeight: "700", color: "#111827", marginBottom: 5 },
-  cardDesc: { fontSize: 12, color: "#6B7280", marginBottom: 12 },
+  // Image wrapper: bo góc, overflow hidden, margin dưới
+  cardImageWrapper: {
+    borderRadius: 10,
+    overflow: "hidden",
+    marginBottom: 12,
+  },
+  cardImage: {
+    width: "100%",
+    height: Math.round(CARD_W * 9 / 16),
+  },
+  cardName: { fontSize: 15, fontWeight: "700", color: "#111827", marginBottom: 4 },
+  cardDesc: { fontSize: 12, color: "#6B7280", marginBottom: 10 },
 
-  metaRow: { flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 12 },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 10 },
   metaItem: { flexDirection: "row", alignItems: "center", gap: 4 },
   metaText: { fontSize: 11, color: "#6B7280" },
 
-  priceBlock: { marginBottom: 12 },
+  priceBlock: { marginBottom: 10 },
   priceLabelRow: { flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 3 },
   priceLabel: { fontSize: 11, color: "#6B7280" },
   productBadge: {
@@ -438,15 +458,15 @@ const styles = StyleSheet.create({
     borderRadius: 5, paddingHorizontal: 6, paddingVertical: 1,
   },
   productBadgeText: { fontSize: 9, color: "#059669", fontWeight: "600" },
-  priceValue: { fontSize: 20, fontWeight: "800", color: "#059669" },
+  priceValue: { fontSize: 19, fontWeight: "800", color: "#059669" },
 
   cardFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   ratingText: { fontSize: 12, fontWeight: "600", color: "#6B7280" },
-  contactBtn: { backgroundColor: "#059669", paddingHorizontal: 18, paddingVertical: 9, borderRadius: 30 },
+  contactBtn: { backgroundColor: "#059669", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 30 },
   contactBtnText: { fontSize: 12, color: "#FFF", fontWeight: "600" },
 
-  // Error banner nhỏ (không block list)
+  // Error banner
   errorBanner: {
     flexDirection: "row", alignItems: "center", gap: 6,
     backgroundColor: "#FEF2F2", borderRadius: 8, marginHorizontal: 16,
