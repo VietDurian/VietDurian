@@ -122,18 +122,23 @@ export default function BlogPage() {
                         </div>
                     ) : error ? (
                         <div className="flex flex-col justify-center items-center py-20">
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <AlertCircle className="w-6 h-6 text-red-600" />
-                                    <h3 className="text-lg font-semibold text-red-900">Lỗi</h3>
+                            <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-emerald-100">
+                                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
                                 </div>
-                                <p className="text-red-700 mb-4">{error}</p>
-                                <button
-                                    onClick={() => window.location.reload()}
-                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                                >
-                                    Thử lại
-                                </button>
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">Đăng nhập để đọc bài viết</h3>
+                                <p className="text-gray-500 text-sm mb-6">Bạn cần đăng nhập để truy cập nội dung này.</p>
+                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                    <Link href="/login" className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">
+                                        Đăng nhập ngay
+                                    </Link>
+                                    <Link href="/register" className="px-6 py-2.5 border border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors text-sm">
+                                        Tạo tài khoản
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     ) : filteredBlogs.length === 0 ? (

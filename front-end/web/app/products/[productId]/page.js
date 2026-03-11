@@ -20,6 +20,7 @@ import {
   Star,
   AlertCircle,
   Calendar,
+  MessageCircleMore,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
@@ -418,14 +419,7 @@ export default function ProductDetailPage() {
                     }
                     className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
-                    <svg
-                      className="w-6 h-6"
-                      viewBox="0 0 48 48"
-                      fill="currentColor"
-                    >
-                      <path d="M24 4C12.95 4 4 12.95 4 24c0 4.52 1.52 8.69 4.08 12.06L4.5 43.5l7.92-3.42C15.76 42.57 19.74 44 24 44c11.05 0 20-8.95 20-20S35.05 4 24 4zm0 36c-3.86 0-7.45-1.31-10.29-3.51l-.74-.57-5.66 2.44 2.5-5.45-.62-.79C6.65 29.16 5.5 26.67 5.5 24c0-10.22 8.28-18.5 18.5-18.5S42.5 13.78 42.5 24 34.22 42.5 24 42.5z" />
-                      <path d="M32.5 27.5c-.41 0-.83-.1-1.21-.31l-5.54-3.07c-.68-.38-1.11-1.11-1.11-1.91v-6.46c0-1.19.97-2.16 2.16-2.16h.41c1.19 0 2.16.97 2.16 2.16v5.28l4.34 2.4c1.03.57 1.39 1.87.82 2.9-.39.7-1.12 1.17-1.93 1.17h-.1z" />
-                    </svg>
+                    <MessageCircleMore className="w-6 h-6" />
                     Liên hệ qua Zalo
                   </button>
                   <button
