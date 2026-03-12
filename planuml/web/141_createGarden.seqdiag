@@ -1,0 +1,64 @@
+actor Farmer
+boundary CreateGardenPage
+control GardenController
+participant ":gardenService" as gardenService
+participant ":gardenModel" as gardenModel
+database Database
+
+
+Farmer->CreateGardenPage: 1. Enter garden record details & submit
+activate Farmer
+activate CreateGardenPage
+
+CreateGardenPage->CreateGardenPage: 2. Validate input
+activate CreateGardenPage
+space
+deactivate CreateGardenPage
+
+opt Invalid input data
+CreateGardenPage-->Farmer: 2.1 Display error message
+end
+
+CreateGardenPage->GardenController: 3. Create garden request
+activate GardenController
+
+GardenController->gardenService: 4. createGarden(data)
+activate gardenService
+
+gardenService->gardenModel: 5. save(data)
+activate gardenModel
+
+gardenModel->Database: 6. Execute save
+activate Database
+Database-->gardenModel: 7. Return result
+deactivate Database
+
+gardenModel-->gardenService: 8. Return garden entity
+deactivate gardenModel
+
+gardenService->gardenService: 9. checkSaveResult(result)
+activate gardenService
+space
+deactivate gardenService
+
+alt Create garden success
+gardenService-->GardenController: 9.1 Return success
+GardenController-->CreateGardenPage: 9.1.1 Show success message
+CreateGardenPage-->Farmer: 9.1.2 Display garden record created
+
+else Garden name already exists
+gardenService-->GardenController: 9.2 Return duplicate name error
+GardenController-->CreateGardenPage: 9.2.1 Show error message
+CreateGardenPage-->Farmer: 9.2.2 "Garden name already exists."
+
+else Create garden failed
+gardenService-->GardenController: 9.3 Return error
+deactivate gardenService
+
+GardenController-->CreateGardenPage: 9.3.1 Show error message
+deactivate GardenController
+CreateGardenPage-->Farmer: 9.3.2 Display error message
+
+deactivate CreateGardenPage
+deactivate Farmer
+end
