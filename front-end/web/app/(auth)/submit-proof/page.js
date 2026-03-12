@@ -16,8 +16,10 @@ import {
   Scroll,
 } from "lucide-react";
 import { usePermissionStore } from "@/store/usePermissionStore";
+import { cloudinaryService } from "@/lib/cloudinaryService";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 // ─── Upload Zone Component ────────────────────────────────────────────────────
 
@@ -146,41 +148,44 @@ export default function SubmitProofPage() {
   const [backFile, setBackFile] = useState(null);
   const [certificate, setCertificate] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const { submitProof, isSubmittingProof } = usePermissionStore();
   const router = useRouter();
 
   const canSubmit = Boolean(
-    frontFile && backFile && certificate && !isSubmittingProof,
+    frontFile && backFile && certificate && !isSubmittingProof && !uploading,
   );
-
-  const fileToDataUrl = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
 
-    const [frontUrl, backUrl, certificateUrl] = await Promise.all([
-      fileToDataUrl(frontFile),
-      fileToDataUrl(backFile),
-      fileToDataUrl(certificate),
-    ]);
+    try {
+      setUploading(true);
+      toast.loading("Đang tải file lên...");
 
-    const payload = {
-      proofs: [
-        { type: "cccd_front", url: frontUrl },
-        { type: "cccd_back", url: backUrl },
-        { type: "certificate", url: certificateUrl },
-      ],
-    };
+      // Upload files to Cloudinary via backend
+      const [frontProof, backProof, certProof] = await Promise.all([
+        cloudinaryService.uploadProofToCloudinary(frontFile, "cccd_front"),
+        cloudinaryService.uploadProofToCloudinary(backFile, "cccd_back"),
+        cloudinaryService.uploadProofToCloudinary(certificate, "certificate"),
+      ]);
 
-    const result = await submitProof(payload);
-    if (result) {
-      setSubmitted(true);
+      toast.dismiss();
+
+      const payload = {
+        proofs: [frontProof, backProof, certProof],
+      };
+
+      const result = await submitProof(payload);
+      if (result) {
+        setSubmitted(true);
+      }
+    } catch (error) {
+      toast.error(error?.message || "Lỗi khi tải file lên");
+      console.error("Upload error:", error);
+    } finally {
+      setUploading(false);
+      toast.dismiss();
     }
   };
 
@@ -329,10 +334,10 @@ export default function SubmitProofPage() {
                 : "bg-gray-100 text-gray-400 cursor-not-allowed",
             ].join(" ")}
           >
-            {isSubmittingProof ? (
+            {uploading || isSubmittingProof ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Đang gửi...
+                {uploading ? "Đang tải file..." : "Đang gửi..."}
               </>
             ) : (
               <>

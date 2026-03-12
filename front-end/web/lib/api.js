@@ -121,11 +121,11 @@ export const permissionAPI = {
     return response.data;
   },
   async getPermissionById(id) {
-    const response = await apiClient.get(`permission/${id}`);
+    const response = await apiClient.get(`permission/requests/${id}`);
     return response.data;
   },
   async filterPermissions(filters = {}) {
-    const response = await apiClient.get("permission/filter", {
+    const response = await apiClient.get("permission/requests/filter", {
       params: filters,
     });
     return response.data;
