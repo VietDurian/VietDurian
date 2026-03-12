@@ -210,9 +210,9 @@ export default function MyProductsPage() {
   const router = useRouter();
 
   const {
-    products,
-    isProductsLoading,
-    fetchProducts,
+    ownProducts,
+    isOwnProductLoading,
+    getOwnProducts,
     deleteProduct,
     isProductCreating,
   } = useProductStore();
@@ -223,41 +223,46 @@ export default function MyProductsPage() {
   }, [fetchTypes]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const params = {};
+    getOwnProducts().catch(() => {});
+  }, [getOwnProducts]);
 
-      if (search.trim()) {
-        params.name = search.trim();
-      }
+  const filteredProducts = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+    const normalizedStatus = statusFilter.trim().toLowerCase();
 
-      if (typeFilter) {
-        params.typeId = typeFilter;
-      }
+    return ownProducts.filter((product) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        (product?.name || "").toLowerCase().includes(normalizedSearch);
 
-      if (statusFilter) {
-        params.status = statusFilter;
-      }
+      const productTypeId =
+        product?.typeId || product?.type_product_id || product?.type?._id || "";
+      const matchesType = !typeFilter || productTypeId === typeFilter;
 
-      fetchProducts(params).catch(() => {});
-    }, 300);
+      const productStatus = (product?.status || "").toLowerCase();
+      const matchesStatus =
+        !normalizedStatus || productStatus === normalizedStatus;
 
-    return () => clearTimeout(timer);
-  }, [search, typeFilter, statusFilter, fetchProducts]);
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [ownProducts, search, typeFilter, statusFilter]);
 
   const stats = useMemo(() => {
-    const total = products.length;
-    const views = products.reduce(
+    const total = filteredProducts.length;
+    const views = filteredProducts.reduce(
       (sum, p) => sum + (toNumber(p.view_count) || 0),
       0,
     );
     const ratingAvg =
-      products.length === 0
+      filteredProducts.length === 0
         ? "0.0"
         : (
-            products.reduce((sum, p) => sum + (toNumber(p.rating) || 0), 0) /
-            products.length
+            filteredProducts.reduce(
+              (sum, p) => sum + (toNumber(p.rating) || 0),
+              0,
+            ) / filteredProducts.length
           ).toFixed(1);
-    const totalStock = products.reduce(
+    const totalStock = filteredProducts.reduce(
       (sum, p) => sum + (toNumber(p.stock) || 0),
       0,
     );
@@ -304,7 +309,7 @@ export default function MyProductsPage() {
         valueColor: "text-purple-700",
       },
     ];
-  }, [products]);
+  }, [filteredProducts]);
 
   const handleDelete = async (productId) => {
     if (!productId) return;
@@ -315,7 +320,7 @@ export default function MyProductsPage() {
 
   return (
     <>
-      {isProductsLoading ||
+      {isOwnProductLoading ||
         (isProductCreating && (
           <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
             <div className="bg-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
@@ -401,19 +406,19 @@ export default function MyProductsPage() {
 
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <ProductCard
                 key={product._id || product.id}
                 product={product}
                 onDelete={handleDelete}
               />
             ))}
-            {isProductsLoading && (
+            {isOwnProductLoading && (
               <div className="col-span-4 text-center py-16 text-gray-400 text-sm">
                 Loading products...
               </div>
             )}
-            {!isProductsLoading && products.length === 0 && (
+            {!isOwnProductLoading && filteredProducts.length === 0 && (
               <div className="col-span-4 text-center py-16 text-gray-400 text-sm">
                 No products found.
               </div>

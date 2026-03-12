@@ -7,6 +7,7 @@ const getErrorMessage = (error, fallback) =>
 
 export const useProductStore = create((set, get) => ({
   products: [],
+  ownProducts: [],
   productDetail: null,
   pagination: null,
   isProductsLoading: false,
@@ -14,6 +15,7 @@ export const useProductStore = create((set, get) => ({
   isProductCreating: false,
   isProductEditing: false,
   isProductDeleting: false,
+  isOwnProductLoading: false,
 
   // GET /products
   fetchProducts: async (params = {}) => {
@@ -28,6 +30,26 @@ export const useProductStore = create((set, get) => ({
       throw error;
     } finally {
       set({ isProductsLoading: false });
+    }
+  },
+
+  // GET /products/own
+  getOwnProducts: async () => {
+    set({ isOwnProductLoading: true });
+    try {
+      const res = await axiosInstance.get("/products/own");
+      const data = res?.data?.data ?? res?.data;
+      const pagination = res?.data?.pagination ?? null;
+      set({
+        ownProducts: Array.isArray(data) ? data : [],
+        pagination,
+      });
+      return res.data;
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to load own products"));
+      throw error;
+    } finally {
+      set({ isOwnProductLoading: false });
     }
   },
 
@@ -99,7 +121,10 @@ export const useProductStore = create((set, get) => ({
     set({ isProductCreating: true });
     try {
       const res = await axiosInstance.post("/products", data);
-      set((state) => ({ products: [res.data.data, ...state.products] }));
+      set((state) => ({
+        products: [res.data.data, ...state.products],
+        ownProducts: [res.data.data, ...state.ownProducts],
+      }));
       toast.success(res.data.message || "Product created successfully");
       return res.data;
     } catch (error) {
@@ -117,6 +142,9 @@ export const useProductStore = create((set, get) => ({
       const res = await axiosInstance.put(`/products/${productId}`, data);
       set((state) => ({
         products: state.products.map((p) =>
+          p?._id === productId ? res.data.data : p,
+        ),
+        ownProducts: state.ownProducts.map((p) =>
           p?._id === productId ? res.data.data : p,
         ),
         productDetail:
@@ -141,6 +169,7 @@ export const useProductStore = create((set, get) => ({
       const res = await axiosInstance.delete(`/products/${productId}`);
       set((state) => ({
         products: state.products.filter((p) => p?._id !== productId),
+        ownProducts: state.ownProducts.filter((p) => p?._id !== productId),
         productDetail:
           state.productDetail?._id === productId ? null : state.productDetail,
       }));

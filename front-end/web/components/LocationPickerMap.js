@@ -290,7 +290,7 @@ export default function LocationPickerMap({ latitude, longitude, onPick }) {
           />
 
           {showSuggestions && query.trim().length >= 2 && (
-            <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-64 overflow-auto">
+            <div className="absolute z-1000 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-64 overflow-auto">
               {isSuggesting && (
                 <div className="px-3 py-2 text-sm text-gray-500">
                   Đang tìm gợi ý địa điểm...
