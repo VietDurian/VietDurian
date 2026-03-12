@@ -100,8 +100,8 @@ export default function PermissionPage() {
             phone: item.user?.phone || 'No Phone',
             avatar: item.user?.avatar || '',
             role: item.user?.role || 'Unknown Role',
-            created_at: item.created_at,
-            updated_at: item.updated_at,
+            created_at: item.user_id?.created_at,
+            updated_at: item.user_id?.updated_at,
         }))
     }, [permission])
 
@@ -130,16 +130,37 @@ export default function PermissionPage() {
             if (doc.length === 0) return <span className="text-gray-400">No document</span>
             return (
                 <div className="flex flex-wrap gap-2">
-                    {doc.map((d, idx) => (
-                        <a key={idx} href={d} target="_blank" rel="noreferrer" className="text-[#1a4d2e] underline">
-                            Doc {idx + 1}
-                        </a>
-                    ))}
+                    {doc.map((d, idx) => {
+                        // Handle both string and object formats
+                        const url = typeof d === 'string' ? d : d?.url
+                        const type = typeof d === 'object' ? d?.type : null
+                        const label = type ? {
+                            'cccd_front': 'CCCD-F',
+                            'cccd_back': 'CCCD-B',
+                            'certificate': 'Cert',
+                            'degree': 'Deg',
+                            'other': 'Other'
+                        }[type] || `Doc ${idx + 1}` : `Doc ${idx + 1}`
+
+                        return (
+                            <a
+                                key={idx}
+                                href={url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[#1a4d2e] underline text-xs md:text-sm"
+                                title={type || 'Document'}
+                            >
+                                {label}
+                            </a>
+                        )
+                    })}
                 </div>
             )
         }
+        const url = typeof doc === 'string' ? doc : doc?.url
         return (
-            <a href={doc} target="_blank" rel="noreferrer" className="text-[#1a4d2e] underline">
+            <a href={url} target="_blank" rel="noreferrer" className="text-[#1a4d2e] underline">
                 View
             </a>
         )
@@ -148,6 +169,36 @@ export default function PermissionPage() {
     const handleRequestUpdated = ({ id, status }) => {
         setPermission((prev) => Array.isArray(prev) ? prev.map((item) => item?._id === id ? { ...item, status } : item) : prev)
         setSelectedRequest((prev) => prev ? { ...prev, status } : prev)
+    }
+
+    const handleViewDetail = async (req) => {
+        try {
+            // Call API để lấy chi tiết đầy đủ bao gồm proofs
+            const res = await permissionAPI.getPermissionById(req.id)
+            const detailData = res?.data?.data || res?.data
+
+            // Map lại dữ liệu để phù hợp với request object
+            const fullRequest = {
+                id: detailData._id,
+                user_name: detailData.user_id?.full_name || req.user_name,
+                email: detailData.user_id?.email || req.email,
+                phone: detailData.user_id?.phone || req.phone,
+                avatar: detailData.user_id?.avatar || req.avatar,
+                role: detailData.user_id?.role || req.role,
+                requestRole: detailData.requested_role,          // ← sửa
+                description: detailData.description,              // ← thêm
+                document: detailData.document,
+                proofs: detailData.proofs,
+                status: detailData.status,
+                created_at: detailData.user_id?.created_at,              // ← từ permission, không phải user
+                updated_at: detailData.user_id?.updated_at,              // ← từ permission, không phải user
+            }
+
+            setSelectedRequest(fullRequest)
+            setShowDetail(true)
+        } catch (error) {
+            console.error('Error fetching permission detail:', error)
+        }
     }
 
     return (
@@ -240,7 +291,7 @@ export default function PermissionPage() {
                                             <td className="px-6 py-4 text-sm text-gray-700">{req.role}</td>
                                             <td className="px-6 py-4 text-sm text-gray-700">{req.requestRole}</td>
                                             <td className="px-6 py-4 text-sm text-gray-700 max-w-xs truncate" title={req.description}>{req.description || '—'}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">{renderDocuments(req.document)}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-700">{renderDocuments(req.proofs || req.document)}</td>
                                             <td className="px-6 py-4 text-sm">
                                                 <span
                                                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${req.status === 'approved'
@@ -257,8 +308,8 @@ export default function PermissionPage() {
                                                 {req.created_at ? new Date(req.created_at).toLocaleString() : '—'}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-700">
-                                                <Eye className='w-4 h-4'
-                                                    onClick={() => { setSelectedRequest(req); setShowDetail(true); }}
+                                                <Eye className='w-4 h-4 cursor-pointer hover:text-[#1a4d2e] transition'
+                                                    onClick={() => handleViewDetail(req)}
                                                 >
 
                                                 </Eye>

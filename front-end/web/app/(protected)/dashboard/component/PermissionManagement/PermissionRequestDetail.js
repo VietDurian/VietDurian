@@ -33,15 +33,20 @@ export default function PermissionRequestDetail({ request, onClose, onUpdated })
         requestRole,
         description,
         document,
+        proofs,
         status,
         created_at,
         updated_at
     } = request
 
+    // Use proofs if available (new format), otherwise fall back to document (old format)
+    const documentsToDisplay = proofs || document
+
     const [submitting, setSubmitting] = useState(false)
     const [currentStatus, setCurrentStatus] = useState(status)
     const [showRejectReason, setShowRejectReason] = useState(false)
     const [rejectReason, setRejectReason] = useState('')
+    const [failedImages, setFailedImages] = useState(new Set())
 
     const timeline = useMemo(() => ([
         {
@@ -62,28 +67,100 @@ export default function PermissionRequestDetail({ request, onClose, onUpdated })
         }
 
         const files = Array.isArray(doc) ? doc : [doc]
+
+        // Debug: log files to see what we're receiving
+        console.log('Files received:', files)
+
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {files.map((file, idx) => (
-                    <a
-                        key={`${file}-${idx}`}
-                        href={file}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group flex items-center justify-between rounded-2xl border border-gray-100 bg-white/70 p-4 shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-lg"
-                    >
-                        <div className="flex items-center gap-3">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1a4d2e]/10 text-[#1a4d2e]">
-                                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
-                            </span>
-                            <div>
-                                <div className="text-sm font-semibold text-gray-900">Supporting file {idx + 1}</div>
-                                <p className="text-xs text-gray-500">Open in new tab</p>
-                            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-3 gap-3">
+                {files.map((file, idx) => {
+                    // Handle both old string format and new proof object format
+                    const fileUrl = typeof file === 'string' ? file : file?.url
+                    const proofType = typeof file === 'object' ? file?.type : null
+                    const uploadedAt = typeof file === 'object' ? file?.uploadedAt : null
+
+                    if (!fileUrl) return null
+
+                    const isImage = !/\.(pdf|doc|docx|xls|xlsx|txt|zip|rar)$/i.test(fileUrl) &&
+                        (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileUrl) ||
+                            fileUrl.includes('cloudinary') ||
+                            fileUrl.includes('picsum') ||
+                            fileUrl.includes('imgur') ||
+                            fileUrl.includes('unsplash') ||
+                            fileUrl.includes('pexels') ||
+                            fileUrl.includes('res.cloudinary.com'))
+                    const proofLabel = proofType ? {
+                        'cccd_front': 'CCCD Front',
+                        'cccd_back': 'CCCD Back',
+                        'certificate': 'Certificate',
+                        'degree': 'Degree',
+                        'other': 'Other Document'
+                    }[proofType] : `Document ${idx + 1}`
+
+                    return (
+                        <div
+                            key={`${fileUrl}-${idx}`}
+                            className="group relative rounded-2xl border border-gray-100 overflow-hidden shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-lg aspect-square"
+                        >
+                            {/* Image - Display directly and prominently */}
+                            {isImage ? (
+                                <a
+                                    href={fileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="relative block w-full h-full bg-gray-100 overflow-hidden"
+                                >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={fileUrl}
+                                        alt={proofLabel}
+                                        className="h-full w-full object-cover group-hover:scale-105 transition duration-300"
+                                        crossOrigin="anonymous"
+                                        onError={(e) => {
+                                            console.error('Image failed to load:', fileUrl)
+                                            // Try first CORS proxy
+                                            if (!e.target.src.includes('cors-anywhere')) {
+                                                const corsUrl = `https://cors-anywhere.herokuapp.com/${fileUrl}`
+                                                e.target.src = corsUrl
+                                                return
+                                            }
+                                            // Try second CORS proxy
+                                            if (!e.target.src.includes('api.allorigins')) {
+                                                const corsUrl2 = `https://api.allorigins.win/raw?url=${encodeURIComponent(fileUrl)}`
+                                                e.target.src = corsUrl2
+                                                return
+                                            }
+                                            // If all fail, hide image
+                                            setFailedImages(prev => new Set([...prev, fileUrl]))
+                                            e.target.style.display = 'none'
+                                        }}
+                                    />
+                                    {/* Label overlay on image */}
+                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent px-4 py-3">
+                                        <div className="text-sm font-semibold text-white">{proofLabel}</div>
+                                    </div>
+                                </a>
+                            ) : (
+                                <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+                                    <a
+                                        href={fileUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-center hover:opacity-75 transition"
+                                    >
+                                        <div className="text-xs font-semibold text-gray-900">{proofLabel}</div>
+                                        <div className="text-xs text-gray-500 mt-1 inline-flex items-center gap-1">
+                                            View
+                                            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M9 18l6-6-6-6" />
+                                            </svg>
+                                        </div>
+                                    </a>
+                                </div>
+                            )}
                         </div>
-                        <svg className="h-4 w-4 text-gray-400 transition group-hover:text-[#1a4d2e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-                    </a>
-                ))}
+                    )
+                })}
             </div>
         )
     }
@@ -305,7 +382,7 @@ export default function PermissionRequestDetail({ request, onClose, onUpdated })
                     <span className="text-xs font-medium text-gray-500">Confidential</span>
                 </div>
                 <div className="mt-4">
-                    {renderDocuments(document)}
+                    {renderDocuments(documentsToDisplay)}
                 </div>
             </section>
 
