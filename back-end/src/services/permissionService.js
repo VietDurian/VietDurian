@@ -19,7 +19,6 @@ const getPermissionRequests = async () => {
     ];
 
     pipeline.push({ $sort: { created_at: -1 } });
-
     return await PermissionAccountModel.aggregate(pipeline);
   } catch (error) {
     throw error;
@@ -29,9 +28,11 @@ const getPermissionRequests = async () => {
 const getPermissionRequestDetail = async (request_id) => {
   try {
     const request = await PermissionAccountModel.findById(request_id)
-      .populate("user_id", "full_name email avatar role is_verified is_banned")
+      .populate("user_id", "full_name email phone avatar role is_verified is_banned created_at updated_at")
       .lean();
+    console.log("Request detail:", request);
     return request;
+
   } catch (error) {
     throw error;
   }

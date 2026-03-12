@@ -1,5 +1,6 @@
 // Vo Lam Thuy Vi
 import { permissionService } from "@/services/permissionService.js";
+import { proofUploadService } from "@/services/proofUploadService.js";
 
 const getPermissionRequests = async (req, res, next) => {
     try {
@@ -136,6 +137,49 @@ const isMyAccountApproved = async (req, res, next) => {
     }
 };
 
+const uploadProof = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const { file, proofType } = req.body;
+
+        if (!file || !proofType) {
+            return res.status(400).json({
+                code: 400,
+                message: "File and proof type are required",
+            });
+        }
+
+        // Validate proof type
+        const validTypes = [
+            "cccd_front",
+            "cccd_back",
+            "certificate",
+            "degree",
+            "other",
+        ];
+        if (!validTypes.includes(proofType)) {
+            return res.status(400).json({
+                code: 400,
+                message: "Invalid proof type",
+            });
+        }
+
+        // Upload file to Cloudinary
+        const uploadResult = await proofUploadService.uploadProofFile(
+            file,
+            proofType,
+        );
+
+        res.status(200).json({
+            code: 200,
+            message: "Proof file uploaded successfully",
+            data: uploadResult,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const permissionController = {
     getPermissionRequests,
     searchPermissionRequests,
@@ -145,4 +189,5 @@ export const permissionController = {
     rejectAccount,
     submitProofs,
     isMyAccountApproved,
+    uploadProof,
 };
