@@ -1,0 +1,49 @@
+actor Farmer
+boundary GardenPage
+control GardenController
+participant ":gardenService" as gardenService
+participant ":gardenModel" as gardenModel
+database Database
+
+
+Farmer->GardenPage: 1. Users click "Garden" tab
+activate Farmer
+activate GardenPage
+
+GardenPage->GardenController: 2. Get garden list request
+activate GardenController
+
+GardenController->gardenService: 3. getGardensByUser(userId)
+activate gardenService
+
+gardenService->gardenModel: 4. find(userId)
+activate gardenModel
+
+gardenModel->Database: 5. Execute query
+activate Database
+Database-->gardenModel: 6. Return result
+deactivate Database
+
+gardenModel-->gardenService: 7. Return garden list
+deactivate gardenModel
+
+gardenService->gardenService: 8. check garden list
+activate gardenService
+space
+deactivate gardenService
+
+alt Garden list not empty
+gardenService-->GardenController: 8.1 Return garden list
+GardenController-->GardenPage: 8.1.1 Show garden list
+GardenPage-->Farmer: 8.1.2 Display garden list
+else Garden list empty
+gardenService-->GardenController: 8.2 Return empty list
+deactivate gardenService
+
+GardenController-->GardenPage: 8.2.1 Show empty message
+deactivate GardenController
+GardenPage-->Farmer: 8.2.2 Display "No gardens found"
+
+deactivate GardenPage
+deactivate Farmer
+end

@@ -1,0 +1,48 @@
+actor Farmer
+boundary GardenDetailPage
+control GardenController
+participant ":gardenService" as gardenService
+participant ":gardenModel" as gardenModel
+database Database
+
+
+Farmer->GardenDetailPage: 1. Users select "Chi tiết" in Garden tab
+activate Farmer
+activate GardenDetailPage
+
+GardenDetailPage->GardenController: 2. Get garden detail request
+activate GardenController
+
+GardenController->gardenService: 3. getGardenById(gardenId)
+activate gardenService
+
+gardenService->gardenModel: 4. find(gardenId)
+activate gardenModel
+
+gardenModel->Database: 5. Execute query
+activate Database
+Database-->gardenModel: 6. Return result
+deactivate Database
+gardenModel-->gardenService: 7. Return garden data
+deactivate gardenModel
+
+gardenService->gardenService: 8. check garden data
+activate gardenService
+space
+deactivate gardenService
+
+alt Garden Exist
+gardenService-->GardenController: 8.1 Return garden data
+GardenController-->GardenDetailPage: 8.1.1 Show garden data
+GardenDetailPage-->Farmer: 8.1.2 Display garden data
+else Garden not found
+gardenService-->GardenController: 8.2 Return not found message
+deactivate gardenService
+
+GardenController-->GardenDetailPage: 8.2.1 Show empty message
+deactivate GardenController
+GardenDetailPage-->Farmer: 8.2.2 Display "No gardens found"
+
+deactivate GardenDetailPage
+deactivate Farmer
+end
