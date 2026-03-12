@@ -1,6 +1,7 @@
 import { GardenModel } from '../model/gardenModel.js';
 import createError from 'http-errors';
 import { cloudinary } from '@/config/cloudinary';
+import { DiaryModel } from '@/model/diaryModel.js'
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -337,10 +338,20 @@ const updateGarden = async (gardenId, updateData) => {
 // Delete garden record
 const deleteGarden = async (gardenId) => {
 	try {
-		const deletedGarden = await GardenModel.findByIdAndDelete(gardenId);
-		if (!deletedGarden) {
+		const existingGarden = await GardenModel.findById(gardenId)
+			.select('_id')
+			.lean();
+
+		if (!existingGarden) {
 			throw createError(404, 'Vườn không tồn tại');
 		}
+
+		const hasDiary = await DiaryModel.exists({ garden_id: gardenId });
+		if (hasDiary) {
+			throw createError(409, 'Không thể xóa vườn vì vẫn còn nhật ký');
+		}
+
+		const deletedGarden = await GardenModel.findByIdAndDelete(gardenId);
 		return deletedGarden;
 	} catch (error) {
 		throw error;
