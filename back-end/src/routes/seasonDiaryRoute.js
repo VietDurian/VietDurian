@@ -25,6 +25,7 @@ const Router = express.Router();
  *         schema:
  *           type: string
  *         description: Filter by owner user id
+ *         example: "69429eee21eeba96cd1c3f71"
  *     responses:
  *       200:
  *         description: Season diary list retrieved successfully

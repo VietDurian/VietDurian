@@ -94,8 +94,6 @@ const updateSeasonDiary = async (req, res, next) => {
 
 		const diary = await seasonDiaryService.updateSeasonDiary({
 			seasonDiaryId: season_diary_id,
-			userId,
-			role: req.user?.role,
 			data: req.body,
 		});
 
@@ -112,12 +110,9 @@ const updateSeasonDiary = async (req, res, next) => {
 const deleteSeasonDiary = async (req, res, next) => {
 	try {
 		const { season_diary_id } = req.params;
-		const userId = req.user?.id || req.user?._id;
 
 		await seasonDiaryService.deleteSeasonDiary({
 			seasonDiaryId: season_diary_id,
-			userId,
-			role: req.user?.role,
 		});
 
 		res.status(200).json({
@@ -132,12 +127,9 @@ const deleteSeasonDiary = async (req, res, next) => {
 const finishSeasonDiary = async (req, res, next) => {
 	try {
 		const { season_diary_id } = req.params;
-		const userId = req.user?.id || req.user?._id;
 
 		const diary = await seasonDiaryService.finishSeasonDiary({
 			seasonDiaryId: season_diary_id,
-			userId,
-			role: req.user?.role,
 		});
 
 		res.status(200).json({

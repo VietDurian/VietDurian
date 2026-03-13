@@ -4,11 +4,37 @@ import mongoose from 'mongoose';
 
 const VALID_STATUSES = ['In progressing', 'Completed'];
 
-const toObjectIdString = (value) => value?.toString();
+const escapeRegex = (text = '') =>
+	text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const normalizeGardenName = (name = '') => name.trim();
 
 const ensureValidObjectId = (id, fieldName = 'id') => {
 	if (!mongoose.Types.ObjectId.isValid(id)) {
 		throw createError(400, `Invalid ${fieldName}`);
+	}
+};
+
+const ensureUniqueGardenName = async ({ gardenName, excludeId = null }) => {
+	const normalizedName = normalizeGardenName(gardenName);
+	if (!normalizedName) {
+		return;
+	}
+
+	const query = {
+		garden_name: {
+			$regex: `^${escapeRegex(normalizedName)}$`,
+			$options: 'i',
+		},
+	};
+
+	if (excludeId) {
+		query._id = { $ne: excludeId };
+	}
+
+	const existedDiary = await SeasonDiaryModel.findOne(query).select('_id').lean();
+	if (existedDiary) {
+		throw createError(409, 'Tên vườn đã tồn tại, vui lòng chọn tên khác');
 	}
 };
 
@@ -65,8 +91,11 @@ const getSeasonDiaryDetail = async (seasonDiaryId) => {
 
 const createSeasonDiary = async ({ userId, data }) => {
 	try {
+		await ensureUniqueGardenName({ gardenName: data.garden_name });
+
 		const newDiary = new SeasonDiaryModel({
 			...data,
+			garden_name: normalizeGardenName(data.garden_name),
 			user_id: userId,
 		});
 
@@ -77,7 +106,7 @@ const createSeasonDiary = async ({ userId, data }) => {
 	}
 };
 
-const updateSeasonDiary = async ({ seasonDiaryId, userId, role, data }) => {
+const updateSeasonDiary = async ({ seasonDiaryId, data }) => {
 	try {
 		ensureValidObjectId(seasonDiaryId, 'seasonDiaryId');
 
@@ -86,13 +115,16 @@ const updateSeasonDiary = async ({ seasonDiaryId, userId, role, data }) => {
 			throw createError(404, 'Season diary not found');
 		}
 
-		const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-		if (!isOwner && role !== 'admin') {
-			throw createError(403, 'You do not have permission to update this season diary');
-		}
-
 		delete data.status;
 		delete data.end_date;
+
+		if (typeof data.garden_name === 'string') {
+			await ensureUniqueGardenName({
+				gardenName: data.garden_name,
+				excludeId: seasonDiaryId,
+			});
+			data.garden_name = normalizeGardenName(data.garden_name);
+		}
 
 		Object.assign(diary, data);
 		const updatedDiary = await diary.save();
@@ -103,18 +135,13 @@ const updateSeasonDiary = async ({ seasonDiaryId, userId, role, data }) => {
 	}
 };
 
-const deleteSeasonDiary = async ({ seasonDiaryId, userId, role }) => {
+const deleteSeasonDiary = async ({ seasonDiaryId}) => {
 	try {
 		ensureValidObjectId(seasonDiaryId, 'seasonDiaryId');
 
 		const diary = await SeasonDiaryModel.findById(seasonDiaryId);
 		if (!diary) {
 			throw createError(404, 'Season diary not found');
-		}
-
-		const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-		if (!isOwner && role !== 'admin') {
-			throw createError(403, 'You do not have permission to delete this season diary');
 		}
 
 		if (diary.status !== 'In progressing') {
@@ -131,18 +158,13 @@ const deleteSeasonDiary = async ({ seasonDiaryId, userId, role }) => {
 	}
 };
 
-const finishSeasonDiary = async ({ seasonDiaryId, userId, role }) => {
+const finishSeasonDiary = async ({ seasonDiaryId }) => {
 	try {
 		ensureValidObjectId(seasonDiaryId, 'seasonDiaryId');
 
 		const diary = await SeasonDiaryModel.findById(seasonDiaryId);
 		if (!diary) {
 			throw createError(404, 'Season diary not found');
-		}
-
-		const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-		if (!isOwner && role !== 'admin') {
-			throw createError(403, 'You do not have permission to finish this season diary');
 		}
 
 		diary.status = 'Completed';
