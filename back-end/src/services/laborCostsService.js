@@ -1,4 +1,4 @@
-import { IrrigationCostsModel } from '@/model/irrigationCostsModel';
+import { LaborCostsModel } from '@/model/laborCostsModel';
 import { SeasonDiaryModel } from '@/model/seasonDiaryModel';
 import createError from 'http-errors';
 
@@ -17,7 +17,7 @@ const parseLimit = (limit) => {
 	return parsed > 100 ? 100 : parsed;
 };
 
-const normalizeExecutionDate = (value) => {
+const normalizeDate = (value) => {
 	if (value === undefined || value === null) {
 		return value;
 	}
@@ -30,14 +30,14 @@ const normalizeExecutionDate = (value) => {
 	if (dateOnlyRegex.test(value)) {
 		const parsedDate = new Date(`${value}T00:00:00.000Z`);
 		if (Number.isNaN(parsedDate.getTime())) {
-			throw createError(400, 'execution_date must be a valid date in YYYY-MM-DD format');
+			throw createError(400, 'labor_hire_date must be a valid date in YYYY-MM-DD format');
 		}
 		return parsedDate;
 	}
 
 	const parsedDate = new Date(value);
 	if (Number.isNaN(parsedDate.getTime())) {
-		throw createError(400, 'execution_date must be a valid date in YYYY-MM-DD format');
+		throw createError(400, 'labor_hire_date must be a valid date in YYYY-MM-DD format');
 	}
 
 	return parsedDate;
@@ -55,34 +55,30 @@ const normalizeNumber = (value, fieldName) => {
 	return value;
 };
 
-const normalizeCostNumber = (value) => {
-	return normalizeNumber(value, 'electricity_fuel_cost');
-};
-
-const normalizeDuration = (value) => {
+const normalizeWorkingTime = (value) => {
 	if (value === undefined || value === null || value === '') {
 		return value === '' ? null : value;
 	}
 
 	if (typeof value !== 'object' || Array.isArray(value)) {
-		throw createError(400, 'irrigation_duration must be an object with hours and minutes');
+		throw createError(400, 'working_time must be an object with hours and minutes');
 	}
 
 	const normalized = {};
 
 	if (Object.prototype.hasOwnProperty.call(value, 'hours')) {
-		const hours = normalizeNumber(value.hours, 'irrigation_duration.hours');
+		const hours = normalizeNumber(value.hours, 'working_time.hours');
 		if (hours !== null && hours !== undefined && hours < 0) {
-			throw createError(400, 'irrigation_duration.hours must be >= 0');
+			throw createError(400, 'working_time.hours must be >= 0');
 		}
 		normalized.hours = hours;
 	}
 
 	if (Object.prototype.hasOwnProperty.call(value, 'minutes')) {
-		const minutes = normalizeNumber(value.minutes, 'irrigation_duration.minutes');
+		const minutes = normalizeNumber(value.minutes, 'working_time.minutes');
 		if (minutes !== null && minutes !== undefined) {
 			if (minutes < 0 || minutes > 59) {
-				throw createError(400, 'irrigation_duration.minutes must be between 0 and 59');
+				throw createError(400, 'working_time.minutes must be between 0 and 59');
 			}
 		}
 		normalized.minutes = minutes;
@@ -91,32 +87,38 @@ const normalizeDuration = (value) => {
 	return normalized;
 };
 
-const sanitizeIrrigationPayload = (payload) => {
+const sanitizePayload = (payload) => {
 	const sanitized = { ...payload };
 
-	delete sanitized.water_source;
-	delete sanitized.maintenance_repair_cost;
+	if (Object.prototype.hasOwnProperty.call(sanitized, 'worker_quantity')) {
+		sanitized.worker_quantity = normalizeNumber(sanitized.worker_quantity, 'worker_quantity');
+	}
 
-	if (Object.prototype.hasOwnProperty.call(sanitized, 'irrigation_duration_hours')) {
-		sanitized.irrigation_duration = {
+	if (Object.prototype.hasOwnProperty.call(sanitized, 'working_time_hours_per_day')) {
+		sanitized.working_time = {
 			hours: normalizeNumber(
-				sanitized.irrigation_duration_hours,
-				'irrigation_duration_hours',
+				sanitized.working_time_hours_per_day,
+				'working_time_hours_per_day',
 			),
 			minutes: 0,
 		};
-		delete sanitized.irrigation_duration_hours;
+		delete sanitized.working_time_hours_per_day;
 	}
 
-	if (Object.prototype.hasOwnProperty.call(sanitized, 'irrigation_duration')) {
-		sanitized.irrigation_duration = normalizeDuration(sanitized.irrigation_duration);
+	if (Object.prototype.hasOwnProperty.call(sanitized, 'working_time')) {
+		sanitized.working_time = normalizeWorkingTime(sanitized.working_time);
 	}
 
-	if (Object.prototype.hasOwnProperty.call(sanitized, 'electricity_fuel_cost')) {
-		sanitized.electricity_fuel_cost = normalizeCostNumber(
-			sanitized.electricity_fuel_cost,
-		);
+	if (Object.prototype.hasOwnProperty.call(sanitized, 'unit_price_vnd')) {
+		sanitized.unit_price_vnd = normalizeNumber(sanitized.unit_price_vnd, 'unit_price_vnd');
 	}
+
+	if (Object.prototype.hasOwnProperty.call(sanitized, 'labor_hire_date')) {
+		sanitized.labor_hire_date = normalizeDate(sanitized.labor_hire_date);
+	}
+
+	// Explicitly drop unsupported field from legacy UI/forms.
+	delete sanitized.total_cost;
 
 	return sanitized;
 };
@@ -137,13 +139,7 @@ const ensureSeasonDiaryAccess = async ({ seasonDiaryId, userId, role }) => {
 	}
 };
 
-const viewIrrigationCostsList = async ({
-	page,
-	limit,
-	seasonDiaryId,
-	userId,
-	role,
-}) => {
+const viewLaborCostsList = async ({ page, limit, seasonDiaryId, userId, role }) => {
 	const pageNumber = parsePage(page);
 	const limitNumber = parseLimit(limit);
 	const skip = (pageNumber - 1) * limitNumber;
@@ -157,7 +153,7 @@ const viewIrrigationCostsList = async ({
 	}
 
 	const [items, total] = await Promise.all([
-		IrrigationCostsModel.find(query)
+		LaborCostsModel.find(query)
 			.select('-created_by -__v')
 			.populate({
 				path: 'season_diary_id',
@@ -167,7 +163,7 @@ const viewIrrigationCostsList = async ({
 			.skip(skip)
 			.limit(limitNumber)
 			.lean(),
-		IrrigationCostsModel.countDocuments(query),
+		LaborCostsModel.countDocuments(query),
 	]);
 
 	return {
@@ -181,32 +177,30 @@ const viewIrrigationCostsList = async ({
 	};
 };
 
-const createIrrigationCosts = async ({ userId, role, data }) => {
+const createLaborCosts = async ({ userId, role, data }) => {
 	if (!data?.season_diary_id) {
 		throw createError(400, 'season_diary_id is required');
 	}
 
 	await ensureSeasonDiaryAccess({
-		seasonDiaryId: data?.season_diary_id,
+		seasonDiaryId: data.season_diary_id,
 		userId,
 		role,
 	});
 
 	const payload = {
-		...sanitizeIrrigationPayload(data),
+		...sanitizePayload(data),
 		created_by: userId,
 	};
 
-	payload.execution_date = normalizeExecutionDate(payload.execution_date);
-
-	const created = await IrrigationCostsModel.create(payload);
+	const created = await LaborCostsModel.create(payload);
 	return created;
 };
 
-const updateIrrigationCosts = async ({ irrigationCostId, userId, role, data }) => {
-	const existing = await IrrigationCostsModel.findById(irrigationCostId);
+const updateLaborCosts = async ({ laborCostId, userId, role, data }) => {
+	const existing = await LaborCostsModel.findById(laborCostId);
 	if (!existing) {
-		throw createError(404, 'Irrigation costs log not found');
+		throw createError(404, 'Labor costs log not found');
 	}
 
 	const isCreator =
@@ -218,11 +212,7 @@ const updateIrrigationCosts = async ({ irrigationCostId, userId, role, data }) =
 	const targetSeasonDiaryId = data?.season_diary_id || existing.season_diary_id;
 	await ensureSeasonDiaryAccess({ seasonDiaryId: targetSeasonDiaryId, userId, role });
 
-	const payload = sanitizeIrrigationPayload(data);
-	if (Object.prototype.hasOwnProperty.call(payload, 'execution_date')) {
-		payload.execution_date = normalizeExecutionDate(payload.execution_date);
-	}
-
+	const payload = sanitizePayload(data);
 	delete payload.created_by;
 
 	Object.assign(existing, payload);
@@ -230,13 +220,13 @@ const updateIrrigationCosts = async ({ irrigationCostId, userId, role, data }) =
 	return updated;
 };
 
-const deleteIrrigationCosts = async ({ irrigationCostId, userId, role }) => {
-	const existing = await IrrigationCostsModel.findById(irrigationCostId)
+const deleteLaborCosts = async ({ laborCostId, userId, role }) => {
+	const existing = await LaborCostsModel.findById(laborCostId)
 		.select('_id created_by')
 		.lean();
 
 	if (!existing) {
-		throw createError(404, 'Irrigation costs log not found');
+		throw createError(404, 'Labor costs log not found');
 	}
 
 	const isCreator =
@@ -245,13 +235,13 @@ const deleteIrrigationCosts = async ({ irrigationCostId, userId, role }) => {
 		throw createError(403, 'You do not have permission to delete this log');
 	}
 
-	await IrrigationCostsModel.findByIdAndDelete(irrigationCostId);
+	await LaborCostsModel.findByIdAndDelete(laborCostId);
 	return true;
 };
 
-export const irrigationCostsService = {
-	viewIrrigationCostsList,
-	createIrrigationCosts,
-	updateIrrigationCosts,
-	deleteIrrigationCosts,
+export const laborCostsService = {
+	viewLaborCostsList,
+	createLaborCosts,
+	updateLaborCosts,
+	deleteLaborCosts,
 };

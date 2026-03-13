@@ -54,7 +54,8 @@ const Router = express.Router();
  *                 properties:
  *                   execution_date:
  *                     type: string
- *                     description: Clear date format YYYY-MM-DD
+	*                     format: date
+	*                     description: Date value (YYYY-MM-DD)
  *                     example: "2026-03-13"
  *                   irrigation_item:
  *                     type: string
@@ -64,9 +65,16 @@ const Router = express.Router();
  *                     enum: [nho_giot, phun_mua, thu_cong]
  *                     description: nho_giot (Nhỏ giọt), phun_mua (Phun mưa), thu_cong (Thủ công)
  *                     example: "nho_giot"
- *                   irrigation_duration_hours:
- *                     type: number
- *                     example: 2.5
+ *                   irrigation_duration:
+ *                     type: object
+ *                     properties:
+ *                       hours:
+ *                         type: number
+ *                         format: double
+ *                         example: 2
+ *                       minutes:
+ *                         type: number
+ *                         example: 30
  *                   irrigation_area:
  *                     type: string
  *                     example: "2500 m2"
@@ -106,15 +114,22 @@ const Router = express.Router();
  *                 properties:
  *                   execution_date:
  *                     type: string
- *                     description: YYYY-MM-DD
+	*                     format: date
+	*                     description: Date value (YYYY-MM-DD)
  *                   irrigation_item:
  *                     type: string
  *                   irrigation_method:
  *                     type: string
  *                     enum: [nho_giot, phun_mua, thu_cong]
  *                     description: nho_giot (Nhỏ giọt), phun_mua (Phun mưa), thu_cong (Thủ công)
- *                   irrigation_duration_hours:
- *                     type: number
+ *                   irrigation_duration:
+ *                     type: object
+ *                     properties:
+ *                       hours:
+ *                         type: number
+ *                         format: double
+ *                       minutes:
+ *                         type: number
  *                   irrigation_area:
  *                     type: string
  *                   electricity_fuel_cost:

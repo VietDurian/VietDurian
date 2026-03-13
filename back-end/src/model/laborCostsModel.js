@@ -1,8 +1,6 @@
 import mongoose from 'mongoose';
 
-const irrigationMethodEnum = ['nho_giot', 'phun_mua', 'thu_cong'];
-
-const IrrigationCostsSchema = new mongoose.Schema(
+const LaborCostsSchema = new mongoose.Schema(
 	{
 		season_diary_id: {
 			type: mongoose.Schema.Types.ObjectId,
@@ -14,23 +12,22 @@ const IrrigationCostsSchema = new mongoose.Schema(
 			ref: 'User',
 			required: true,
 		},
-		// Clear, timezone-safe date format: YYYY-MM-DD
-		execution_date: {
+		// Clear date format to avoid timezone confusion
+		labor_hire_date: {
 			type: Date,
 			default: null,
 		},
-		irrigation_item: {
+		work_description: {
 			type: String,
 			trim: true,
 			default: '',
 		},
-		irrigation_method: {
-			type: String,
-			enum: irrigationMethodEnum,
+		worker_quantity: {
+			type: Number,
 			required: false,
 			default: null,
 		},
-		irrigation_duration: {
+		working_time: {
 			hours: {
 				type: Number,
 				required: false,
@@ -45,17 +42,17 @@ const IrrigationCostsSchema = new mongoose.Schema(
 				max: 59,
 			},
 		},
-		irrigation_area: {
-			type: String,
-			trim: true,
-			default: '',
-		},
-		electricity_fuel_cost: {
+		unit_price_vnd: {
 			type: Number,
 			required: false,
 			default: null,
 		},
-		performed_by: {
+		worker_or_team_name: {
+			type: String,
+			trim: true,
+			default: '',
+		},
+		supervisor_name: {
 			type: String,
 			trim: true,
 			default: '',
@@ -69,6 +66,6 @@ const IrrigationCostsSchema = new mongoose.Schema(
 	},
 );
 
-const IrrigationCostsModel = mongoose.model('IrrigationCosts', IrrigationCostsSchema);
+const LaborCostsModel = mongoose.model('LaborCosts', LaborCostsSchema);
 
-export { IrrigationCostsModel, irrigationMethodEnum };
+export { LaborCostsModel };
