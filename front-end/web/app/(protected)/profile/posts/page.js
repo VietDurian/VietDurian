@@ -4,13 +4,13 @@ import {
   Heart, ImageIcon, MessageCircle, MoreHorizontal, X,
   CheckCircle, Clock, XCircle, AlertCircle, Loader2,
   Wrench, BookOpen, Package, HandCoins, LayoutGrid, Plus, ChevronDown,
+  Phone, Mail,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getOwnPosts, updatePost, deletePost, favoriteAPI, commentAPI, setPostInactive, setPostActive } from "@/lib/api";
+import { getOwnPosts, updatePost, deletePost, favoriteAPI, commentAPI } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -31,6 +31,43 @@ const STATUS_OPTIONS = [
   { value: "progressing", label: "Đang chờ duyệt" },
   { value: "inactive", label: "Ngưng hoạt động" },
 ];
+
+const TITLE_PLACEHOLDERS = {
+  "Dịch vụ": "VD: Dọn cỏ, làm vườn, phun thuốc, cắt tỉa cành...",
+  "Sản phẩm": "VD: Bán sầu riêng Ri6, phân bón hữu cơ, cây giống...",
+  "Kinh nghiệm": "VD: Kỹ thuật bón phân, cách xử lý sâu bệnh...",
+  "Thuê dịch vụ": "VD: Cần thuê người phun thuốc, hái quả, chăm vườn...",
+  "Khác": "VD: Thông báo, hỏi đáp, tin tức nông nghiệp...",
+};
+
+const categoryConfig = {
+  "Dịch vụ": { icon: Wrench, bg: "from-blue-500 to-cyan-500" },
+  "Kinh nghiệm": { icon: BookOpen, bg: "from-amber-500 to-orange-500" },
+  "Sản phẩm": { icon: Package, bg: "from-emerald-500 to-teal-500" },
+  "Thuê dịch vụ": { icon: HandCoins, bg: "from-purple-500 to-violet-500" },
+  "Khác": { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" },
+};
+
+const PHONE_REGEX = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validateContact = (type, value) => {
+  if (!value.trim()) return "Vui lòng nhập thông tin liên hệ";
+  if (type === "phone") {
+    if (!PHONE_REGEX.test(value))
+      return "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 03, 05, 07, 08, 09)";
+  } else {
+    if (!EMAIL_REGEX.test(value))
+      return "Email không hợp lệ (VD: example@gmail.com)";
+  }
+  return "";
+};
+
+// detect whether a contact string looks like email or phone
+const detectContactType = (val) => {
+  if (!val) return "phone";
+  return EMAIL_REGEX.test(val) ? "email" : "phone";
+};
 
 // ── Confirm Modal ─────────────────────────────────────────
 const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
@@ -71,19 +108,27 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const categories = getCategoriesByRole(user?.role);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [category, setCategory] = useState(post?.category || categories[0]);
+  const [title, setTitle] = useState(post?.title || "");
   const [content, setContent] = useState(post?.content || "");
+  const [contactType, setContactType] = useState(detectContactType(post?.link));
   const [contact, setContact] = useState(post?.link || "");
+  const [contactError, setContactError] = useState("");
   const [imagePreview, setImagePreview] = useState(post?.image || "");
   const [imageData, setImageData] = useState(post?.image || "");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const canSubmit = Boolean(category) && Boolean(content.trim()) && Boolean(imageData) && Boolean(contact.trim());
+
+  const canSubmit = Boolean(category) && Boolean(title.trim()) && Boolean(content.trim()) && Boolean(imageData) && Boolean(contact.trim()) && !contactError;
 
   useEffect(() => {
     if (post) {
       setCategory(post.category || categories[0]);
+      setTitle(post.title || "");
       setContent(post.content || "");
+      const ct = detectContactType(post.link);
+      setContactType(ct);
       setContact(post.link || "");
+      setContactError("");
       setImagePreview(post.image || "");
       setImageData(post.image || "");
       setError("");
@@ -95,6 +140,19 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
     document.body.style.overflow = isOpen ? "hidden" : "unset";
     return () => { document.body.style.overflow = "unset"; };
   }, [isOpen]);
+
+  const handleContactChange = (e) => {
+    const val = e.target.value;
+    setContact(val);
+    if (val.trim()) setContactError(validateContact(contactType, val));
+    else setContactError("");
+  };
+
+  const handleContactTypeChange = (type) => {
+    setContactType(type);
+    setContact("");
+    setContactError("");
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -108,11 +166,13 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    const cErr = validateContact(contactType, contact);
+    if (cErr) { setContactError(cErr); return; }
     if (!canSubmit) { setError("Vui lòng điền đủ thông tin."); return; }
     setIsSubmitting(true);
     try {
-      const updated = await updatePost(post.id, { category, content: content.trim(), image: imageData, contact: contact.trim() });
-      onPostUpdated?.({ ...post, content: updated?.content || content.trim(), link: updated?.contact || contact.trim(), image: updated?.image || imagePreview, category: updated?.category || category, status: updated?.status || post.status });
+      const updated = await updatePost(post.id, { category, title: title.trim(), content: content.trim(), image: imageData, contact: contact.trim() });
+      onPostUpdated?.({ ...post, title: updated?.title || title.trim(), content: updated?.content || content.trim(), link: updated?.contact || contact.trim(), image: updated?.image || imagePreview, category: updated?.category || category, status: updated?.status || post.status });
       onClose();
     } catch (err) {
       setError(err?.message || "Không thể cập nhật bài viết");
@@ -128,9 +188,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
       <div className="bg-white text-black w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
         <div className="relative flex items-center justify-center p-4 border-b border-gray-200">
           <h2 className="text-xl font-bold">Chỉnh sửa bài viết</h2>
-          <button onClick={onClose} className="absolute right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition">
-            <X size={20} className="text-gray-600" />
-          </button>
+          <button onClick={onClose} className="absolute right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition"><X size={20} className="text-gray-600" /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
@@ -142,6 +200,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
             </div>
           </div>
 
+          {/* Category */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Danh mục</label>
             <div className="relative">
@@ -159,17 +218,39 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
             </div>
           </div>
 
+          {/* Title → label "Nội dung" */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Nội dung</label>
-            <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Bạn đang nghĩ gì?" className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-600" maxLength={1000} />
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={TITLE_PLACEHOLDERS[category] || TITLE_PLACEHOLDERS["Khác"]} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white font-medium" maxLength={100} />
+            <div className="text-xs text-gray-500 text-right">{title.length}/100</div>
+          </div>
+
+          {/* Content → label "Mô tả chi tiết" */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700">Mô tả chi tiết</label>
+            <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Mô tả chi tiết về bài viết của bạn..." className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-600" maxLength={1000} />
             <div className="text-xs text-gray-500 text-right">{content.length}/1000</div>
           </div>
 
+          {/* Contact */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Thông tin liên hệ</label>
-            <input type="text" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Số điện thoại hoặc email" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white" />
+            <div className="flex gap-2">
+              <button type="button" onClick={() => handleContactTypeChange("phone")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "phone" ? "border-emerald-600 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                <Phone size={15} />Số điện thoại
+              </button>
+              <button type="button" onClick={() => handleContactTypeChange("email")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "email" ? "border-emerald-600 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                <Mail size={15} />Email
+              </button>
+            </div>
+            <input type={contactType === "phone" ? "tel" : "email"} value={contact} onChange={handleContactChange} placeholder={contactType === "phone" ? "VD: 0901234567" : "VD: example@gmail.com"} className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white ${contactError ? "border-red-400" : "border-gray-200"}`} />
+            {contactError && <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+              <XCircle size={14} strokeWidth={2.5} />
+              {contactError}
+            </p>}
           </div>
 
+          {/* Image */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Ảnh</label>
             {!imagePreview ? (
@@ -187,18 +268,10 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
           </div>
 
-          {error && (
-            <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-              <AlertCircle size={18} /><span>{error}</span>
-            </div>
-          )}
+          {error && <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2"><AlertCircle size={18} /><span>{error}</span></div>}
 
           <button type="submit" disabled={!canSubmit || isSubmitting} className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition disabled:opacity-60 disabled:cursor-not-allowed">
-            {isSubmitting ? (
-              <span className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Đang cập nhật...
-              </span>
-            ) : "Cập nhật bài viết"}
+            {isSubmitting ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Đang cập nhật...</span> : "Cập nhật bài viết"}
           </button>
         </form>
       </div>
@@ -241,62 +314,53 @@ const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm
     if (showMenu) { document.addEventListener("click", close); return () => document.removeEventListener("click", close); }
   }, [showMenu]);
 
-  const categoryConfig = {
-    "Dịch vụ": { icon: Wrench, bg: "from-blue-500 to-cyan-500" },
-    "Kinh nghiệm": { icon: BookOpen, bg: "from-amber-500 to-orange-500" },
-    "Sản phẩm": { icon: Package, bg: "from-emerald-500 to-teal-500" },
-    "Thuê dịch vụ": { icon: HandCoins, bg: "from-purple-500 to-violet-500" },
-    "Khác": { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" },
-  };
+  const cfg = post.category ? (categoryConfig[post.category] || { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" }) : null;
 
   return (
     <>
       <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-shadow w-full">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex gap-3">
+        {/* Header row: avatar + name + category badge (inside) */}
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex gap-3 flex-1 min-w-0">
             <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100 cursor-pointer" onClick={() => router.push(`/profile/${post.authorId}`)}>
               <img src={post.userAvatar || "/images/avatar.jpg"} alt={post.userName} className="w-full h-full object-cover" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <h4 className="font-bold text-gray-900 text-base">{post.userName}</h4>
+                {/* Category badge inside header */}
+                {cfg && (() => {
+                  const Icon = cfg.icon;
+                  return (
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${cfg.bg} text-white shadow-sm shrink-0`}>
+                      <Icon size={11} />{post.category}
+                    </span>
+                  );
+                })()}
                 <StatusBadge status={post.status} />
               </div>
               <p className="text-gray-500 text-sm">@{post.userHandle} • {post.timestamp}</p>
             </div>
           </div>
-          <div className="relative">
-            <button onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }} className="text-gray-400 hover:bg-gray-100 p-2 rounded-full transition">
-              <MoreHorizontal size={20} />
-            </button>
+          <div className="relative shrink-0">
+            <button onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }} className="text-gray-400 hover:bg-gray-100 p-2 rounded-full transition"><MoreHorizontal size={20} /></button>
             {showMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
                 <button onClick={(e) => { e.stopPropagation(); setShowMenu(false); onEdit?.(post); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                  Chỉnh sửa
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>Chỉnh sửa
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); setShowMenu(false); onDeleteConfirm?.(post.id); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                  Xóa
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>Xóa
                 </button>
               </div>
             )}
           </div>
         </div>
 
-        {post.category && (() => {
-          const cfg = categoryConfig[post.category] || { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" };
-          const Icon = cfg.icon;
-          return (
-            <div className="mb-4">
-              <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r ${cfg.bg} text-white shadow-sm`}>
-                <Icon size={14} />{post.category}
-              </span>
-            </div>
-          );
-        })()}
+        {/* Title */}
+        {post.title && <h3 className="font-bold text-gray-900 text-lg leading-snug mb-2">{post.title}</h3>}
 
-        <p className="text-base text-gray-800 leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
+        <p className="text-base text-gray-600 leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
 
         {post.link && (
           <div className="mb-4">
@@ -320,9 +384,7 @@ const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm
             <MessageCircle size={20} />
             {commentCount > 0 && <span className="text-sm font-medium">{commentCount}</span>}
           </button>
-          <button onClick={() => onContact?.(post)} className="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">
-            Liên Hệ
-          </button>
+          <button onClick={() => onContact?.(post)} className="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">Liên Hệ</button>
         </div>
       </article>
       <CommentModal isOpen={isCommentModalOpen} onClose={() => setIsCommentModalOpen(false)} postId={post.id} onCommentCountChange={setCommentCount} />
@@ -345,12 +407,9 @@ export default function PostsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (isStatusDropdownOpen && !e.target.closest(".status-dropdown")) {
-        setIsStatusDropdownOpen(false);
-      }
+      if (isStatusDropdownOpen && !e.target.closest(".status-dropdown")) setIsStatusDropdownOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -364,10 +423,7 @@ export default function PostsPage() {
       setPostsError(null);
       try {
         const [postsData, favoritesResponse] = await Promise.all([
-          getOwnPosts({
-            author_id: user._id || user.id,
-            status: statusFilter === "all" ? undefined : statusFilter,
-          }),
+          getOwnPosts({ author_id: user._id || user.id, status: statusFilter === "all" ? undefined : statusFilter }),
           favoriteAPI.getFavorites().catch(() => ({ data: [] })),
         ]);
         if (cancelled) return;
@@ -378,8 +434,9 @@ export default function PostsPage() {
           userHandle: user?.username || user?.email || "",
           userAvatar: user?.avatar || "/images/avatar.jpg",
           timestamp: post.created_at ? new Date(post.created_at).toLocaleString("vi-VN") : "Vừa xong",
+          title: post.title || "",
           content: post.content, link: post.contact, image: post.image, category: post.category,
-          likes: post.likes_count || 0, comments: post.comments_count || 0, shares: post.shares_count || 0,
+          likes: post.likes_count || 0, comments: post.comments_count || 0,
           status: post.status || "progressing", isLiked: favoritePostIds.has(post._id),
         }));
         setPosts(normalized);
@@ -404,34 +461,19 @@ export default function PostsPage() {
   const handleLikeUpdate = (postId, isLiked) => { setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, isLiked, likes: isLiked ? p.likes + 1 : p.likes - 1 } : p)); };
   const handleEdit = (post) => { setEditingPost(post); setIsEditModalOpen(true); };
   const handlePostUpdated = (updated) => { setPosts((prev) => prev.map((p) => p.id === updated.id ? updated : p)); };
-
-  const handleDeleteConfirm = (postId) => {
-    setDeletingPostId(postId);
-    setConfirmModalOpen(true);
-  };
-
+  const handleDeleteConfirm = (postId) => { setDeletingPostId(postId); setConfirmModalOpen(true); };
   const handleContact = (post) => {
     const receiverId = post.authorId;
     if (!receiverId) return;
-    const chatUser = {
-      _id: receiverId,
-      full_name: post.userName || "Người bán",
-      avatar: post.userAvatar || "/images/avatar.jpg",
-    };
-    addContact(chatUser);
-    setSelectedUser(chatUser);
-    router.push(`/chat/${receiverId}`);
+    const chatUser = { _id: receiverId, full_name: post.userName || "Người bán", avatar: post.userAvatar || "/images/avatar.jpg" };
+    addContact(chatUser); setSelectedUser(chatUser); router.push(`/chat/${receiverId}`);
   };
-
   const handleDelete = async () => {
     try {
       await deletePost(deletingPostId);
       setPosts((prev) => prev.filter((p) => p.id !== deletingPostId));
-      setConfirmModalOpen(false);
-      setDeletingPostId(null);
-    } catch (err) {
-      toast.error(err?.message || "Không thể xóa bài viết");
-    }
+      setConfirmModalOpen(false); setDeletingPostId(null);
+    } catch (err) { toast.error(err?.message || "Không thể xóa bài viết"); }
   };
 
   const currentStatusLabel = STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label || "Tất cả";
@@ -456,33 +498,19 @@ export default function PostsPage() {
         <EditPostModal isOpen={isEditModalOpen} onClose={() => { setIsEditModalOpen(false); setEditingPost(null); }} post={editingPost} user={user || {}} onPostUpdated={handlePostUpdated} />
 
         <div className="w-full max-w-4xl mt-8">
-
-          {/* Status Filter */}
           <div className="flex items-center justify-between mb-6">
-            <p className="text-gray-600">
-              Tìm thấy <span className="font-semibold text-emerald-600">{posts.length}</span> bài viết
-            </p>
+            <p className="text-gray-600">Tìm thấy <span className="font-semibold text-emerald-600">{posts.length}</span> bài viết</p>
             <div className="flex items-center gap-3">
               <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Trạng thái:</span>
               <div className="relative status-dropdown">
-                <button
-                  onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                  className="min-w-[170px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
-                >
+                <button onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)} className="min-w-[170px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm">
                   <span>{currentStatusLabel}</span>
                   <ChevronDown className={`w-4 h-4 text-gray-500 transition-all duration-200 ${isStatusDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
                 {isStatusDropdownOpen && (
                   <div className="absolute top-full right-0 mt-2 w-full bg-white border-2 border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
                     {STATUS_OPTIONS.map((opt, index) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => { setStatusFilter(opt.value); setIsStatusDropdownOpen(false); }}
-                        className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${statusFilter === opt.value
-                            ? "bg-emerald-50 text-emerald-700 font-semibold"
-                            : "text-gray-700 hover:bg-gray-50"
-                          } ${index !== STATUS_OPTIONS.length - 1 ? "border-b border-gray-100" : ""}`}
-                      >
+                      <button key={opt.value} onClick={() => { setStatusFilter(opt.value); setIsStatusDropdownOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${statusFilter === opt.value ? "bg-emerald-50 text-emerald-700 font-semibold" : "text-gray-700 hover:bg-gray-50"} ${index !== STATUS_OPTIONS.length - 1 ? "border-b border-gray-100" : ""}`}>
                         {opt.label}
                       </button>
                     ))}
@@ -492,28 +520,14 @@ export default function PostsPage() {
             </div>
           </div>
 
-          {loadingPosts && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
-              <p className="text-gray-500 font-medium">Đang tải bài viết...</p>
-            </div>
-          )}
-          {postsError && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-              <AlertCircle className="mx-auto text-red-500 mb-3" size={32} />
-              <p className="text-red-600 font-medium">{postsError}</p>
-            </div>
-          )}
+          {loadingPosts && <div className="flex flex-col items-center justify-center py-12"><div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div><p className="text-gray-500 font-medium">Đang tải bài viết...</p></div>}
+          {postsError && <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center"><AlertCircle className="mx-auto text-red-500 mb-3" size={32} /><p className="text-red-600 font-medium">{postsError}</p></div>}
           {!loadingPosts && !postsError && posts.length === 0 && (
             <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ImageIcon className="text-gray-400" size={28} />
-              </div>
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><ImageIcon className="text-gray-400" size={28} /></div>
               <h3 className="text-lg font-bold text-gray-800 mb-2">Chưa có bài viết nào</h3>
               <p className="text-gray-500 mb-4">Hãy chia sẻ khoảnh khắc đầu tiên của bạn!</p>
-              <Link href="/profile/posts/create" className="inline-block bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-700 transition">
-                Tạo bài viết
-              </Link>
+              <Link href="/profile/posts/create" className="inline-block bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-700 transition">Tạo bài viết</Link>
             </div>
           )}
           {posts.map((post) => (
@@ -522,12 +536,7 @@ export default function PostsPage() {
         </div>
       </main>
 
-      <ConfirmModal
-        isOpen={confirmModalOpen}
-        onClose={() => { setConfirmModalOpen(false); setDeletingPostId(null); }}
-        onConfirm={handleDelete}
-        message="Bạn có chắc chắn muốn xóa bài viết này?"
-      />
+      <ConfirmModal isOpen={confirmModalOpen} onClose={() => { setConfirmModalOpen(false); setDeletingPostId(null); }} onConfirm={handleDelete} message="Bạn có chắc chắn muốn xóa bài viết này?" />
     </div>
   );
 }
