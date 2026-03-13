@@ -1,36 +1,17 @@
 import {
     StyleSheet, Text, View, ScrollView, TouchableOpacity,
-    TextInput, Modal, Alert, Dimensions, Platform,
-    KeyboardAvoidingView,
+    TextInput, Modal, Alert, ActivityIndicator,
+    KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard,
 } from "react-native";
-import { useState, useEffect } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
-import { useProductStore } from "../store/useProductStore";
-import { useAppStore } from "../store/useAppStore";
+import { useState, useEffect } from "react";
+import { useRatingStore } from "../store/useRatingStore";
 
-const { width: SCREEN_W } = Dimensions.get("window");
-
-// ── Mock fallback (dùng khi backend chưa có) ─────────────────────────────────
-const MOCK_USER_ID = "u_me";
-const MOCK_STATS = { averageRating: 4.7, totalRatings: 4 };
-const MOCK_OWN = {
-    id: "r_own", userName: "Tôi", userId: MOCK_USER_ID, rating: 4,
-    comment: "Ngon lắm, hạt lép, cơm vàng ươm. Sẽ mua lại lần sau.", date: "20/05/2024",
-};
-const MOCK_OTHERS = [
-    { id: "r1", userName: "Trần Thị B", userId: "u2", rating: 5, comment: "Sầu riêng rất ngon, múi dày, vị béo ngậy. Đóng gói cẩn thận, giao hàng nhanh. Sẽ ủng hộ thêm lần sau!", date: "15/05/2024" },
-    { id: "r2", userName: "Lê Văn C", userId: "u3", rating: 4, comment: "Chất lượng tốt, giá hợp lý. Hương thơm đặc trưng của Ri6.", date: "10/05/2024" },
-    { id: "r3", userName: "Phạm Thị D", userId: "u4", rating: 5, comment: "Tuyệt vời! Đúng như quảng cáo. Sẽ giới thiệu cho bạn bè.", date: "05/05/2024" },
-];
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-/** Sao tĩnh nhỏ */
-function StarRow({ rating, size = 18 }) {
+// ── StarRow (display only) ────────────────────────────────────────────────────
+function StarRow({ rating, size = 16 }) {
     return (
-        <View style={{ flexDirection: "row", gap: 1 }}>
+        <View style={{ flexDirection: "row", gap: 2 }}>
             {[1, 2, 3, 4, 5].map((s) => (
                 <Ionicons
                     key={s}
@@ -43,26 +24,16 @@ function StarRow({ rating, size = 18 }) {
     );
 }
 
-/**
- * Dãy sao tương tác lớn (ngoài màn hình)
- * Bấm 1 sao → setCurrentRating(s) → gọi onStarClick(s)
- */
-function InteractiveStars({ currentRating, onStarClick }) {
-    const [hovered, setHovered] = useState(0);
+// ── StarInput (interactive) ───────────────────────────────────────────────────
+function StarInput({ value, onChange, size = 38 }) {
     return (
-        <View style={styles.interactStarsRow}>
+        <View style={{ flexDirection: "row", gap: 6 }}>
             {[1, 2, 3, 4, 5].map((s) => (
-                <TouchableOpacity
-                    key={s}
-                    onPress={() => onStarClick(s)}
-                    onPressIn={() => setHovered(s)}
-                    onPressOut={() => setHovered(0)}
-                    hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
-                >
+                <TouchableOpacity key={s} onPress={() => onChange(s)} activeOpacity={0.7}>
                     <Ionicons
-                        name={s <= (hovered || currentRating) ? "star" : "star-outline"}
-                        size={38}
-                        color={s <= (hovered || currentRating) ? "#FBBF24" : "#D1D5DB"}
+                        name={s <= value ? "star" : "star-outline"}
+                        size={size}
+                        color={s <= value ? "#FBBF24" : "#D1D5DB"}
                     />
                 </TouchableOpacity>
             ))}
@@ -70,393 +41,408 @@ function InteractiveStars({ currentRating, onStarClick }) {
     );
 }
 
-/**
- * Review card — w≈300 border-2 border-emerald-600
- * boxShadow: 3px 3px 0px #10b981
- */
+// ── ReviewCard ────────────────────────────────────────────────────────────────
+// Tất cả card đều có shadow xanh giống nhau
+// Card của mình: thêm nút edit/delete
 function ReviewCard({ review, isOwn, onPress, onEdit, onDelete }) {
     return (
         <TouchableOpacity
-            style={[styles.reviewCard, isOwn && styles.reviewCardOwn]}
+            activeOpacity={0.85}
+            style={styles.reviewCard}
             onPress={onPress}
-            activeOpacity={0.88}
         >
-            {/* Header: tên trái + ngày phải */}
-            <View style={styles.rcHeader}>
-                <Text style={styles.rcName} numberOfLines={1}>{review.userName}</Text>
-                <Text style={styles.rcDate}>{review.date}</Text>
+            {/* Header: tên + ngày */}
+            <View style={styles.reviewCardHeader}>
+                <Text style={styles.reviewUserName} numberOfLines={1}>
+                    {review.userName}
+                </Text>
+                <Text style={styles.reviewDate}>{review.date}</Text>
             </View>
 
-            {/* Stars + action buttons */}
-            <View style={styles.rcMid}>
-                <StarRow rating={review.rating} size={15} />
+            {/* Stars + edit/delete chỉ trên card của mình */}
+            <View style={styles.reviewStarsRow}>
+                <StarRow rating={review.rating} size={14} />
                 {isOwn && (
-                    <View style={{ flexDirection: "row", gap: 5 }}>
+                    <View style={{ flexDirection: "row", gap: 6 }}>
                         <TouchableOpacity
-                            style={styles.rcActionBtn}
-                            onPress={() => onEdit?.()}
+                            style={styles.actionBtn}
+                            onPress={(e) => { e?.stopPropagation?.(); onEdit(); }}
                         >
-                            <Feather name="edit-2" size={11} color="#059669" />
+                            <Feather name="edit-2" size={12} color="#059669" />
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.rcActionBtn, { borderColor: "#FCA5A5" }]}
-                            onPress={() => onDelete?.()}
+                            style={[styles.actionBtn, styles.actionBtnRed]}
+                            onPress={(e) => { e?.stopPropagation?.(); onDelete(); }}
                         >
-                            <Feather name="trash-2" size={11} color="#EF4444" />
+                            <Feather name="trash-2" size={12} color="#EF4444" />
                         </TouchableOpacity>
                     </View>
                 )}
             </View>
 
-            {/* Comment truncate */}
-            <Text style={styles.rcComment} numberOfLines={1}>{review.comment}</Text>
+            {/* Comment preview 1 dòng */}
+            <Text style={styles.reviewComment} numberOfLines={1}>
+                {review.comment}
+            </Text>
         </TouchableOpacity>
     );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-export default function ProductRating({ productId }) {
+// ── RatingModal — có KeyboardAvoidingView fix bàn phím che modal ──────────────
+function RatingModal({ visible, isEditMode, userRating, setUserRating, ratingContent, setRatingContent, submitting, onClose, onSubmit, onDelete, editingRatingId }) {
+    return (
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onClose}
+        >
+            {/* Bấm ngoài modal → đóng + dismiss keyboard */}
+            <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); onClose(); }}>
+                <View style={styles.modalOverlay}>
+                    {/* KeyboardAvoidingView đẩy modal lên khi bàn phím xuất hiện */}
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                        style={{ width: "100%", alignItems: "center" }}
+                        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 40}
+                    >
+                        {/* Bấm vào trong modal → KHÔNG đóng, dismiss keyboard thôi */}
+                        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                            <View style={styles.modalCard}>
 
-    // Store
+                                {/* Header */}
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalTitle}>
+                                        {isEditMode ? "CHỈNH SỬA ĐÁNH GIÁ" : "ĐÁNH GIÁ SẢN PHẨM"}
+                                    </Text>
+                                    <TouchableOpacity onPress={onClose} hitSlop={8}>
+                                        <Ionicons name="close" size={22} color="#9CA3AF" />
+                                    </TouchableOpacity>
+                                </View>
+
+                                {/* Sao lớn ở giữa */}
+                                <View style={styles.modalStarsRow}>
+                                    <StarInput value={userRating} onChange={setUserRating} size={46} />
+                                </View>
+                                <View style={styles.divider} />
+
+                                {/* Textarea */}
+                                <Text style={styles.modalLabel}>
+                                    Chia sẻ trải nghiệm của bạn về sản phẩm này
+                                </Text>
+                                <TextInput
+                                    style={styles.textarea}
+                                    multiline
+                                    numberOfLines={5}
+                                    placeholder="Hãy chia sẻ cảm nhận của bạn về chất lượng, hương vị, hoặc bất cứ điều gì khác..."
+                                    placeholderTextColor="#9CA3AF"
+                                    value={ratingContent}
+                                    onChangeText={setRatingContent}
+                                    textAlignVertical="top"
+                                    // Không dùng returnKeyType="done" trên multiline
+                                    blurOnSubmit={false}
+                                />
+
+                                {/* Buttons */}
+                                <View style={styles.modalBtns}>
+                                    <TouchableOpacity
+                                        style={[styles.submitBtn, submitting && { opacity: 0.6 }]}
+                                        onPress={onSubmit}
+                                        disabled={submitting}
+                                    >
+                                        {submitting
+                                            ? <ActivityIndicator size="small" color="#059669" />
+                                            : <Text style={styles.submitBtnText}>
+                                                {isEditMode ? "Cập nhật" : "Gửi đánh giá"}
+                                            </Text>
+                                        }
+                                    </TouchableOpacity>
+                                    {isEditMode && (
+                                        <TouchableOpacity
+                                            style={styles.deleteBtn}
+                                            onPress={() => { onClose(); onDelete(editingRatingId); }}
+                                        >
+                                            <Text style={styles.deleteBtnText}>Xoá</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </KeyboardAvoidingView>
+                </View>
+            </TouchableWithoutFeedback>
+        </Modal>
+    );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
+export default function ProductRating({ productId, userId }) {
     const {
-        ratings, ratingStats, userOwnRating, ratingsLoading,
-        fetchRatings, createRating, updateRating, deleteRating,
-    } = useProductStore();
+        averageRating, totalRatings,
+        userOwnRating, otherReviews,
+        ratingsLoading, submitting,
+        fetchRatings, createRating, updateRating, deleteRating, clearRatings,
+    } = useRatingStore();
 
-    // Lấy userId từ auth store nếu có
-    // const { authUser } = useAuthStore();
-    // const currentUserId = authUser?._id ?? MOCK_USER_ID;
-    const currentUserId = MOCK_USER_ID; // đổi thành authUser._id khi có auth
-
-    // Fallback khi store rỗng
-    const stats = ratingStats ?? MOCK_STATS;
-    const ownRating = userOwnRating ?? MOCK_OWN;
-    const otherReviews = ratings.filter((r) => r.userId !== currentUserId).length > 0
-        ? ratings.filter((r) => r.userId !== currentUserId)
-        : MOCK_OTHERS;
-
-    // Modal state
-    const [ratingModalVisible, setRatingModalVisible] = useState(false);
-    const [detailModalVisible, setDetailModalVisible] = useState(false);
-    const [isEditMode, setIsEditMode] = useState(false);
-    const [editingRatingId, setEditingRatingId] = useState(null);
-    const [selectedReview, setSelectedReview] = useState(null);
-
-    // Form
+    // Rating modal state
     const [userRating, setUserRating] = useState(0);
     const [ratingContent, setRatingContent] = useState("");
-    const [hoveredStar, setHoveredStar] = useState(0);
-    const [submitting, setSubmitting] = useState(false);
+    const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingRatingId, setEditingRatingId] = useState(null);
 
-    // Fetch ratings
+    // Detail modal state
+    const [selectedReview, setSelectedReview] = useState(null);
+    const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+
     useEffect(() => {
-        if (productId) fetchRatings(productId, currentUserId);
-    }, [productId]);
+        fetchRatings(productId, userId);
+        return () => clearRatings();
+    }, [productId, userId]);
 
-    // ── Handlers ─────────────────────────────────────────
+    // ── Handlers ──────────────────────────────────────────────────────────────
 
-    /** Bấm sao ngoài → set sao → mở modal ngay */
-    const handleStarClick = (s) => {
-        setUserRating(s);
-        setIsEditMode(false);
-        setEditingRatingId(null);
-        setRatingContent("");
-        setRatingModalVisible(true);
+    const handleStarInputPress = (value) => {
+        setUserRating(value);
+        setIsRatingModalVisible(true);
     };
 
-    const openEdit = (review) => {
-        setIsEditMode(true);
-        setEditingRatingId(review.id);
-        setUserRating(review.rating);
-        setRatingContent(review.comment);
-        setDetailModalVisible(false);
-        setRatingModalVisible(true);
-    };
-
-    const openDetail = (review) => {
-        setSelectedReview(review);
-        setDetailModalVisible(true);
-    };
-
-    const closeRatingModal = () => {
-        setRatingModalVisible(false);
+    const handleCloseRatingModal = () => {
+        Keyboard.dismiss();
+        setIsRatingModalVisible(false);
         setRatingContent("");
         setUserRating(0);
-        setHoveredStar(0);
         setIsEditMode(false);
         setEditingRatingId(null);
     };
 
-    const closeDetailModal = () => {
-        setDetailModalVisible(false);
-        setSelectedReview(null);
-    };
-
-    const handleSubmit = async () => {
+    const handleSubmitRating = async () => {
+        if (!userId) {
+            Alert.alert("Thông báo", "Vui lòng đăng nhập để đánh giá");
+            handleCloseRatingModal();
+            return;
+        }
         if (userRating === 0) {
             Alert.alert("Thông báo", "Vui lòng chọn số sao đánh giá");
             return;
         }
         if (!ratingContent.trim() || ratingContent.trim().length < 10) {
-            Alert.alert("Thông báo", "Vui lòng nhập nội dung tối thiểu 10 ký tự");
-            closeRatingModal();
+            Alert.alert("Thông báo", "Vui lòng nhập nội dung đánh giá (tối thiểu 10 ký tự)");
             return;
         }
-        setSubmitting(true);
+
         try {
-            let result;
+            let response;
             if (isEditMode && editingRatingId) {
-                result = await updateRating(editingRatingId, productId, { stars: userRating, content: ratingContent.trim() }, currentUserId);
+                response = await updateRating(editingRatingId, userRating, ratingContent);
             } else {
-                result = await createRating(productId, { stars: userRating, content: ratingContent.trim() }, currentUserId);
+                response = await createRating(productId, userRating, ratingContent);
             }
-            if (!result.success) {
-                Alert.alert("Lỗi", result.message ?? "Không thể gửi đánh giá");
+
+            if (response.success) {
+                Alert.alert(
+                    "Thành công",
+                    isEditMode ? "Cập nhật đánh giá thành công!" : "Gửi đánh giá thành công!"
+                );
+                handleCloseRatingModal();
+                await fetchRatings(productId, userId);
+            } else {
+                throw new Error(response.message);
             }
-        } finally {
-            setSubmitting(false);
-            closeRatingModal();
+        } catch (err) {
+            console.error("[ProductRating] submit:", err.message);
+            Alert.alert(
+                "Lỗi",
+                isEditMode
+                    ? "Không thể cập nhật đánh giá. Vui lòng thử lại."
+                    : "Bạn đã đánh giá sản phẩm này rồi!"
+            );
+            handleCloseRatingModal();
         }
     };
 
-    const handleDelete = (ratingId) => {
-        Alert.alert("Xác nhận", "Bạn có chắc muốn xóa đánh giá này?", [
-            { text: "Hủy", style: "cancel" },
-            {
-                text: "Xóa", style: "destructive",
-                onPress: async () => {
-                    closeDetailModal();
-                    await deleteRating(ratingId, productId, currentUserId);
+    const handleDeleteRating = (ratingId) => {
+        Alert.alert(
+            "Xác nhận",
+            "Bạn có chắc muốn xóa đánh giá này?",
+            [
+                { text: "Huỷ", style: "cancel" },
+                {
+                    text: "Xoá",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            const response = await deleteRating(ratingId);
+                            if (response.success) {
+                                setIsDetailModalVisible(false);
+                                setSelectedReview(null);
+                                Alert.alert("Thành công", "Xóa đánh giá thành công!");
+                                await fetchRatings(productId, userId);
+                            }
+                        } catch (error) {
+                            Alert.alert("Lỗi", "Không thể xóa đánh giá. Vui lòng thử lại.");
+                        }
+                    },
                 },
-            },
-        ]);
+            ]
+        );
     };
 
-    /** Sao tương tác bên trong modal */
-    const renderModalStars = () => (
-        <View style={styles.modalStarsRow}>
-            {[1, 2, 3, 4, 5].map((s) => {
-                const filled = hoveredStar ? s <= hoveredStar : s <= userRating;
-                return (
-                    <TouchableOpacity
-                        key={s}
-                        onPress={() => setUserRating(s)}
-                        onPressIn={() => setHoveredStar(s)}
-                        onPressOut={() => setHoveredStar(0)}
-                        hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
-                    >
-                        <Ionicons
-                            name={filled ? "star" : "star-outline"}
-                            size={44}
-                            color={filled ? "#FBBF24" : "#D1D5DB"}
-                        />
-                    </TouchableOpacity>
-                );
-            })}
-        </View>
-    );
+    const handleReviewCardPress = (review, isEdit = false) => {
+        setSelectedReview(review);
+        if (isEdit) {
+            setIsEditMode(true);
+            setEditingRatingId(review.id);
+            setUserRating(review.rating);
+            setRatingContent(review.comment);
+            setIsRatingModalVisible(true);
+        } else {
+            setIsDetailModalVisible(true);
+        }
+    };
 
-    // ── Render ────────────────────────────────────────────
+    const handleCloseDetailModal = () => {
+        setIsDetailModalVisible(false);
+        setSelectedReview(null);
+    };
+
+    // ── Render ────────────────────────────────────────────────────────────────
     return (
         <View style={styles.container}>
 
-            {/* ── Section header ────────────────────────────── */}
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Đánh giá</Text>
+            <Text style={styles.sectionTitle}>Đánh giá</Text>
 
-                {/* Overview: số to + stars + total */}
-                <View style={styles.overviewRow}>
-                    <Text style={styles.avgScore}>
-                        {stats.averageRating > 0 ? Number(stats.averageRating).toFixed(1) : "0.0"}
-                    </Text>
-                    <View style={styles.overviewRight}>
-                        <StarRow rating={stats.averageRating} size={20} />
-                        <Text style={styles.totalRatings}>{stats.totalRatings} Đánh giá</Text>
-                    </View>
+            {/* Overview */}
+            <View style={styles.overviewRow}>
+                <Text style={styles.avgScore}>
+                    {averageRating > 0 ? averageRating.toFixed(1) : "0.0"}
+                </Text>
+                <View style={{ gap: 5 }}>
+                    <StarRow rating={averageRating} size={22} />
+                    <Text style={styles.totalText}>{totalRatings} Đánh giá</Text>
                 </View>
-
-                {/* Dãy sao tương tác lớn — bấm để viết đánh giá */}
-                <InteractiveStars currentRating={userRating} onStarClick={handleStarClick} />
             </View>
 
-            {/* ── Review cards — horizontal scroll ──────────── */}
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.cardsRow}
-            >
-                {ownRating && (
-                    <ReviewCard
-                        review={ownRating} isOwn
-                        onPress={() => openDetail(ownRating)}
-                        onEdit={() => openEdit(ownRating)}
-                        onDelete={() => handleDelete(ownRating.id)}
-                    />
-                )}
-                {otherReviews.slice(0, ownRating ? 3 : 4).map((r) => (
-                    <ReviewCard
-                        key={r.id} review={r} isOwn={false}
-                        onPress={() => openDetail(r)}
-                    />
-                ))}
-                {otherReviews.length === 0 && !ownRating && (
-                    <View style={styles.emptyCard}>
-                        <Ionicons name="chatbubble-outline" size={28} color="#D1D5DB" />
-                        <Text style={styles.emptyText}>
-                            Chưa có đánh giá nào.{"\n"}Hãy là người đầu tiên!
-                        </Text>
-                    </View>
-                )}
-            </ScrollView>
+            {/* Sao tương tác — nhấn để mở modal */}
+            <View style={styles.inputStarsWrap}>
+                <StarInput value={userRating} onChange={handleStarInputPress} size={40} />
+            </View>
 
-            {/* ══════════════════════════════════════════════════
-          RATING MODAL
-          Fix bàn phím: KeyboardAvoidingView bọc ngoài,
-          ScrollView bên trong để nội dung không bị che
-          ══════════════════════════════════════════════════ */}
-            <Modal
-                visible={ratingModalVisible}
-                animationType="slide"
-                transparent
-                onRequestClose={closeRatingModal}
-            >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    activeOpacity={1}
-                    onPress={closeRatingModal}
+            {/* Danh sách review cuộn ngang */}
+            {ratingsLoading ? (
+                <ActivityIndicator size="small" color="#059669" style={{ marginTop: 12 }} />
+            ) : (userOwnRating || otherReviews.length > 0) ? (
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.reviewsScroll}
                 >
-                    {/* KeyboardAvoidingView đẩy sheet lên khi bàn phím hiện */}
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === "ios" ? "padding" : "height"}
-                        style={{ width: "100%" }}
-                        keyboardVerticalOffset={0}
-                    >
-                        <TouchableOpacity activeOpacity={1} style={styles.modalSheet}>
+                    {/* Card của mình luôn đầu tiên */}
+                    {userOwnRating && (
+                        <ReviewCard
+                            review={userOwnRating}
+                            isOwn={true}
+                            onPress={() => handleReviewCardPress(userOwnRating, false)}
+                            onEdit={() => handleReviewCardPress(userOwnRating, true)}
+                            onDelete={() => handleDeleteRating(userOwnRating.id)}
+                        />
+                    )}
+                    {/* Có card mình → 3 người khác, không có → 4 người */}
+                    {otherReviews.slice(0, userOwnRating ? 3 : 4).map((review) => (
+                        <ReviewCard
+                            key={review.id}
+                            review={review}
+                            isOwn={false}
+                            onPress={() => handleReviewCardPress(review, false)}
+                        />
+                    ))}
+                </ScrollView>
+            ) : (
+                <View style={styles.emptyBox}>
+                    <Ionicons name="chatbubble-outline" size={32} color="#D1D5DB" />
+                    <Text style={styles.emptyText}>
+                        {"Chưa có đánh giá nào.\nHãy là người đầu tiên đánh giá sản phẩm này!"}
+                    </Text>
+                </View>
+            )}
 
-                            {/* Header */}
-                            <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>
-                                    {isEditMode ? "CHỈNH SỬA ĐÁNH GIÁ" : "ĐÁNH GIÁ SẢN PHẨM"}
-                                </Text>
-                                <TouchableOpacity onPress={closeRatingModal}>
-                                    <Text style={styles.modalClose}>×</Text>
-                                </TouchableOpacity>
-                            </View>
+            {/* ── Modal: Đánh giá / Chỉnh sửa ───────────────────────────────── */}
+            <RatingModal
+                visible={isRatingModalVisible}
+                isEditMode={isEditMode}
+                userRating={userRating}
+                setUserRating={setUserRating}
+                ratingContent={ratingContent}
+                setRatingContent={setRatingContent}
+                submitting={submitting}
+                onClose={handleCloseRatingModal}
+                onSubmit={handleSubmitRating}
+                onDelete={handleDeleteRating}
+                editingRatingId={editingRatingId}
+            />
 
-                            {/* Nội dung có thể scroll khi bàn phím che */}
-                            <ScrollView
-                                keyboardShouldPersistTaps="handled"
-                                showsVerticalScrollIndicator={false}
-                            >
-                                {/* Stars lớn */}
-                                <View style={styles.modalStarsBlock}>
-                                    {renderModalStars()}
-                                </View>
-
-                                <View style={styles.modalBody}>
-                                    <Text style={styles.modalTextLabel}>
-                                        Chia sẻ trải nghiệm của bạn về sản phẩm này
-                                    </Text>
-                                    <TextInput
-                                        style={styles.modalTextarea}
-                                        placeholder="Hãy chia sẻ cảm nhận về chất lượng, hương vị, hoặc bất cứ điều gì khác..."
-                                        placeholderTextColor="#9CA3AF"
-                                        multiline
-                                        numberOfLines={5}
-                                        textAlignVertical="top"
-                                        value={ratingContent}
-                                        onChangeText={setRatingContent}
-                                        // KHÔNG dùng autoFocus để tránh bàn phím bật ngay khi mở modal
-                                        autoFocus={false}
-                                    />
-
-                                    <View style={styles.modalActions}>
-                                        <TouchableOpacity
-                                            style={[styles.submitBtn, submitting && { opacity: 0.6 }]}
-                                            onPress={handleSubmit}
-                                            disabled={submitting}
-                                        >
-                                            <Text style={styles.submitBtnText}>
-                                                {submitting ? "Đang gửi..." : isEditMode ? "Cập nhật" : "Gửi đánh giá"}
-                                            </Text>
-                                        </TouchableOpacity>
-                                        {isEditMode && (
-                                            <TouchableOpacity
-                                                style={styles.deleteBtn}
-                                                onPress={() => { closeRatingModal(); handleDelete(editingRatingId); }}
-                                            >
-                                                <Text style={styles.deleteBtnText}>Xóa</Text>
-                                            </TouchableOpacity>
-                                        )}
-                                    </View>
-                                </View>
-                            </ScrollView>
-                        </TouchableOpacity>
-                    </KeyboardAvoidingView>
-                </TouchableOpacity>
-            </Modal>
-
-            {/* ══════════════════════════════════════════════════
-          DETAIL MODAL
-          ══════════════════════════════════════════════════ */}
+            {/* ── Modal: Chi tiết đánh giá ────────────────────────────────────── */}
             <Modal
-                visible={detailModalVisible}
+                visible={isDetailModalVisible}
+                transparent
                 animationType="fade"
-                transparent
-                onRequestClose={closeDetailModal}
+                onRequestClose={handleCloseDetailModal}
             >
-                <TouchableOpacity
-                    style={styles.detailOverlay}
-                    activeOpacity={1}
-                    onPress={closeDetailModal}
-                >
-                    <TouchableOpacity activeOpacity={1} style={styles.detailSheet}>
+                <TouchableWithoutFeedback onPress={handleCloseDetailModal}>
+                    <View style={styles.modalOverlay}>
+                        <TouchableWithoutFeedback onPress={() => { }}>
+                            <View style={styles.modalCard}>
 
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>CHI TIẾT ĐÁNH GIÁ</Text>
-                            <TouchableOpacity onPress={closeDetailModal}>
-                                <Text style={styles.modalClose}>×</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        {selectedReview && (
-                            <View style={styles.detailBody}>
-                                {/* Name + date */}
-                                <View style={styles.detailUserRow}>
-                                    <Text style={styles.detailUserName}>{selectedReview.userName}</Text>
-                                    <Text style={styles.detailDate}>{selectedReview.date}</Text>
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalTitle}>CHI TIẾT ĐÁNH GIÁ</Text>
+                                    <TouchableOpacity onPress={handleCloseDetailModal} hitSlop={8}>
+                                        <Ionicons name="close" size={22} color="#9CA3AF" />
+                                    </TouchableOpacity>
                                 </View>
 
-                                <View style={{ marginBottom: 14 }}>
-                                    <StarRow rating={selectedReview.rating} size={22} />
-                                </View>
+                                {selectedReview && (
+                                    <>
+                                        <View style={[styles.detailUserRow, styles.dividerBottom]}>
+                                            <Text style={styles.detailUserName}>{selectedReview.userName}</Text>
+                                            <Text style={styles.detailDate}>{selectedReview.date}</Text>
+                                        </View>
 
-                                {/* Comment box */}
-                                <View style={styles.detailCommentBox}>
-                                    <Text style={styles.detailComment}>{selectedReview.comment}</Text>
-                                </View>
+                                        <View style={{ marginVertical: 14 }}>
+                                            <StarRow rating={selectedReview.rating} size={22} />
+                                        </View>
 
-                                {/* Edit + Delete — chỉ với review của mình */}
-                                {selectedReview.userId === currentUserId && (
-                                    <View style={styles.detailActions}>
-                                        <TouchableOpacity
-                                            style={styles.detailEditBtn}
-                                            onPress={() => openEdit(selectedReview)}
-                                        >
-                                            <Text style={styles.detailEditBtnText}>Chỉnh sửa</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={styles.detailDeleteBtn}
-                                            onPress={() => handleDelete(selectedReview.id)}
-                                        >
-                                            <Text style={styles.detailDeleteBtnText}>Xóa</Text>
-                                        </TouchableOpacity>
-                                    </View>
+                                        <View style={styles.detailCommentBox}>
+                                            <Text style={styles.detailCommentText}>{selectedReview.comment}</Text>
+                                        </View>
+
+                                        {/* Chỉ hiện edit/delete nếu là review của mình */}
+                                        {selectedReview.userId === userId && (
+                                            <View style={[styles.modalBtns, styles.dividerTop]}>
+                                                <TouchableOpacity
+                                                    style={styles.submitBtn}
+                                                    onPress={() => {
+                                                        handleCloseDetailModal();
+                                                        handleReviewCardPress(selectedReview, true);
+                                                    }}
+                                                >
+                                                    <Text style={styles.submitBtnText}>Chỉnh sửa</Text>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    style={styles.deleteBtn}
+                                                    onPress={() => handleDeleteRating(selectedReview.id)}
+                                                >
+                                                    <Text style={styles.deleteBtnText}>Xoá</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        )}
+                                    </>
                                 )}
+
                             </View>
-                        )}
-                    </TouchableOpacity>
-                </TouchableOpacity>
+                        </TouchableWithoutFeedback>
+                    </View>
+                </TouchableWithoutFeedback>
             </Modal>
 
         </View>
@@ -465,146 +451,243 @@ export default function ProductRating({ productId }) {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-    container: { backgroundColor: "#FFF", marginTop: 8, paddingBottom: 12 },
-
-    section: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 18 },
-    sectionTitle: { fontSize: 26, fontWeight: "800", color: "#111827", marginBottom: 18 },
+    container: {
+        paddingHorizontal: 16,
+        paddingVertical: 20,
+    },
+    sectionTitle: {
+        fontSize: 22,
+        fontWeight: "800",
+        color: "#111827",
+        marginBottom: 16,
+    },
 
     // Overview
-    overviewRow: { flexDirection: "row", alignItems: "center", gap: 18, marginBottom: 18 },
-    avgScore: { fontSize: 56, fontWeight: "900", color: "#111827", lineHeight: 62 },
-    overviewRight: { gap: 7 },
-    totalRatings: { fontSize: 14, color: "#6B7280", marginTop: 3 },
+    overviewRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 16,
+        marginBottom: 16,
+    },
+    avgScore: {
+        fontSize: 52,
+        fontWeight: "800",
+        color: "#111827",
+        lineHeight: 58,
+    },
+    totalText: {
+        fontSize: 14,
+        color: "#6B7280",
+        marginTop: 2,
+    },
+    inputStarsWrap: {
+        marginBottom: 20,
+    },
 
-    // Interactive stars
-    interactStarsRow: { flexDirection: "row", gap: 8 },
-
-    // Cards row
-    cardsRow: { paddingHorizontal: 20, gap: 14, paddingBottom: 8 },
-
-    // Card
+    // Review cards — tất cả card đều có shadow xanh giống nhau
+    reviewsScroll: {
+        gap: 12,
+        paddingBottom: 4,
+    },
     reviewCard: {
-        width: 296, minHeight: 130,
-        backgroundColor: "#FFF",
-        borderRadius: 12, borderWidth: 2, borderColor: "#059669",
-        padding: 14,
-        shadowColor: "#10b981",
+        width: 220,
+        minHeight: 110,
+        borderRadius: 12,
+        borderWidth: 1.5,
+        borderColor: "#059669",
+        padding: 12,
+        backgroundColor: "#FFFFFF",
+        justifyContent: "space-between",
+        // Shadow xanh emerald — giống nhau cho tất cả card
+        shadowColor: "#059669",
         shadowOffset: { width: 3, height: 3 },
-        shadowOpacity: 1, shadowRadius: 0, elevation: 0,
+        shadowOpacity: 0.3,
+        shadowRadius: 0,
+        elevation: 3,
     },
-    reviewCardOwn: { backgroundColor: "#F0FDF4" },
-
-    rcHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 7 },
-    rcName: { fontSize: 13, fontWeight: "600", color: "#111827", flex: 1, marginRight: 6 },
-    rcDate: { fontSize: 10, color: "#9CA3AF" },
-
-    rcMid: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 7 },
-    rcActionBtn: {
-        width: 24, height: 24, borderRadius: 5,
-        borderWidth: 1, borderColor: "#D1FAE5",
-        alignItems: "center", justifyContent: "center",
+    reviewCardHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        marginBottom: 6,
     },
-    rcComment: { fontSize: 11, color: "#9CA3AF", lineHeight: 16 },
-
-    // Empty
-    emptyCard: {
-        width: SCREEN_W - 40, paddingVertical: 36, paddingHorizontal: 20,
-        alignItems: "center", justifyContent: "center",
-        backgroundColor: "#F9FAFB", borderRadius: 12,
-        borderWidth: 2, borderStyle: "dashed", borderColor: "#D1D5DB",
-        gap: 8,
+    reviewUserName: {
+        fontSize: 13,
+        fontWeight: "700",
+        color: "#111827",
+        flex: 1,
+        marginRight: 8,
     },
-    emptyText: { fontSize: 13, color: "#9CA3AF", textAlign: "center", lineHeight: 20 },
+    reviewDate: {
+        fontSize: 11,
+        color: "#9CA3AF",
+        flexShrink: 0,
+    },
+    reviewStarsRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 6,
+    },
+    reviewComment: {
+        fontSize: 12,
+        color: "#9CA3AF",
+    },
 
-    // ── Rating Modal ───────────────────────────────────
+    // Edit/delete buttons trên card
+    actionBtn: {
+        width: 26,
+        height: 26,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: "#059669",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    actionBtnRed: {
+        borderColor: "#EF4444",
+    },
+
+    // Empty state
+    emptyBox: {
+        borderWidth: 1.5,
+        borderStyle: "dashed",
+        borderColor: "#D1D5DB",
+        borderRadius: 12,
+        paddingVertical: 36,
+        alignItems: "center",
+        gap: 10,
+        backgroundColor: "#F9FAFB",
+    },
+    emptyText: {
+        fontSize: 13,
+        color: "#9CA3AF",
+        textAlign: "center",
+        lineHeight: 20,
+    },
+
+    // Modal overlay
     modalOverlay: {
         flex: 1,
         backgroundColor: "rgba(0,0,0,0.4)",
-        justifyContent: "flex-end",   // sheet từ đáy lên
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
     },
-    modalSheet: {
-        backgroundColor: "#FFF",
-        borderTopLeftRadius: 22, borderTopRightRadius: 22,
-        // maxHeight để không che hết màn hình
-        maxHeight: "90%",
+    modalCard: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 20,
+        width: "100%",
+        maxWidth: 400,
+        padding: 20,
     },
     modalHeader: {
-        flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-        paddingHorizontal: 22, paddingVertical: 18,
-        borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 16,
     },
-    modalTitle: { fontSize: 16, fontWeight: "800", color: "#111827" },
-    modalClose: { fontSize: 28, color: "#9CA3AF", lineHeight: 32 },
+    modalTitle: {
+        fontSize: 15,
+        fontWeight: "800",
+        color: "#111827",
+        flex: 1,
+    },
+    modalStarsRow: {
+        alignItems: "center",
+        marginBottom: 16,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: "#E5E7EB",
+        marginBottom: 14,
+    },
+    dividerBottom: {
+        borderBottomWidth: 1,
+        borderBottomColor: "#E5E7EB",
+        paddingBottom: 12,
+        marginBottom: 0,
+    },
+    dividerTop: {
+        borderTopWidth: 1,
+        borderTopColor: "#E5E7EB",
+        paddingTop: 14,
+        marginTop: 4,
+    },
+    modalLabel: {
+        fontSize: 13,
+        color: "#6B7280",
+        marginBottom: 10,
+    },
+    textarea: {
+        borderWidth: 1.5,
+        borderColor: "#D1D5DB",
+        borderRadius: 10,
+        padding: 12,
+        fontSize: 14,
+        color: "#111827",
+        backgroundColor: "#F9FAFB",
+        minHeight: 110,
+        marginBottom: 16,
+    },
+    modalBtns: {
+        flexDirection: "row",
+        gap: 10,
+    },
+    submitBtn: {
+        flex: 1,
+        borderWidth: 2,
+        borderColor: "#059669",
+        borderRadius: 10,
+        paddingVertical: 13,
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: 46,
+    },
+    submitBtnText: {
+        fontSize: 13,
+        fontWeight: "700",
+        color: "#059669",
+    },
+    deleteBtn: {
+        flex: 1,
+        backgroundColor: "#DC2626",
+        borderRadius: 10,
+        paddingVertical: 13,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    deleteBtnText: {
+        fontSize: 13,
+        fontWeight: "700",
+        color: "#FFFFFF",
+    },
 
-    // Stars block
-    modalStarsBlock: {
-        paddingVertical: 20, paddingHorizontal: 22,
-        borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
+    // Detail modal
+    detailUserRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
         alignItems: "center",
     },
-    modalStarsRow: { flexDirection: "row", gap: 10, justifyContent: "center" },
-
-    // Body
-    modalBody: { paddingHorizontal: 22, paddingTop: 18, paddingBottom: 30 },
-    modalTextLabel: { fontSize: 14, fontWeight: "500", color: "#6B7280", marginBottom: 12 },
-    modalTextarea: {
-        borderWidth: 2, borderColor: "#E5E7EB", borderRadius: 10,
-        padding: 13, fontSize: 14, color: "#111827",
-        backgroundColor: "#F9FAFB",
-        minHeight: 120,   // minHeight thay vì height cố định
-        marginBottom: 18,
+    detailUserName: {
+        fontSize: 16,
+        fontWeight: "800",
+        color: "#111827",
     },
-
-    modalActions: { flexDirection: "row", justifyContent: "center", gap: 12 },
-    submitBtn: {
-        flex: 1, maxWidth: 200,
-        borderWidth: 2, borderColor: "#059669",
-        borderRadius: 10, paddingVertical: 12, alignItems: "center",
+    detailDate: {
+        fontSize: 13,
+        color: "#6B7280",
     },
-    submitBtnText: { fontSize: 14, fontWeight: "700", color: "#059669" },
-    deleteBtn: {
-        flex: 1, maxWidth: 200,
-        backgroundColor: "#DC2626",
-        borderRadius: 10, paddingVertical: 12, alignItems: "center",
-    },
-    deleteBtnText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
-
-    // ── Detail Modal ───────────────────────────────────
-    detailOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.4)",
-        justifyContent: "center",   // dialog giữa màn hình
-        paddingHorizontal: 16,
-    },
-    detailSheet: {
-        backgroundColor: "#FFF",
-        borderRadius: 20, overflow: "hidden",
-    },
-    detailBody: { padding: 22 },
-
-    detailUserRow: {
-        flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-        borderBottomWidth: 1, borderBottomColor: "#E5E7EB",
-        paddingBottom: 12, marginBottom: 14,
-    },
-    detailUserName: { fontSize: 18, fontWeight: "700", color: "#111827" },
-    detailDate: { fontSize: 13, color: "#9CA3AF" },
-
     detailCommentBox: {
-        backgroundColor: "#F9FAFB", borderRadius: 10,
-        padding: 14, minHeight: 100, marginBottom: 18,
+        backgroundColor: "#F9FAFB",
+        borderRadius: 10,
+        padding: 14,
+        minHeight: 100,
+        marginBottom: 8,
     },
-    detailComment: { fontSize: 14, color: "#374151", lineHeight: 22 },
-
-    detailActions: {
-        flexDirection: "row", gap: 12,
-        borderTopWidth: 1, borderTopColor: "#E5E7EB", paddingTop: 14,
+    detailCommentText: {
+        fontSize: 14,
+        color: "#374151",
+        lineHeight: 22,
     },
-    detailEditBtn: {
-        flex: 1, borderWidth: 2, borderColor: "#059669",
-        borderRadius: 10, paddingVertical: 12, alignItems: "center",
-    },
-    detailEditBtnText: { fontSize: 14, fontWeight: "700", color: "#059669" },
-    detailDeleteBtn: { flex: 1, backgroundColor: "#DC2626", borderRadius: 10, paddingVertical: 12, alignItems: "center" },
-    detailDeleteBtnText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
 });
