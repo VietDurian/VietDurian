@@ -80,6 +80,7 @@ export function PostRequestPage() {
 						item?.author_id?.avatar ||
 						item.avatar ||
 						'',
+					title: item.title || '',
 					content: item.content || '',
 					category: item.category || '',
 					status: item.status || 'inactive',
@@ -214,7 +215,7 @@ export function PostRequestPage() {
 										</div>
 									</td>
 									<td className="px-6 py-4 text-sm text-gray-600 max-w-xs">
-										{snippet(post.content)}
+										{snippet(post.title)}
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
 										<span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
@@ -295,7 +296,7 @@ export function PostRequestPage() {
 						</div>
 
 						<p className="text-sm text-gray-600 line-clamp-2 mb-3">
-							{post.content}
+							{post.title}
 						</p>
 
 						<div className="flex items-center justify-between">
@@ -410,6 +411,12 @@ export function PostRequestPage() {
 								<div className="space-y-2">
 									<p className="text-sm font-medium text-gray-700">
 										{t('content')}
+									</p>
+									<p className="text-gray-800 leading-relaxed">
+										{selectedPost.title}
+									</p>
+									<p className="text-sm font-medium text-gray-700">
+										{t('description')}
 									</p>
 									<p className="text-gray-800 leading-relaxed">
 										{selectedPost.content}
