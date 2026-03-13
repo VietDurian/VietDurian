@@ -190,6 +190,113 @@ const Router = express.Router();
  *     responses:
  *       200:
  *         description: Season diary marked as completed successfully
+ *
+ * /season-diary/{season_diary_id}/statistics:
+ *   get:
+ *     tags: [season-diary]
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Get season diary statistics
+ *     description: Return financial and harvest statistics for one specific season diary id.
+ *     parameters:
+ *       - in: path
+ *         name: season_diary_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Season diary id
+ *     responses:
+ *       200:
+ *         description: Season diary statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Season diary statistics retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     overview:
+ *                       type: object
+ *                       properties:
+ *                         total_cost:
+ *                           type: number
+ *                           example: 15000000
+ *                         total_revenue:
+ *                           type: number
+ *                           example: 23000000
+ *                         profit:
+ *                           type: number
+ *                           example: 8000000
+ *                         margin_percent:
+ *                           type: number
+ *                           example: 34.78
+ *                         cost_per_kg:
+ *                           type: number
+ *                           example: 18750
+ *                         yield_per_area:
+ *                           type: number
+ *                           example: 0.42
+ *                     harvest:
+ *                       type: object
+ *                       properties:
+ *                         total_harvest_kg:
+ *                           type: number
+ *                           example: 1200
+ *                         total_consumed_kg:
+ *                           type: number
+ *                           example: 900
+ *                         unsold_weight_kg:
+ *                           type: number
+ *                           example: 300
+ *                         consumed_rate_percent:
+ *                           type: number
+ *                           example: 75
+ *                     cost_breakdown:
+ *                       type: object
+ *                       properties:
+ *                         seed:
+ *                           type: object
+ *                           properties:
+ *                             amount:
+ *                               type: number
+ *                               example: 3000000
+ *                             percent:
+ *                               type: number
+ *                               example: 20
+ *                         fertilizer:
+ *                           type: object
+ *                           properties:
+ *                             amount:
+ *                               type: number
+ *                               example: 5000000
+ *                             percent:
+ *                               type: number
+ *                               example: 33.33
+ *                         labor:
+ *                           type: object
+ *                           properties:
+ *                             amount:
+ *                               type: number
+ *                               example: 4500000
+ *                             percent:
+ *                               type: number
+ *                               example: 30
+ *                         irrigation:
+ *                           type: object
+ *                           properties:
+ *                             amount:
+ *                               type: number
+ *                               example: 2500000
+ *                             percent:
+ *                               type: number
+ *                               example: 16.67
  */
 
 Router.get('/', authMiddleware.protect, seasonDiaryController.viewSeasonDiaryList);
@@ -213,5 +320,10 @@ Router.patch(
 	'/:season_diary_id/finish',
 	authMiddleware.protect,
 	seasonDiaryController.finishSeasonDiary,
+);
+Router.get(
+	'/:season_diary_id/statistics',
+	authMiddleware.protect,
+	seasonDiaryController.statisticsSeasonDiary,
 );
 export { Router as seasonDiaryRoute };

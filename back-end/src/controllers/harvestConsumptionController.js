@@ -25,7 +25,6 @@ const viewHarvestConsumptionList = async (req, res, next) => {
 			limit,
 			seasonDiaryId: season_diary_id || seasonDiaryId,
 			userId,
-			role: req.user?.role,
 		});
 
 		res.status(200).json({
@@ -46,7 +45,6 @@ const createHarvestConsumption = async (req, res, next) => {
 
 		const created = await harvestConsumptionService.createHarvestConsumption({
 			userId,
-			role: req.user?.role,
 			data: payload,
 		});
 
@@ -76,7 +74,6 @@ const updateHarvestConsumption = async (req, res, next) => {
 		const updated = await harvestConsumptionService.updateHarvestConsumption({
 			harvestConsumptionId: harvest_consumption_id,
 			userId,
-			role: req.user?.role,
 			data: payload,
 		});
 
@@ -98,7 +95,6 @@ const deleteHarvestConsumption = async (req, res, next) => {
 		await harvestConsumptionService.deleteHarvestConsumption({
 			harvestConsumptionId: harvest_consumption_id,
 			userId,
-			role: req.user?.role,
 		});
 
 		res.status(200).json({

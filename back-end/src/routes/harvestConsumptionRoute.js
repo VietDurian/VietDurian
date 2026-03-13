@@ -44,10 +44,20 @@ const Router = express.Router();
  *             type: object
  *             required:
  *               - season_diary_id
+ *               - harvest_date
+ *               - harvest_quantity_kg
  *             properties:
  *               season_diary_id:
  *                 type: string
  *                 example: "67f13a9f2d8b6a0012c9a101"
+ *               harvest_date:
+ *                 type: string
+ *                 format: date
+ *                 example: "2026-03-20"
+ *               harvest_quantity_kg:
+ *                 type: number
+ *                 format: double
+ *                 example: 1200.5
  *               seasonDiary:
  *                 type: object
  *                 properties:
@@ -69,7 +79,11 @@ const Router = express.Router();
  *                   consumed_weight_kg:
  *                     type: number
  *                     format: double
- *                     example: 980.75
+ *                     example: 0
+ *                   sale_unit_price_vnd:
+ *                     type: number
+ *                     format: double
+ *                     example: 0
  *     responses:
  *       201:
  *         description: Harvest and product consumption log created successfully
@@ -101,17 +115,27 @@ const Router = express.Router();
  *                   harvest_date:
  *                     type: string
  *                     format: date
+ *                     example: "2026-03-20"
  *                   harvest_quantity_kg:
  *                     type: number
  *                     format: double
+ *                     example: 1200.5
  *                   sale_date:
  *                     type: string
  *                     format: date
+ *                     example: "2026-03-25"
  *                   buyer_or_consumption_address:
  *                     type: string
+ *                     example: "Co so thu mua Thanh Cong, Cho Lach, Ben Tre"
  *                   consumed_weight_kg:
  *                     type: number
  *                     format: double
+ *                     example: 1000
+ *                   sale_unit_price_vnd:
+ *                     type: number
+ *                     format: double
+ *                     example: 60000
+
  *     responses:
  *       200:
  *         description: Harvest and product consumption log updated successfully
