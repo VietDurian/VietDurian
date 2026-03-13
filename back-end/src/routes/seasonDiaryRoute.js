@@ -214,5 +214,4 @@ Router.patch(
 	authMiddleware.protect,
 	seasonDiaryController.finishSeasonDiary,
 );
-
 export { Router as seasonDiaryRoute };
