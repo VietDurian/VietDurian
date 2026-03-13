@@ -570,8 +570,8 @@ export async function getOwnPosts(filters = {}) {
 }
 
 // Create new post
-export async function createPost({ category, content, image, contact }) {
-  const params = { category, content, image, contact };
+export async function createPost({ category, title, content, image, contact }) {
+  const params = { category, title, content, image, contact };
   try {
     const response = await apiClient.post("/post/general", params);
     return response?.data?.data;
@@ -599,9 +599,9 @@ export async function deletePost(postId) {
 }
 
 // Update post
-export async function updatePost(postId, { category, content, image, contact }) {
+export async function updatePost(postId, { category, title, content, image, contact }) {
   try {
-    const params = { category, content, image, contact };
+    const params = { category, title, content, image, contact };
     const response = await apiClient.patch(`/post/${postId}/general`, params);
     return response?.data?.data;
   } catch (error) {

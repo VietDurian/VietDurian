@@ -6,7 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 import { createPost } from "@/lib/api";
 import Navbar from "@/components/Navbar";
 import {
-    ImageIcon, X, AlertCircle, ArrowLeft, FileText,
+    ImageIcon, X, AlertCircle, ArrowLeft, FileText, Phone, Mail,
+    XCircle,
 } from "lucide-react";
 
 const getCategoriesByRole = (role) => {
@@ -19,6 +20,29 @@ const getCategoriesByRole = (role) => {
     }
 };
 
+const TITLE_PLACEHOLDERS = {
+    "Dịch vụ": "VD: Dọn cỏ, làm vườn, phun thuốc, cắt tỉa cành...",
+    "Sản phẩm": "VD: Bán sầu riêng Ri6, phân bón hữu cơ, cây giống...",
+    "Kinh nghiệm": "VD: Kỹ thuật bón phân, cách xử lý sâu bệnh...",
+    "Thuê dịch vụ": "VD: Cần thuê người phun thuốc, hái quả, chăm vườn...",
+    "Khác": "VD: Thông báo, hỏi đáp, tin tức nông nghiệp...",
+};
+
+const PHONE_REGEX = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validateContact = (type, value) => {
+    if (!value.trim()) return "Vui lòng nhập thông tin liên hệ";
+    if (type === "phone") {
+        if (!PHONE_REGEX.test(value))
+            return "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 03, 05, 07, 08, 09)";
+    } else {
+        if (!EMAIL_REGEX.test(value))
+            return "Email không hợp lệ (VD: example@gmail.com)";
+    }
+    return "";
+};
+
 export default function CreatePostPage() {
     const router = useRouter();
     const { user } = useAuth();
@@ -27,14 +51,36 @@ export default function CreatePostPage() {
 
     const categories = getCategoriesByRole(user?.role);
     const [category, setCategory] = useState(categories[0]);
+    const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
+    const [contactType, setContactType] = useState("phone");
     const [contact, setContact] = useState("");
+    const [contactError, setContactError] = useState("");
     const [imagePreview, setImagePreview] = useState("");
     const [imageData, setImageData] = useState("");
     const [error, setError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const canSubmit = Boolean(category) && Boolean(content.trim()) && Boolean(imageData) && Boolean(contact.trim());
+    const handleContactChange = (e) => {
+        const val = e.target.value;
+        setContact(val);
+        if (val.trim()) setContactError(validateContact(contactType, val));
+        else setContactError("");
+    };
+
+    const handleContactTypeChange = (type) => {
+        setContactType(type);
+        setContact("");
+        setContactError("");
+    };
+
+    const canSubmit =
+        Boolean(category) &&
+        Boolean(title.trim()) &&
+        Boolean(content.trim()) &&
+        Boolean(imageData) &&
+        Boolean(contact.trim()) &&
+        !contactError;
 
     const handleImageChange = (e) => {
         const file = e.target.files?.[0];
@@ -48,10 +94,12 @@ export default function CreatePostPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
-        if (!canSubmit) { setError("Vui lòng điền đủ danh mục, nội dung, ảnh và thông tin liên hệ."); return; }
+        const cErr = validateContact(contactType, contact);
+        if (cErr) { setContactError(cErr); return; }
+        if (!canSubmit) { setError("Vui lòng điền đủ thông tin."); return; }
         setIsSubmitting(true);
         try {
-            await createPost({ category, content: content.trim(), image: imageData, contact: contact.trim() });
+            await createPost({ category, title: title.trim(), content: content.trim(), image: imageData, contact: contact.trim() });
             router.push("/profile/posts");
         } catch (err) {
             setError(err?.message || "Không thể tạo bài viết. Vui lòng thử lại.");
@@ -64,16 +112,11 @@ export default function CreatePostPage() {
         <div className="min-h-screen bg-gray-50">
             <Navbar />
 
-            {/* ── Header giống blog ───────────────────────────── */}
             <section className="pt-10 pb-8 px-4">
                 <div className="max-w-5xl mx-auto">
                     <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl p-4 md:p-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer"
-                        >
-                            <ArrowLeft size={20} />
-                            <span>Quay lại</span>
+                        <button onClick={() => router.back()} className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer">
+                            <ArrowLeft size={20} /><span>Quay lại</span>
                         </button>
                         <div className="text-center">
                             <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -86,7 +129,6 @@ export default function CreatePostPage() {
                 </div>
             </section>
 
-            {/* ── Form ───────────────────────────────────────── */}
             <section className="pb-16 px-4">
                 <div className="max-w-5xl mx-auto">
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -100,82 +142,82 @@ export default function CreatePostPage() {
                             </div>
                         </div>
 
-                        {/* Category — custom dropdown giống code gốc */}
+                        {/* Category */}
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700">
-                                Danh mục
-                            </label>
+                            <label className="text-sm font-semibold text-gray-700">Danh mục</label>
                             <div className="relative">
-                                {/* Toggle button */}
-                                <button
-                                    type="button"
-                                    onClick={() => setDropdownOpen((o) => !o)}
-                                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white transition-all cursor-pointer text-left flex justify-between items-center"
-                                >
+                                <button type="button" onClick={() => setDropdownOpen((o) => !o)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white transition-all cursor-pointer text-left flex justify-between items-center">
                                     <span>{category}</span>
-                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                 </button>
-
-                                {/* Dropdown list */}
                                 {dropdownOpen && (
                                     <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
                                         {categories.map((item) => (
-                                            <div
-                                                key={item}
-                                                onClick={() => { setCategory(item); setDropdownOpen(false); }}
-                                                className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item
-                                                    ? "bg-emerald-600 text-white font-medium"
-                                                    : "text-gray-900 hover:bg-emerald-500 hover:text-white"
-                                                    }`}
-                                            >
-                                                {item}
-                                            </div>
+                                            <div key={item} onClick={() => { setCategory(item); setDropdownOpen(false); }} className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item ? "bg-emerald-600 text-white font-medium" : "text-gray-900 hover:bg-emerald-500 hover:text-white"}`}>{item}</div>
                                         ))}
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Content */}
+                        {/* Title field — label "Nội dung", max 100 */}
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700">
-                                Nội dung
-                            </label>
+                            <label className="text-sm font-semibold text-gray-700">Nội dung</label>
+                            <input
+                                type="text"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                placeholder={TITLE_PLACEHOLDERS[category] || TITLE_PLACEHOLDERS["Khác"]}
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white font-medium"
+                                maxLength={100}
+                            />
+                            <div className="text-xs text-gray-500 text-right">{title.length}/100</div>
+                        </div>
+
+                        {/* Content field — label "Mô tả chi tiết" */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-gray-700">Mô tả chi tiết</label>
                             <textarea
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
-                                autoFocus
-                                placeholder="Bạn đang nghĩ gì?"
+                                placeholder="Mô tả chi tiết về bài viết của bạn..."
                                 className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-600"
                                 maxLength={1000}
                             />
                             <div className="text-xs text-gray-500 text-right">{content.length}/1000</div>
                         </div>
 
-                        {/* Contact */}
+                        {/* Contact — phone / email toggle */}
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700">
-                                Thông tin liên hệ
-                            </label>
+                            <label className="text-sm font-semibold text-gray-700">Thông tin liên hệ</label>
+                            <div className="flex gap-2">
+                                <button type="button" onClick={() => handleContactTypeChange("phone")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "phone" ? "border-emerald-600 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                                    <Phone size={15} />Số điện thoại
+                                </button>
+                                <button type="button" onClick={() => handleContactTypeChange("email")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "email" ? "border-emerald-600 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                                    <Mail size={15} />Email
+                                </button>
+                            </div>
                             <input
-                                type="text"
+                                type={contactType === "phone" ? "tel" : "email"}
                                 value={contact}
-                                onChange={(e) => setContact(e.target.value)}
-                                placeholder="Số điện thoại hoặc email"
-                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white"
+                                onChange={handleContactChange}
+                                placeholder={contactType === "phone" ? "VD: 0901234567" : "VD: example@gmail.com"}
+                                className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white ${contactError ? "border-red-400" : "border-gray-200"}`}
                             />
+                            {contactError && (
+                                <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+                                    <XCircle size={14} strokeWidth={2.5} />
+                                    {contactError}
+                                </p>
+                            )}
                         </div>
 
                         {/* Image */}
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-gray-700">Ảnh</label>
                             {!imagePreview ? (
-                                <div
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all"
-                                >
+                                <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
                                     <ImageIcon className="mx-auto text-gray-400 mb-2" size={32} />
                                     <p className="text-sm font-medium text-gray-600">Nhấp để chọn ảnh</p>
                                     <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF tối đa 5MB</p>
@@ -183,35 +225,22 @@ export default function CreatePostPage() {
                             ) : (
                                 <div className="relative rounded-lg overflow-hidden border border-gray-200">
                                     <img src={imagePreview} alt="Preview" className="w-full h-auto object-contain bg-gray-50 max-h-80" />
-                                    <button
-                                        type="button"
-                                        onClick={() => { setImagePreview(""); setImageData(""); }}
-                                        className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full"
-                                    >
-                                        <X size={16} />
-                                    </button>
+                                    <button type="button" onClick={() => { setImagePreview(""); setImageData(""); }} className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full"><X size={16} /></button>
                                 </div>
                             )}
                             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                         </div>
 
-                        {/* Error */}
                         {error && (
                             <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                                 <AlertCircle size={18} /><span>{error}</span>
                             </div>
                         )}
 
-                        {/* Submit */}
-                        <button
-                            type="submit"
-                            disabled={!canSubmit || isSubmitting}
-                            className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                        >
+                        <button type="submit" disabled={!canSubmit || isSubmitting} className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition disabled:opacity-60 disabled:cursor-not-allowed">
                             {isSubmitting ? (
                                 <span className="flex items-center justify-center gap-2">
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    Đang đăng...
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Đang đăng...
                                 </span>
                             ) : "Đăng bài viết"}
                         </button>
