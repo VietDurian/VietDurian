@@ -45,7 +45,6 @@ export function AdminSidebar({
 		{ id: 'users', icon: Users, label: t('users') },
 		{ id: 'types', icon: Sprout, label: t('types') },
 		{ id: 'products', icon: ShoppingBag, label: t('products') },
-		{ id: 'stages', icon: Milestone, label: t('stages') },
 		{ id: 'posts', icon: MessageSquareText, label: t('posts') },
 		{ id: 'blogs', icon: Newspaper, label: t('blogs') },
 		{ id: 'reports', icon: Flag, label: t('reports') },

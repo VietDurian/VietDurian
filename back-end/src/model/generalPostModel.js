@@ -1,4 +1,3 @@
-import { auth } from 'google-auth-library';
 import mongoose from 'mongoose';
 
 const generalPostSchema = new mongoose.Schema(
@@ -11,6 +10,10 @@ const generalPostSchema = new mongoose.Schema(
 		category: {
 			type: String,
             enum: ['Dịch vụ', 'Kinh nghiệm', 'Sản phẩm', 'Thuê dịch vụ', 'Khác'],
+			required: true,
+		},
+		title: {
+			type: String,
 			required: true,
 		},
 		content: {

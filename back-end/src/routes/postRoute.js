@@ -4,6 +4,7 @@ import { authMiddleware } from '@/middlewares/authentication';
 
 const Router = express.Router();
 
+ 
 /**
  * @swagger
  * /post/general:
@@ -30,7 +31,7 @@ const Router = express.Router();
  *         name: search
  *         schema:
  *           type: string
- *         description: Search by content
+ *         description: Search by title
  *       - in: query
  *         name: sort
  *         schema:
@@ -68,6 +69,9 @@ const Router = express.Router();
  *                         type: string
  *                         enum: ['Dịch vụ', 'Kinh nghiệm', 'Sản phẩm', 'Thuê dịch vụ', 'Khác']
  *                         example: "Dịch vụ"
+ *                       title:
+ *                         type: string
+ *                         example: "Tiêu đề bài viết"
  *                       content:
  *                         type: string
  *                         example: "General blog content"
@@ -97,6 +101,7 @@ const Router = express.Router();
  *             type: object
  *             required:
  *               - category
+ *               - title
  *               - content
  *               - contact
  *             properties:
@@ -105,6 +110,9 @@ const Router = express.Router();
  *                 enum: ['Dịch vụ', 'Kinh nghiệm', 'Sản phẩm', 'Thuê dịch vụ', 'Khác']
  *                 description: "Các loại danh mục: 'Dịch vụ', 'Kinh nghiệm', 'Sản phẩm', 'Thuê dịch vụ', 'Khác'"
  *                 example: "Dịch vụ"
+ *               title:
+ *                 type: string
+ *                 example: "Tiêu đề bài viết"
  *               content:
  *                 type: string
  *                 example: "Content of the general blog"
@@ -137,6 +145,9 @@ const Router = express.Router();
  *                     category:
  *                       type: string
  *                       example: "Dịch vụ"
+ *                     title:
+ *                       type: string
+ *                       example: "Tiêu đề bài viết"
  *                     content:
  *                       type: string
  *                       example: "Content of the general blog"
@@ -188,6 +199,9 @@ const Router = express.Router();
  *                     category:
  *                       type: string
  *                       example: "Dịch vụ"
+ *                     title:
+ *                       type: string
+ *                       example: "Tiêu đề bài viết"
  *                     content:
  *                       type: string
  *                       example: "General blog content"
@@ -243,6 +257,9 @@ const Router = express.Router();
  *                 enum: ['Dịch vụ', 'Kinh nghiệm', 'Sản phẩm', 'Thuê dịch vụ', 'Khác']
  *                 description: "Các loại danh mục: 'Dịch vụ', 'Kinh nghiệm', 'Sản phẩm', 'Thuê dịch vụ', 'Khác'"
  *                 example: "Dịch vụ"
+ *               title:
+ *                 type: string
+ *                 example: "Cập nhật tiêu đề"
  *               content:
  *                 type: string
  *                 example: "Updated content of the general blog"
@@ -278,6 +295,9 @@ const Router = express.Router();
  *                     category:
  *                       type: string
  *                       example: "Dịch vụ"
+ *                     title:
+ *                       type: string
+ *                       example: "Cập nhật tiêu đề"
  *                     content:
  *                       type: string
  *                       example: "Updated content"

@@ -24,18 +24,19 @@ const getGeneralPost = async (req, res, next) => {
 // Create a new general post
 const createGeneralPost = async (req, res, next) => {
 	try {
-		const { category, content, image, contact } = req.body;
+		const { category, title, content, image, contact } = req.body;
 		// Validate input
-		if (!category || !content || !contact) {
+		if (!category || !title || !content || !contact) {
 			return res.status(400).json({
 				code: 400,
-				message: 'Category, content, and contact are required',
+				message: 'Category, title, content, and contact are required',
 			});
 		}
 		const author_id = req.user.id;
 		const newGeneralPost = await postService.createGeneralPost({
 			author_id,
 			category,
+			title,
 			content,
 			image,
 			contact,
@@ -54,9 +55,10 @@ const createGeneralPost = async (req, res, next) => {
 const updateGeneralPost = async (req, res, next) => {
 	try {
 		const { post_id } = req.params;
-		const { category, content, image, contact, status } = req.body;
+		const { category, title, content, image, contact, status } = req.body;
 		const updatedPost = await postService.updateGeneralPost(post_id, {
 			category,
+			title,
 			content,
 			image,
 			contact,

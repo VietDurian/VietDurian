@@ -35,7 +35,7 @@ const register = async (userData) => {
       password: userData.password,
       phone: userData.phone || "",
       avatar:
-        "https://res.cloudinary.com/di6lwnmsm/image/upload/v1754207039/lang-nghe-banh-trang-9-1789_hupbtt.jpg",
+        "https://res.cloudinary.com/di6lwnmsm/image/upload/v1773319504/%E1%B4%97_Avatar_scc196.jpg",
       role: needApproval ? "trader" : requestedRole,
       is_verified: false,
     });
