@@ -2,8 +2,6 @@ import { HarvestConsumptionModel } from '@/model/harvestConsumptionModel';
 import { SeasonDiaryModel } from '@/model/seasonDiaryModel';
 import createError from 'http-errors';
 
-const toObjectIdString = (value) => value?.toString();
-
 const parsePage = (page) => {
 	const parsed = Number.parseInt(page, 10);
 	return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
@@ -80,15 +78,52 @@ const sanitizePayload = (payload) => {
 		);
 	}
 
+	if (Object.prototype.hasOwnProperty.call(sanitized, 'sale_unit_price_vnd')) {
+		sanitized.sale_unit_price_vnd = normalizeNumber(
+			sanitized.sale_unit_price_vnd,
+			'sale_unit_price_vnd',
+		);
+	}
+
 	// Explicitly remove columns user requested to exclude.
 	delete sanitized.processing_location;
 	delete sanitized.processing_method;
 	delete sanitized.location;
+	delete sanitized.sale_total_amount_vnd;
 
 	return sanitized;
 };
 
-const ensureSeasonDiaryAccess = async ({ seasonDiaryId, userId, role }) => {
+const validateRequiredHarvestFieldsOnCreate = (payload) => {
+	if (!payload?.harvest_date) {
+		throw createError(400, 'Ngày thu hoạch không được để trống');
+	}
+
+	if (
+		payload?.harvest_quantity_kg === undefined ||
+		payload?.harvest_quantity_kg === null
+	) {
+		throw createError(400, 'Số lượng thu hoạch không được để trống');
+	}
+};
+
+const validateRequiredHarvestFieldsOnUpdate = (payload) => {
+	if (
+		Object.prototype.hasOwnProperty.call(payload, 'harvest_date') &&
+		(payload.harvest_date === null || payload.harvest_date === undefined)
+	) {
+		throw createError(400, 'Ngày thu hoạch không được để trống');
+	}
+
+	if (
+		Object.prototype.hasOwnProperty.call(payload, 'harvest_quantity_kg') &&
+		(payload.harvest_quantity_kg === null || payload.harvest_quantity_kg === undefined)
+	) {
+		throw createError(400, 'Số lượng thu hoạch không được để trống');
+	}
+};
+
+const ensureSeasonDiaryAccess = async ({ seasonDiaryId, userId }) => {
 	if (!seasonDiaryId) {
 		return;
 	}
@@ -98,22 +133,22 @@ const ensureSeasonDiaryAccess = async ({ seasonDiaryId, userId, role }) => {
 		throw createError(404, 'Season diary not found');
 	}
 
-	const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-	if (!isOwner && role !== 'admin') {
+	const isOwner = String(diary.user_id) === String(userId);
+	if (!isOwner) {
 		throw createError(403, 'You do not have permission to access this season diary');
 	}
 };
 
-const viewHarvestConsumptionList = async ({ page, limit, seasonDiaryId, userId, role }) => {
+const viewHarvestConsumptionList = async ({ page, limit, seasonDiaryId, userId }) => {
 	const pageNumber = parsePage(page);
 	const limitNumber = parseLimit(limit);
 	const skip = (pageNumber - 1) * limitNumber;
 	const query = { season_diary_id: { $ne: null } };
 
 	if (seasonDiaryId) {
-		await ensureSeasonDiaryAccess({ seasonDiaryId, userId, role });
+		await ensureSeasonDiaryAccess({ seasonDiaryId, userId });
 		query.season_diary_id = seasonDiaryId;
-	} else if (role !== 'admin') {
+	} else {
 		query.created_by = userId;
 	}
 
@@ -142,7 +177,7 @@ const viewHarvestConsumptionList = async ({ page, limit, seasonDiaryId, userId, 
 	};
 };
 
-const createHarvestConsumption = async ({ userId, role, data }) => {
+const createHarvestConsumption = async ({ userId, data }) => {
 	if (!data?.season_diary_id) {
 		throw createError(400, 'season_diary_id is required');
 	}
@@ -150,7 +185,6 @@ const createHarvestConsumption = async ({ userId, role, data }) => {
 	await ensureSeasonDiaryAccess({
 		seasonDiaryId: data.season_diary_id,
 		userId,
-		role,
 	});
 
 	const payload = {
@@ -158,26 +192,28 @@ const createHarvestConsumption = async ({ userId, role, data }) => {
 		created_by: userId,
 	};
 
+	validateRequiredHarvestFieldsOnCreate(payload);
+
 	const created = await HarvestConsumptionModel.create(payload);
 	return created;
 };
 
-const updateHarvestConsumption = async ({ harvestConsumptionId, userId, role, data }) => {
+const updateHarvestConsumption = async ({ harvestConsumptionId, userId, data }) => {
 	const existing = await HarvestConsumptionModel.findById(harvestConsumptionId);
 	if (!existing) {
 		throw createError(404, 'Harvest/consumption log not found');
 	}
 
-	const isCreator =
-		toObjectIdString(existing.created_by) === toObjectIdString(userId) || role === 'admin';
+	const isCreator = String(existing.created_by) === String(userId);
 	if (!isCreator) {
 		throw createError(403, 'You do not have permission to update this log');
 	}
 
 	const targetSeasonDiaryId = data?.season_diary_id || existing.season_diary_id;
-	await ensureSeasonDiaryAccess({ seasonDiaryId: targetSeasonDiaryId, userId, role });
+	await ensureSeasonDiaryAccess({ seasonDiaryId: targetSeasonDiaryId, userId });
 
 	const payload = sanitizePayload(data);
+	validateRequiredHarvestFieldsOnUpdate(payload);
 	delete payload.created_by;
 
 	Object.assign(existing, payload);
@@ -185,7 +221,7 @@ const updateHarvestConsumption = async ({ harvestConsumptionId, userId, role, da
 	return updated;
 };
 
-const deleteHarvestConsumption = async ({ harvestConsumptionId, userId, role }) => {
+const deleteHarvestConsumption = async ({ harvestConsumptionId, userId }) => {
 	const existing = await HarvestConsumptionModel.findById(harvestConsumptionId)
 		.select('_id created_by')
 		.lean();
@@ -194,8 +230,7 @@ const deleteHarvestConsumption = async ({ harvestConsumptionId, userId, role }) 
 		throw createError(404, 'Harvest/consumption log not found');
 	}
 
-	const isCreator =
-		toObjectIdString(existing.created_by) === toObjectIdString(userId) || role === 'admin';
+	const isCreator = String(existing.created_by) === String(userId);
 	if (!isCreator) {
 		throw createError(403, 'You do not have permission to delete this log');
 	}

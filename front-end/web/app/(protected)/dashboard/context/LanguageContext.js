@@ -68,6 +68,7 @@ const translations = {
 		// Posts
 		post_management: 'Quản lý bài viết',
 		content: 'Nội dung',
+		description: 'Mô tả',
 		category: 'Thể loại',
 		inactive_post: 'Đưa về trạng thái Ngưng hoạt động',
 		active_post: 'Đưa về trạng thái Hoạt động',
@@ -357,6 +358,7 @@ const translations = {
 		post_management: 'Post Management',
 		search_posts: 'Search posts...',
 		content: 'Content',
+		description: 'Description',
 		category: 'Category',
 		inactive_post: 'Set to Inactive',
 		active_post: 'Set to Active',

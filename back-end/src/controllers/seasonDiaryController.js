@@ -11,7 +11,7 @@ const viewSeasonDiaryList = async (req, res, next) => {
 
 		res.status(200).json({
 			code: 200,
-			message: 'Season diary list retrieved successfully',
+			message: 'Lấy danh sách nhật ký mùa vụ thành công',
 			data: diaries,
 		});
 	} catch (error) {
@@ -27,7 +27,7 @@ const viewSeasonDiaryDetail = async (req, res, next) => {
 
 		res.status(200).json({
 			code: 200,
-			message: 'Season diary detail retrieved successfully',
+			message: 'Lấy chi tiết nhật ký mùa vụ thành công',
 			data: diary,
 		});
 	} catch (error) {
@@ -59,7 +59,7 @@ const createSeasonDiary = async (req, res, next) => {
 			return res.status(400).json({
 				code: 400,
 				message:
-					'garden_name, farmer_name, location, longitude, latitude, crop_variety, and area are required',
+					'Thiếu dữ liệu bắt buộc: garden_name, farmer_name, location, longitude, latitude, crop_variety, area',
 			});
 		}
 
@@ -72,7 +72,7 @@ const createSeasonDiary = async (req, res, next) => {
 
 		res.status(201).json({
 			code: 201,
-			message: 'Season diary created successfully',
+			message: 'Tạo nhật ký mùa vụ thành công',
 			data: diary,
 		});
 	} catch (error) {
@@ -88,7 +88,7 @@ const updateSeasonDiary = async (req, res, next) => {
 		if (!Object.keys(req.body || {}).length) {
 			return res.status(400).json({
 				code: 400,
-				message: 'No fields provided for update',
+				message: 'Không có trường nào để cập nhật',
 			});
 		}
 
@@ -99,7 +99,7 @@ const updateSeasonDiary = async (req, res, next) => {
 
 		res.status(200).json({
 			code: 200,
-			message: 'Season diary updated successfully',
+			message: 'Cập nhật nhật ký mùa vụ thành công',
 			data: diary,
 		});
 	} catch (error) {
@@ -117,7 +117,7 @@ const deleteSeasonDiary = async (req, res, next) => {
 
 		res.status(200).json({
 			code: 200,
-			message: 'Season diary deleted successfully',
+			message: 'Xóa nhật ký mùa vụ thành công',
 		});
 	} catch (error) {
 		next(error);
@@ -134,8 +134,28 @@ const finishSeasonDiary = async (req, res, next) => {
 
 		res.status(200).json({
 			code: 200,
-			message: 'Season diary marked as completed successfully',
+			message: 'Đã hoàn thành nhật ký mùa vụ thành công',
 			data: diary,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
+const statisticsSeasonDiary = async (req, res, next) => {
+	try {
+		const { season_diary_id } = req.params;
+		const userId = req.user?.id || req.user?._id;
+
+		const statistics = await seasonDiaryService.getSeasonDiaryStatistics({
+			seasonDiaryId: season_diary_id,
+			userId,
+		});
+
+		res.status(200).json({
+			code: 200,
+			message: 'Lấy thống kê nhật ký mùa vụ thành công',
+			data: statistics,
 		});
 	} catch (error) {
 		next(error);
@@ -150,4 +170,5 @@ export const seasonDiaryController = {
 	updateSeasonDiary,
 	deleteSeasonDiary,
 	finishSeasonDiary,
+	statisticsSeasonDiary,
 };

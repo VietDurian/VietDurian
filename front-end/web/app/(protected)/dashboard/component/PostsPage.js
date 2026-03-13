@@ -66,6 +66,7 @@ export function PostsPage() {
 						item?.author_id?.avatar ||
 						item.avatar ||
 						'',
+					title: item.title || '',
 					content: item.content || '',
 					category: item.category || '',
 					status: item.status || 'inactive',
@@ -105,7 +106,7 @@ export function PostsPage() {
 
 	const normalizedSearch = normalizeText(searchTerm);
 	const filteredPosts = posts.filter((post) => {
-		const normalizedContent = normalizeText(post.content);
+		const normalizedContent = normalizeText(post.title);
 		const matchesSearch = normalizedContent.includes(normalizedSearch);
 		const matchesStatus =
 			statusFilter === 'all' || post.status === statusFilter;
@@ -361,7 +362,7 @@ export function PostsPage() {
 										</div>
 									</td>
 									<td className="px-6 py-4 text-sm text-gray-600 max-w-xs">
-										{snippet(post.content)}
+										{snippet(post.title)}
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
 										<span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
@@ -628,8 +629,16 @@ export function PostsPage() {
 										{t('content')}
 									</p>
 									<p className="text-gray-800 leading-relaxed">
+										{selectedPost.title}
+									</p>
+
+									<p className="text-sm font-medium text-gray-700">
+										{t('description')}
+									</p>
+									<p className="text-gray-800 leading-relaxed">
 										{selectedPost.content}
 									</p>
+
 									<div className="space-y-1">
 										<p className="text-sm font-medium text-gray-700">
 											{t('contact')}

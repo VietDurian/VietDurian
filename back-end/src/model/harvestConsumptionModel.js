@@ -15,13 +15,13 @@ const HarvestConsumptionSchema = new mongoose.Schema(
 		// Ngay/thang/nam thu hoach
 		harvest_date: {
 			type: Date,
-			default: null,
+			required: true,
 		},
 		// San luong thu hoach (kg)
 		harvest_quantity_kg: {
 			type: Number,
-			required: false,
-			default: null,
+			required: true,
+			min: 0,
 		},
 		// Thoi gian xuat ban san pham (ngay/thang/nam)
 		sale_date: {
@@ -36,6 +36,12 @@ const HarvestConsumptionSchema = new mongoose.Schema(
 		},
 		// Khoi luong tieu thu (kg)
 		consumed_weight_kg: {
+			type: Number,
+			required: false,
+			default: null,
+		},
+		// Don gia ban (VND/kg)
+		sale_unit_price_vnd: {
 			type: Number,
 			required: false,
 			default: null,
