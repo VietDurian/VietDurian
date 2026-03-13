@@ -16,6 +16,7 @@ const normalizeText = (text = '') =>
 const createGeneralPost = async ({
 	author_id,
 	category,
+	title,
 	content,
 	image,
 	contact,
@@ -36,6 +37,7 @@ const createGeneralPost = async ({
 		const newPost = new GeneralPostModel({
 			author_id,
 			category,
+			title,
 			content,
 			image: imageUrl,
 			contact,
@@ -114,7 +116,7 @@ const getGeneralPost = async ({
 		}
 
 		const filteredPosts = postsWithAuthor.filter((post) =>
-			normalizeText(post.content || '').includes(normalizedSearch),
+			normalizeText(post.title || '').includes(normalizedSearch),
 		);
 
 		return filteredPosts;
