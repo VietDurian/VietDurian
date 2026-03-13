@@ -9,6 +9,8 @@ import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useAppStore } from "../store/useAppStore";
 import { useProductStore } from "../store/useProductStore";
+import { useAuthStore } from "../store/useAuthStore";
+import ProductRating from "../components/ProductRating";
 
 // ── Mock fallback ─────────────────────────────────────────────────────────────
 const MOCK_PRODUCT = {
@@ -55,6 +57,8 @@ export default function ProductDetailScreen() {
 
     const [activeTab, setActiveTab] = useState("description");
     const [selectedImage, setSelectedImage] = useState(0);
+    const { authUser } = useAuthStore();
+    const currentUserId = authUser?._id ?? null;
 
     // Fetch chi tiết khi mount
     useEffect(() => {
@@ -284,7 +288,7 @@ export default function ProductDetailScreen() {
                     </View>
                 </View>
 
-                {/* ❌ bỏ: <ProductRating productId={product._id} /> */}
+                <ProductRating productId={product._id} userId={currentUserId} />
 
                 <View style={{ height: 40 }} />
             </ScrollView>
