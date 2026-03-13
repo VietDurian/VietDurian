@@ -1,43 +1,12 @@
 import {
     StyleSheet, Text, View, ScrollView, TouchableOpacity,
     TextInput, Modal, Alert, ActivityIndicator,
+    KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
 import { useState, useEffect } from "react";
-
-// ── Mock data để test UI (xoá khi tích hợp API) ──────────────────────────────
-const MOCK_REVIEWS = [
-    {
-        id: "r1",
-        userName: "Nguyễn Văn A",
-        avatar: null,
-        rating: 4,
-        comment: "Sầu riêng rất ngon, múi dày, hạt nhỏ! Giao hàng nhanh và đóng gói cẩn thận.",
-        date: "12/03/2025",
-        userId: "u1",
-    },
-    {
-        id: "r2",
-        userName: "Trần Thị B",
-        avatar: null,
-        rating: 5,
-        comment: "Chất lượng tuyệt vời, mua lần 2 rồi vẫn ưng lắm!",
-        date: "05/03/2025",
-        userId: "u2",
-    },
-    {
-        id: "r3",
-        userName: "Lê Văn C",
-        avatar: null,
-        rating: 4,
-        comment: "Ngon nhưng hơi to, khó ăn một mình.",
-        date: "01/03/2025",
-        userId: "u3",
-    },
-];
-const MOCK_USER_ID = "u1"; // giả lập user đang đăng nhập
-// ─────────────────────────────────────────────────────────────────────────────
+import { useRatingStore } from "../store/useRatingStore";
 
 // ── StarRow (display only) ────────────────────────────────────────────────────
 function StarRow({ rating, size = 16 }) {
@@ -73,84 +42,164 @@ function StarInput({ value, onChange, size = 38 }) {
 }
 
 // ── ReviewCard ────────────────────────────────────────────────────────────────
+// Tất cả card đều có shadow xanh giống nhau
+// Card của mình: thêm nút edit/delete
 function ReviewCard({ review, isOwn, onPress, onEdit, onDelete }) {
     return (
         <TouchableOpacity
             activeOpacity={0.85}
-            style={[styles.reviewCard, isOwn && styles.reviewCardOwn]}
+            style={styles.reviewCard}
             onPress={onPress}
         >
             {/* Header: tên + ngày */}
             <View style={styles.reviewCardHeader}>
-                <Text style={styles.reviewUserName} numberOfLines={1}>{review.userName}</Text>
+                <Text style={styles.reviewUserName} numberOfLines={1}>
+                    {review.userName}
+                </Text>
                 <Text style={styles.reviewDate}>{review.date}</Text>
             </View>
 
-            {/* Stars + nút edit/delete (chỉ hiện nếu là review của mình) */}
+            {/* Stars + edit/delete chỉ trên card của mình */}
             <View style={styles.reviewStarsRow}>
                 <StarRow rating={review.rating} size={14} />
                 {isOwn && (
                     <View style={{ flexDirection: "row", gap: 6 }}>
                         <TouchableOpacity
                             style={styles.actionBtn}
-                            onPress={(e) => { e.stopPropagation?.(); onEdit(); }}
+                            onPress={(e) => { e?.stopPropagation?.(); onEdit(); }}
                         >
-                            <Feather name="edit-2" size={13} color="#059669" />
+                            <Feather name="edit-2" size={12} color="#059669" />
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.actionBtn, styles.actionBtnRed]}
-                            onPress={(e) => { e.stopPropagation?.(); onDelete(); }}
+                            onPress={(e) => { e?.stopPropagation?.(); onDelete(); }}
                         >
-                            <Feather name="trash-2" size={13} color="#EF4444" />
+                            <Feather name="trash-2" size={12} color="#EF4444" />
                         </TouchableOpacity>
                     </View>
                 )}
             </View>
 
-            {/* Comment preview */}
-            <Text style={styles.reviewComment} numberOfLines={1}>{review.comment}</Text>
+            {/* Comment preview 1 dòng */}
+            <Text style={styles.reviewComment} numberOfLines={1}>
+                {review.comment}
+            </Text>
         </TouchableOpacity>
     );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
-export default function ProductRating({ productId, userId = MOCK_USER_ID }) {
-    const [userRating, setUserRating] = useState(0);
-    const [averageRating, setAverageRating] = useState(0);
-    const [totalRatings, setTotalRatings] = useState(0);
-    const [userOwnRating, setUserOwnRating] = useState(null);
-    const [otherReviews, setOtherReviews] = useState([]);
-    const [loading, setLoading] = useState(false);
+// ── RatingModal — có KeyboardAvoidingView fix bàn phím che modal ──────────────
+function RatingModal({ visible, isEditMode, userRating, setUserRating, ratingContent, setRatingContent, submitting, onClose, onSubmit, onDelete, editingRatingId }) {
+    return (
+        <Modal
+            visible={visible}
+            transparent
+            animationType="fade"
+            onRequestClose={onClose}
+        >
+            {/* Bấm ngoài modal → đóng + dismiss keyboard */}
+            <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); onClose(); }}>
+                <View style={styles.modalOverlay}>
+                    {/* KeyboardAvoidingView đẩy modal lên khi bàn phím xuất hiện */}
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                        style={{ width: "100%", alignItems: "center" }}
+                        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 40}
+                    >
+                        {/* Bấm vào trong modal → KHÔNG đóng, dismiss keyboard thôi */}
+                        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                            <View style={styles.modalCard}>
 
+                                {/* Header */}
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalTitle}>
+                                        {isEditMode ? "CHỈNH SỬA ĐÁNH GIÁ" : "ĐÁNH GIÁ SẢN PHẨM"}
+                                    </Text>
+                                    <TouchableOpacity onPress={onClose} hitSlop={8}>
+                                        <Ionicons name="close" size={22} color="#9CA3AF" />
+                                    </TouchableOpacity>
+                                </View>
+
+                                {/* Sao lớn ở giữa */}
+                                <View style={styles.modalStarsRow}>
+                                    <StarInput value={userRating} onChange={setUserRating} size={46} />
+                                </View>
+                                <View style={styles.divider} />
+
+                                {/* Textarea */}
+                                <Text style={styles.modalLabel}>
+                                    Chia sẻ trải nghiệm của bạn về sản phẩm này
+                                </Text>
+                                <TextInput
+                                    style={styles.textarea}
+                                    multiline
+                                    numberOfLines={5}
+                                    placeholder="Hãy chia sẻ cảm nhận của bạn về chất lượng, hương vị, hoặc bất cứ điều gì khác..."
+                                    placeholderTextColor="#9CA3AF"
+                                    value={ratingContent}
+                                    onChangeText={setRatingContent}
+                                    textAlignVertical="top"
+                                    // Không dùng returnKeyType="done" trên multiline
+                                    blurOnSubmit={false}
+                                />
+
+                                {/* Buttons */}
+                                <View style={styles.modalBtns}>
+                                    <TouchableOpacity
+                                        style={[styles.submitBtn, submitting && { opacity: 0.6 }]}
+                                        onPress={onSubmit}
+                                        disabled={submitting}
+                                    >
+                                        {submitting
+                                            ? <ActivityIndicator size="small" color="#059669" />
+                                            : <Text style={styles.submitBtnText}>
+                                                {isEditMode ? "Cập nhật" : "Gửi đánh giá"}
+                                            </Text>
+                                        }
+                                    </TouchableOpacity>
+                                    {isEditMode && (
+                                        <TouchableOpacity
+                                            style={styles.deleteBtn}
+                                            onPress={() => { onClose(); onDelete(editingRatingId); }}
+                                        >
+                                            <Text style={styles.deleteBtnText}>Xoá</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </KeyboardAvoidingView>
+                </View>
+            </TouchableWithoutFeedback>
+        </Modal>
+    );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
+export default function ProductRating({ productId, userId }) {
+    const {
+        averageRating, totalRatings,
+        userOwnRating, otherReviews,
+        ratingsLoading, submitting,
+        fetchRatings, createRating, updateRating, deleteRating, clearRatings,
+    } = useRatingStore();
+
+    // Rating modal state
+    const [userRating, setUserRating] = useState(0);
+    const [ratingContent, setRatingContent] = useState("");
     const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
-    const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingRatingId, setEditingRatingId] = useState(null);
-    const [ratingContent, setRatingContent] = useState("");
+
+    // Detail modal state
     const [selectedReview, setSelectedReview] = useState(null);
+    const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
 
-    // ── TODO: thay bằng fetchRatings() từ API khi tích hợp ──────────────────
     useEffect(() => {
-        loadMockData();
-    }, [productId]);
-
-    const loadMockData = () => {
-        // Tính average từ mock
-        const avg = MOCK_REVIEWS.reduce((sum, r) => sum + r.rating, 0) / MOCK_REVIEWS.length;
-        setAverageRating(avg);
-        setTotalRatings(MOCK_REVIEWS.length);
-
-        if (userId) {
-            const own = MOCK_REVIEWS.find((r) => r.userId === userId) ?? null;
-            const others = MOCK_REVIEWS.filter((r) => r.userId !== userId);
-            setUserOwnRating(own);
-            setOtherReviews(others);
-        } else {
-            setUserOwnRating(null);
-            setOtherReviews(MOCK_REVIEWS);
-        }
-    };
-    // ─────────────────────────────────────────────────────────────────────────
+        fetchRatings(productId, userId);
+        return () => clearRatings();
+    }, [productId, userId]);
 
     // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -160,6 +209,7 @@ export default function ProductRating({ productId, userId = MOCK_USER_ID }) {
     };
 
     const handleCloseRatingModal = () => {
+        Keyboard.dismiss();
         setIsRatingModalVisible(false);
         setRatingContent("");
         setUserRating(0);
@@ -167,7 +217,7 @@ export default function ProductRating({ productId, userId = MOCK_USER_ID }) {
         setEditingRatingId(null);
     };
 
-    const handleSubmitRating = () => {
+    const handleSubmitRating = async () => {
         if (!userId) {
             Alert.alert("Thông báo", "Vui lòng đăng nhập để đánh giá");
             handleCloseRatingModal();
@@ -182,10 +232,34 @@ export default function ProductRating({ productId, userId = MOCK_USER_ID }) {
             return;
         }
 
-        // TODO: gọi API tạo / cập nhật rating ở đây
-        // isEditMode ? ratingAPI.updateRating(...) : ratingAPI.createRating(...)
-        Alert.alert("Thành công", isEditMode ? "Cập nhật đánh giá thành công!" : "Gửi đánh giá thành công!");
-        handleCloseRatingModal();
+        try {
+            let response;
+            if (isEditMode && editingRatingId) {
+                response = await updateRating(editingRatingId, userRating, ratingContent);
+            } else {
+                response = await createRating(productId, userRating, ratingContent);
+            }
+
+            if (response.success) {
+                Alert.alert(
+                    "Thành công",
+                    isEditMode ? "Cập nhật đánh giá thành công!" : "Gửi đánh giá thành công!"
+                );
+                handleCloseRatingModal();
+                await fetchRatings(productId, userId);
+            } else {
+                throw new Error(response.message);
+            }
+        } catch (err) {
+            console.error("[ProductRating] submit:", err.message);
+            Alert.alert(
+                "Lỗi",
+                isEditMode
+                    ? "Không thể cập nhật đánh giá. Vui lòng thử lại."
+                    : "Bạn đã đánh giá sản phẩm này rồi!"
+            );
+            handleCloseRatingModal();
+        }
     };
 
     const handleDeleteRating = (ratingId) => {
@@ -197,10 +271,18 @@ export default function ProductRating({ productId, userId = MOCK_USER_ID }) {
                 {
                     text: "Xoá",
                     style: "destructive",
-                    onPress: () => {
-                        // TODO: gọi ratingAPI.deleteRating(ratingId)
-                        setIsDetailModalVisible(false);
-                        Alert.alert("Đã xoá", "Đã xoá đánh giá thành công!");
+                    onPress: async () => {
+                        try {
+                            const response = await deleteRating(ratingId);
+                            if (response.success) {
+                                setIsDetailModalVisible(false);
+                                setSelectedReview(null);
+                                Alert.alert("Thành công", "Xóa đánh giá thành công!");
+                                await fetchRatings(productId, userId);
+                            }
+                        } catch (error) {
+                            Alert.alert("Lỗi", "Không thể xóa đánh giá. Vui lòng thử lại.");
+                        }
                     },
                 },
             ]
@@ -228,31 +310,35 @@ export default function ProductRating({ productId, userId = MOCK_USER_ID }) {
     // ── Render ────────────────────────────────────────────────────────────────
     return (
         <View style={styles.container}>
-            {/* ── Section title ─────────────────────────────── */}
+
             <Text style={styles.sectionTitle}>Đánh giá</Text>
 
-            {/* ── Rating overview ───────────────────────────── */}
+            {/* Overview */}
             <View style={styles.overviewRow}>
-                <Text style={styles.avgScore}>{averageRating > 0 ? averageRating.toFixed(1) : "0.0"}</Text>
-                <View style={{ gap: 4 }}>
-                    <StarRow rating={averageRating} size={20} />
+                <Text style={styles.avgScore}>
+                    {averageRating > 0 ? averageRating.toFixed(1) : "0.0"}
+                </Text>
+                <View style={{ gap: 5 }}>
+                    <StarRow rating={averageRating} size={22} />
                     <Text style={styles.totalText}>{totalRatings} Đánh giá</Text>
                 </View>
             </View>
 
-            {/* ── Interactive stars (tap to open modal) ─────── */}
-            <View style={styles.inputStarsRow}>
-                <StarInput value={userRating} onChange={handleStarInputPress} size={38} />
+            {/* Sao tương tác — nhấn để mở modal */}
+            <View style={styles.inputStarsWrap}>
+                <StarInput value={userRating} onChange={handleStarInputPress} size={40} />
             </View>
 
-            {/* ── Reviews horizontal list ────────────────────── */}
-            {(userOwnRating || otherReviews.length > 0) ? (
+            {/* Danh sách review cuộn ngang */}
+            {ratingsLoading ? (
+                <ActivityIndicator size="small" color="#059669" style={{ marginTop: 12 }} />
+            ) : (userOwnRating || otherReviews.length > 0) ? (
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.reviewsScroll}
                 >
-                    {/* Own review first */}
+                    {/* Card của mình luôn đầu tiên */}
                     {userOwnRating && (
                         <ReviewCard
                             review={userOwnRating}
@@ -262,7 +348,7 @@ export default function ProductRating({ productId, userId = MOCK_USER_ID }) {
                             onDelete={() => handleDeleteRating(userOwnRating.id)}
                         />
                     )}
-                    {/* Others */}
+                    {/* Có card mình → 3 người khác, không có → 4 người */}
                     {otherReviews.slice(0, userOwnRating ? 3 : 4).map((review) => (
                         <ReviewCard
                             key={review.id}
@@ -275,144 +361,90 @@ export default function ProductRating({ productId, userId = MOCK_USER_ID }) {
             ) : (
                 <View style={styles.emptyBox}>
                     <Ionicons name="chatbubble-outline" size={32} color="#D1D5DB" />
-                    <Text style={styles.emptyText}>Chưa có đánh giá nào.{"\n"}Hãy là người đầu tiên đánh giá sản phẩm này!</Text>
+                    <Text style={styles.emptyText}>
+                        {"Chưa có đánh giá nào.\nHãy là người đầu tiên đánh giá sản phẩm này!"}
+                    </Text>
                 </View>
             )}
 
-            {/* ── Rating Modal ───────────────────────────────── */}
-            <Modal
+            {/* ── Modal: Đánh giá / Chỉnh sửa ───────────────────────────────── */}
+            <RatingModal
                 visible={isRatingModalVisible}
-                transparent
-                animationType="fade"
-                onRequestClose={handleCloseRatingModal}
-            >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    activeOpacity={1}
-                    onPress={handleCloseRatingModal}
-                >
-                    <TouchableOpacity activeOpacity={1} style={styles.modalCard} onPress={() => { }}>
-                        {/* Header */}
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>
-                                {isEditMode ? "CHỈNH SỬA ĐÁNH GIÁ" : "ĐÁNH GIÁ SẢN PHẨM"}
-                            </Text>
-                            <TouchableOpacity onPress={handleCloseRatingModal}>
-                                <Ionicons name="close" size={24} color="#9CA3AF" />
-                            </TouchableOpacity>
-                        </View>
+                isEditMode={isEditMode}
+                userRating={userRating}
+                setUserRating={setUserRating}
+                ratingContent={ratingContent}
+                setRatingContent={setRatingContent}
+                submitting={submitting}
+                onClose={handleCloseRatingModal}
+                onSubmit={handleSubmitRating}
+                onDelete={handleDeleteRating}
+                editingRatingId={editingRatingId}
+            />
 
-                        {/* Stars */}
-                        <View style={styles.modalStarsRow}>
-                            <StarInput value={userRating} onChange={setUserRating} size={44} />
-                        </View>
-                        <View style={styles.divider} />
-
-                        {/* Textarea */}
-                        <Text style={styles.modalLabel}>
-                            Chia sẻ trải nghiệm của bạn về sản phẩm này
-                        </Text>
-                        <TextInput
-                            style={styles.textarea}
-                            multiline
-                            numberOfLines={5}
-                            placeholder="Hãy chia sẻ cảm nhận của bạn về chất lượng, hương vị, hoặc bất cứ điều gì khác..."
-                            placeholderTextColor="#9CA3AF"
-                            value={ratingContent}
-                            onChangeText={setRatingContent}
-                            textAlignVertical="top"
-                        />
-
-                        {/* Buttons */}
-                        <View style={styles.modalBtns}>
-                            <TouchableOpacity
-                                style={styles.submitBtn}
-                                onPress={handleSubmitRating}
-                            >
-                                <Text style={styles.submitBtnText}>
-                                    {isEditMode ? "Cập nhật" : "Gửi đánh giá"}
-                                </Text>
-                            </TouchableOpacity>
-                            {isEditMode && (
-                                <TouchableOpacity
-                                    style={styles.deleteBtn}
-                                    onPress={() => {
-                                        handleCloseRatingModal();
-                                        handleDeleteRating(editingRatingId);
-                                    }}
-                                >
-                                    <Text style={styles.deleteBtnText}>Xoá</Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    </TouchableOpacity>
-                </TouchableOpacity>
-            </Modal>
-
-            {/* ── Detail Modal ───────────────────────────────── */}
+            {/* ── Modal: Chi tiết đánh giá ────────────────────────────────────── */}
             <Modal
                 visible={isDetailModalVisible}
                 transparent
                 animationType="fade"
                 onRequestClose={handleCloseDetailModal}
             >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    activeOpacity={1}
-                    onPress={handleCloseDetailModal}
-                >
-                    <TouchableOpacity activeOpacity={1} style={styles.modalCard} onPress={() => { }}>
-                        {/* Header */}
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>CHI TIẾT ĐÁNH GIÁ</Text>
-                            <TouchableOpacity onPress={handleCloseDetailModal}>
-                                <Ionicons name="close" size={24} color="#9CA3AF" />
-                            </TouchableOpacity>
-                        </View>
+                <TouchableWithoutFeedback onPress={handleCloseDetailModal}>
+                    <View style={styles.modalOverlay}>
+                        <TouchableWithoutFeedback onPress={() => { }}>
+                            <View style={styles.modalCard}>
 
-                        {selectedReview && (
-                            <>
-                                {/* User + date */}
-                                <View style={[styles.detailUserRow, styles.dividerBottom]}>
-                                    <Text style={styles.detailUserName}>{selectedReview.userName}</Text>
-                                    <Text style={styles.detailDate}>{selectedReview.date}</Text>
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalTitle}>CHI TIẾT ĐÁNH GIÁ</Text>
+                                    <TouchableOpacity onPress={handleCloseDetailModal} hitSlop={8}>
+                                        <Ionicons name="close" size={22} color="#9CA3AF" />
+                                    </TouchableOpacity>
                                 </View>
 
-                                {/* Stars */}
-                                <View style={{ marginVertical: 12 }}>
-                                    <StarRow rating={selectedReview.rating} size={20} />
-                                </View>
+                                {selectedReview && (
+                                    <>
+                                        <View style={[styles.detailUserRow, styles.dividerBottom]}>
+                                            <Text style={styles.detailUserName}>{selectedReview.userName}</Text>
+                                            <Text style={styles.detailDate}>{selectedReview.date}</Text>
+                                        </View>
 
-                                {/* Comment full */}
-                                <View style={styles.detailCommentBox}>
-                                    <Text style={styles.detailCommentText}>{selectedReview.comment}</Text>
-                                </View>
+                                        <View style={{ marginVertical: 14 }}>
+                                            <StarRow rating={selectedReview.rating} size={22} />
+                                        </View>
 
-                                {/* Edit/Delete — chỉ hiện nếu là review của mình */}
-                                {selectedReview.userId === userId && (
-                                    <View style={[styles.modalBtns, styles.dividerTop]}>
-                                        <TouchableOpacity
-                                            style={styles.submitBtn}
-                                            onPress={() => {
-                                                handleCloseDetailModal();
-                                                handleReviewCardPress(selectedReview, true);
-                                            }}
-                                        >
-                                            <Text style={styles.submitBtnText}>Chỉnh sửa</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={styles.deleteBtn}
-                                            onPress={() => handleDeleteRating(selectedReview.id)}
-                                        >
-                                            <Text style={styles.deleteBtnText}>Xoá</Text>
-                                        </TouchableOpacity>
-                                    </View>
+                                        <View style={styles.detailCommentBox}>
+                                            <Text style={styles.detailCommentText}>{selectedReview.comment}</Text>
+                                        </View>
+
+                                        {/* Chỉ hiện edit/delete nếu là review của mình */}
+                                        {selectedReview.userId === userId && (
+                                            <View style={[styles.modalBtns, styles.dividerTop]}>
+                                                <TouchableOpacity
+                                                    style={styles.submitBtn}
+                                                    onPress={() => {
+                                                        handleCloseDetailModal();
+                                                        handleReviewCardPress(selectedReview, true);
+                                                    }}
+                                                >
+                                                    <Text style={styles.submitBtnText}>Chỉnh sửa</Text>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    style={styles.deleteBtn}
+                                                    onPress={() => handleDeleteRating(selectedReview.id)}
+                                                >
+                                                    <Text style={styles.deleteBtnText}>Xoá</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        )}
+                                    </>
                                 )}
-                            </>
-                        )}
-                    </TouchableOpacity>
-                </TouchableOpacity>
+
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </View>
+                </TouchableWithoutFeedback>
             </Modal>
+
         </View>
     );
 }
@@ -423,7 +455,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 20,
     },
-
     sectionTitle: {
         fontSize: 22,
         fontWeight: "800",
@@ -442,20 +473,18 @@ const styles = StyleSheet.create({
         fontSize: 52,
         fontWeight: "800",
         color: "#111827",
-        lineHeight: 56,
+        lineHeight: 58,
     },
     totalText: {
         fontSize: 14,
         color: "#6B7280",
         marginTop: 2,
     },
-
-    // Interactive stars
-    inputStarsRow: {
+    inputStarsWrap: {
         marginBottom: 20,
     },
 
-    // Review cards
+    // Review cards — tất cả card đều có shadow xanh giống nhau
     reviewsScroll: {
         gap: 12,
         paddingBottom: 4,
@@ -467,16 +496,14 @@ const styles = StyleSheet.create({
         borderWidth: 1.5,
         borderColor: "#059669",
         padding: 12,
-        backgroundColor: "#FFF",
+        backgroundColor: "#FFFFFF",
         justifyContent: "space-between",
-    },
-    reviewCardOwn: {
-        // Thêm shadow nhẹ để phân biệt card của mình
+        // Shadow xanh emerald — giống nhau cho tất cả card
         shadowColor: "#059669",
-        shadowOffset: { width: 2, height: 2 },
-        shadowOpacity: 0.25,
+        shadowOffset: { width: 3, height: 3 },
+        shadowOpacity: 0.3,
         shadowRadius: 0,
-        elevation: 2,
+        elevation: 3,
     },
     reviewCardHeader: {
         flexDirection: "row",
@@ -507,7 +534,7 @@ const styles = StyleSheet.create({
         color: "#9CA3AF",
     },
 
-    // Action buttons (edit/delete on own card)
+    // Edit/delete buttons trên card
     actionBtn: {
         width: 26,
         height: 26,
@@ -539,7 +566,7 @@ const styles = StyleSheet.create({
         lineHeight: 20,
     },
 
-    // Modal shared
+    // Modal overlay
     modalOverlay: {
         flex: 1,
         backgroundColor: "rgba(0,0,0,0.4)",
@@ -548,7 +575,7 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     modalCard: {
-        backgroundColor: "#FFF",
+        backgroundColor: "#FFFFFF",
         borderRadius: 20,
         width: "100%",
         maxWidth: 400,
@@ -566,8 +593,6 @@ const styles = StyleSheet.create({
         color: "#111827",
         flex: 1,
     },
-
-    // Rating modal
     modalStarsRow: {
         alignItems: "center",
         marginBottom: 16,
@@ -614,8 +639,10 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: "#059669",
         borderRadius: 10,
-        paddingVertical: 12,
+        paddingVertical: 13,
         alignItems: "center",
+        justifyContent: "center",
+        minHeight: 46,
     },
     submitBtnText: {
         fontSize: 13,
@@ -626,13 +653,14 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#DC2626",
         borderRadius: 10,
-        paddingVertical: 12,
+        paddingVertical: 13,
         alignItems: "center",
+        justifyContent: "center",
     },
     deleteBtnText: {
         fontSize: 13,
         fontWeight: "700",
-        color: "#FFF",
+        color: "#FFFFFF",
     },
 
     // Detail modal
