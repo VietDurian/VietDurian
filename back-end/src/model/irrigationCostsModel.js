@@ -16,10 +16,8 @@ const IrrigationCostsSchema = new mongoose.Schema(
 		},
 		// Clear, timezone-safe date format: YYYY-MM-DD
 		execution_date: {
-			type: String,
-			trim: true,
+			type: Date,
 			default: null,
-			match: [/^\d{4}-\d{2}-\d{2}$/, 'execution_date must be in YYYY-MM-DD format'],
 		},
 		irrigation_item: {
 			type: String,
@@ -32,10 +30,20 @@ const IrrigationCostsSchema = new mongoose.Schema(
 			required: false,
 			default: null,
 		},
-		irrigation_duration_hours: {
-			type: Number,
-			required: false,
-			default: null,
+		irrigation_duration: {
+			hours: {
+				type: Number,
+				required: false,
+				default: null,
+				min: 0,
+			},
+			minutes: {
+				type: Number,
+				required: false,
+				default: null,
+				min: 0,
+				max: 59,
+			},
 		},
 		irrigation_area: {
 			type: String,
