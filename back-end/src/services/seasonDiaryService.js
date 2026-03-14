@@ -28,6 +28,8 @@ const toNumber = (value, fallback = 0) => {
 const roundNumber = (value, digits = 2) =>
 	Number(toNumber(value, 0).toFixed(digits));
 
+const M2_PER_HA = 10000;
+
 const calculatePercent = (part, total) => {
 	if (!total) return 0;
 	return roundNumber((toNumber(part) / toNumber(total)) * 100);
@@ -339,6 +341,43 @@ const getSeasonDiaryStatistics = async ({
 	}
 };
 
+const getSeasonDiaryMapPoints = async () => {
+	try {
+		const diaries = await SeasonDiaryModel.find({
+			latitude: { $exists: true, $nin: [null, ''] },
+			longitude: { $exists: true, $nin: [null, ''] },
+		})
+			.select('_id garden_name location latitude longitude area')
+			.sort({ created_at: -1 })
+			.lean();
+
+		return diaries
+			.map((diary) => {
+				const latitude = Number(diary.latitude);
+				const longitude = Number(diary.longitude);
+				const areaM2 = toNumber(diary.area, 0);
+
+				if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+					return null;
+				}
+
+				return {
+					id: diary._id,
+					name: diary.garden_name || 'Vuon',
+					location: diary.location || '',
+					latitude,
+					longitude,
+					area: areaM2,
+					area_m2: areaM2,
+					area_ha: roundNumber(areaM2 / M2_PER_HA, 4),
+				};
+			})
+			.filter(Boolean);
+	} catch (error) {
+		throw error;
+	}
+};
+
 
 
 export const seasonDiaryService = {
@@ -349,4 +388,5 @@ export const seasonDiaryService = {
 	deleteSeasonDiary,
 	finishSeasonDiary,
 	getSeasonDiaryStatistics,
+	getSeasonDiaryMapPoints,
 };

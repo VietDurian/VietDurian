@@ -7,6 +7,8 @@ import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from 'react-le
 import { useLanguage } from '../context/LanguageContext';
 import { gardenAPI } from '@/lib/api';
 
+const M2_PER_HA = 10000;
+
 const getAreaBucket = (areaHa) => {
 	const n = Number(areaHa);
 	if (Number.isNaN(n)) return 'lt3';
@@ -108,6 +110,20 @@ const fmtCoord = (value, pos, neg) => {
 	return `${Math.abs(n).toFixed(3)}°${dir}`;
 };
 
+const toAreaHa = (point) => {
+	const explicitHa = Number(point?.areaHa ?? point?.area_ha);
+	if (Number.isFinite(explicitHa)) return explicitHa;
+
+	const explicitM2 = Number(point?.areaM2 ?? point?.area_m2);
+	if (Number.isFinite(explicitM2)) return explicitM2 / M2_PER_HA;
+
+	const areaRaw = Number(point?.area);
+	if (!Number.isFinite(areaRaw)) return 0;
+
+	// Season diary area is entered in m2, convert to ha for dashboard map display.
+	return areaRaw / M2_PER_HA;
+};
+
 export function GardenHeatmap({ points }) {
 	const { t } = useLanguage();
 	const [dbGardens, setDbGardens] = useState([]);
@@ -141,7 +157,7 @@ export function GardenHeatmap({ points }) {
 			.map((p, idx) => {
 				const latitude = Number(p?.latitude ?? p?.lat);
 				const longitude = Number(p?.longitude ?? p?.lng);
-				const areaHa = Number(p?.areaHa ?? p?.area ?? p?.area_ha);
+				const areaHa = toAreaHa(p);
 				const safeAreaHa = Number.isFinite(areaHa) ? areaHa : 0;
 				const hasLatLng = Number.isFinite(latitude) && Number.isFinite(longitude);
 				const fromXY = {
@@ -245,7 +261,7 @@ export function GardenHeatmap({ points }) {
 									<div>
 										<div className="font-bold text-[#1a4d2e]">{p.name}</div>
 										<div className="text-sm">
-											{t('area')}: {p.areaHa.toFixed(1)} ha
+											{t('area')}: {p.areaHa.toFixed(2)} ha
 										</div>
 										<div className="text-xs text-gray-600">{locationLine}</div>
 									</div>

@@ -300,6 +300,7 @@ const Router = express.Router();
  */
 
 Router.get('/', authMiddleware.protect, seasonDiaryController.viewSeasonDiaryList);
+Router.get('/map', authMiddleware.protect, seasonDiaryController.mapSeasonDiary);
 Router.get(
 	'/:season_diary_id',
 	authMiddleware.protect,
