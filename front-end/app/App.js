@@ -7,6 +7,7 @@ import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import HomeScreen from "./screens/HomeScreen";
 import BlogsScreen from "./screens/BlogsScreen";
+import BlogDetailScreen from "./screens/BlogDetailScreen";
 import ProductsScreen from "./screens/ProductsScreen";
 import ProductDetailScreen from "./screens/ProductDetailScreen";
 import ProfileScreen from "./screens/ProfileScreen";
@@ -27,6 +28,8 @@ function ScreenRouter() {
       return <HomeScreen />;
     case "blogs":
       return <BlogsScreen />;
+    case "blog-detail":
+      return <BlogDetailScreen />;
     case "products":
       return <ProductsScreen />;
     case "product-detail":
