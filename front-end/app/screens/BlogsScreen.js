@@ -1,65 +1,17 @@
 import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  Image,
-  Dimensions,
+  StyleSheet, Text, View, TextInput, TouchableOpacity,
+  FlatList, Image, Dimensions, ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "../components/Header";
 import BottomTabBar from "../components/BottomTabBar";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import { useAppStore } from "../store/useAppStore";
+import { useBlogStore } from "../store/useBlogStore";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const CARD_W = SCREEN_W - 32;
-
-const MOCK_BLOGS = [
-  {
-    _id: "1",
-    title: "Kỹ thuật trồng sầu riêng Musang King đạt chuẩn xuất khẩu",
-    content: "Musang King là giống sầu riêng cao cấp từ Malaysia, nổi tiếng với vị ngậy béo, màu vàng đậm và hương thơm đặc trưng. Bài viết này chia sẻ quy trình canh tác chi tiết.",
-    image: "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=800",
-    created_at: "2024-03-10T00:00:00.000Z",
-    knowledgeBlocksCount: 5,
-  },
-  {
-    _id: "2",
-    title: "Phòng trừ sâu bệnh trên cây sầu riêng mùa mưa",
-    content: "Mùa mưa là thời điểm sâu bệnh phát triển mạnh trên cây sầu riêng. Hướng dẫn nhận biết và xử lý hiệu quả các loại sâu bệnh phổ biến.",
-    image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800",
-    created_at: "2024-02-20T00:00:00.000Z",
-    knowledgeBlocksCount: 3,
-  },
-  {
-    _id: "3",
-    title: "Cập nhật giá sầu riêng tháng 3/2024 tại các tỉnh miền Tây",
-    content: "Thị trường sầu riêng tháng 3/2024 có nhiều biến động do ảnh hưởng của thời tiết và nhu cầu xuất khẩu sang Trung Quốc tăng mạnh.",
-    image: null,
-    created_at: "2024-03-01T00:00:00.000Z",
-    knowledgeBlocksCount: 0,
-  },
-  {
-    _id: "4",
-    title: "Bón phân cân đối giúp sầu riêng ra hoa đồng loạt",
-    content: "Chế độ dinh dưỡng hợp lý là yếu tố then chốt để cây sầu riêng ra hoa đúng thời điểm và đậu quả tốt.",
-    image: "https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=800",
-    created_at: "2024-01-15T00:00:00.000Z",
-    knowledgeBlocksCount: 7,
-  },
-  {
-    _id: "5",
-    title: "Xử lý ra hoa sầu riêng trái vụ tăng thu nhập",
-    content: "Kỹ thuật xử lý ra hoa trái vụ giúp nông dân chủ động lịch thu hoạch, tránh thời điểm rớt giá và tối đa hóa lợi nhuận.",
-    image: "https://images.unsplash.com/photo-1534482421-64566f976cfa?w=800",
-    created_at: "2024-01-05T00:00:00.000Z",
-    knowledgeBlocksCount: 4,
-  },
-];
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Mới nhất" },
@@ -68,12 +20,15 @@ const SORT_OPTIONS = [
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return date.toLocaleDateString("vi-VN", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+  });
 };
 
 const normalize = (str) =>
   str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
+// ── Blog Card ──────────────────────────────────────────────────────────────────
 function BlogCard({ blog, onPress }) {
   const imageHeight = Math.round(CARD_W * 9 / 16);
   return (
@@ -115,26 +70,57 @@ function BlogCard({ blog, onPress }) {
   );
 }
 
+// ── Main Screen ────────────────────────────────────────────────────────────────
 export default function BlogsScreen() {
   const { navigate, setSelectedBlog } = useAppStore();
+  const {
+    blogs, pagination,
+    blogsLoading, blogsError,
+    fetchBlogs, appendBlogs,
+  } = useBlogStore();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
   const [showSortSheet, setShowSortSheet] = useState(false);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+  // ── Fetch lại từ đầu khi đổi sort ─────────────────────────────────────────
+  useEffect(() => {
+    fetchBlogs({ page: 1, limit: 10, sort: sortOrder });
+  }, [sortOrder]);
+
+  // ── Infinite scroll ────────────────────────────────────────────────────────
+  const handleLoadMore = useCallback(async () => {
+    if (isFetchingMore || blogsLoading) return;
+    if (pagination.currentPage >= pagination.totalPages) return;
+    setIsFetchingMore(true);
+    await appendBlogs({
+      page: pagination.currentPage + 1,
+      limit: 10,
+      sort: sortOrder,
+    });
+    setIsFetchingMore(false);
+  }, [isFetchingMore, blogsLoading, pagination, sortOrder]);
 
   const handleOpenBlog = (blog) => {
     setSelectedBlog(blog);
     navigate("blog-detail");
   };
 
-  const filteredBlogs = MOCK_BLOGS
-    .filter((blog) => normalize(blog.title).includes(normalize(searchTerm)))
-    .sort((a, b) =>
-      sortOrder === "newest"
-        ? new Date(b.created_at) - new Date(a.created_at)
-        : new Date(a.created_at) - new Date(b.created_at)
-    );
+  // ── Filter theo search (client-side) ──────────────────────────────────────
+  const filteredBlogs = blogs.filter((blog) =>
+    normalize(blog.title).includes(normalize(searchTerm))
+  );
 
   const currentSortLabel = SORT_OPTIONS.find((o) => o.value === sortOrder)?.label ?? "Sắp xếp";
+
+  // ── Footer: spinner khi load thêm ─────────────────────────────────────────
+  const ListFooter = isFetchingMore ? (
+    <View style={styles.loadMoreRow}>
+      <ActivityIndicator size="small" color="#059669" />
+      <Text style={styles.loadMoreText}>Đang tải thêm...</Text>
+    </View>
+  ) : null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -191,51 +177,80 @@ export default function BlogsScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Blog List */}
-      <FlatList
-        data={filteredBlogs}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <View style={styles.sortBar}>
-            <Text style={styles.resultCount}>
-              Tìm thấy <Text style={styles.resultCountHighlight}>{filteredBlogs.length}</Text> bài viết
-            </Text>
-            <View style={styles.sortRight}>
-              <Text style={styles.sortLabel}>Sắp xếp:</Text>
-              <TouchableOpacity style={styles.sortButton} onPress={() => setShowSortSheet(true)} activeOpacity={0.8}>
-                <Text style={styles.sortButtonText}>{currentSortLabel}</Text>
-                <Feather name="chevron-down" size={13} color="#374151" />
-              </TouchableOpacity>
+      {/* Loading toàn màn hình - chỉ lần đầu */}
+      {blogsLoading && blogs.length === 0 ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#059669" />
+          <Text style={styles.loadingText}>Đang tải bài viết...</Text>
+        </View>
+      ) : blogsError && blogs.length === 0 ? (
+        /* Error state */
+        <View style={styles.centered}>
+          <Feather name="wifi-off" size={44} color="#d1d5db" />
+          <Text style={styles.errorText}>{blogsError}</Text>
+          <TouchableOpacity
+            style={styles.retryBtn}
+            onPress={() => fetchBlogs({ page: 1, sort: sortOrder })}
+          >
+            <Text style={styles.retryBtnText}>Thử lại</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredBlogs}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={ListFooter}
+          ListHeaderComponent={
+            <View style={styles.sortBar}>
+              <Text style={styles.resultCount}>
+                Tìm thấy{" "}
+                <Text style={styles.resultCountHighlight}>
+                  {searchTerm ? filteredBlogs.length : (pagination.totalItems || blogs.length)}
+                </Text>{" "}
+                bài viết
+              </Text>
+              <View style={styles.sortRight}>
+                <Text style={styles.sortLabel}>Sắp xếp:</Text>
+                <TouchableOpacity
+                  style={styles.sortButton}
+                  onPress={() => setShowSortSheet(true)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.sortButtonText}>{currentSortLabel}</Text>
+                  <Feather name="chevron-down" size={13} color="#374151" />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Feather name="meh" size={48} color="#d1d5db" />
-            <Text style={styles.emptyText}>Không tìm thấy bài viết nào</Text>
-          </View>
-        }
-        renderItem={({ item }) => (
-          <BlogCard blog={item} onPress={() => handleOpenBlog(item)} />
-        )}
-      />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Feather name="meh" size={48} color="#d1d5db" />
+              <Text style={styles.emptyText}>Không tìm thấy bài viết nào</Text>
+            </View>
+          }
+          renderItem={({ item }) => (
+            <BlogCard blog={item} onPress={() => handleOpenBlog(item)} />
+          )}
+        />
+      )}
 
       <BottomTabBar />
     </SafeAreaView>
   );
 }
 
+// ── Styles ─────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F3F4F6" },
 
   // Hero
   heroBanner: {
     backgroundColor: "#065f46",
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 22,
+    paddingHorizontal: 20, paddingTop: 18, paddingBottom: 22,
   },
   heroTitle: { fontSize: 22, fontWeight: "800", color: "#fff", textAlign: "center", marginBottom: 6 },
   heroSubtitle: { fontSize: 12, color: "#a7f3d0", textAlign: "center", lineHeight: 18, marginBottom: 14 },
@@ -305,10 +320,8 @@ const styles = StyleSheet.create({
   cardImage: { width: "100%", height: "100%" },
   cardImagePlaceholder: { flex: 1, alignItems: "center", justifyContent: "center", gap: 6 },
   cardImagePlaceholderText: { fontSize: 12, color: "#6ee7b7", fontWeight: "500" },
-
   cardTitle: { fontSize: 15, fontWeight: "700", color: "#111827", lineHeight: 21, marginBottom: 5 },
   cardContent: { fontSize: 12, color: "#6b7280", lineHeight: 18, marginBottom: 10 },
-
   cardFooter: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingTop: 10, borderTopWidth: 1, borderTopColor: "#f3f4f6", marginBottom: 8,
@@ -324,7 +337,19 @@ const styles = StyleSheet.create({
   readMoreRow: { flexDirection: "row", alignItems: "center", gap: 2 },
   readMoreText: { fontSize: 13, color: "#059669", fontWeight: "600" },
 
-  // Empty
+  // States
+  centered: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 60 },
+  loadingText: { marginTop: 10, color: "#6b7280", fontSize: 13 },
+  errorText: { marginTop: 10, color: "#6b7280", fontSize: 13, textAlign: "center", paddingHorizontal: 24 },
+  retryBtn: { marginTop: 14, backgroundColor: "#059669", paddingHorizontal: 24, paddingVertical: 10, borderRadius: 24 },
+  retryBtnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
   emptyState: { alignItems: "center", paddingVertical: 60 },
   emptyText: { marginTop: 12, fontSize: 14, color: "#9ca3af" },
+
+  // Load more footer
+  loadMoreRow: {
+    flexDirection: "row", alignItems: "center",
+    justifyContent: "center", gap: 8, paddingVertical: 16,
+  },
+  loadMoreText: { fontSize: 13, color: "#6b7280" },
 });
