@@ -73,7 +73,7 @@ const Router = express.Router();
  *                       minutes:
  *                         type: number
  *                         example: 30
- *                   unit_price_vnd:
+ *                   total_price_vnd:
  *                     type: number
  *                     format: double
  *                     example: 300000
@@ -128,7 +128,7 @@ const Router = express.Router();
  *                         format: double
  *                       minutes:
  *                         type: number
- *                   unit_price_vnd:
+ *                   total_price_vnd:
  *                     type: number
  *                     format: double
  *                   worker_or_team_name:

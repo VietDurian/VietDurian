@@ -42,7 +42,7 @@ const LaborCostsSchema = new mongoose.Schema(
 				max: 59,
 			},
 		},
-		unit_price_vnd: {
+		total_price_vnd: {
 			type: Number,
 			required: false,
 			default: null,
