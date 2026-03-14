@@ -20,7 +20,15 @@ const formatStatus = (value) => {
     return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-export default function PermissionRequestDetail({ request, onClose, onUpdated }) {
+export default function PermissionRequestDetail({ request, onClose, onUpdated, isLoading }) {
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-16">
+                <span className="inline-block h-10 w-10 border-4 border-emerald-500/60 border-t-emerald-500 rounded-full animate-spin mb-4" />
+                <span className="text-emerald-700 font-semibold text-lg">Đang tải chi tiết...</span>
+            </div>
+        );
+    }
     if (!request) return null
 
     const {
@@ -72,7 +80,7 @@ export default function PermissionRequestDetail({ request, onClose, onUpdated })
         console.log('Files received:', files)
 
         return (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-3 gap-3 w-full max-w-full">
                 {files.map((file, idx) => {
                     // Handle both old string format and new proof object format
                     const fileUrl = typeof file === 'string' ? file : file?.url
