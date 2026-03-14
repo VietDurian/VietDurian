@@ -162,6 +162,20 @@ const statisticsSeasonDiary = async (req, res, next) => {
 	}
 };
 
+const mapSeasonDiary = async (req, res, next) => {
+	try {
+		const points = await seasonDiaryService.getSeasonDiaryMapPoints();
+
+		res.status(200).json({
+			code: 200,
+			message: 'Lấy danh sách vị trí vườn thành công',
+			data: points,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
 
 export const seasonDiaryController = {
 	viewSeasonDiaryList,
@@ -171,4 +185,5 @@ export const seasonDiaryController = {
 	deleteSeasonDiary,
 	finishSeasonDiary,
 	statisticsSeasonDiary,
+	mapSeasonDiary,
 };

@@ -30,7 +30,7 @@ const apiClient = axios.create({
 // Garden API
 export const gardenAPI = {
   async getGardensForMap() {
-    const response = await apiClient.get("/garden/map");
+    const response = await apiClient.get("/season-diary/map");
     return response.data;
   },
 };
