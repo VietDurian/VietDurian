@@ -1,72 +1,67 @@
-bottomparticipants
-hide footbox
+actor User
+boundary LoginPage
+control AuthController
+participant ":AuthService" as authService
+entity UserModel as userModel
+database Database
 
-actor User as "Users"
-boundary "LoginPage" as View
-control "AuthController" as Controller
-participant ":AuthService" as Service
-entity "UserModel" as Model
-database Database as Database
-
-User -> View : 1. Input login fields
+User->LoginPage: 1. Input login fields
 activate User
-activate View
-User -> View : 2. Submit login form
+activate LoginPage
+User->LoginPage: 2. Submit login form
 
-View -> View : 3. Validate input
-activate View
+LoginPage->LoginPage: 3. Validate input
+activate LoginPage
 space
-deactivate View
+deactivate LoginPage
 
 opt Empty or malformed information
-	View --> User : 3.1. Display validation error 
+LoginPage-->User: 3.1 Display validation error
 end
 
-View -> Controller : 4. POST /auth/login
-activate Controller
+LoginPage->AuthController: 4. POST /auth/login
+activate AuthController
 
-Controller -> Service : 5. login()
-activate Service
+AuthController->authService: 5. login()
+activate authService
 
-Service -> Model : 6. findByEmail()
-activate Model
-Model -> Database : 7. findOne()
+authService->userModel: 6. findByEmail()
+activate userModel
+userModel->Database: 7. findOne()
 activate Database
-Database --> Model : 8. Return user (or null)
+Database-->userModel: 8. Return user (or null)
 deactivate Database
-Model --> Service : 9. Return user (or null)
-deactivate Model
+userModel-->authService: 9. Return user (or null)
+deactivate userModel
 
-Service -> Service : 10. verifyPassword()
-activate Service
-deactivate Service
+authService->authService: 10. verifyPassword()
+activate authService
+deactivate authService
 
 alt Invalid credentials or user not found
-	Service --> Controller : 10.1. Return error: invalid credentials
-	Controller --> View : 10.1.1. Return error
-	View --> User : 10.1.2. Display error: invalid credentials
+authService-->AuthController: 10.1 Return error: invalid credentials
+AuthController-->LoginPage: 10.1.1 Return error
+LoginPage-->User: 10.1.2 Display error: invalid credentials
 
 else Credentials valid
-	Service -> Service : 10.2. generateTokens()
-	activate Service
-	deactivate Service
+authService->authService: 10.2 generateTokens()
+activate authService
+deactivate authService
 
-	Service -> Model : 10.2.1. saveRefreshToken()
-	activate Model
-	Model -> Database : 10.2.2. updateOne()
-	activate Database
-	Database --> Model : 10.2.3. Return update result
-	deactivate Database
-	Model --> Service : 10.2.4. Return token saved
-	deactivate Model
+authService->userModel: 10.2.1 saveRefreshToken()
+activate userModel
+userModel->Database: 10.2.2 updateOne()
+activate Database
+Database-->userModel: 10.2.3 Return update result
+deactivate Database
+userModel-->authService: 10.2.4 Return token saved
+deactivate userModel
 
-	Service --> Controller : 10.2.5. Return success with tokens
-	deactivate Service
-	Controller --> View : 10.2.6. Return login success
-	deactivate Controller
-	View --> User : 10.2.7. Redirect to dashboard
-	deactivate View
-	deactivate User
+authService-->AuthController: 10.2.5 Return success with tokens
+deactivate authService
+AuthController-->LoginPage: 10.2.6 Return login success
+deactivate AuthController
+LoginPage-->User: 10.2.7 Redirect to dashboard
+deactivate LoginPage
+deactivate User
 end
-
-@enduml
