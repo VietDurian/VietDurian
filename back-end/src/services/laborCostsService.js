@@ -109,8 +109,22 @@ const sanitizePayload = (payload) => {
 		sanitized.working_time = normalizeWorkingTime(sanitized.working_time);
 	}
 
-	if (Object.prototype.hasOwnProperty.call(sanitized, 'unit_price_vnd')) {
-		sanitized.unit_price_vnd = normalizeNumber(sanitized.unit_price_vnd, 'unit_price_vnd');
+	if (
+		Object.prototype.hasOwnProperty.call(sanitized, 'unit_price_vnd') &&
+		!Object.prototype.hasOwnProperty.call(sanitized, 'total_price_vnd')
+	) {
+		sanitized.total_price_vnd = normalizeNumber(
+			sanitized.unit_price_vnd,
+			'unit_price_vnd',
+		);
+		delete sanitized.unit_price_vnd;
+	}
+
+	if (Object.prototype.hasOwnProperty.call(sanitized, 'total_price_vnd')) {
+		sanitized.total_price_vnd = normalizeNumber(
+			sanitized.total_price_vnd,
+			'total_price_vnd',
+		);
 	}
 
 	if (Object.prototype.hasOwnProperty.call(sanitized, 'labor_hire_date')) {

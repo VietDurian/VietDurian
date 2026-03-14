@@ -232,16 +232,7 @@ const getSeasonDiaryStatistics = async ({
 					{
 						$project: {
 							computed_cost: {
-								$cond: [
-									{
-										$and: [
-											{ $ne: ['$worker_quantity', null] },
-											{ $ne: ['$unit_price_vnd', null] },
-										],
-									},
-									{ $multiply: ['$worker_quantity', '$unit_price_vnd'] },
-									{ $ifNull: ['$unit_price_vnd', 0] },
-								],
+								$ifNull: ['$total_price_vnd', { $ifNull: ['$unit_price_vnd', 0] }],
 							},
 						},
 					},
@@ -292,7 +283,6 @@ const getSeasonDiaryStatistics = async ({
 		const laborCost = toNumber(laborAgg?.[0]?.total, 0);
 		const irrigationCost = toNumber(irrigationAgg?.[0]?.total, 0);
 		const totalCost = seedCost + fertilizerCost + laborCost + irrigationCost;
-
 		const totalHarvestKg = toNumber(harvestAgg?.[0]?.total_harvest_kg, 0);
 		const totalConsumedKg = toNumber(harvestAgg?.[0]?.total_consumed_kg, 0);
 		const totalRevenue = toNumber(harvestAgg?.[0]?.total_revenue, 0);
