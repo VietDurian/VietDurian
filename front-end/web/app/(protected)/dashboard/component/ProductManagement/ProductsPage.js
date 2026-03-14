@@ -430,9 +430,9 @@ export function ProductsPage() {
             </div>
 
             {/* Products Table - Desktop */}
-            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="overflow-x-hidden">
-                    <table className="w-full ">
+            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="w-full">
+                    <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('Name')}</th>
@@ -447,30 +447,30 @@ export function ProductsPage() {
                         <tbody className="divide-y divide-gray-200">
                             {paginatedProducts.map((p) => (
                                 <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-4 py-4 whitespace-nowrap max-w-[220px]">
                                         <div className="flex items-center">
-                                            <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f] flex items-center justify-center text-white font-bold ring-1 ring-gray-200">
+                                            <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f] flex items-center justify-center text-white font-bold ring-1 ring-gray-200">
                                                 {p.imageUrl ? (
                                                     <img src={p.imageUrl} alt={p.name || 'product'} className="w-full h-full object-cover" />
                                                 ) : (
                                                     p.name?.charAt(0)
                                                 )}
                                             </div>
-                                            <div className="ml-4">
-                                                <p className="font-medium text-gray-900 break-words">{p.name}</p>
-                                                <p className="ttext-xs text-gray-500 break-words line-clamp-2">{p.description}</p>
+                                            <div className="ml-3 min-w-0">
+                                                <p className="font-medium text-gray-900 truncate" title={p.name}>{p.name}</p>
+                                                <p className="text-xs text-gray-500 truncate" title={p.description}>{p.description}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(p.typeName)}`}>{t(p.typeName) || p.typeName}</span>
+                                    <td className="px-4 py-4 whitespace-nowrap max-w-[120px]">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(p.typeName)} truncate`} title={p.typeName}>{t(p.typeName) || p.typeName}</span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatVND(p.price)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(p.status)}`}>{t(p.status) || p.status || '--'}</span>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600 max-w-[100px] truncate" title={formatVND(p.price)}>{formatVND(p.price)}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap max-w-[100px]">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(p.status)} truncate`} title={p.status}>{t(p.status) || p.status || '--'}</span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">{renderRatingStars(p.rating)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-4 py-4 whitespace-nowrap max-w-[80px]">{renderRatingStars(p.rating)}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
                                         <button
                                             type="button"
                                             onClick={() => setSelectedProduct(p)}
@@ -511,6 +511,7 @@ export function ProductsPage() {
                             <div className="flex-1 min-w-0">
                                 <h3 className="font-medium truncate text-gray-900">{p.name}</h3>
                                 <p className="text-xs text-gray-500 line-clamp-2">{p.description}</p>
+                                <p className="text-xs text-gray-500 break-words line-clamp-2 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap" style={{ maxWidth: '200px' }} title={p.description}>{p.description}</p>
                                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-600">
                                     <span>{t('type') || 'Type'}: <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(p.typeName)}`}>{t(p.typeName) || p.typeName}</span></span>
                                     <span>{t('price') || 'Price'}: {formatVND(p.price)}</span>
