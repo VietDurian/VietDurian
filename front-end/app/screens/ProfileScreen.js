@@ -21,6 +21,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
 import Header from "../components/Header";
 import BottomTabBar from "../components/BottomTabBar";
+import FavoritePostsTab from "../components/FavoritePostsTab"; // ← NEW IMPORT
 import { useProfileStore } from "../store/useProfileStore";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -106,17 +107,7 @@ const PasswordRuleItem = ({ rule, password }) => {
   );
 };
 
-// ─── FavoritesTab ─────────────────────────────────────────────────────────────
-const FavoritesTab = () => (
-  <View style={styles.placeholderWrap}>
-    <Ionicons name="heart-outline" size={48} color="#d1d5db" />
-    <Text style={styles.placeholderText}>Bài viết yêu thích sẽ hiển thị ở đây</Text>
-  </View>
-);
-
 // ─── SecurityTab ─────────────────────────────────────────────────────────────
-// PasswordInput PHẢI ở ngoài SecurityTab — nếu để bên trong thì mỗi lần
-// setForm re-render sẽ tạo lại component mới → TextInput bị unmount → bàn phím tắt
 const PasswordInput = ({ field, label, placeholder, form, setForm, show, setShow }) => (
   <View style={{ marginBottom: 14 }}>
     <Text style={styles.inputLabel}>{label}</Text>
@@ -233,6 +224,7 @@ const SecurityTab = () => {
 
 // ─── EditModal ────────────────────────────────────────────────────────────────
 const EditModal = ({ visible, profileData, onClose, onSaved }) => {
+  const fileInputRef = React.useRef(null);
   const { isSaving, updateProfile } = useProfileStore();
   const [editForm, setEditForm] = useState({ full_name: "", phone: "", avatar: "" });
   const [phoneError, setPhoneError] = useState("");
@@ -280,7 +272,6 @@ const EditModal = ({ visible, profileData, onClose, onSaved }) => {
         setEditForm((p) => ({ ...p, avatar: base64Uri }));
       }
     } catch (err) {
-      console.error("[EditModal] pickAvatar:", err);
       Alert.alert("Lỗi", "Không thể chọn ảnh. Vui lòng thử lại.");
     }
   };
@@ -306,22 +297,12 @@ const EditModal = ({ visible, profileData, onClose, onSaved }) => {
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      transparent
-      onRequestClose={onClose}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); onClose(); }}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <View style={styles.modalBox}>
-
-                {/* Header */}
                 <View style={styles.modalHeader}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                     <Feather name="edit-2" size={18} color="#fff" />
@@ -332,19 +313,10 @@ const EditModal = ({ visible, profileData, onClose, onSaved }) => {
                   </TouchableOpacity>
                 </View>
 
-                {/* Body */}
-                <ScrollView
-                  contentContainerStyle={styles.modalBody}
-                  keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator={false}
-                >
-                  {/* Avatar */}
+                <ScrollView contentContainerStyle={styles.modalBody} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                   <View style={styles.avatarPickerWrap}>
                     <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.85}>
-                      <Image
-                        source={{ uri: editForm.avatar || profileData?.avatar }}
-                        style={styles.editAvatar}
-                      />
+                      <Image source={{ uri: editForm.avatar || profileData?.avatar }} style={styles.editAvatar} />
                       <View style={styles.cameraBtn}>
                         <Ionicons name="camera" size={15} color="#fff" />
                       </View>
@@ -352,11 +324,8 @@ const EditModal = ({ visible, profileData, onClose, onSaved }) => {
                     <Text style={styles.avatarHint}>Nhấn ảnh để thay đổi (tối đa 5MB)</Text>
                   </View>
 
-                  {/* Họ và tên */}
                   <View style={{ marginBottom: 14 }}>
-                    <Text style={styles.inputLabel}>
-                      Họ và tên <Text style={{ color: "#ef4444" }}>*</Text>
-                    </Text>
+                    <Text style={styles.inputLabel}>Họ và tên <Text style={{ color: "#ef4444" }}>*</Text></Text>
                     <TextInput
                       style={styles.input}
                       value={editForm.full_name}
@@ -367,11 +336,8 @@ const EditModal = ({ visible, profileData, onClose, onSaved }) => {
                     />
                   </View>
 
-                  {/* Số điện thoại */}
                   <View style={{ marginBottom: 8 }}>
-                    <Text style={styles.inputLabel}>
-                      Số điện thoại <Text style={{ color: "#ef4444" }}>*</Text>
-                    </Text>
+                    <Text style={styles.inputLabel}>Số điện thoại <Text style={{ color: "#ef4444" }}>*</Text></Text>
                     <TextInput
                       style={[styles.input, phoneError ? styles.inputError : null]}
                       value={editForm.phone}
@@ -391,7 +357,6 @@ const EditModal = ({ visible, profileData, onClose, onSaved }) => {
                   </View>
                 </ScrollView>
 
-                {/* Footer */}
                 <View style={styles.modalFooter}>
                   <TouchableOpacity
                     style={[styles.saveBtn, (!canSave || isSaving) && styles.saveBtnDisabled]}
@@ -409,7 +374,6 @@ const EditModal = ({ visible, profileData, onClose, onSaved }) => {
                     )}
                   </TouchableOpacity>
                 </View>
-
               </View>
             </TouchableWithoutFeedback>
           </View>
@@ -425,9 +389,7 @@ export default function ProfileScreen() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { profileData, profileLoading, profileError, fetchProfile } = useProfileStore();
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  useEffect(() => { fetchProfile(); }, []);
 
   const formatDate = (dateString) => {
     if (!dateString) return "—";
@@ -545,7 +507,18 @@ export default function ProfileScreen() {
             </View>
           </>
         )}
-        {activeTab === "favorites" && <FavoritesTab />}
+
+        {/* ── UPDATED: Real FavoritePostsTab ── */}
+        {activeTab === "favorites" && (
+          <FavoritePostsTab
+            onContact={(favorite) => {
+              // TODO: navigate to chat
+              const authorId = favorite.post_id?.author_id?._id;
+              console.log("Navigate to chat with:", authorId);
+            }}
+          />
+        )}
+
         {activeTab === "security" && <SecurityTab />}
       </ScrollView>
 
@@ -582,8 +555,7 @@ const styles = StyleSheet.create({
   heroEmail: { color: "#d1fae5", fontSize: 12, marginBottom: 8 },
   roleBadge: {
     flexDirection: "row", alignItems: "center", gap: 5,
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20,
-    alignSelf: "flex-start",
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, alignSelf: "flex-start",
   },
   roleBadgeText: { color: "#fff", fontSize: 11, fontWeight: "600" },
   editBtn: {
@@ -632,9 +604,6 @@ const styles = StyleSheet.create({
   statusRowValue: { fontSize: 14, fontWeight: "700", color: "#111827" },
   statusDivider: { height: 1, backgroundColor: "#f3f4f6" },
 
-  placeholderWrap: { alignItems: "center", justifyContent: "center", paddingVertical: 60, gap: 12 },
-  placeholderText: { fontSize: 14, color: "#9ca3af", textAlign: "center" },
-
   tipsCard: {
     backgroundColor: "#fffbeb", borderRadius: 16, padding: 16,
     borderWidth: 1, borderColor: "#fde68a",
@@ -658,20 +627,13 @@ const styles = StyleSheet.create({
   },
   passwordInput: { flex: 1, paddingVertical: 12, fontSize: 15, color: "#111827" },
 
-  // Modal — giữa màn hình, bo tròn 4 góc
   modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    flex: 1, backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center", alignItems: "center", padding: 20,
   },
   modalBox: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    width: "100%",
-    maxHeight: "85%",
-    overflow: "hidden",
+    backgroundColor: "#fff", borderRadius: 20,
+    width: "100%", maxHeight: "85%", overflow: "hidden",
   },
   modalHeader: {
     backgroundColor: "#10b981", flexDirection: "row",
@@ -707,4 +669,4 @@ const styles = StyleSheet.create({
   },
   saveBtnDisabled: { opacity: 0.45 },
   saveBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
-}); 
+});
