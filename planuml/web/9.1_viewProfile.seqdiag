@@ -1,0 +1,53 @@
+actor User
+boundary ProfileViewPage
+control profileController 
+participant ":profileService" as ProfileService
+participant ":userService" as UserService
+participant ":userModel" as UserModel
+database Database
+
+User->ProfileViewPage: 1. Click view profile
+activate User
+activate ProfileViewPage
+
+ProfileViewPage->profileController: 2. GET /profile/me
+activate profileController
+
+profileController->ProfileService: 3. getProfile(userId)
+activate ProfileService
+
+ProfileService->UserService: 4. findById(userId)
+activate UserService
+
+UserService->UserModel: 5. findOne()
+activate UserModel
+
+UserModel->Database: 6. execute query findOne
+activate Database
+Database-->UserModel: 7. Return user document
+deactivate Database
+
+UserModel-->UserService: 8. Return raw result
+deactivate UserModel
+
+UserService->UserService: 9. checkNotFound()
+activate UserService
+space
+deactivate UserService
+
+alt user not found
+    UserService-->ProfileService: 9.1 Return notfound
+    ProfileService-->profileController: 9.1.1 Return error response
+    profileController-->ProfileViewPage: 9.1.2 Return error response
+    ProfileViewPage->User: 9.1.3 Display user not found
+else user found
+    UserService-->ProfileService: 9.2 Return user entity
+    deactivate UserService
+    ProfileService-->profileController: 9.2.1 Return success + user data
+    deactivate ProfileService
+    profileController-->ProfileViewPage: 9.2.2 Return success + user data
+    deactivate profileController
+    ProfileViewPage-->User: 9.2.3 Display profile
+    deactivate ProfileViewPage
+    deactivate User
+end

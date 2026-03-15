@@ -1,0 +1,49 @@
+@startuml 4_logout
+actor User
+boundary LogoutPage
+boundary LocalStorage
+control AuthController
+participant ":AuthService" as authService
+participant ":BlacklistModel" as blacklistModel
+database Database
+
+User -> LogoutPage: 1. Click logout button
+activate User
+activate LogoutPage
+
+LogoutPage -> AuthController: 2. POST /auth/logout
+activate AuthController
+
+AuthController -> authService: 3. handleLogout()
+activate authService
+
+authService -> blacklistModel: 4. addToBlacklist(token)
+activate blacklistModel
+blacklistModel -> Database: 5. insertOne(token)
+activate Database
+Database --> blacklistModel: 6. Return inserted document
+deactivate Database
+blacklistModel --> authService: 7. Return result
+deactivate blacklistModel
+
+authService -> authService: 8. validatePersistenceResult()
+
+alt Persistence error
+    authService --> AuthController: 8.1 Return error
+    AuthController --> LogoutPage: 8.2 Return error
+    LogoutPage --> User: 8.3 Display error message
+else Success
+    authService --> AuthController: 8.4 Return success
+    AuthController --> LogoutPage: 8.5 Return success
+    LogoutPage -> LocalStorage: 8.6 Clear local storage
+    activate LocalStorage
+    LocalStorage --> LogoutPage: 8.7 Confirm cleared
+    deactivate LocalStorage
+    LogoutPage --> User: 8.8 Redirect to login page
+end
+
+deactivate authService
+deactivate AuthController
+deactivate LogoutPage
+deactivate User
+@enduml
