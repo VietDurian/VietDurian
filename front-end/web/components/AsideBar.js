@@ -22,34 +22,38 @@ const SidebarItem = ({ icon: Icon, label, href, active, onClick }) => (
   <Link
     href={href}
     onClick={onClick}
-    className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${active
-      ? "bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white scale-105"
-      : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
-      }`}
+    className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${
+      active
+        ? "bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white scale-105"
+        : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
+    }`}
   >
     {active && (
       <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 animate-pulse rounded-2xl" />
     )}
 
     <div
-      className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${active
-        ? "bg-white/20 backdrop-blur-sm"
-        : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
-        }`}
+      className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
+        active
+          ? "bg-white/20 backdrop-blur-sm"
+          : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
+      }`}
     >
       <Icon
         size={20}
-        className={`${active
-          ? "text-white"
-          : "text-emerald-600 group-hover:text-emerald-700 group-hover:scale-110"
-          } transition-all duration-300`}
+        className={`${
+          active
+            ? "text-white"
+            : "text-emerald-600 group-hover:text-emerald-700 group-hover:scale-110"
+        } transition-all duration-300`}
         strokeWidth={2.5}
       />
     </div>
 
     <span
-      className={`relative z-10 text-[15px] font-semibold tracking-wide ${active ? "text-white" : "text-gray-700 group-hover:text-gray-900"
-        } transition-colors duration-300`}
+      className={`relative z-10 text-[15px] font-semibold tracking-wide ${
+        active ? "text-white" : "text-gray-700 group-hover:text-gray-900"
+      } transition-colors duration-300`}
     >
       {label}
     </span>
@@ -85,7 +89,7 @@ export default function AsideBar({ role }) {
         return [
           { icon: User, label: "Thông tin", href: "/profile/details" },
           { icon: FileText, label: "Bài viết", href: "/profile/posts" },
-          { icon: Sprout, label: "Vườn cây", href: "/profile/gardens" },
+          { icon: Sprout, label: "Vườn", href: "/profile/season-diaries" },
           { icon: Package, label: "Sản Phẩm", href: "/profile/products" },
         ];
       case "contentExpert":
@@ -147,8 +151,12 @@ export default function AsideBar({ role }) {
               <div className="absolute inset-0 w-3 h-3 rounded-full bg-white animate-ping"></div>
             </div>
             <div className="flex flex-col">
-              <span className="text-white font-bold text-sm tracking-wide">VietDurian</span>
-              <span className="text-white/80 text-xs font-medium">Trang Cá Nhân</span>
+              <span className="text-white font-bold text-sm tracking-wide">
+                VietDurian
+              </span>
+              <span className="text-white/80 text-xs font-medium">
+                Trang Cá Nhân
+              </span>
             </div>
           </div>
 
@@ -179,8 +187,9 @@ export default function AsideBar({ role }) {
 
       {/* ── Mobile Drawer ── */}
       <aside
-        className={`md:hidden fixed top-0 left-0 z-[1001] h-full w-72 bg-gradient-to-b from-gray-50 via-white to-gray-50 flex flex-col px-4 py-8 border-r border-gray-200/60 backdrop-blur-xl transition-transform duration-300 ${mobileOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+        className={`md:hidden fixed top-0 left-0 z-[1001] h-full w-72 bg-gradient-to-b from-gray-50 via-white to-gray-50 flex flex-col px-4 py-8 border-r border-gray-200/60 backdrop-blur-xl transition-transform duration-300 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500" />
         <div
@@ -205,14 +214,26 @@ export default function AsideBar({ role }) {
 
         <style jsx>{`
           @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
+            from {
+              opacity: 0;
+              transform: translateX(-20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
           }
           @keyframes shine {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+            0% {
+              transform: translateX(-100%);
+            }
+            100% {
+              transform: translateX(100%);
+            }
           }
-          .animate-shine { animation: shine 3s ease-in-out infinite; }
+          .animate-shine {
+            animation: shine 3s ease-in-out infinite;
+          }
         `}</style>
       </aside>
 
@@ -231,14 +252,26 @@ export default function AsideBar({ role }) {
 
         <style jsx>{`
           @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
+            from {
+              opacity: 0;
+              transform: translateX(-20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
           }
           @keyframes shine {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+            0% {
+              transform: translateX(-100%);
+            }
+            100% {
+              transform: translateX(100%);
+            }
           }
-          .animate-shine { animation: shine 3s ease-in-out infinite; }
+          .animate-shine {
+            animation: shine 3s ease-in-out infinite;
+          }
         `}</style>
       </aside>
     </>
