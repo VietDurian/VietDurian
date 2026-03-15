@@ -348,64 +348,6 @@ Router.post(
   permissionController.submitProofs,
 );
 
-/**
- * @swagger
- * /permission/upload-proof:
- *   post:
- *     summary: Upload a single proof file to Cloudinary
- *     description: Authenticated users upload a proof file (CCCD, certificate, etc) to Cloudinary
- *     tags: [Permission]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - file
- *               - proofType
- *             properties:
- *               file:
- *                 type: string
- *                 format: base64
- *                 description: Base64 encoded image data
- *               proofType:
- *                 type: string
- *                 enum: [cccd_front, cccd_back, certificate, degree, other]
- *                 description: Type of proof document
- *     responses:
- *       200:
- *         description: Proof file uploaded successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     url:
- *                       type: string
- *                       description: Cloudinary URL of the uploaded file
- *                     publicId:
- *                       type: string
- *                     proofType:
- *                       type: string
- *                     uploadedAt:
- *                       type: string
- *                       format: date-time
- *       400:
- *         description: Missing required fields or invalid proof type
- *       401:
- *         description: Unauthorized
- */
 Router.post(
   "/upload-proof",
   authMiddleware.protect,

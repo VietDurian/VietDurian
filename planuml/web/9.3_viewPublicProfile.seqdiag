@@ -1,0 +1,68 @@
+actor User
+boundary profileViewPage
+control profileController
+participant ":profileService" as ProfileService
+participant ":userService" as UserService
+participant ":userModel" as UserModel
+database Database
+
+User->profileViewPage: 1. Click view public profile
+activate User
+activate profileViewPage
+
+profileViewPage->profileController: 2. GET /profile/public/:userId
+activate profileController
+
+profileController->ProfileService: 3. getPublicProfile(userId)
+activate ProfileService
+
+ProfileService->UserService: 4. findById(userId)
+activate UserService
+
+UserService->UserModel: 5. findOne()
+activate UserModel
+
+UserModel->Database: 6. execute query findOne
+activate Database
+Database-->UserModel: 7. Return user document
+deactivate Database
+
+UserModel-->UserService: 8. Return raw result
+deactivate UserModel
+
+UserService->UserService: 9. checkQuerySuccess()
+activate UserService
+space
+deactivate UserService
+
+opt database error
+    UserService-->ProfileService: 9.1 Return badrequest
+    ProfileService-->profileController: 9.2 Return error response
+    profileController-->profileViewPage: 9.3 Return error response
+    profileViewPage-->User: 9.4 Display error message
+end
+
+UserService-->ProfileService: 10. Return user entity
+deactivate UserService
+
+ProfileService->ProfileService: 11. filterPublicData()
+activate ProfileService
+space
+deactivate ProfileService
+
+ProfileService->ProfileService: 12. mapToPublicDTO()
+activate ProfileService
+space
+deactivate ProfileService
+
+ProfileService-->profileController: 13. Return success + public data
+deactivate ProfileService
+
+profileController-->profileViewPage: 14. Return success + public data (200)
+deactivate profileController
+
+
+
+profileViewPage-->User: 15. Display public profile
+deactivate profileViewPage
+deactivate User
