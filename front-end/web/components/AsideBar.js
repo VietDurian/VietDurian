@@ -16,6 +16,8 @@ import {
   Package,
   Menu,
   X,
+  Bot,
+  ChartColumnIncreasing,
 } from "lucide-react";
 
 const SidebarItem = ({ icon: Icon, label, href, active, onClick }) => (
@@ -91,6 +93,12 @@ export default function AsideBar({ role }) {
           { icon: FileText, label: "Bài viết", href: "/profile/posts" },
           { icon: Sprout, label: "Vườn", href: "/profile/season-diaries" },
           { icon: Package, label: "Sản Phẩm", href: "/profile/products" },
+          {
+            icon: ChartColumnIncreasing,
+            label: "Thống Kê",
+            href: "/profile/statistics",
+          },
+          { icon: Bot, label: "AI", href: "/profile/ai" },
         ];
       case "contentExpert":
         return [
