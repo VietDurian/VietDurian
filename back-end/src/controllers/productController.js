@@ -5,6 +5,7 @@ import { productService } from "@/services/productService.js";
 const createProduct = async (req, res, next) => {
   try {
     const {
+      seasonDiaryId,
       diaryId,
       name,
       description,
@@ -17,11 +18,12 @@ const createProduct = async (req, res, next) => {
       status,
       images,
     } = req.body;
+    const resolvedSeasonDiaryId = seasonDiaryId || diaryId;
     const userId = req.user?.id || req.user?._id;
 
     // Validate required fields
     if (
-      !diaryId ||
+      !resolvedSeasonDiaryId ||
       !name ||
       !description ||
       !price ||
@@ -35,7 +37,7 @@ const createProduct = async (req, res, next) => {
       return res.status(400).json({
         code: 400,
         message:
-          "Missing required fields: name, description, price, origin, weight, typeId, harvestStartDate, harvestEndDate, status",
+          "Missing required fields: seasonDiaryId, name, description, price, origin, weight, typeId, harvestStartDate, harvestEndDate, status",
       });
     }
 
@@ -49,7 +51,7 @@ const createProduct = async (req, res, next) => {
     const newProduct = await productService.createProduct({
       userId,
       typeId,
-      diaryId,
+      seasonDiaryId: resolvedSeasonDiaryId,
       name,
       description,
       price,
@@ -78,6 +80,7 @@ const getAllProducts = async (req, res, next) => {
     const {
       name,
       typeId,
+      seasonDiaryId,
       diaryId,
       sortBy,
       sortOrder,
@@ -90,12 +93,13 @@ const getAllProducts = async (req, res, next) => {
     // Allow filtering by authenticated user or explicit query param
     const authUserId = req.user?.id || req.user?._id;
     const userId = userIdQuery || authUserId;
+    const resolvedSeasonDiaryId = seasonDiaryId || diaryId;
 
     const products = await productService.getAllProducts({
       searchName: name,
       typeId,
       userId,
-      diaryId,
+      seasonDiaryId: resolvedSeasonDiaryId,
       status,
       sortBy: sortBy || "created_at",
       sortOrder: sortOrder || "desc",

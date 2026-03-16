@@ -33,9 +33,9 @@ const productSchema = new mongoose.Schema(
       ref: "TypeProduct",
       required: true,
     },
-    diary_id: {
+    season_diary_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Diary",
+      ref: "SeasonDiary",
       required: true,
     },
     name: {
