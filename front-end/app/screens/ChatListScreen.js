@@ -9,9 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import BottomTabBar from "../components/BottomTabBar";
 import { useAppStore } from "../store/useAppStore";
-import Header from "../components/Header";
 
 // ── Mock Data ──
 const CHATS = [
@@ -119,9 +117,7 @@ function ChatItem({ item }) {
 // ── Main Screen ──
 export default function ChatListScreen() {
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <Header />
+    <View style={styles.container}>
 
       {/* Search Bar */}
       <View style={styles.searchWrapper}>
@@ -146,9 +142,7 @@ export default function ChatListScreen() {
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-
-      <BottomTabBar />
-    </SafeAreaView>
+    </View>
   );
 }
 

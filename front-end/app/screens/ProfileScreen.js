@@ -19,9 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
-import Header from "../components/Header";
-import BottomTabBar from "../components/BottomTabBar";
-import FavoritePostsTab from "../components/FavoritePostsTab"; // ← NEW IMPORT
+import FavoritePostsTab from "../components/FavoritePostsTab";
 import { useProfileStore } from "../store/useProfileStore";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -400,21 +398,17 @@ export default function ProfileScreen() {
 
   if (profileLoading && !profileData) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Header />
+      <View style={styles.container}>
         <View style={styles.centerWrap}>
           <ActivityIndicator size="large" color="#10b981" />
           <Text style={styles.loadingText}>Đang tải thông tin...</Text>
         </View>
-        <BottomTabBar />
-      </SafeAreaView>
+      </View>
     );
   }
-
   if (profileError && !profileData) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Header />
+      <View style={styles.container}>
         <View style={styles.centerWrap}>
           <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
           <Text style={styles.errorStateText}>{profileError}</Text>
@@ -422,14 +416,12 @@ export default function ProfileScreen() {
             <Text style={styles.retryBtnText}>Thử lại</Text>
           </TouchableOpacity>
         </View>
-        <BottomTabBar />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header />
+    <View style={styles.container}>
 
       {/* Hero */}
       <View style={styles.heroBanner}>
@@ -508,11 +500,9 @@ export default function ProfileScreen() {
           </>
         )}
 
-        {/* ── UPDATED: Real FavoritePostsTab ── */}
         {activeTab === "favorites" && (
           <FavoritePostsTab
             onContact={(favorite) => {
-              // TODO: navigate to chat
               const authorId = favorite.post_id?.author_id?._id;
               console.log("Navigate to chat with:", authorId);
             }}
@@ -522,15 +512,14 @@ export default function ProfileScreen() {
         {activeTab === "security" && <SecurityTab />}
       </ScrollView>
 
-      <BottomTabBar />
-
       <EditModal
         visible={isEditModalOpen}
         profileData={profileData}
         onClose={() => setIsEditModalOpen(false)}
         onSaved={() => { }}
       />
-    </SafeAreaView>
+
+    </View>
   );
 }
 
