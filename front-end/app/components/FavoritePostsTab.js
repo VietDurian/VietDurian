@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { usePostStore } from "../store/usePostStore";
+import { useAppStore } from "../store/useAppStore";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const CATEGORY_TAG_COLORS = {
@@ -59,6 +60,7 @@ function StatusBadge({ status }) {
 
 // ── Favorite Post Card ─────────────────────────────────────────────────────────
 function FavoritePostCard({ post, onUnfavorite }) {
+    const { navigate, setSelectedPostId } = useAppStore();
     return (
         <>
             <View style={styles.card}>
@@ -114,8 +116,15 @@ function FavoritePostCard({ post, onUnfavorite }) {
                         <Ionicons name="heart" size={22} color="#ef4444" />
                     </TouchableOpacity>
 
-                    {/* Comment icon only */}
-                    <TouchableOpacity style={styles.actionBtn} activeOpacity={0.8}>
+                    {/* Comment icon — navigate to CommentScreen */}
+                    <TouchableOpacity
+                        style={styles.actionBtn}
+                        onPress={() => {
+                            setSelectedPostId(post.id);
+                            navigate("comment");
+                        }}
+                        activeOpacity={0.8}
+                    >
                         <Ionicons name="chatbubble-outline" size={22} color="#6b7280" />
                     </TouchableOpacity>
 
