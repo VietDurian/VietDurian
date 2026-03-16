@@ -1,10 +1,10 @@
 import { PackagingHandling } from "@/model/packagingHandlingModel";
-import { SeasonDiary } from "@/model/seasonDiaryModel";
+import { SeasonDiaryModel } from "@/model/seasonDiaryModel";
 
 const ensureDiaryAccess = async (userId, season_diary_id) => {
-  const diary = await SeasonDiary.findById(season_diary_id);
+  const diary = await SeasonDiaryModel.findById(season_diary_id);
   if (!diary) throw new Error("Nhật ký mùa vụ không tồn tại");
-  if (diary.user_id.toString() !== userId) throw new Error("Không có quyền truy cập");
+  if (diary.user_id.toString() !== userId?.toString()) throw new Error("Không có quyền truy cập");
   return diary;
 };
 
