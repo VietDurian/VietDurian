@@ -18,6 +18,7 @@ import {
   X,
   Bot,
   ChartColumnIncreasing,
+  ChevronLeft,
 } from "lucide-react";
 
 const SidebarItem = ({ icon: Icon, label, href, active, onClick }) => (
@@ -80,6 +81,12 @@ export default function AsideBar({ role }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const seasonDiaryRouteMatch = pathname?.match(
+    /^\/profile\/season-diaries\/([^/]+)/,
+  );
+  const seasonDiaryId = seasonDiaryRouteMatch?.[1];
+  const isFarmerSeasonDiarySubRoute = role === "farmer" && !!seasonDiaryId;
+
   const getMenuItems = (role) => {
     switch (role) {
       case "trader":
@@ -88,6 +95,26 @@ export default function AsideBar({ role }) {
           { icon: FileText, label: "Bài viết", href: "/profile/posts" },
         ];
       case "farmer":
+        if (isFarmerSeasonDiarySubRoute) {
+          return [
+            {
+              icon: Sprout,
+              label: "Chi Tiết",
+              href: `/profile/season-diaries/${seasonDiaryId}`,
+            },
+            {
+              icon: FileText,
+              label: "Nhật Ký",
+              href: `/profile/season-diaries/${seasonDiaryId}/diaries`,
+            },
+            {
+              icon: ChartColumnIncreasing,
+              label: "Thống Kê",
+              href: `/profile/season-diaries/${seasonDiaryId}/statistics`,
+            },
+          ];
+        }
+
         return [
           { icon: User, label: "Thông tin", href: "/profile/details" },
           { icon: FileText, label: "Bài viết", href: "/profile/posts" },
@@ -123,6 +150,17 @@ export default function AsideBar({ role }) {
     <>
       {/* Navigation Links */}
       <nav className="relative z-10 flex flex-col flex-1 space-y-2">
+        {isFarmerSeasonDiarySubRoute && (
+          <Link
+            href="/profile/season-diaries"
+            onClick={onItemClick}
+            className="flex items-center gap-2 px-4 py-2.5 mb-1 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors duration-300"
+          >
+            <ChevronLeft size={16} strokeWidth={2.5} />
+            Trở lại vườn
+          </Link>
+        )}
+
         {menuItems.map((item, index) => (
           <div
             key={item.label}
