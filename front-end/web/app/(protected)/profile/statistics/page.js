@@ -652,7 +652,9 @@ export default function StatisticsPage() {
                 </div>
               ))}
               {isStatisticsLoading && (
-                <p className="text-xs text-gray-400">Đang cập nhật thống kê...</p>
+                <p className="text-xs text-gray-400">
+                  Đang cập nhật thống kê...
+                </p>
               )}
             </div>
           </div>
