@@ -7,6 +7,7 @@ import { useBuyingFertilizerStore } from "@/store/useBuyingFertilizerStore";
 import { useUseFertilizerStore } from "@/store/useUseFertilizerStore";
 import { usePackagingHandlingStore } from "@/store/usePackagingHandlingStore";
 import { useHarvestConsumptionStore } from "@/store/useHarvestConsumptionStore";
+import { useIrrigationCostStore } from "@/store/useIrrigationCostStore";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HƯỚNG DẪN TÍCH HỢP ZUSTAND
@@ -509,6 +510,43 @@ const buildHarvestConsumptionPayload = (form, seasonDiaryId) => ({
       : Number(form.sale_unit_price_vnd) || 0,
 });
 
+const normalizeIrrigationCost = (item) => ({
+  id: item?._id || item?.id,
+  execution_date: item?.execution_date || "",
+  irrigation_item: item?.irrigation_item || "",
+  irrigation_method: item?.irrigation_method || "",
+  irrigation_duration_hours: item?.irrigation_duration?.hours ?? "",
+  irrigation_duration_minutes: item?.irrigation_duration?.minutes ?? "",
+  irrigation_area: item?.irrigation_area || "",
+  electricity_fuel_cost: item?.electricity_fuel_cost ?? "",
+  performed_by: item?.performed_by || "",
+});
+
+const buildIrrigationCostPayload = (form, seasonDiaryId) => ({
+  season_diary_id: seasonDiaryId,
+  execution_date: form.execution_date || null,
+  irrigation_item: String(form.irrigation_item || "").trim(),
+  irrigation_method: form.irrigation_method || null,
+  irrigation_duration: {
+    hours:
+      form.irrigation_duration_hours === "" ||
+      form.irrigation_duration_hours === null
+        ? null
+        : Number(form.irrigation_duration_hours) || 0,
+    minutes:
+      form.irrigation_duration_minutes === "" ||
+      form.irrigation_duration_minutes === null
+        ? null
+        : Number(form.irrigation_duration_minutes) || 0,
+  },
+  irrigation_area: String(form.irrigation_area || "").trim(),
+  electricity_fuel_cost:
+    form.electricity_fuel_cost === "" || form.electricity_fuel_cost === null
+      ? null
+      : Number(form.electricity_fuel_cost) || 0,
+  performed_by: String(form.performed_by || "").trim(),
+});
+
 // ── SEED DATA (thay bằng Zustand store) ──────────────────────────────────────
 const SEED_DATA = {
   1.4: [
@@ -851,6 +889,7 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
   const isUseFertilizerDiary = diary.id === "1.6";
   const isPackagingHandlingDiary = diary.id === "1.7";
   const isHarvestConsumptionDiary = diary.id === "1.8";
+  const isIrrigationCostDiary = diary.id === "1.9";
 
   const {
     buyingSeeds,
@@ -912,6 +951,18 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     deleteHarvestConsumption,
   } = useHarvestConsumptionStore();
 
+  const {
+    irrigationCosts,
+    isIrrigationCostsLoading,
+    isIrrigationCostCreating,
+    isIrrigationCostUpdating,
+    isIrrigationCostDeleting,
+    getIrrigationCosts,
+    createIrrigationCost,
+    updateIrrigationCost,
+    deleteIrrigationCost,
+  } = useIrrigationCostStore();
+
   const [localRows, setLocalRows] = useState(
     initialRows ?? SEED_DATA[diary.id] ?? [],
   );
@@ -956,6 +1007,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     getHarvestConsumptions({ seasonDiaryId, page: 1, limit: 200 });
   }, [isHarvestConsumptionDiary, seasonDiaryId, getHarvestConsumptions]);
 
+  useEffect(() => {
+    if (!isIrrigationCostDiary || !seasonDiaryId) return;
+    getIrrigationCosts({ seasonDiaryId, page: 1, limit: 200 });
+  }, [isIrrigationCostDiary, seasonDiaryId, getIrrigationCosts]);
+
   const apiRows = useMemo(
     () => (buyingSeeds || []).map(normalizeBuyingSeed).filter((r) => r.id),
     [buyingSeeds],
@@ -991,6 +1047,12 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     [harvestConsumptions],
   );
 
+  const apiIrrigationCostRows = useMemo(
+    () =>
+      (irrigationCosts || []).map(normalizeIrrigationCost).filter((r) => r.id),
+    [irrigationCosts],
+  );
+
   const rows = isBuyingSeedDiary
     ? apiRows
     : isBuyingFertilizerDiary
@@ -1001,7 +1063,9 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
           ? apiPackagingHandlingRows
           : isHarvestConsumptionDiary
             ? apiHarvestConsumptionRows
-            : localRows;
+            : isIrrigationCostDiary
+              ? apiIrrigationCostRows
+              : localRows;
 
   const isActionBusy =
     (isBuyingSeedDiary &&
@@ -1021,7 +1085,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     (isHarvestConsumptionDiary &&
       (isHarvestConsumptionCreating ||
         isHarvestConsumptionUpdating ||
-        isHarvestConsumptionDeleting));
+        isHarvestConsumptionDeleting)) ||
+    (isIrrigationCostDiary &&
+      (isIrrigationCostCreating ||
+        isIrrigationCostUpdating ||
+        isIrrigationCostDeleting));
 
   const filtered = useMemo(() => {
     if (!search) return rows;
@@ -1120,6 +1188,20 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
         const updated = await updateHarvestConsumption(editRow.id, payload);
         if (!updated) return;
       }
+    } else if (isIrrigationCostDiary) {
+      if (!seasonDiaryId) {
+        showToast("Thiếu mã mùa vụ, không thể lưu bản ghi", "error");
+        return;
+      }
+
+      const payload = buildIrrigationCostPayload(form, seasonDiaryId);
+      if (modal === "create") {
+        const created = await createIrrigationCost(payload);
+        if (!created) return;
+      } else {
+        const updated = await updateIrrigationCost(editRow.id, payload);
+        if (!updated) return;
+      }
     } else if (modal === "create") {
       setRows((prev) => [{ ...form, id: genId() }, ...prev]);
       showToast("Đã thêm bản ghi mới");
@@ -1158,6 +1240,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     } else if (isHarvestConsumptionDiary) {
       const results = await Promise.all(
         Array.from(ids).map((id) => deleteHarvestConsumption(id)),
+      );
+      if (results.some((ok) => !ok)) return;
+    } else if (isIrrigationCostDiary) {
+      const results = await Promise.all(
+        Array.from(ids).map((id) => deleteIrrigationCost(id)),
       );
       if (results.some((ok) => !ok)) return;
     } else {
@@ -1369,7 +1456,8 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
               (isBuyingFertilizerDiary && isBuyingFertilizersLoading) ||
               (isUseFertilizerDiary && isUseFertilizersLoading) ||
               (isPackagingHandlingDiary && isPackagingHandlingsLoading) ||
-              (isHarvestConsumptionDiary && isHarvestConsumptionsLoading) ? (
+              (isHarvestConsumptionDiary && isHarvestConsumptionsLoading) ||
+              (isIrrigationCostDiary && isIrrigationCostsLoading) ? (
                 <tr>
                   <td
                     colSpan={cols.length + 2}
