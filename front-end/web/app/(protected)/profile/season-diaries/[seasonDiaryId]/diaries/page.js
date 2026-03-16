@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useBuyingSeedStore } from "@/store/useBuyingSeedStore";
 import { useBuyingFertilizerStore } from "@/store/useBuyingFertilizerStore";
 import { useUseFertilizerStore } from "@/store/useUseFertilizerStore";
+import { usePackagingHandlingStore } from "@/store/usePackagingHandlingStore";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HƯỚNG DẪN TÍCH HỢP ZUSTAND
@@ -463,6 +464,22 @@ const buildUseFertilizerPayload = (form, seasonDiaryId) => ({
   preharvest_interval: String(form.preharvest_interval || "").trim(),
 });
 
+const normalizePackagingHandling = (item) => ({
+  id: item?._id || item?.id,
+  handling_date: item?.handling_date || "",
+  packaging_type: item?.packaging_type || "",
+  storage_location: item?.storage_location || "",
+  treatment_method: item?.treatment_method || "",
+});
+
+const buildPackagingHandlingPayload = (form, seasonDiaryId) => ({
+  season_diary_id: seasonDiaryId,
+  handling_date: form.handling_date || null,
+  packaging_type: String(form.packaging_type || "").trim(),
+  storage_location: String(form.storage_location || "").trim(),
+  treatment_method: String(form.treatment_method || "").trim(),
+});
+
 // ── SEED DATA (thay bằng Zustand store) ──────────────────────────────────────
 const SEED_DATA = {
   1.4: [
@@ -803,6 +820,7 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
   const isBuyingSeedDiary = diary.id === "1.4";
   const isBuyingFertilizerDiary = diary.id === "1.5";
   const isUseFertilizerDiary = diary.id === "1.6";
+  const isPackagingHandlingDiary = diary.id === "1.7";
 
   const {
     buyingSeeds,
@@ -840,6 +858,18 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     deleteUseFertilizer,
   } = useUseFertilizerStore();
 
+  const {
+    packagingHandlings,
+    isPackagingHandlingsLoading,
+    isPackagingHandlingCreating,
+    isPackagingHandlingUpdating,
+    isPackagingHandlingDeleting,
+    getPackagingHandlings,
+    createPackagingHandling,
+    updatePackagingHandling,
+    deletePackagingHandling,
+  } = usePackagingHandlingStore();
+
   const [localRows, setLocalRows] = useState(
     initialRows ?? SEED_DATA[diary.id] ?? [],
   );
@@ -874,6 +904,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     getUseFertilizers({ seasonDiaryId, page: 1, limit: 200 });
   }, [isUseFertilizerDiary, seasonDiaryId, getUseFertilizers]);
 
+  useEffect(() => {
+    if (!isPackagingHandlingDiary || !seasonDiaryId) return;
+    getPackagingHandlings({ seasonDiaryId, page: 1, limit: 200 });
+  }, [isPackagingHandlingDiary, seasonDiaryId, getPackagingHandlings]);
+
   const apiRows = useMemo(
     () => (buyingSeeds || []).map(normalizeBuyingSeed).filter((r) => r.id),
     [buyingSeeds],
@@ -893,13 +928,23 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     [useFertilizers],
   );
 
+  const apiPackagingHandlingRows = useMemo(
+    () =>
+      (packagingHandlings || [])
+        .map(normalizePackagingHandling)
+        .filter((r) => r.id),
+    [packagingHandlings],
+  );
+
   const rows = isBuyingSeedDiary
     ? apiRows
     : isBuyingFertilizerDiary
       ? apiFertilizerRows
       : isUseFertilizerDiary
         ? apiUseFertilizerRows
-        : localRows;
+        : isPackagingHandlingDiary
+          ? apiPackagingHandlingRows
+          : localRows;
 
   const isActionBusy =
     (isBuyingSeedDiary &&
@@ -911,7 +956,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     (isUseFertilizerDiary &&
       (isUseFertilizerCreating ||
         isUseFertilizerUpdating ||
-        isUseFertilizerDeleting));
+        isUseFertilizerDeleting)) ||
+    (isPackagingHandlingDiary &&
+      (isPackagingHandlingCreating ||
+        isPackagingHandlingUpdating ||
+        isPackagingHandlingDeleting));
 
   const filtered = useMemo(() => {
     if (!search) return rows;
@@ -982,6 +1031,20 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
         const updated = await updateUseFertilizer(editRow.id, payload);
         if (!updated) return;
       }
+    } else if (isPackagingHandlingDiary) {
+      if (!seasonDiaryId) {
+        showToast("Thiếu mã mùa vụ, không thể lưu bản ghi", "error");
+        return;
+      }
+
+      const payload = buildPackagingHandlingPayload(form, seasonDiaryId);
+      if (modal === "create") {
+        const created = await createPackagingHandling(payload);
+        if (!created) return;
+      } else {
+        const updated = await updatePackagingHandling(editRow.id, payload);
+        if (!updated) return;
+      }
     } else if (modal === "create") {
       setRows((prev) => [{ ...form, id: genId() }, ...prev]);
       showToast("Đã thêm bản ghi mới");
@@ -1010,6 +1073,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     } else if (isUseFertilizerDiary) {
       const results = await Promise.all(
         Array.from(ids).map((id) => deleteUseFertilizer(id)),
+      );
+      if (results.some((ok) => !ok)) return;
+    } else if (isPackagingHandlingDiary) {
+      const results = await Promise.all(
+        Array.from(ids).map((id) => deletePackagingHandling(id)),
       );
       if (results.some((ok) => !ok)) return;
     } else {
@@ -1219,7 +1287,8 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
             <tbody>
               {(isBuyingSeedDiary && isBuyingSeedsLoading) ||
               (isBuyingFertilizerDiary && isBuyingFertilizersLoading) ||
-              (isUseFertilizerDiary && isUseFertilizersLoading) ? (
+              (isUseFertilizerDiary && isUseFertilizersLoading) ||
+              (isPackagingHandlingDiary && isPackagingHandlingsLoading) ? (
                 <tr>
                   <td
                     colSpan={cols.length + 2}
