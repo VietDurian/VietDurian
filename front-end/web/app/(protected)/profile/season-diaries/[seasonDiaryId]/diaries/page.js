@@ -8,6 +8,7 @@ import { useUseFertilizerStore } from "@/store/useUseFertilizerStore";
 import { usePackagingHandlingStore } from "@/store/usePackagingHandlingStore";
 import { useHarvestConsumptionStore } from "@/store/useHarvestConsumptionStore";
 import { useIrrigationCostStore } from "@/store/useIrrigationCostStore";
+import { useLaborCostsStore } from "@/store/useLaborCostsStore";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HƯỚNG DẪN TÍCH HỢP ZUSTAND
@@ -547,6 +548,44 @@ const buildIrrigationCostPayload = (form, seasonDiaryId) => ({
   performed_by: String(form.performed_by || "").trim(),
 });
 
+const normalizeLaborCost = (item) => ({
+  id: item?._id || item?.id,
+  labor_hire_date: item?.labor_hire_date || "",
+  work_description: item?.work_description || "",
+  worker_quantity: item?.worker_quantity ?? "",
+  working_time_hours: item?.working_time?.hours ?? "",
+  working_time_minutes: item?.working_time?.minutes ?? "",
+  total_price_vnd: item?.total_price_vnd ?? "",
+  worker_or_team_name: item?.worker_or_team_name || "",
+  supervisor_name: item?.supervisor_name || "",
+});
+
+const buildLaborCostPayload = (form, seasonDiaryId) => ({
+  season_diary_id: seasonDiaryId,
+  labor_hire_date: form.labor_hire_date || null,
+  work_description: String(form.work_description || "").trim(),
+  worker_quantity:
+    form.worker_quantity === "" || form.worker_quantity === null
+      ? null
+      : Number(form.worker_quantity) || 0,
+  working_time: {
+    hours:
+      form.working_time_hours === "" || form.working_time_hours === null
+        ? null
+        : Number(form.working_time_hours) || 0,
+    minutes:
+      form.working_time_minutes === "" || form.working_time_minutes === null
+        ? null
+        : Number(form.working_time_minutes) || 0,
+  },
+  total_price_vnd:
+    form.total_price_vnd === "" || form.total_price_vnd === null
+      ? null
+      : Number(form.total_price_vnd) || 0,
+  worker_or_team_name: String(form.worker_or_team_name || "").trim(),
+  supervisor_name: String(form.supervisor_name || "").trim(),
+});
+
 // ── SEED DATA (thay bằng Zustand store) ──────────────────────────────────────
 const SEED_DATA = {
   1.4: [
@@ -890,6 +929,7 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
   const isPackagingHandlingDiary = diary.id === "1.7";
   const isHarvestConsumptionDiary = diary.id === "1.8";
   const isIrrigationCostDiary = diary.id === "1.9";
+  const isLaborCostsDiary = diary.id === "1.10";
 
   const {
     buyingSeeds,
@@ -963,6 +1003,18 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     deleteIrrigationCost,
   } = useIrrigationCostStore();
 
+  const {
+    laborCosts,
+    isLaborCostsLoading,
+    isLaborCostCreating,
+    isLaborCostUpdating,
+    isLaborCostDeleting,
+    getLaborCosts,
+    createLaborCost,
+    updateLaborCost,
+    deleteLaborCost,
+  } = useLaborCostsStore();
+
   const [localRows, setLocalRows] = useState(
     initialRows ?? SEED_DATA[diary.id] ?? [],
   );
@@ -1012,6 +1064,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     getIrrigationCosts({ seasonDiaryId, page: 1, limit: 200 });
   }, [isIrrigationCostDiary, seasonDiaryId, getIrrigationCosts]);
 
+  useEffect(() => {
+    if (!isLaborCostsDiary || !seasonDiaryId) return;
+    getLaborCosts({ seasonDiaryId, page: 1, limit: 200 });
+  }, [isLaborCostsDiary, seasonDiaryId, getLaborCosts]);
+
   const apiRows = useMemo(
     () => (buyingSeeds || []).map(normalizeBuyingSeed).filter((r) => r.id),
     [buyingSeeds],
@@ -1053,6 +1110,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     [irrigationCosts],
   );
 
+  const apiLaborCostRows = useMemo(
+    () => (laborCosts || []).map(normalizeLaborCost).filter((r) => r.id),
+    [laborCosts],
+  );
+
   const rows = isBuyingSeedDiary
     ? apiRows
     : isBuyingFertilizerDiary
@@ -1065,7 +1127,9 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
             ? apiHarvestConsumptionRows
             : isIrrigationCostDiary
               ? apiIrrigationCostRows
-              : localRows;
+              : isLaborCostsDiary
+                ? apiLaborCostRows
+                : localRows;
 
   const isActionBusy =
     (isBuyingSeedDiary &&
@@ -1089,7 +1153,9 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     (isIrrigationCostDiary &&
       (isIrrigationCostCreating ||
         isIrrigationCostUpdating ||
-        isIrrigationCostDeleting));
+        isIrrigationCostDeleting)) ||
+    (isLaborCostsDiary &&
+      (isLaborCostCreating || isLaborCostUpdating || isLaborCostDeleting));
 
   const filtered = useMemo(() => {
     if (!search) return rows;
@@ -1202,6 +1268,20 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
         const updated = await updateIrrigationCost(editRow.id, payload);
         if (!updated) return;
       }
+    } else if (isLaborCostsDiary) {
+      if (!seasonDiaryId) {
+        showToast("Thiếu mã mùa vụ, không thể lưu bản ghi", "error");
+        return;
+      }
+
+      const payload = buildLaborCostPayload(form, seasonDiaryId);
+      if (modal === "create") {
+        const created = await createLaborCost(payload);
+        if (!created) return;
+      } else {
+        const updated = await updateLaborCost(editRow.id, payload);
+        if (!updated) return;
+      }
     } else if (modal === "create") {
       setRows((prev) => [{ ...form, id: genId() }, ...prev]);
       showToast("Đã thêm bản ghi mới");
@@ -1245,6 +1325,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     } else if (isIrrigationCostDiary) {
       const results = await Promise.all(
         Array.from(ids).map((id) => deleteIrrigationCost(id)),
+      );
+      if (results.some((ok) => !ok)) return;
+    } else if (isLaborCostsDiary) {
+      const results = await Promise.all(
+        Array.from(ids).map((id) => deleteLaborCost(id)),
       );
       if (results.some((ok) => !ok)) return;
     } else {
@@ -1457,7 +1542,8 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
               (isUseFertilizerDiary && isUseFertilizersLoading) ||
               (isPackagingHandlingDiary && isPackagingHandlingsLoading) ||
               (isHarvestConsumptionDiary && isHarvestConsumptionsLoading) ||
-              (isIrrigationCostDiary && isIrrigationCostsLoading) ? (
+              (isIrrigationCostDiary && isIrrigationCostsLoading) ||
+              (isLaborCostsDiary && isLaborCostsLoading) ? (
                 <tr>
                   <td
                     colSpan={cols.length + 2}
