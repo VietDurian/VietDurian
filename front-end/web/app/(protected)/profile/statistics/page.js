@@ -1,178 +1,37 @@
 "use client";
 
-import { useState } from "react";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HƯỚNG DẪN TÍCH HỢP ZUSTAND
-// ─────────────────────────────────────────────────────────────────────────────
-// Bước 1: Xoá SAMPLE_GARDENS bên dưới
-// Bước 2: Import store, ví dụ:
-//   import { useSeasonStore } from "@/stores/seasonStore";
-// Bước 3: Trong StatisticsPage, thay 2 dòng được comment thành:
-//   const gardens       = useSeasonStore((state) => state.gardens);
-//   const selectedId    = useSeasonStore((state) => state.selectedId);
-//   const setSelectedId = useSeasonStore((state) => state.setSelectedId);
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ── SAMPLE DATA ───────────────────────────────────────────────────────────────
-const SAMPLE_GARDENS = [
-  {
-    diary: {
-      id: "garden_001",
-      garden_name: "Vườn Ri6 Cái Mơn",
-      status: "In progressing",
-      area: 5200,
-      start_date: "2025-12-17T12:15:42.917Z",
-      end_date: null,
-    },
-    overview: {
-      total_cost: 22050000,
-      total_revenue: 77100250,
-      profit: 55050250,
-      margin_percent: 71.4,
-      cost_per_kg: 8256.88,
-      yield_per_area: 0.51,
-    },
-    harvest: {
-      total_harvest_kg: 2670.5,
-      total_consumed_kg: 1150.75,
-      unsold_weight_kg: 1519.75,
-      consumed_rate_percent: 43.09,
-    },
-    cost_breakdown: {
-      seed: {
-        amount: 18000000,
-        percent: 81.63,
-        label: "Giống",
-        color: "#059669",
-      },
-      fertilizer: {
-        amount: 2850000,
-        percent: 12.93,
-        label: "Phân bón",
-        color: "#34d399",
-      },
-      labor: {
-        amount: 600000,
-        percent: 2.72,
-        label: "Nhân công",
-        color: "#6ee7b7",
-      },
-      irrigation: {
-        amount: 600000,
-        percent: 2.72,
-        label: "Tưới tiêu",
-        color: "#a7f3d0",
-      },
-    },
-  },
-  {
-    diary: {
-      id: "garden_002",
-      garden_name: "Vườn Musang King Bến Tre",
-      status: "In progressing",
-      area: 8100,
-      start_date: "2025-10-05T08:00:00.000Z",
-      end_date: null,
-    },
-    overview: {
-      total_cost: 38500000,
-      total_revenue: 124000000,
-      profit: 85500000,
-      margin_percent: 68.95,
-      cost_per_kg: 9500,
-      yield_per_area: 0.5,
-    },
-    harvest: {
-      total_harvest_kg: 4050,
-      total_consumed_kg: 2430,
-      unsold_weight_kg: 1620,
-      consumed_rate_percent: 60.0,
-    },
-    cost_breakdown: {
-      seed: {
-        amount: 28000000,
-        percent: 72.73,
-        label: "Giống",
-        color: "#059669",
-      },
-      fertilizer: {
-        amount: 6500000,
-        percent: 16.88,
-        label: "Phân bón",
-        color: "#34d399",
-      },
-      labor: {
-        amount: 2000000,
-        percent: 5.19,
-        label: "Nhân công",
-        color: "#6ee7b7",
-      },
-      irrigation: {
-        amount: 2000000,
-        percent: 5.19,
-        label: "Tưới tiêu",
-        color: "#a7f3d0",
-      },
-    },
-  },
-  {
-    diary: {
-      id: "garden_003",
-      garden_name: "Vườn Monthong Tiền Giang",
-      status: "Completed",
-      area: 3400,
-      start_date: "2025-03-01T07:00:00.000Z",
-      end_date: "2025-11-20T07:00:00.000Z",
-    },
-    overview: {
-      total_cost: 15200000,
-      total_revenue: 48750000,
-      profit: 33550000,
-      margin_percent: 68.82,
-      cost_per_kg: 7200,
-      yield_per_area: 0.62,
-    },
-    harvest: {
-      total_harvest_kg: 2111,
-      total_consumed_kg: 2111,
-      unsold_weight_kg: 0,
-      consumed_rate_percent: 100,
-    },
-    cost_breakdown: {
-      seed: {
-        amount: 9000000,
-        percent: 59.21,
-        label: "Giống",
-        color: "#059669",
-      },
-      fertilizer: {
-        amount: 4200000,
-        percent: 27.63,
-        label: "Phân bón",
-        color: "#34d399",
-      },
-      labor: {
-        amount: 1200000,
-        percent: 7.89,
-        label: "Nhân công",
-        color: "#6ee7b7",
-      },
-      irrigation: {
-        amount: 800000,
-        percent: 5.26,
-        label: "Tưới tiêu",
-        color: "#a7f3d0",
-      },
-    },
-  },
-];
+import { useEffect, useMemo, useState } from "react";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 const fmt = (n) => new Intl.NumberFormat("vi-VN").format(Math.round(n));
 const fmtVND = (n) => fmt(n) + " ₫";
 const fmtDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString("vi-VN") : null;
+
+const COST_BREAKDOWN_META = {
+  seed: { label: "Giống", color: "#059669" },
+  fertilizer: { label: "Phân bón", color: "#34d399" },
+  labor: { label: "Nhân công", color: "#6ee7b7" },
+  irrigation: { label: "Tưới tiêu", color: "#a7f3d0" },
+};
+
+const EMPTY_OVERVIEW = {
+  total_cost: 0,
+  total_revenue: 0,
+  profit: 0,
+  margin_percent: 0,
+  cost_per_kg: 0,
+  yield_per_area: 0,
+};
+
+const EMPTY_HARVEST = {
+  total_harvest_kg: 0,
+  total_consumed_kg: 0,
+  unsold_weight_kg: 0,
+  consumed_rate_percent: 0,
+};
 
 // ── DONUT CHART ───────────────────────────────────────────────────────────────
 function DonutChart({ segments, size = 180 }) {
@@ -281,7 +140,8 @@ function GardenDropdown({ gardens, selectedId, onSelect }) {
         className="flex items-center gap-2 group"
       >
         <h2 className="text-white text-xl font-bold leading-tight group-hover:text-emerald-100 transition-colors">
-          {gardens.find((g) => g.diary.id === selectedId)?.diary.garden_name}
+          {gardens.find((g) => g.diary.id === selectedId)?.diary.garden_name ||
+            "Chọn khu vườn"}
         </h2>
         <svg
           className={`w-5 h-5 text-emerald-200 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
@@ -381,14 +241,96 @@ function GardenDropdown({ gardens, selectedId, onSelect }) {
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function StatisticsPage() {
-  // ── Thay 2 dòng này bằng Zustand store ─────────────────────────────────────
-  const gardens = SAMPLE_GARDENS;
-  const [selectedId, setSelectedId] = useState(SAMPLE_GARDENS[0].diary.id);
-  // ───────────────────────────────────────────────────────────────────────────
+  const { authUser } = useAuthStore();
+  const {
+    seasonDiaries,
+    seasonDiaryStatistics,
+    isSeasonDiariesLoading,
+    isStatisticsLoading,
+    getSeasonDiaries,
+    getSeasonDiaryStatistics,
+  } = useSeasonDiaryStore();
 
-  const stats = gardens.find((g) => g.diary.id === selectedId) ?? gardens[0];
-  const { diary, overview, harvest, cost_breakdown } = stats;
-  const breakdown = Object.values(cost_breakdown);
+  const [selectedId, setSelectedId] = useState(null);
+
+  useEffect(() => {
+    if (authUser?._id) {
+      getSeasonDiaries(authUser._id);
+    }
+  }, [authUser?._id, getSeasonDiaries]);
+
+  const gardens = useMemo(
+    () =>
+      seasonDiaries.map((d) => ({
+        diary: {
+          id: d._id,
+          garden_name: d.garden_name,
+          status: d.status,
+          area: Number(d.area) || 0,
+          start_date: d.created_at || null,
+          end_date: d.end_date || null,
+        },
+      })),
+    [seasonDiaries],
+  );
+
+  useEffect(() => {
+    if (!gardens.length) {
+      setSelectedId(null);
+      return;
+    }
+
+    setSelectedId((prev) => {
+      if (prev && gardens.some((g) => g.diary.id === prev)) return prev;
+      return gardens[0].diary.id;
+    });
+  }, [gardens]);
+
+  useEffect(() => {
+    if (selectedId) {
+      getSeasonDiaryStatistics(selectedId);
+    }
+  }, [selectedId, getSeasonDiaryStatistics]);
+
+  const selectedGarden =
+    gardens.find((g) => g.diary.id === selectedId) ?? gardens[0] ?? null;
+
+  const stats =
+    seasonDiaryStatistics?.diary &&
+    String(seasonDiaryStatistics.diary.id) === String(selectedId)
+      ? seasonDiaryStatistics
+      : null;
+
+  const diary = stats?.diary ?? selectedGarden?.diary ?? {};
+  const overview = stats?.overview ?? EMPTY_OVERVIEW;
+  const harvest = stats?.harvest ?? EMPTY_HARVEST;
+  const breakdown = Object.entries(stats?.cost_breakdown || {}).map(
+    ([key, value]) => ({
+      amount: value?.amount || 0,
+      percent: value?.percent || 0,
+      label: COST_BREAKDOWN_META[key]?.label || key,
+      color: COST_BREAKDOWN_META[key]?.color || "#d1d5db",
+    }),
+  );
+
+  if (isSeasonDiariesLoading && !gardens.length) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-gray-500">
+          <span className="animate-spin w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full" />
+          Đang tải danh sách mùa vụ...
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSeasonDiariesLoading && !gardens.length) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <p className="text-sm text-gray-500">Bạn chưa có nhật ký mùa vụ nào.</p>
+      </div>
+    );
+  }
 
   // ── Derived data ────────────────────────────────────────────────────────────
   const kpiCards = [
@@ -671,7 +613,7 @@ export default function StatisticsPage() {
                   <div
                     className={`w-full rounded-t-xl ${bar.colorClass}`}
                     style={{
-                      height: `${(bar.value / overview.total_revenue) * 100}%`,
+                      height: `${overview.total_revenue > 0 ? (bar.value / overview.total_revenue) * 100 : 0}%`,
                       minHeight: 8,
                     }}
                   />
@@ -709,6 +651,9 @@ export default function StatisticsPage() {
                   </span>
                 </div>
               ))}
+              {isStatisticsLoading && (
+                <p className="text-xs text-gray-400">Đang cập nhật thống kê...</p>
+              )}
             </div>
           </div>
         </div>
