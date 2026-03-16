@@ -6,93 +6,49 @@ const router = express.Router();
 
 /**
  * @swagger
- * tags:
- *   name: PackagingHandling
- *   description: Quản lý xử lý đóng gói
- */
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     PackagingHandling:
- *       type: object
- *       required:
- *         - season_diary_id
- *         - handling_date
- *         - packaging_type
- *         - storage_location
- *         - treatment_method
- *       properties:
- *         _id:
- *           type: string
- *           example: 65f7a1b2c3d4e5f6g7h8i9j0
- *         season_diary_id:
- *           type: string
- *           example: 65f7a1b2c3d4e5f6g7h8i9j0
- *         handling_date:
- *           type: string
- *           format: date-time
- *           example: 2025-03-13T10:00:00Z
- *         packaging_type:
- *           type: string
- *           example: Thùng chứa thuốc dư thừa
- *         storage_location:
- *           type: string
- *           example: Kho phía Bắc
- *         treatment_method:
- *           type: string
- *           example: Đốt
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
- */
-
-/**
- * @swagger
- * /api/packaging-handling:
+ * /packaging-handling:
  *   post:
- *     summary: Tạo bản ghi xử lý đóng gói
- *     tags: [PackagingHandling]
+ *     tags: [packaging-handling]
  *     security:
  *       - bearerAuth: []
+ *     summary: Tạo bản ghi xử lý đóng gói
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/PackagingHandling'
- *           example:
- *             season_diary_id: 65f7a1b2c3d4e5f6g7h8i9j0
- *             handling_date: 2025-03-13T10:00:00Z
- *             packaging_type: Thùng chứa thuốc dư thừa
- *             storage_location: Kho phía Bắc
- *             treatment_method: Đốt
+ *             type: object
+ *             required:
+ *               - season_diary_id
+ *               - handling_date
+ *               - packaging_type
+ *               - storage_location
+ *               - treatment_method
+ *             properties:
+ *               season_diary_id:
+ *                 type: string
+ *                 example: "67f13a9f2d8b6a0012c9a101"
+ *               handling_date:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2026-03-16T07:00:00.000Z"
+ *               packaging_type:
+ *                 type: string
+ *                 example: "Thung carton"
+ *               storage_location:
+ *                 type: string
+ *                 example: "Kho A - Cho Lach"
+ *               treatment_method:
+ *                 type: string
+ *                 example: "Khu trung va dong goi hut am"
  *     responses:
  *       201:
- *         description: Tạo thành công
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/PackagingHandling'
- *       400:
- *         description: Dữ liệu không hợp lệ
- *       401:
- *         description: Chưa xác thực
- */
-router.post("/", authMiddleware.protect, packagingHandlingController.create);
-
-/**
- * @swagger
- * /api/packaging-handling:
+ *         description: Tạo bản ghi xử lý đóng gói thành công
  *   get:
- *     summary: Lấy danh sách xử lý đóng gói
- *     tags: [PackagingHandling]
+ *     tags: [packaging-handling]
  *     security:
  *       - bearerAuth: []
+ *     summary: Lấy danh sách xử lý đóng gói (phân trang)
  *     parameters:
  *       - in: query
  *         name: season_diary_id
@@ -100,124 +56,85 @@ router.post("/", authMiddleware.protect, packagingHandlingController.create);
  *         schema:
  *           type: string
  *         description: ID nhật ký mùa vụ
+ *         example: "67f13a9f2d8b6a0012c9a101"
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
- *           default: 20
- *         description: Số bản ghi trên trang
+ *           example: 20
+ *         description: Số lượng bản ghi lấy ra
  *       - in: query
  *         name: skip
  *         schema:
  *           type: integer
- *           default: 0
- *         description: Số bản ghi bỏ qua
+ *           example: 0
+ *         description: Số lượng bản ghi bỏ qua
  *     responses:
  *       200:
- *         description: Danh sách bản ghi
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/PackagingHandling'
- *       401:
- *         description: Chưa xác thực
- */
-router.get("/", authMiddleware.protect, packagingHandlingController.list);
-
-/**
- * @swagger
- * /api/packaging-handling/{id}:
- *   get:
- *     summary: Xem chi tiết xử lý đóng gói
- *     tags: [PackagingHandling]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID bản ghi
- *     responses:
- *       200:
- *         description: Thông tin bản ghi
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/PackagingHandling'
+ *         description: Lấy danh sách xử lý đóng gói thành công
  *       404:
- *         description: Không tìm thấy
- *       401:
- *         description: Chưa xác thực
- */
-router.get("/:id", authMiddleware.protect, packagingHandlingController.detail);
-
-/**
- * @swagger
- * /api/packaging-handling/{id}:
+ *         description: Nhật ký mùa vụ không tồn tại
+ *
+ * /packaging-handling/{id}:
  *   put:
- *     summary: Cập nhật xử lý đóng gói
- *     tags: [PackagingHandling]
+ *     tags: [packaging-handling]
  *     security:
  *       - bearerAuth: []
+ *     summary: Cập nhật bản ghi xử lý đóng gói
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: ID bản ghi
+ *         description: ID bản ghi xử lý đóng gói
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/PackagingHandling'
- *           example:
- *             handling_date: 2025-03-13T10:00:00Z
- *             packaging_type: Thùng chứa thuốc dư thừa
- *             storage_location: Kho phía Nam
- *             treatment_method: Chôn
+ *             type: object
+ *             properties:
+ *               handling_date:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2026-03-18T07:00:00.000Z"
+ *               packaging_type:
+ *                 type: string
+ *                 example: "Tui luoi"
+ *               storage_location:
+ *                 type: string
+ *                 example: "Kho B - Cai Mon"
+ *               treatment_method:
+ *                 type: string
+ *                 example: "Xu ly lanh truoc khi van chuyen"
  *     responses:
  *       200:
- *         description: Cập nhật thành công
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/PackagingHandling'
- *       404:
- *         description: Không tìm thấy
- *       401:
- *         description: Chưa xác thực
- */
-router.put("/:id", authMiddleware.protect, packagingHandlingController.update);
-
-/**
- * @swagger
- * /api/packaging-handling/{id}:
+ *         description: Cập nhật bản ghi xử lý đóng gói thành công
+ *
  *   delete:
- *     summary: Xóa xử lý đóng gói
- *     tags: [PackagingHandling]
+ *     tags: [packaging-handling]
  *     security:
  *       - bearerAuth: []
+ *     summary: Xóa bản ghi xử lý đóng gói
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: ID bản ghi
+ *         description: ID bản ghi xử lý đóng gói
  *     responses:
  *       200:
- *         description: Xóa thành công
- *       404:
- *         description: Không tìm thấy
- *       401:
- *         description: Chưa xác thực
+ *         description: Xóa bản ghi xử lý đóng gói thành công
  */
+
+router.post("/", authMiddleware.protect, packagingHandlingController.create);
+
+router.get("/", authMiddleware.protect, packagingHandlingController.list);
+
+router.put("/:id", authMiddleware.protect, packagingHandlingController.update);
+
 router.delete("/:id", authMiddleware.protect, packagingHandlingController.remove);
 
 export const packagingHandlingRoute = router;
