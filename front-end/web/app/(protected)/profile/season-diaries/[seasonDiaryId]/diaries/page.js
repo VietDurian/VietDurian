@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useBuyingSeedStore } from "@/store/useBuyingSeedStore";
+import { useBuyingFertilizerStore } from "@/store/useBuyingFertilizerStore";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HƯỚNG DẪN TÍCH HỢP ZUSTAND
@@ -417,6 +418,28 @@ const buildBuyingSeedPayload = (form, seasonDiaryId) => ({
   supplier_address: String(form.supplier_address || "").trim(),
 });
 
+const normalizeBuyingFertilizer = (item) => ({
+  id: item?._id,
+  purchase_date: item?.purchase_date || "",
+  material_name: item?.material_name || "",
+  quantity: item?.quantity ?? "",
+  unit: item?.unit || "",
+  total_price: item?.total_price ?? "",
+  supplier_name: item?.supplier_name || "",
+  supplier_address: item?.supplier_address || "",
+});
+
+const buildBuyingFertilizerPayload = (form, seasonDiaryId) => ({
+  season_diary_id: seasonDiaryId,
+  purchase_date: form.purchase_date || null,
+  material_name: String(form.material_name || "").trim(),
+  quantity: Number(form.quantity) || 0,
+  unit: String(form.unit || "").trim(),
+  total_price: Number(form.total_price) || 0,
+  supplier_name: String(form.supplier_name || "").trim(),
+  supplier_address: String(form.supplier_address || "").trim(),
+});
+
 // ── SEED DATA (thay bằng Zustand store) ──────────────────────────────────────
 const SEED_DATA = {
   1.4: [
@@ -755,6 +778,7 @@ function DeleteModal({ count, onConfirm, onClose }) {
 function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
   const cols = flatCols(diary);
   const isBuyingSeedDiary = diary.id === "1.4";
+  const isBuyingFertilizerDiary = diary.id === "1.5";
 
   const {
     buyingSeeds,
@@ -767,6 +791,18 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     updateBuyingSeed,
     deleteBuyingSeed,
   } = useBuyingSeedStore();
+
+  const {
+    buyingFertilizers,
+    isBuyingFertilizersLoading,
+    isBuyingFertilizerCreating,
+    isBuyingFertilizerUpdating,
+    isBuyingFertilizerDeleting,
+    getBuyingFertilizers,
+    createBuyingFertilizer,
+    updateBuyingFertilizer,
+    deleteBuyingFertilizer,
+  } = useBuyingFertilizerStore();
 
   const [localRows, setLocalRows] = useState(
     initialRows ?? SEED_DATA[diary.id] ?? [],
@@ -792,12 +828,37 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     getBuyingSeeds({ seasonDiaryId, page: 1, limit: 200 });
   }, [isBuyingSeedDiary, seasonDiaryId, getBuyingSeeds]);
 
+  useEffect(() => {
+    if (!isBuyingFertilizerDiary || !seasonDiaryId) return;
+    getBuyingFertilizers({ seasonDiaryId, page: 1, limit: 200 });
+  }, [isBuyingFertilizerDiary, seasonDiaryId, getBuyingFertilizers]);
+
   const apiRows = useMemo(
     () => (buyingSeeds || []).map(normalizeBuyingSeed).filter((r) => r.id),
     [buyingSeeds],
   );
 
-  const rows = isBuyingSeedDiary ? apiRows : localRows;
+  const apiFertilizerRows = useMemo(
+    () =>
+      (buyingFertilizers || [])
+        .map(normalizeBuyingFertilizer)
+        .filter((r) => r.id),
+    [buyingFertilizers],
+  );
+
+  const rows = isBuyingSeedDiary
+    ? apiRows
+    : isBuyingFertilizerDiary
+      ? apiFertilizerRows
+      : localRows;
+
+  const isActionBusy =
+    (isBuyingSeedDiary &&
+      (isBuyingSeedCreating || isBuyingSeedUpdating || isBuyingSeedDeleting)) ||
+    (isBuyingFertilizerDiary &&
+      (isBuyingFertilizerCreating ||
+        isBuyingFertilizerUpdating ||
+        isBuyingFertilizerDeleting));
 
   const filtered = useMemo(() => {
     if (!search) return rows;
@@ -840,6 +901,20 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
         const updated = await updateBuyingSeed(editRow.id, payload);
         if (!updated) return;
       }
+    } else if (isBuyingFertilizerDiary) {
+      if (!seasonDiaryId) {
+        showToast("Thiếu mã mùa vụ, không thể lưu bản ghi", "error");
+        return;
+      }
+
+      const payload = buildBuyingFertilizerPayload(form, seasonDiaryId);
+      if (modal === "create") {
+        const created = await createBuyingFertilizer(payload);
+        if (!created) return;
+      } else {
+        const updated = await updateBuyingFertilizer(editRow.id, payload);
+        if (!updated) return;
+      }
     } else if (modal === "create") {
       setRows((prev) => [{ ...form, id: genId() }, ...prev]);
       showToast("Đã thêm bản ghi mới");
@@ -858,6 +933,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     if (isBuyingSeedDiary) {
       const results = await Promise.all(
         Array.from(ids).map((id) => deleteBuyingSeed(id)),
+      );
+      if (results.some((ok) => !ok)) return;
+    } else if (isBuyingFertilizerDiary) {
+      const results = await Promise.all(
+        Array.from(ids).map((id) => deleteBuyingFertilizer(id)),
       );
       if (results.some((ok) => !ok)) return;
     } else {
@@ -955,7 +1035,7 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
         {selected.size > 0 && (
           <button
             onClick={() => setDeleteConfirm(new Set(selected))}
-            disabled={isBuyingSeedDeleting}
+            disabled={isActionBusy}
             className="px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 hover:bg-red-100 transition font-medium"
           >
             Xoá {selected.size} mục
@@ -963,9 +1043,7 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
         )}
         <button
           onClick={openCreate}
-          disabled={
-            isBuyingSeedCreating || isBuyingSeedUpdating || isBuyingSeedDeleting
-          }
+          disabled={isActionBusy}
           className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-emerald-200"
         >
           <svg
@@ -1067,7 +1145,8 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
               </tr>
             </thead>
             <tbody>
-              {isBuyingSeedDiary && isBuyingSeedsLoading ? (
+              {(isBuyingSeedDiary && isBuyingSeedsLoading) ||
+              (isBuyingFertilizerDiary && isBuyingFertilizersLoading) ? (
                 <tr>
                   <td
                     colSpan={cols.length + 2}
