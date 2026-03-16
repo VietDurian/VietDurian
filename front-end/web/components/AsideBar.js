@@ -93,6 +93,7 @@ export default function AsideBar({ role }) {
         return [
           { icon: User, label: "Thông tin", href: "/profile/details" },
           { icon: FileText, label: "Bài viết", href: "/profile/posts" },
+          { icon: Bot, label: "AI", href: "/profile/ai" },
         ];
       case "farmer":
         if (isFarmerSeasonDiarySubRoute) {
@@ -132,12 +133,14 @@ export default function AsideBar({ role }) {
           { icon: User, label: "Thông tin", href: "/profile/details" },
           { icon: FileText, label: "Bài viết", href: "/profile/posts" },
           { icon: PenTool, label: "Blog", href: "/profile/blogs" },
+          { icon: Bot, label: "AI", href: "/profile/ai" },
         ];
       case "serviceProvider":
         return [
           { icon: User, label: "Thông tin", href: "/profile/details" },
           { icon: FileText, label: "Bài viết", href: "/profile/posts" },
           { icon: FileEdit, label: "Hồ sơ", href: "/profile/resume" },
+          { icon: Bot, label: "AI", href: "/profile/ai" },
         ];
       default:
         return [];
