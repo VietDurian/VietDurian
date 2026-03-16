@@ -126,6 +126,9 @@ function FavoritePostCard({ post, onUnfavorite }) {
                         activeOpacity={0.8}
                     >
                         <Ionicons name="chatbubble-outline" size={22} color="#6b7280" />
+                        {post.comments > 0 && (
+                            <Text style={styles.actionCount}>{post.comments}</Text>
+                        )}
                     </TouchableOpacity>
 
                     {/* Contact */}
@@ -333,8 +336,9 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: "#f3f4f6",
     },
-    actionBtn: { padding: 8, borderRadius: 10 },
+    actionBtn: { flexDirection: "row", alignItems: "center", gap: 5, padding: 8, borderRadius: 10 },
     actionBtnLiked: { backgroundColor: "#fff1f2" },
+    actionCount: { fontSize: 13, fontWeight: "600", color: "#6b7280" },
     contactBtn: {
         backgroundColor: "#16a34a",
         borderRadius: 20,
