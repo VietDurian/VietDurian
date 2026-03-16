@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import BottomTabBar from "../components/BottomTabBar";
 import Header from "../components/Header";
 import { usePostStore } from "../store/usePostStore";
+import { useAppStore } from "../store/useAppStore";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -181,7 +182,7 @@ function CategoryGuideSection({ selectedCategory, onCategoryChange }) {
 }
 
 // ── Post Card ──────────────────────────────────────────────────────────────────
-function PostCard({ post, onToggleLike }) {
+function PostCard({ post, onToggleLike, onComment }) {
   return (
     <View style={styles.card}>
       {/* Header */}
@@ -239,8 +240,12 @@ function PostCard({ post, onToggleLike }) {
           />
         </TouchableOpacity>
 
-        {/* Comment — icon only */}
-        <TouchableOpacity style={styles.actionBtn} activeOpacity={0.8}>
+        {/* Comment — navigate to CommentScreen */}
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() => onComment(post.id)}
+          activeOpacity={0.8}
+        >
           <Ionicons name="chatbubble-outline" size={22} color="#6b7280" />
         </TouchableOpacity>
 
@@ -358,6 +363,8 @@ export default function HomeScreen() {
     fetchPosts, toggleLikePost,
   } = usePostStore();
 
+  const { navigate, setSelectedPostId } = useAppStore();
+
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
@@ -453,7 +460,14 @@ export default function HomeScreen() {
         data={posts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <PostCard post={item} onToggleLike={toggleLikePost} />
+          <PostCard
+            post={item}
+            onToggleLike={toggleLikePost}
+            onComment={(postId) => {
+              setSelectedPostId(postId);
+              navigate("comment");
+            }}
+          />
         )}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={!postsLoading ? <EmptyState onClear={clearFilters} /> : null}

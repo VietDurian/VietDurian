@@ -15,9 +15,10 @@ import ChatListScreen from "./screens/ChatListScreen";
 import ChatDetailScreen from "./screens/ChatDetailScreen";
 import NotificationsScreen from "./screens/NotificationsScreen";
 import AIScanScreen from "./screens/AIScanScreen";
+import CommentScreen from "./screens/CommentScreen";
 
 function ScreenRouter() {
-  const { currentScreen } = useAppStore();
+  const { currentScreen, navigate } = useAppStore();
 
   switch (currentScreen) {
     case "login":
@@ -44,6 +45,8 @@ function ScreenRouter() {
       return <NotificationsScreen />;
     case "AI":
       return <AIScanScreen />;
+    case "comment":
+      return <CommentScreen onBack={() => navigate("home")} />;
     default:
       return <LoginScreen />;
   }
