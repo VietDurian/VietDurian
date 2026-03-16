@@ -36,13 +36,12 @@ export const useBuyingSeedStore = create((set, get) => ({
 
       set({
         buyingSeeds: items,
-        buyingSeedPagination:
-          res?.data?.pagination || {
-            totalItems: items.length,
-            totalPages: 1,
-            currentPage: page,
-            itemsPerPage: limit,
-          },
+        buyingSeedPagination: res?.data?.pagination || {
+          totalItems: items.length,
+          totalPages: 1,
+          currentPage: page,
+          itemsPerPage: limit,
+        },
       });
     } catch (error) {
       toast.error(
