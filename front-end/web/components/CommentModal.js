@@ -53,13 +53,13 @@ const getReactionColor = (type) => {
 const getReactionLabel = (type) => {
   switch (type) {
     case "like":
-      return "Like";
+      return "Thích";
     case "love":
-      return "Love";
+      return "Yêu Thích";
     case "haha":
       return "Haha";
     case "angry":
-      return "Angry";
+      return "Phẫn nộ";
     default:
       return "";
   }
@@ -184,7 +184,7 @@ const ReactionModal = ({ isOpen, onClose, commentId, reactions }) => {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[70vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900">Reactions</h3>
+          <h3 className="text-lg font-bold text-gray-900">Cảm Xúc</h3>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition"
@@ -700,7 +700,7 @@ export default function CommentModal({
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-5 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-900">Bình Luận</h2>
