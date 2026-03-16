@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
     View,
     Text,
@@ -7,95 +7,31 @@ import {
     TouchableOpacity,
     TextInput,
     FlatList,
+    ScrollView,
     KeyboardAvoidingView,
     Platform,
     ActivityIndicator,
+    Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "../store/useAppStore";
-
-// ── Mock Data ──────────────────────────────────────────────────────────────────
-const MOCK_COMMENTS = [
-    {
-        _id: "c1",
-        content: "Bài viết rất hay! Cảm ơn bạn đã chia sẻ kinh nghiệm quý báu này.",
-        created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-        author_id: {
-            _id: "u1",
-            full_name: "Nguyễn Văn An",
-            username: "nguyenvanan",
-            avatar: "https://i.pravatar.cc/100?img=8",
-        },
-        children: [
-            {
-                _id: "c1r1",
-                content: "Đồng ý! Mình cũng áp dụng thử và thấy hiệu quả lắm.",
-                created_at: new Date(Date.now() - 3600000).toISOString(),
-                author_id: {
-                    _id: "u2",
-                    full_name: "Trần Thị Lan",
-                    username: "trantilan",
-                    avatar: "https://i.pravatar.cc/100?img=5",
-                },
-                children: [],
-            },
-        ],
-    },
-    {
-        _id: "c2",
-        content: "Cho mình hỏi kỹ thuật này áp dụng cho giống sầu riêng Musang King được không vậy bạn?",
-        created_at: new Date(Date.now() - 7200000).toISOString(),
-        author_id: {
-            _id: "u3",
-            full_name: "Lê Minh Tuấn",
-            username: "leminhtuấn",
-            avatar: "https://i.pravatar.cc/100?img=11",
-        },
-        children: [],
-    },
-    {
-        _id: "c3",
-        content: "Mình đã thử phương pháp này được 2 vụ rồi, kết quả tốt hơn hẳn so với cách cũ. Bà con nên thử!",
-        created_at: new Date(Date.now() - 86400000).toISOString(),
-        author_id: {
-            _id: "u4",
-            full_name: "Phạm Thu Hà",
-            username: "phamthuha",
-            avatar: "https://i.pravatar.cc/100?img=16",
-        },
-        children: [],
-    },
-];
-
-// Mock reactions per comment
-const MOCK_REACTIONS = {
-    c1: { total: 12, breakdown: { like: 8, love: 3, haha: 1, angry: 0 }, userReaction: "love" },
-    c1r1: { total: 4, breakdown: { like: 4, love: 0, haha: 0, angry: 0 }, userReaction: null },
-    c2: { total: 2, breakdown: { like: 1, love: 0, haha: 1, angry: 0 }, userReaction: null },
-    c3: { total: 7, breakdown: { like: 5, love: 2, haha: 0, angry: 0 }, userReaction: "like" },
-};
-
-// Mock current user
-const MOCK_AUTH_USER = {
-    _id: "me",
-    full_name: "Bạn",
-    avatar: "https://i.pravatar.cc/100?img=20",
-};
+import { useCommentStore } from "../store/useCommentStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const REACTION_TYPES = [
-    { type: "like", icon: "thumbs-up", color: "#3b82f6", label: "Thích" },
-    { type: "love", icon: "heart", color: "#ef4444", label: "Yêu thích" },
-    { type: "haha", icon: "happy", color: "#eab308", label: "Haha" },
-    { type: "angry", icon: "flame", color: "#f97316", label: "Phẫn nộ" },
+    { type: "like", icon: "thumbs-up", iconFilled: "thumbs-up", color: "#3b82f6", label: "Thích" },
+    { type: "love", icon: "heart-outline", iconFilled: "heart", color: "#ef4444", label: "Yêu thích" },
+    { type: "haha", icon: "happy-outline", iconFilled: "happy", color: "#eab308", label: "Haha" },
+    { type: "angry", icon: "sad-outline", iconFilled: "sad", color: "#f97316", label: "Phẫn nộ" },
 ];
 
 const REACTION_MAP = {
-    like: { icon: "thumbs-up", color: "#3b82f6", label: "Thích" },
-    love: { icon: "heart", color: "#ef4444", label: "Yêu thích" },
-    haha: { icon: "happy", color: "#eab308", label: "Haha" },
-    angry: { icon: "flame", color: "#f97316", label: "Phẫn nộ" },
+    like: { icon: "thumbs-up", iconFilled: "thumbs-up", color: "#3b82f6", label: "Thích" },
+    love: { icon: "heart-outline", iconFilled: "heart", color: "#ef4444", label: "Yêu thích" },
+    haha: { icon: "happy-outline", iconFilled: "happy", color: "#eab308", label: "Haha" },
+    angry: { icon: "sad-outline", iconFilled: "sad", color: "#f97316", label: "Phẫn nộ" },
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -106,7 +42,11 @@ function getTimeAgo(dateString) {
     if (diff < 3600) return `${Math.floor(diff / 60)}m`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
     if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
-    return `${Math.floor(diff / 604800)}w`;
+    const weeks = Math.floor(diff / 604800);
+    if (weeks < 4) return `${weeks}w`;
+    const months = Math.floor(diff / 2592000);
+    if (months < 12) return `${months}mo`;
+    return `${Math.floor(diff / 31536000)}y`;
 }
 
 function getMostReactedType(breakdown) {
@@ -116,70 +56,182 @@ function getMostReactedType(breakdown) {
         .sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 }
 
-// ── Reaction Picker (inline popup) ────────────────────────────────────────────
-function ReactionPicker({ onSelect, onRemove, userReaction, visible }) {
+// ── Confirm Modal ──────────────────────────────────────────────────────────────
+function ConfirmModal({ visible, message, onClose, onConfirm }) {
+    return (
+        <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+            <View style={styles.modalOverlay}>
+                <View style={styles.confirmBox}>
+                    <Text style={styles.confirmMessage}>{message}</Text>
+                    <View style={styles.confirmBtns}>
+                        <TouchableOpacity style={styles.confirmCancelBtn} onPress={onClose} activeOpacity={0.85}>
+                            <Text style={styles.confirmCancelText}>Hủy</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.confirmDeleteBtn} onPress={onConfirm} activeOpacity={0.85}>
+                            <Text style={styles.confirmDeleteText}>Xóa</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
+}
+
+// ── Report Modal ───────────────────────────────────────────────────────────────
+function ReportModal({ visible, onClose, onSubmit, submitting }) {
+    const [reason, setReason] = useState("");
+    useEffect(() => { if (!visible) setReason(""); }, [visible]);
+
+    return (
+        <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+            <View style={styles.modalOverlay}>
+                <View style={styles.reportBox}>
+                    {/* Header */}
+                    <View style={styles.reportHeader}>
+                        <View style={styles.reportHeaderLeft}>
+                            <View style={styles.reportIconWrap}>
+                                <Ionicons name="flag-outline" size={18} color="#f97316" />
+                            </View>
+                            <Text style={styles.reportTitle}>Báo cáo bình luận</Text>
+                        </View>
+                        <TouchableOpacity onPress={onClose} hitSlop={8}>
+                            <Ionicons name="close" size={22} color="#374151" />
+                        </TouchableOpacity>
+                    </View>
+
+                    <Text style={styles.reportDesc}>
+                        Vui lòng cho chúng tôi biết lý do bạn báo cáo bình luận này. Chúng tôi sẽ xem xét và xử lý trong thời gian sớm nhất.
+                    </Text>
+
+                    <TextInput
+                        style={styles.reportInput}
+                        value={reason}
+                        onChangeText={setReason}
+                        placeholder="Nhập lý do báo cáo..."
+                        placeholderTextColor="#9ca3af"
+                        multiline
+                        maxLength={500}
+                    />
+
+                    <View style={styles.reportFooter}>
+                        <TouchableOpacity
+                            style={[styles.reportSubmitBtn, (!reason.trim() || submitting) && styles.reportSubmitBtnDisabled]}
+                            onPress={() => onSubmit(reason)}
+                            disabled={!reason.trim() || submitting}
+                            activeOpacity={0.85}
+                        >
+                            {submitting
+                                ? <ActivityIndicator size="small" color="#fff" />
+                                : <Text style={styles.reportSubmitText}>Gửi báo cáo</Text>
+                            }
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
+}
+
+// ── Reaction Detail Bottom Sheet ───────────────────────────────────────────────
+// Giong web: hien breakdown + danh sach nguoi thả reaction
+function ReactionDetailSheet({ visible, reactions, onClose }) {
+    const reactionList = reactions?.reactions || [];
+    const breakdown = reactions?.breakdown || {};
+
+    return (
+        <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+            <TouchableOpacity style={styles.sheetBackdrop} activeOpacity={1} onPress={onClose} />
+            <View style={styles.sheetBox}>
+                {/* Header */}
+                <View style={styles.sheetHeader}>
+                    <Text style={styles.sheetTitle}>Reactions</Text>
+                    <TouchableOpacity onPress={onClose} hitSlop={8}>
+                        <Ionicons name="close" size={22} color="#374151" />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Breakdown — icon + count + label (giong web) */}
+                <View style={styles.sheetBreakdown}>
+                    {REACTION_TYPES.map((r) => {
+                        const count = breakdown[r.type] || 0;
+                        if (count === 0) return null;
+                        return (
+                            <View key={r.type} style={styles.sheetBreakdownItem}>
+                                <Ionicons name={r.iconFilled} size={26} color={r.color} />
+                                <Text style={styles.sheetBreakdownCount}>{count}</Text>
+                                <Text style={styles.sheetBreakdownLabel}>{r.label}</Text>
+                            </View>
+                        );
+                    })}
+                </View>
+
+                {/* Users list — giong web */}
+                <ScrollView style={styles.sheetUserList} showsVerticalScrollIndicator={false}>
+                    {reactionList.map((rxn) => {
+                        const userInfo = typeof rxn.user_id === "object" ? rxn.user_id : null;
+                        const avatar = userInfo?.avatar || "https://i.pravatar.cc/100";
+                        const displayName = userInfo?.full_name || userInfo?.username || "Người dùng";
+                        const rxnCfg = REACTION_MAP[rxn.type];
+                        return (
+                            <View key={rxn._id} style={styles.sheetUserRow}>
+                                <Image source={{ uri: avatar }} style={styles.sheetUserAvatar} />
+                                <Text style={styles.sheetUserName} numberOfLines={1}>{displayName}</Text>
+                                {rxnCfg && (
+                                    <Ionicons name={rxnCfg.iconFilled} size={18} color={rxnCfg.color} />
+                                )}
+                            </View>
+                        );
+                    })}
+                </ScrollView>
+            </View>
+        </Modal>
+    );
+}
+
+// ── Reaction Picker ────────────────────────────────────────────────────────────
+// Hien PHIA TREN action row, lech ve ben phai (marginLeft 40 ~ vi tri nut Thich)
+function ReactionPicker({ visible, userReaction, onSelect, onRemove }) {
     if (!visible) return null;
     return (
         <View style={styles.reactionPicker}>
             {REACTION_TYPES.map((r) => (
                 <TouchableOpacity
                     key={r.type}
-                    style={[
-                        styles.reactionPickerBtn,
-                        userReaction === r.type && styles.reactionPickerBtnActive,
-                    ]}
+                    style={[styles.reactionPickerBtn, userReaction === r.type && styles.reactionPickerBtnActive]}
                     onPress={() => userReaction === r.type ? onRemove() : onSelect(r.type)}
-                    activeOpacity={0.8}
+                    activeOpacity={0.75}
                 >
-                    <Ionicons name={r.icon} size={22} color={r.color} />
+                    <Ionicons
+                        name={userReaction === r.type ? r.iconFilled : r.icon}
+                        size={24}
+                        color={r.color}
+                    />
                 </TouchableOpacity>
             ))}
+            {/* Nut X de bo reaction — giong web */}
+            {userReaction && (
+                <TouchableOpacity
+                    style={[styles.reactionPickerBtn, styles.reactionPickerRemoveBtn]}
+                    onPress={onRemove}
+                    activeOpacity={0.75}
+                >
+                    <Ionicons name="close" size={18} color="#ef4444" />
+                </TouchableOpacity>
+            )}
         </View>
     );
 }
 
-// ── Reaction Summary ───────────────────────────────────────────────────────────
+// ── Reaction Summary Badge ─────────────────────────────────────────────────────
 function ReactionSummary({ reactions, onPress }) {
     if (!reactions || reactions.total === 0) return null;
     const top = getMostReactedType(reactions.breakdown);
     const cfg = top ? REACTION_MAP[top] : null;
     return (
         <TouchableOpacity style={styles.reactionSummary} onPress={onPress} activeOpacity={0.8}>
-            {cfg && <Ionicons name={cfg.icon} size={14} color={cfg.color} />}
+            {cfg && <Ionicons name={cfg.iconFilled} size={13} color={cfg.color} />}
             <Text style={styles.reactionSummaryText}>{reactions.total}</Text>
         </TouchableOpacity>
-    );
-}
-
-// ── Reaction Detail Modal ──────────────────────────────────────────────────────
-function ReactionDetailModal({ visible, reactions, onClose }) {
-    if (!visible || !reactions) return null;
-    return (
-        <View style={styles.reactionDetailOverlay}>
-            <TouchableOpacity style={styles.reactionDetailBackdrop} onPress={onClose} activeOpacity={1} />
-            <View style={styles.reactionDetailBox}>
-                <View style={styles.reactionDetailHeader}>
-                    <Text style={styles.reactionDetailTitle}>Reactions</Text>
-                    <TouchableOpacity onPress={onClose} hitSlop={8}>
-                        <Ionicons name="close" size={22} color="#374151" />
-                    </TouchableOpacity>
-                </View>
-                {/* Breakdown row */}
-                <View style={styles.reactionDetailBreakdown}>
-                    {REACTION_TYPES.map((r) => {
-                        const count = reactions.breakdown?.[r.type] || 0;
-                        if (count === 0) return null;
-                        return (
-                            <View key={r.type} style={styles.reactionDetailItem}>
-                                <Ionicons name={r.icon} size={24} color={r.color} />
-                                <Text style={styles.reactionDetailCount}>{count}</Text>
-                                <Text style={styles.reactionDetailLabel}>{r.label}</Text>
-                            </View>
-                        );
-                    })}
-                </View>
-            </View>
-        </View>
     );
 }
 
@@ -191,89 +243,109 @@ function CommentItem({
     onReply,
     onEdit,
     onDelete,
+    onReport,
     reactions,
     onToggleReaction,
     openPicker,
     setOpenPicker,
     onShowReactions,
 }) {
-    const isOwn = comment.author_id?._id === authUser?._id;
+    const authorId = typeof comment.author_id === "object"
+        ? comment.author_id?._id
+        : comment.author_id;
+    const isOwn = authorId === authUser?._id;
     const commentReactions = reactions[comment._id];
     const userReaction = commentReactions?.userReaction || null;
     const pickerVisible = openPicker === comment._id;
-
     const reactionCfg = userReaction ? REACTION_MAP[userReaction] : null;
+
+    const authorName = comment.author_id?.full_name || comment.author_id?.username || "Người dùng";
+    const authorAvatar = comment.author_id?.avatar || "https://i.pravatar.cc/100";
 
     return (
         <View style={[styles.commentItem, isReply && styles.commentItemReply]}>
-            {/* Avatar */}
             <Image
-                source={{ uri: comment.author_id?.avatar || "https://i.pravatar.cc/100" }}
+                source={{ uri: authorAvatar }}
                 style={[styles.commentAvatar, isReply && styles.commentAvatarSmall]}
             />
 
             <View style={styles.commentBody}>
-                {/* Bubble */}
-                <View style={styles.commentBubble}>
-                    <Text style={styles.commentAuthor}>
-                        {comment.author_id?.full_name || comment.author_id?.username || "Người dùng"}
-                    </Text>
-                    <Text style={styles.commentText}>{comment.content}</Text>
-                </View>
+                <View style={styles.commentBodyInner}>
+                    {/* Bubble — giong web: bg-gray-50 rounded-2xl inline-block */}
+                    <View style={styles.commentBubble}>
+                        <Text style={styles.commentAuthor}>{authorName}</Text>
+                        <Text style={styles.commentText}>{comment.content}</Text>
+                    </View>
 
-                {/* Reaction summary on bubble bottom-right */}
-                <ReactionSummary
-                    reactions={commentReactions}
-                    onPress={() => onShowReactions(comment._id)}
-                />
+                    {/* Reaction picker — absolute, de len action row */}
+                    {pickerVisible && (
+                        <View style={styles.reactionPickerWrap}>
+                            <ReactionPicker
+                                visible
+                                userReaction={userReaction}
+                                onSelect={(type) => { onToggleReaction(comment._id, type); setOpenPicker(null); }}
+                                onRemove={() => { onToggleReaction(comment._id, null); setOpenPicker(null); }}
+                            />
+                        </View>
+                    )}
 
-                {/* Action row */}
-                <View style={styles.commentActions}>
-                    <Text style={styles.commentTime}>{getTimeAgo(comment.created_at)}</Text>
+                    {/* Action row */}
+                    <View style={styles.commentActions}>
+                        <Text style={styles.commentTime}>{getTimeAgo(comment.created_at)}</Text>
 
-                    {/* Like / Reaction button */}
-                    <TouchableOpacity
-                        onPress={() => setOpenPicker(pickerVisible ? null : comment._id)}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={[styles.commentActionText, reactionCfg && { color: reactionCfg.color, fontWeight: "700" }]}>
-                            {reactionCfg ? reactionCfg.label : "Thích"}
-                        </Text>
-                    </TouchableOpacity>
-
-                    {/* Reply (not for nested replies) */}
-                    {!isReply && (
-                        <TouchableOpacity onPress={() => onReply(comment)} activeOpacity={0.8}>
-                            <Text style={styles.commentActionText}>Trả lời</Text>
+                        {/* Thich */}
+                        <TouchableOpacity onPress={() => setOpenPicker(pickerVisible ? null : comment._id)} activeOpacity={0.8}>
+                            <Text style={[styles.commentActionBtn, reactionCfg && { color: reactionCfg.color, fontWeight: "700" }]}>
+                                {reactionCfg ? reactionCfg.label : "Thích"}
+                            </Text>
                         </TouchableOpacity>
-                    )}
 
-                    {/* Own comment: edit + delete */}
-                    {isOwn && (
-                        <>
-                            <TouchableOpacity onPress={() => onEdit(comment)} activeOpacity={0.8}>
-                                <Text style={styles.commentActionText}>Sửa</Text>
+                        {/* Reaction summary inline — giong web: hien icon + so sau nut Thich */}
+                        {commentReactions && commentReactions.total > 0 && (
+                            <TouchableOpacity
+                                style={styles.reactionInlineSummary}
+                                onPress={() => onShowReactions(comment._id)}
+                                activeOpacity={0.8}
+                            >
+                                {getMostReactedType(commentReactions.breakdown) && (
+                                    <Ionicons
+                                        name={REACTION_MAP[getMostReactedType(commentReactions.breakdown)]?.iconFilled}
+                                        size={14}
+                                        color={REACTION_MAP[getMostReactedType(commentReactions.breakdown)]?.color}
+                                    />
+                                )}
+                                <Text style={styles.reactionInlineCount}>{commentReactions.total}</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={() => onDelete(comment._id)} activeOpacity={0.8}>
-                                <Text style={[styles.commentActionText, { color: "#ef4444" }]}>Xóa</Text>
-                            </TouchableOpacity>
-                        </>
-                    )}
-                </View>
+                        )}
 
-                {/* Reaction picker */}
-                <ReactionPicker
-                    visible={pickerVisible}
-                    userReaction={userReaction}
-                    onSelect={(type) => {
-                        onToggleReaction(comment._id, type);
-                        setOpenPicker(null);
-                    }}
-                    onRemove={() => {
-                        onToggleReaction(comment._id, null);
-                        setOpenPicker(null);
-                    }}
-                />
+                        {/* Trả lời */}
+                        {!isReply && (
+                            <TouchableOpacity onPress={() => onReply(comment)} activeOpacity={0.8}>
+                                <Text style={styles.commentActionBtn}>Trả lời</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {/* Sửa + Xóa */}
+                        {isOwn && (
+                            <>
+                                <TouchableOpacity onPress={() => onEdit(comment)} activeOpacity={0.8}>
+                                    <Text style={styles.commentActionBtn}>Chỉnh sửa</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => onDelete(comment._id)} activeOpacity={0.8}>
+                                    <Text style={[styles.commentActionBtn, { color: "#ef4444" }]}>Xóa</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
+
+                        {/* Báo cáo */}
+                        {!isOwn && (
+                            <TouchableOpacity onPress={() => onReport(comment._id)} activeOpacity={0.8}>
+                                <Text style={[styles.commentActionBtn, { color: "#f97316" }]}>Báo cáo</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                </View>{/* end commentBodyInner */}
 
                 {/* Nested replies */}
                 {comment.children?.length > 0 && (
@@ -287,6 +359,7 @@ function CommentItem({
                                 onReply={onReply}
                                 onEdit={onEdit}
                                 onDelete={onDelete}
+                                onReport={onReport}
                                 reactions={reactions}
                                 onToggleReaction={onToggleReaction}
                                 openPicker={openPicker}
@@ -304,27 +377,35 @@ function CommentItem({
 // ── CommentScreen ──────────────────────────────────────────────────────────────
 export default function CommentScreen({ onBack }) {
     const { selectedPostId } = useAppStore();
-    // TODO khi kết nối API: dùng selectedPostId để fetch comments
-    // useEffect(() => { fetchComments(selectedPostId); }, [selectedPostId]);
+    const { authUser } = useAuthStore();
+    const {
+        comments, reactions, commentsLoading, commentsError, totalCount,
+        fetchComments, createComment, updateComment, deleteComment,
+        toggleReaction, reportComment, clearComments,
+    } = useCommentStore();
 
-    const [comments, setComments] = useState(MOCK_COMMENTS);
-    const [reactions, setReactions] = useState(MOCK_REACTIONS);
     const [inputText, setInputText] = useState("");
-    const [replyingTo, setReplyingTo] = useState(null);   // comment object
-    const [editingComment, setEditingComment] = useState(null); // comment object
-    const [openPicker, setOpenPicker] = useState(null);   // comment _id
-    const [reactionModalData, setReactionModalData] = useState(null); // { commentId, reactions }
-    const [loading] = useState(false);
+    const [replyingTo, setReplyingTo] = useState(null);
+    const [editingComment, setEditingComment] = useState(null);
+    const [openPicker, setOpenPicker] = useState(null);
+    const [reactionSheet, setReactionSheet] = useState(null);
+    const [sending, setSending] = useState(false);
+
+    // Confirm delete
+    const [confirmVisible, setConfirmVisible] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
+
+    // Report
+    const [reportVisible, setReportVisible] = useState(false);
+    const [reportingId, setReportingId] = useState(null);
+    const [reportSubmitting, setReportSubmitting] = useState(false);
 
     const inputRef = useRef(null);
 
-    // ── Helpers ─────────────────────────────────────────────────────────────────
-    const totalCount = useCallback(() => {
-        let count = 0;
-        const walk = (list) => { list.forEach((c) => { count++; walk(c.children || []); }); };
-        walk(comments);
-        return count;
-    }, [comments]);
+    useEffect(() => {
+        if (selectedPostId) fetchComments(selectedPostId, authUser?._id);
+        return () => clearComments();
+    }, [selectedPostId]);
 
     // ── Handlers ────────────────────────────────────────────────────────────────
     const handleReply = (comment) => {
@@ -347,86 +428,54 @@ export default function CommentScreen({ onBack }) {
         setInputText("");
     };
 
-    const handleSend = () => {
-        if (!inputText.trim()) return;
-
-        if (editingComment) {
-            // Edit existing
-            const updateContent = (list) =>
-                list.map((c) =>
-                    c._id === editingComment._id
-                        ? { ...c, content: inputText.trim() }
-                        : { ...c, children: updateContent(c.children || []) }
-                );
-            setComments(updateContent(comments));
-            setEditingComment(null);
-        } else {
-            const newComment = {
-                _id: `c${Date.now()}`,
-                content: inputText.trim(),
-                created_at: new Date().toISOString(),
-                author_id: MOCK_AUTH_USER,
-                children: [],
-            };
-
-            if (replyingTo) {
-                // Add as reply
-                const addReply = (list) =>
-                    list.map((c) =>
-                        c._id === replyingTo._id
-                            ? { ...c, children: [...(c.children || []), newComment] }
-                            : { ...c, children: addReply(c.children || []) }
-                    );
-                setComments(addReply(comments));
-                setReplyingTo(null);
+    const handleSend = async () => {
+        if (!inputText.trim() || sending) return;
+        setSending(true);
+        try {
+            if (editingComment) {
+                await updateComment(selectedPostId, editingComment._id, inputText, authUser?._id);
+                setEditingComment(null);
             } else {
-                setComments([...comments, newComment]);
+                await createComment(selectedPostId, inputText, replyingTo?._id || null, authUser?._id);
+                setReplyingTo(null);
             }
-        }
-
-        setInputText("");
+            setInputText("");
+        } catch (_) { }
+        finally { setSending(false); }
     };
 
-    const handleDelete = (commentId) => {
-        const removeComment = (list) =>
-            list
-                .filter((c) => c._id !== commentId)
-                .map((c) => ({ ...c, children: removeComment(c.children || []) }));
-        setComments(removeComment(comments));
+    // Delete: show confirm first (giong web)
+    const handleDeletePress = (commentId) => {
+        setDeletingId(commentId);
+        setConfirmVisible(true);
     };
 
-    const handleToggleReaction = (commentId, type) => {
-        setReactions((prev) => {
-            const current = prev[commentId] || { total: 0, breakdown: { like: 0, love: 0, haha: 0, angry: 0 }, userReaction: null };
-            const prevType = current.userReaction;
-
-            let newBreakdown = { ...current.breakdown };
-            let newTotal = current.total;
-            let newUserReaction = null;
-
-            if (prevType) {
-                // Remove old reaction
-                newBreakdown[prevType] = Math.max(0, (newBreakdown[prevType] || 0) - 1);
-                newTotal = Math.max(0, newTotal - 1);
-            }
-
-            if (type && type !== prevType) {
-                // Add new reaction
-                newBreakdown[type] = (newBreakdown[type] || 0) + 1;
-                newTotal += 1;
-                newUserReaction = type;
-            }
-
-            return {
-                ...prev,
-                [commentId]: { total: newTotal, breakdown: newBreakdown, userReaction: newUserReaction },
-            };
-        });
+    const handleConfirmDelete = async () => {
+        setConfirmVisible(false);
+        if (!deletingId) return;
+        try { await deleteComment(selectedPostId, deletingId, authUser?._id); }
+        catch (_) { }
+        setDeletingId(null);
     };
 
-    const handleShowReactions = (commentId) => {
-        setReactionModalData({ commentId, data: reactions[commentId] });
+    // Report
+    const handleReportPress = (commentId) => {
+        setReportingId(commentId);
+        setReportVisible(true);
     };
+
+    const handleSubmitReport = async (reason) => {
+        if (!reason.trim() || !reportingId) return;
+        setReportSubmitting(true);
+        try {
+            await reportComment(reportingId, reason);
+            setReportVisible(false);
+            setReportingId(null);
+        } catch (_) { }
+        finally { setReportSubmitting(false); }
+    };
+
+    const reactionSheetData = reactionSheet ? reactions[reactionSheet] : null;
 
     // ── Render ───────────────────────────────────────────────────────────────────
     return (
@@ -437,25 +486,30 @@ export default function CommentScreen({ onBack }) {
                     <Ionicons name="arrow-back" size={22} color="#111827" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Bình luận</Text>
-                <View style={styles.headerCount}>
-                    <Text style={styles.headerCountText}>{totalCount()}</Text>
-                </View>
+                {totalCount > 0 && (
+                    <View style={styles.headerCount}>
+                        <Text style={styles.headerCountText}>{totalCount}</Text>
+                    </View>
+                )}
             </View>
 
-            <KeyboardAvoidingView
-                style={{ flex: 1 }}
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-            >
-                {/* Comments List */}
-                {loading ? (
+            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+                {commentsLoading ? (
                     <View style={styles.centerWrap}>
                         <ActivityIndicator size="large" color="#16a34a" />
                         <Text style={styles.loadingText}>Đang tải bình luận...</Text>
                     </View>
+                ) : commentsError ? (
+                    <View style={styles.centerWrap}>
+                        <Ionicons name="alert-circle-outline" size={40} color="#ef4444" />
+                        <Text style={styles.errorText}>{commentsError}</Text>
+                        <TouchableOpacity style={styles.retryBtn} onPress={() => fetchComments(selectedPostId, authUser?._id)} activeOpacity={0.85}>
+                            <Text style={styles.retryBtnText}>Thử lại</Text>
+                        </TouchableOpacity>
+                    </View>
                 ) : comments.length === 0 ? (
                     <View style={styles.centerWrap}>
-                        <Ionicons name="chatbubble-outline" size={48} color="#d1d5db" />
+                        <Ionicons name="chatbubble-ellipses-outline" size={52} color="#d1d5db" />
                         <Text style={styles.emptyTitle}>Chưa có bình luận nào</Text>
                         <Text style={styles.emptyDesc}>Hãy là người đầu tiên bình luận!</Text>
                     </View>
@@ -466,15 +520,16 @@ export default function CommentScreen({ onBack }) {
                         renderItem={({ item }) => (
                             <CommentItem
                                 comment={item}
-                                authUser={MOCK_AUTH_USER}
+                                authUser={authUser}
                                 onReply={handleReply}
                                 onEdit={handleEdit}
-                                onDelete={handleDelete}
+                                onDelete={handleDeletePress}
+                                onReport={handleReportPress}
                                 reactions={reactions}
-                                onToggleReaction={handleToggleReaction}
+                                onToggleReaction={(id, type) => toggleReaction(id, type, authUser?._id)}
                                 openPicker={openPicker}
                                 setOpenPicker={setOpenPicker}
-                                onShowReactions={handleShowReactions}
+                                onShowReactions={(id) => setReactionSheet(id)}
                             />
                         )}
                         contentContainerStyle={styles.list}
@@ -483,14 +538,10 @@ export default function CommentScreen({ onBack }) {
                     />
                 )}
 
-                {/* Input Area */}
+                {/* Input area */}
                 <View style={styles.inputArea}>
-                    {/* Context banner: replying / editing */}
                     {(replyingTo || editingComment) && (
-                        <View style={[
-                            styles.contextBanner,
-                            editingComment && styles.contextBannerEdit,
-                        ]}>
+                        <View style={[styles.contextBanner, editingComment && styles.contextBannerEdit]}>
                             <Text style={styles.contextBannerText} numberOfLines={1}>
                                 {editingComment
                                     ? "Đang chỉnh sửa bình luận"
@@ -501,11 +552,9 @@ export default function CommentScreen({ onBack }) {
                             </TouchableOpacity>
                         </View>
                     )}
-
-                    {/* Input row */}
                     <View style={styles.inputRow}>
                         <Image
-                            source={{ uri: MOCK_AUTH_USER.avatar }}
+                            source={{ uri: authUser?.avatar || "https://i.pravatar.cc/100" }}
                             style={styles.inputAvatar}
                         />
                         <TextInput
@@ -514,34 +563,50 @@ export default function CommentScreen({ onBack }) {
                             value={inputText}
                             onChangeText={setInputText}
                             placeholder={
-                                editingComment
-                                    ? "Chỉnh sửa bình luận..."
-                                    : replyingTo
-                                        ? `Trả lời ${replyingTo.author_id?.full_name || ""}...`
+                                editingComment ? "Chỉnh sửa bình luận..."
+                                    : replyingTo ? `Trả lời ${replyingTo.author_id?.full_name || ""}...`
                                         : "Viết bình luận..."
                             }
                             placeholderTextColor="#9ca3af"
                             multiline
                             maxLength={500}
-                            returnKeyType="default"
                         />
                         <TouchableOpacity
-                            style={[styles.sendBtn, !inputText.trim() && styles.sendBtnDisabled]}
+                            style={[styles.sendBtn, (!inputText.trim() || sending) && styles.sendBtnDisabled]}
                             onPress={handleSend}
-                            disabled={!inputText.trim()}
+                            disabled={!inputText.trim() || sending}
                             activeOpacity={0.85}
                         >
-                            <Ionicons name="send" size={18} color="#fff" />
+                            {sending
+                                ? <ActivityIndicator size="small" color="#fff" />
+                                : <Ionicons name="send" size={18} color="#fff" />
+                            }
                         </TouchableOpacity>
                     </View>
                 </View>
             </KeyboardAvoidingView>
 
-            {/* Reaction Detail Modal */}
-            <ReactionDetailModal
-                visible={!!reactionModalData}
-                reactions={reactionModalData?.data}
-                onClose={() => setReactionModalData(null)}
+            {/* Reaction detail bottom sheet */}
+            <ReactionDetailSheet
+                visible={!!reactionSheet}
+                reactions={reactionSheetData}
+                onClose={() => setReactionSheet(null)}
+            />
+
+            {/* Confirm delete modal */}
+            <ConfirmModal
+                visible={confirmVisible}
+                message="Ban co chac muon xoa binh luan nay? Tat ca tra loi cung se bi xoa."
+                onClose={() => { setConfirmVisible(false); setDeletingId(null); }}
+                onConfirm={handleConfirmDelete}
+            />
+
+            {/* Report modal */}
+            <ReportModal
+                visible={reportVisible}
+                onClose={() => { setReportVisible(false); setReportingId(null); }}
+                onSubmit={handleSubmitReport}
+                submitting={reportSubmitting}
             />
         </SafeAreaView>
     );
@@ -551,7 +616,6 @@ export default function CommentScreen({ onBack }) {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: "#F9FAFB" },
 
-    // Header
     header: {
         flexDirection: "row",
         alignItems: "center",
@@ -563,249 +627,224 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     backBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: 36, height: 36, borderRadius: 18,
         backgroundColor: "#f3f4f6",
-        alignItems: "center",
-        justifyContent: "center",
+        alignItems: "center", justifyContent: "center",
     },
     headerTitle: { flex: 1, fontSize: 17, fontWeight: "700", color: "#111827" },
     headerCount: {
-        backgroundColor: "#d1fae5",
-        borderRadius: 20,
-        paddingHorizontal: 10,
-        paddingVertical: 3,
+        backgroundColor: "#d1fae5", borderRadius: 20,
+        paddingHorizontal: 10, paddingVertical: 3,
     },
     headerCountText: { fontSize: 13, fontWeight: "700", color: "#065f46" },
 
-    // States
     centerWrap: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24 },
     loadingText: { fontSize: 14, color: "#6b7280" },
+    errorText: { fontSize: 14, color: "#ef4444", textAlign: "center" },
+    retryBtn: { backgroundColor: "#16a34a", borderRadius: 10, paddingHorizontal: 20, paddingVertical: 9 },
+    retryBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
     emptyTitle: { fontSize: 16, fontWeight: "700", color: "#374151" },
     emptyDesc: { fontSize: 13, color: "#9ca3af" },
 
-    // List
-    list: { padding: 16, paddingBottom: 8 },
+    list: { padding: 16, paddingBottom: 12 },
 
     // Comment item
-    commentItem: {
-        flexDirection: "row",
-        marginBottom: 16,
-        gap: 10,
-    },
-    commentItemReply: {
-        marginTop: 12,
-        marginBottom: 0,
-    },
+    commentItem: { flexDirection: "row", marginBottom: 20, gap: 10 },
+    commentItemReply: { marginTop: 10, marginBottom: 0 },
     commentAvatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        borderWidth: 2,
-        borderColor: "#f3f4f6",
-        flexShrink: 0,
-        marginTop: 2,
+        width: 40, height: 40, borderRadius: 20,
+        borderWidth: 2, borderColor: "#f3f4f6",
+        flexShrink: 0, marginTop: 2,
     },
-    commentAvatarSmall: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-    },
+    commentAvatarSmall: { width: 32, height: 32, borderRadius: 16 },
     commentBody: { flex: 1 },
+    commentBodyInner: { position: "relative" },
 
-    // Bubble
+    // Bubble — giong web bg-gray-50 rounded-2xl inline-block
     commentBubble: {
-        backgroundColor: "#f3f4f6",
-        borderRadius: 18,
-        borderTopLeftRadius: 4,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        alignSelf: "flex-start",
-        maxWidth: "100%",
+        backgroundColor: "#f9fafb",
+        borderRadius: 18, borderTopLeftRadius: 4,
+        paddingHorizontal: 14, paddingVertical: 10,
+        alignSelf: "flex-start", maxWidth: "100%",
+        borderWidth: 1, borderColor: "#f3f4f6",
     },
-    commentAuthor: {
-        fontSize: 13,
-        fontWeight: "700",
-        color: "#111827",
-        marginBottom: 3,
-    },
-    commentText: {
-        fontSize: 14,
-        color: "#374151",
-        lineHeight: 20,
-    },
+    commentAuthor: { fontSize: 13, fontWeight: "700", color: "#111827", marginBottom: 3 },
+    commentText: { fontSize: 14, color: "#374151", lineHeight: 20 },
 
-    // Reaction summary (overlaps bubble bottom)
+    // Reaction summary badge (overlap bottom of bubble)
     reactionSummary: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 3,
+        flexDirection: "row", alignItems: "center", gap: 3,
         alignSelf: "flex-start",
-        backgroundColor: "#fff",
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: "#e5e7eb",
-        paddingHorizontal: 7,
-        paddingVertical: 2,
-        marginTop: -8,
-        marginLeft: 10,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.06,
-        shadowRadius: 2,
-        elevation: 1,
+        backgroundColor: "#fff", borderRadius: 20,
+        borderWidth: 1, borderColor: "#e5e7eb",
+        paddingHorizontal: 7, paddingVertical: 2,
+        marginTop: -8, marginLeft: 10,
+        shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06, shadowRadius: 2, elevation: 2,
     },
     reactionSummaryText: { fontSize: 11, fontWeight: "600", color: "#6b7280" },
 
-    // Action row
-    commentActions: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 14,
-        marginTop: 6,
-        marginLeft: 4,
+    // Wrapper tuyet doi - de len action row khong day xuong (giong web absolute bottom-6 left-7)
+    reactionPickerWrap: {
+        position: "absolute",
+        bottom: 26,
+        left: 36,
+        zIndex: 20,
     },
-    commentTime: { fontSize: 11, color: "#9ca3af" },
-    commentActionText: {
-        fontSize: 12,
-        fontWeight: "600",
-        color: "#6b7280",
-    },
-
-    // Reaction picker popup
     reactionPicker: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
+        flexDirection: "row", alignItems: "center", gap: 2,
         backgroundColor: "#fff",
-        borderRadius: 30,
-        borderWidth: 1,
-        borderColor: "#e5e7eb",
-        paddingHorizontal: 8,
-        paddingVertical: 6,
-        marginTop: 6,
-        alignSelf: "flex-start",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
+        borderRadius: 30, borderWidth: 1, borderColor: "#e5e7eb",
+        paddingHorizontal: 8, paddingVertical: 6,
+        shadowColor: "#000", shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.14, shadowRadius: 12, elevation: 8,
     },
     reactionPickerBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        alignItems: "center",
-        justifyContent: "center",
+        width: 38, height: 38, borderRadius: 19,
+        alignItems: "center", justifyContent: "center",
     },
-    reactionPickerBtnActive: {
-        backgroundColor: "#f3f4f6",
+    reactionPickerBtnActive: { backgroundColor: "#f3f4f6" },
+    reactionPickerRemoveBtn: {
+        borderLeftWidth: 1, borderLeftColor: "#e5e7eb", marginLeft: 2,
     },
+
+    // Action row
+    commentActions: {
+        flexDirection: "row", alignItems: "center",
+        gap: 12, marginTop: 6, marginLeft: 4, flexWrap: "wrap",
+    },
+    commentTime: { fontSize: 11, color: "#9ca3af" },
+    commentActionBtn: { fontSize: 12, fontWeight: "600", color: "#6b7280" },
+
+    // Inline reaction summary next to action row
+    reactionInlineSummary: {
+        flexDirection: "row", alignItems: "center", gap: 3,
+    },
+    reactionInlineCount: { fontSize: 12, color: "#6b7280" },
 
     // Nested replies
     repliesWrap: {
-        marginTop: 4,
-        paddingLeft: 4,
-        borderLeftWidth: 2,
-        borderLeftColor: "#f3f4f6",
+        marginTop: 6, paddingLeft: 6,
+        borderLeftWidth: 2, borderLeftColor: "#f3f4f6",
     },
-
-    // Reaction detail modal
-    reactionDetailOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        zIndex: 100,
-        justifyContent: "flex-end",
-    },
-    reactionDetailBackdrop: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: "rgba(0,0,0,0.4)",
-    },
-    reactionDetailBox: {
-        backgroundColor: "#fff",
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        paddingBottom: 32,
-    },
-    reactionDetailHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: "#f3f4f6",
-    },
-    reactionDetailTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
-    reactionDetailBreakdown: {
-        flexDirection: "row",
-        justifyContent: "center",
-        gap: 24,
-        paddingVertical: 20,
-        paddingHorizontal: 16,
-    },
-    reactionDetailItem: { alignItems: "center", gap: 4 },
-    reactionDetailCount: { fontSize: 16, fontWeight: "800", color: "#111827" },
-    reactionDetailLabel: { fontSize: 11, color: "#6b7280" },
 
     // Input area
     inputArea: {
         backgroundColor: "#fff",
-        borderTopWidth: 1,
-        borderTopColor: "#f3f4f6",
-        paddingBottom: Platform.OS === "ios" ? 8 : 12,
+        borderTopWidth: 1, borderTopColor: "#f3f4f6",
+        paddingBottom: Platform.OS === "ios" ? 8 : 10,
     },
-
-    // Context banner
     contextBanner: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
+        flexDirection: "row", alignItems: "center", justifyContent: "space-between",
         backgroundColor: "#ecfdf5",
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: "#d1fae5",
+        paddingHorizontal: 16, paddingVertical: 8,
+        borderBottomWidth: 1, borderBottomColor: "#d1fae5",
     },
-    contextBannerEdit: {
-        backgroundColor: "#fff7ed",
-        borderBottomColor: "#fed7aa",
-    },
-    contextBannerText: { fontSize: 13, fontWeight: "600", color: "#374151", flex: 1 },
-
+    contextBannerEdit: { backgroundColor: "#fff7ed", borderBottomColor: "#fed7aa" },
+    contextBannerText: { fontSize: 13, fontWeight: "600", color: "#374151", flex: 1, marginRight: 8 },
     inputRow: {
-        flexDirection: "row",
-        alignItems: "flex-end",
-        paddingHorizontal: 12,
-        paddingTop: 10,
-        gap: 10,
+        flexDirection: "row", alignItems: "flex-end",
+        paddingHorizontal: 12, paddingTop: 10, gap: 10,
     },
     inputAvatar: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        borderWidth: 2,
-        borderColor: "#f3f4f6",
-        flexShrink: 0,
+        width: 36, height: 36, borderRadius: 18,
+        borderWidth: 2, borderColor: "#f3f4f6", flexShrink: 0,
     },
     textInput: {
-        flex: 1,
-        backgroundColor: "#f3f4f6",
-        borderRadius: 22,
-        paddingHorizontal: 16,
+        flex: 1, backgroundColor: "#f3f4f6",
+        borderRadius: 22, paddingHorizontal: 16,
         paddingVertical: Platform.OS === "ios" ? 10 : 8,
-        fontSize: 14,
-        color: "#111827",
-        maxHeight: 120,
+        fontSize: 14, color: "#111827", maxHeight: 120,
+        borderWidth: 1, borderColor: "#e5e7eb",
     },
     sendBtn: {
-        width: 38,
-        height: 38,
-        borderRadius: 19,
+        width: 40, height: 40, borderRadius: 20,
         backgroundColor: "#16a34a",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
+        alignItems: "center", justifyContent: "center", flexShrink: 0,
     },
     sendBtnDisabled: { backgroundColor: "#d1d5db" },
+
+    // Reaction detail bottom sheet
+    sheetBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.25)" },
+    sheetBox: {
+        backgroundColor: "#fff",
+        borderTopLeftRadius: 24, borderTopRightRadius: 24,
+        maxHeight: "70%",
+    },
+    sheetHeader: {
+        flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+        paddingHorizontal: 20, paddingVertical: 16,
+        borderBottomWidth: 1, borderBottomColor: "#f3f4f6",
+    },
+    sheetTitle: { fontSize: 17, fontWeight: "700", color: "#111827" },
+    sheetBreakdown: {
+        flexDirection: "row", justifyContent: "center", flexWrap: "wrap",
+        gap: 24, paddingVertical: 20, paddingHorizontal: 16,
+        borderBottomWidth: 1, borderBottomColor: "#f3f4f6",
+    },
+    sheetBreakdownItem: { alignItems: "center", gap: 4, minWidth: 56 },
+    sheetBreakdownCount: { fontSize: 18, fontWeight: "800", color: "#111827" },
+    sheetBreakdownLabel: { fontSize: 12, color: "#6b7280" },
+    sheetUserList: { paddingHorizontal: 20, paddingVertical: 8 },
+    sheetUserRow: {
+        flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10,
+    },
+    sheetUserAvatar: { width: 36, height: 36, borderRadius: 18 },
+    sheetUserName: { flex: 1, fontSize: 14, fontWeight: "500", color: "#111827" },
+
+    // Modal overlay (confirm + report)
+    modalOverlay: {
+        flex: 1, backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "center", alignItems: "center", padding: 24,
+    },
+
+    // Confirm modal
+    confirmBox: {
+        backgroundColor: "#fff", borderRadius: 20,
+        padding: 24, width: "100%", maxWidth: 320, gap: 16,
+    },
+    confirmMessage: { fontSize: 14, color: "#374151", textAlign: "center", lineHeight: 20 },
+    confirmBtns: { flexDirection: "row", gap: 10 },
+    confirmCancelBtn: {
+        flex: 1, borderWidth: 2, borderColor: "#e5e7eb",
+        borderRadius: 12, paddingVertical: 12, alignItems: "center",
+    },
+    confirmCancelText: { fontSize: 14, fontWeight: "700", color: "#374151" },
+    confirmDeleteBtn: {
+        flex: 1, backgroundColor: "#ef4444",
+        borderRadius: 12, paddingVertical: 12, alignItems: "center",
+    },
+    confirmDeleteText: { fontSize: 14, fontWeight: "700", color: "#fff" },
+
+    // Report modal
+    reportBox: {
+        backgroundColor: "#fff", borderRadius: 20,
+        padding: 20, width: "100%", maxWidth: 360, gap: 12,
+    },
+    reportHeader: {
+        flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    },
+    reportHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
+    reportIconWrap: {
+        width: 36, height: 36, borderRadius: 18,
+        backgroundColor: "#fff7ed",
+        alignItems: "center", justifyContent: "center",
+    },
+    reportTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
+    reportDesc: { fontSize: 13, color: "#6b7280", lineHeight: 18 },
+    reportInput: {
+        backgroundColor: "#f9fafb", borderRadius: 14,
+        borderWidth: 1, borderColor: "#e5e7eb",
+        paddingHorizontal: 14, paddingVertical: 12,
+        fontSize: 14, color: "#111827", minHeight: 100, maxHeight: 200,
+        textAlignVertical: "top",
+    },
+    reportFooter: { alignItems: "flex-end" },
+    reportSubmitBtn: {
+        backgroundColor: "#f97316", borderRadius: 12,
+        paddingHorizontal: 20, paddingVertical: 10,
+        minWidth: 100, alignItems: "center",
+    },
+    reportSubmitBtnDisabled: { opacity: 0.5 },
+    reportSubmitText: { fontSize: 14, fontWeight: "700", color: "#fff" },
 });

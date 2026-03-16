@@ -50,7 +50,7 @@ const normalizeFavorite = (fav) => {
     const author = post.author_id || {};
     return {
         favId: fav._id,
-        status: fav.status || "active",
+        status: fav.status || post.status || "pending",
         id: post._id || "",
         authorId: author._id || author.id || "",
         userName: author.full_name || author.name || "Người dùng",
@@ -129,6 +129,24 @@ export const usePostStore = create((set, get) => ({
 
             const normalized = postsData.map((p) => normalizePost(p, favoritePostIds));
             set({ posts: normalized, postsLoading: false });
+
+            // Fetch real comment count per post — same as web
+            const countNested = (list) => {
+                let c = list.length;
+                list.forEach((item) => { if (item.children && item.children.length) c += countNested(item.children); });
+                return c;
+            };
+            const commentResults = await Promise.allSettled(
+                normalized.map((p) => apiClient.get(`/comment/${p.id}/post`, { params: { sort: "all" } }))
+            );
+            const postsWithComments = normalized.map((p, i) => {
+                if (commentResults[i].status === "fulfilled") {
+                    const raw = commentResults[i].value?.data?.data || commentResults[i].value?.data || [];
+                    return { ...p, comments: countNested(Array.isArray(raw) ? raw : []) };
+                }
+                return p;
+            });
+            set({ posts: postsWithComments });
         } catch (err) {
             set({
                 postsError: err?.response?.data?.message || err?.message || "Không thể tải bài viết",
@@ -181,6 +199,24 @@ export const usePostStore = create((set, get) => ({
             const validFavs = data.filter((f) => f.post_id);
             const normalized = validFavs.map(normalizeFavorite);
             set({ favorites: normalized, favoritesLoading: false });
+
+            // Fetch real comment count for each fav post (same as web)
+            const countNested = (list) => {
+                let c = list.length;
+                list.forEach((item) => { if (item.children && item.children.length) c += countNested(item.children); });
+                return c;
+            };
+            const favCommentResults = await Promise.allSettled(
+                normalized.map((p) => apiClient.get(`/comment/${p.id}/post`, { params: { sort: "all" } }))
+            );
+            const favsWithComments = normalized.map((p, i) => {
+                if (favCommentResults[i].status === "fulfilled") {
+                    const raw = favCommentResults[i].value?.data?.data || favCommentResults[i].value?.data || [];
+                    return { ...p, comments: countNested(Array.isArray(raw) ? raw : []) };
+                }
+                return p;
+            });
+            set({ favorites: favsWithComments });
         } catch (err) {
             set({
                 favoritesError: err?.response?.data?.message || err?.message || "Không thể tải danh sách yêu thích",
