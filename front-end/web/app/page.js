@@ -42,7 +42,7 @@ export default function Home() {
 
     const roleRoutes = {
       farmer: "/profile/details",
-      trader: "/home/trader",
+      trader: "/profile/details",
       serviceProvider: "/profile/details",
       contentExpert: "/profile/details",
     };
