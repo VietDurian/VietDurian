@@ -4,6 +4,7 @@ import { BuyingFertilizersModel } from '@/model/buyingFertilizersModel';
 import { LaborCostsModel } from '@/model/laborCostsModel';
 import { IrrigationCostsModel } from '@/model/irrigationCostsModel';
 import { HarvestConsumptionModel } from '@/model/harvestConsumptionModel';
+import { Product } from '@/model/productModel.js';
 import createError from 'http-errors';
 import mongoose from 'mongoose';
 
@@ -35,6 +36,7 @@ const calculatePercent = (part, total) => {
 	return roundNumber((toNumber(part) / toNumber(total)) * 100);
 };
 
+// Kiểm tra tính duy nhất của tên vườn, bỏ qua khoảng trắng và phân biệt chữ hoa thường
 const ensureUniqueGardenName = async ({ gardenName, excludeId = null }) => {
 	const normalizedName = normalizeGardenName(gardenName);
 	if (!normalizedName) {
@@ -171,6 +173,19 @@ const deleteSeasonDiary = async ({ seasonDiaryId}) => {
 			);
 		}
 
+		const linkedProduct = await Product.findOne({
+			season_diary_id: seasonDiaryId,
+		})
+			.select('_id')
+			.lean();
+
+		if (linkedProduct) {
+			throw createError(
+				400,
+				'Không thể xóa nhật ký mùa vụ vì đang có sản phẩm liên kết',
+			);
+		}
+
 		await SeasonDiaryModel.findByIdAndDelete(seasonDiaryId);
 		return true;
 	} catch (error) {
@@ -288,6 +303,7 @@ const getSeasonDiaryStatistics = async ({
 		const totalHarvestKg = toNumber(harvestAgg?.[0]?.total_harvest_kg, 0);
 		const totalConsumedKg = toNumber(harvestAgg?.[0]?.total_consumed_kg, 0);
 		const totalRevenue = toNumber(harvestAgg?.[0]?.total_revenue, 0);
+		console.log('totalRevenue', totalRevenue);
 
 		const profit = totalRevenue - totalCost;
 		const marginPercent = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0; // Lợi nhuận trên doanh thu

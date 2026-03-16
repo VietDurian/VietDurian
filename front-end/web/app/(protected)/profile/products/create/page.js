@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, X, Check, ImageIcon, Package } from "lucide-react";
 import { useProductStore } from "@/store/useProductStore";
 import { useProductStore as useTypeProductStore } from "@/store/useTypeProduct";
-import { useGardenStore } from "@/store/useGardenStore";
-import { useDiaryStore } from "@/store/useDiaryStore";
+import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useAuthStore } from "@/store/useAuthStore";
 
 
@@ -14,10 +13,10 @@ export default function CreateProduct() {
   const { createProduct, isProductCreating } = useProductStore();
   const { types, fetchTypes, isTypesLoading } = useTypeProductStore();
   const { authUser } = useAuthStore();
-  const { gardens, getUserGardens, isGardensLoading } = useGardenStore();
-  const { diaries, getAllDiariesByGardenId, isDiariesLoading } = useDiaryStore();
+  const { seasonDiaries, getSeasonDiaries, isSeasonDiariesLoading } =
+    useSeasonDiaryStore();
   const [formData, setFormData] = useState({
-    diaryId: "",
+    seasonDiaryId: "",
     name: "",
     description: "",
     price: "",
@@ -33,7 +32,6 @@ export default function CreateProduct() {
   const [imagePreview, setImagePreview] = useState("");
   const fileInputRef = useRef(null);
   const [error, setError] = useState("");
-  const [selectedGardenId, setSelectedGardenId] = useState("");
 
   useEffect(() => {
     if (!types?.length) {
@@ -43,21 +41,14 @@ export default function CreateProduct() {
 
   useEffect(() => {
     if (authUser?._id) {
-      getUserGardens(authUser._id);
+      getSeasonDiaries(authUser._id);
     }
-  }, [authUser?._id, getUserGardens]);
-
-  useEffect(() => {
-    if (!selectedGardenId) return;
-
-    getAllDiariesByGardenId(selectedGardenId, null, "Completed");
-  }, [selectedGardenId, getAllDiariesByGardenId]);
+  }, [authUser?._id, getSeasonDiaries]);
 
   const priceValue = Number(formData.price);
   const weightValue = Number(formData.weight);
   const isFormComplete =
-    !!selectedGardenId &&
-    !!formData.diaryId &&
+    !!formData.seasonDiaryId &&
     !!formData.name.trim() &&
     !!formData.description.trim() &&
     formData.price !== "" &&
@@ -87,13 +78,8 @@ export default function CreateProduct() {
     e.preventDefault();
     setError("");
 
-    if (!selectedGardenId) {
-      setError("Vui lòng chọn vườn");
-      return;
-    }
-
-    if (!formData.diaryId) {
-      setError("Vui lòng chọn nhật ký");
+    if (!formData.seasonDiaryId) {
+      setError("Vui lòng chọn mùa vụ");
       return;
     }
 
@@ -109,6 +95,8 @@ export default function CreateProduct() {
 
     const payload = {
       ...formData,
+      seasonDiaryId: formData.seasonDiaryId,
+      season_diary_id: formData.seasonDiaryId,
       price: Number(formData.price) || 0,
       weight: Number(formData.weight) || 0,
       images: formData.images?.length ? formData.images : [],
@@ -149,12 +137,6 @@ export default function CreateProduct() {
 
       return nextFormData;
     });
-  };
-
-  const handleGardenChange = (e) => {
-    const nextGardenId = e.target.value;
-    setSelectedGardenId(nextGardenId);
-    setFormData((prev) => ({ ...prev, diaryId: "" }));
   };
 
   const handleImageChange = (event) => {
@@ -221,71 +203,34 @@ export default function CreateProduct() {
           <div className="bg-white rounded-xl shadow-sm p-8 pb-2">
             <p className="font-bold mb-5">Thông tin cơ bản</p>
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-5">
-                <div>
-                  <label
-                    htmlFor="gardenId"
-                    className="block text-sm font-medium text-gray-900 mb-2"
-                  >
-                    Chọn vườn <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="gardenId"
-                    name="gardenId"
-                    value={selectedGardenId}
-                    onChange={handleGardenChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors bg-white"
-                  >
-                    <option value="">Chọn vườn đang sở hữu</option>
-                    {gardens?.map((garden) => (
-                      <option key={garden?._id} value={garden?._id}>
-                        {garden?.name}
-                      </option>
-                    ))}
-                  </select>
-                  {isGardensLoading ? (
-                    <p className="mt-1 text-xs text-gray-500">
-                      Đang tải danh sách vườn...
-                    </p>
-                  ) : null}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="diaryId"
-                    className="block text-sm font-medium text-gray-900 mb-2"
-                  >
-                    Chọn nhật ký <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="diaryId"
-                    name="diaryId"
-                    value={formData.diaryId}
-                    onChange={handleChange}
-                    required
-                    disabled={!selectedGardenId}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors bg-white disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    <option value="">
-                      {selectedGardenId
-                        ? "Chọn nhật ký thuộc vườn"
-                        : "Vui lòng chọn vườn trước"}
+              <div>
+                <label
+                  htmlFor="seasonDiaryId"
+                  className="block text-sm font-medium text-gray-900 mb-2"
+                >
+                  Chọn mùa vụ <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="seasonDiaryId"
+                  name="seasonDiaryId"
+                  value={formData.seasonDiaryId}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors bg-white"
+                >
+                  <option value="">Chọn mùa vụ</option>
+                  {seasonDiaries?.map((season, index) => (
+                    <option key={season?._id} value={season?._id}>
+                      {season?.garden_name ||
+                        season?.name ||
+                        season?.planting_area_code ||
+                        `Mùa vụ ${index + 1}`}
                     </option>
-                    {selectedGardenId
-                      ? diaries?.map((diary) => (
-                          <option key={diary?._id} value={diary?._id}>
-                            {diary?.title}
-                          </option>
-                        ))
-                      : null}
-                  </select>
-                  {selectedGardenId && isDiariesLoading ? (
-                    <p className="mt-1 text-xs text-gray-500">
-                      Đang tải nhật ký...
-                    </p>
-                  ) : null}
-                </div>
+                  ))}
+                </select>
+                {isSeasonDiariesLoading ? (
+                  <p className="mt-1 text-xs text-gray-500">Đang tải mùa vụ...</p>
+                ) : null}
               </div>
 
               {/* Name */}

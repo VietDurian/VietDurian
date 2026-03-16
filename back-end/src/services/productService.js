@@ -5,7 +5,7 @@ import { TypeProductModel } from "@/model/typeProductModel.js";
 
 // Create a new product
 const createProduct = async ({
-  diaryId,
+  seasonDiaryId,
   userId,
   typeId,
   name,
@@ -47,7 +47,7 @@ const createProduct = async ({
     const newProduct = new Product({
       user_id: userId,
       type_id: typeId,
-      diary_id: diaryId,
+      season_diary_id: seasonDiaryId,
       name,
       description,
       price: mongoose.Types.Decimal128.fromString(String(numericPrice)),
@@ -85,6 +85,7 @@ const getAllProducts = async ({
   searchName,
   typeId,
   userId,
+  seasonDiaryId,
   status,
   sortBy = "created_at",
   sortOrder = "desc",
@@ -110,6 +111,10 @@ const getAllProducts = async ({
 
     if (status) {
       filter = { ...filter, status };
+    }
+
+    if (seasonDiaryId) {
+      filter = { ...filter, season_diary_id: seasonDiaryId };
     }
 
     // Calculate pagination
@@ -233,12 +238,75 @@ const getProductById = async (productId) => {
 // Update product
 const updateProduct = async (productId, updateData) => {
   try {
-    // Prevent updating user_id and type_id directly
-    const { user_id, type_id, images, ...allowedData } = updateData;
+    const existingProduct = await Product.findById(productId);
+    if (!existingProduct) {
+      throw createError(404, "Product not found");
+    }
+
+    const {
+      user_id,
+      images,
+      type_id,
+      typeId,
+      season_diary_id,
+      seasonDiaryId,
+      harvest_start_date,
+      harvest_end_date,
+      harvestStartDate,
+      harvestEndDate,
+      ...allowedData
+    } = updateData;
+
+    const normalizedData = { ...allowedData };
+
+    const resolvedTypeId = typeId || type_id;
+    if (resolvedTypeId) {
+      if (!mongoose.Types.ObjectId.isValid(resolvedTypeId)) {
+        throw createError(400, "Invalid typeId");
+      }
+      const typeExists = await TypeProductModel.findById(resolvedTypeId).lean();
+      if (!typeExists) {
+        throw createError(404, "TypeProduct not found");
+      }
+      normalizedData.type_id = resolvedTypeId;
+    }
+
+    const resolvedSeasonDiaryId = seasonDiaryId || season_diary_id;
+    if (resolvedSeasonDiaryId) {
+      normalizedData.season_diary_id = resolvedSeasonDiaryId;
+    }
+
+    const resolvedStartDate = harvestStartDate || harvest_start_date;
+    const resolvedEndDate = harvestEndDate || harvest_end_date;
+
+    if (resolvedStartDate) {
+      normalizedData.harvest_start_date = new Date(resolvedStartDate);
+      if (Number.isNaN(normalizedData.harvest_start_date.getTime())) {
+        throw createError(400, "Invalid harvestStartDate");
+      }
+    }
+
+    if (resolvedEndDate) {
+      normalizedData.harvest_end_date = new Date(resolvedEndDate);
+      if (Number.isNaN(normalizedData.harvest_end_date.getTime())) {
+        throw createError(400, "Invalid harvestEndDate");
+      }
+    }
+
+    const startToCheck =
+      normalizedData.harvest_start_date || existingProduct.harvest_start_date;
+    const endToCheck =
+      normalizedData.harvest_end_date || existingProduct.harvest_end_date;
+    if (startToCheck && endToCheck && startToCheck > endToCheck) {
+      throw createError(
+        400,
+        "harvestStartDate must be before or equal to harvestEndDate"
+      );
+    }
 
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
-      allowedData,
+      normalizedData,
       { new: true, runValidators: true }
     )
       .populate("user_id", "full_name avatar")

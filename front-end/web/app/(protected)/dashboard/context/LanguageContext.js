@@ -57,6 +57,15 @@ const translations = {
 		blogs: 'Blog',
 		moderation: 'Kiểm duyệt',
 		settings: 'Cài đặt',
+		search_product: 'Tìm kiếm tên sản phẩm...',
+		manage_products: 'Quản lý sản phẩm',
+		all_types: 'Tất cả loại',
+		rating_high_to_low: 'Đánh giá: Cao - thấp',
+		rating_low_to_high: 'Đánh giá: Thấp đến cao',
+		price: 'Giá',
+		filter_product: 'Lọc sản phẩm',
+		rating_product: 'Đánh giá: Cao đến Thấp',
+		type_product: 'Loại sản phẩm',
 
 		// Stats
 		total_platform_users: 'Tổng số người dùng nền tảng',
@@ -399,6 +408,15 @@ const translations = {
 		out_of_5: 'out of 5',
 		list: 'List',
 		failed_to_load_products: 'Failed to load products',
+		search_product: 'Search product name...',
+		manage_products: 'Manage products',
+		all_types: 'All Types',
+		rating_high_to_low: 'Rating: High to Low',
+		rating_low_to_high: 'Rating: Low to High',
+		price: 'Price',
+		filter_product: 'Filter products',
+		rating_product: 'PRating: High to Low',
+		type_product: 'Type of product',
 
 		// Users Page
 		user_management: 'User Management',
