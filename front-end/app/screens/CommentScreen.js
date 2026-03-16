@@ -144,7 +144,7 @@ function ReactionDetailSheet({ visible, reactions, onClose }) {
             <View style={styles.sheetBox}>
                 {/* Header */}
                 <View style={styles.sheetHeader}>
-                    <Text style={styles.sheetTitle}>Reactions</Text>
+                    <Text style={styles.sheetTitle}>Cảm Xúc</Text>
                     <TouchableOpacity onPress={onClose} hitSlop={8}>
                         <Ionicons name="close" size={22} color="#374151" />
                     </TouchableOpacity>
