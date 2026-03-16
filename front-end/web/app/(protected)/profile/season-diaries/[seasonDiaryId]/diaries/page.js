@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useBuyingSeedStore } from "@/store/useBuyingSeedStore";
 import { useBuyingFertilizerStore } from "@/store/useBuyingFertilizerStore";
+import { useUseFertilizerStore } from "@/store/useUseFertilizerStore";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HƯỚNG DẪN TÍCH HỢP ZUSTAND
@@ -440,6 +441,28 @@ const buildBuyingFertilizerPayload = (form, seasonDiaryId) => ({
   supplier_address: String(form.supplier_address || "").trim(),
 });
 
+const normalizeUseFertilizer = (item) => ({
+  id: item?._id,
+  usage_date: item?.usage_date || "",
+  fertilizer_name: item?.fertilizer_name || "",
+  fertilizer_amount: item?.fertilizer_amount || "",
+  pesticide_name: item?.pesticide_name || "",
+  pesticide_concentration_amount: item?.pesticide_concentration_amount || "",
+  preharvest_interval: item?.preharvest_interval || "",
+});
+
+const buildUseFertilizerPayload = (form, seasonDiaryId) => ({
+  season_diary_id: seasonDiaryId,
+  usage_date: form.usage_date || null,
+  fertilizer_name: String(form.fertilizer_name || "").trim(),
+  fertilizer_amount: String(form.fertilizer_amount || "").trim(),
+  pesticide_name: String(form.pesticide_name || "").trim(),
+  pesticide_concentration_amount: String(
+    form.pesticide_concentration_amount || "",
+  ).trim(),
+  preharvest_interval: String(form.preharvest_interval || "").trim(),
+});
+
 // ── SEED DATA (thay bằng Zustand store) ──────────────────────────────────────
 const SEED_DATA = {
   1.4: [
@@ -779,6 +802,7 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
   const cols = flatCols(diary);
   const isBuyingSeedDiary = diary.id === "1.4";
   const isBuyingFertilizerDiary = diary.id === "1.5";
+  const isUseFertilizerDiary = diary.id === "1.6";
 
   const {
     buyingSeeds,
@@ -803,6 +827,18 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     updateBuyingFertilizer,
     deleteBuyingFertilizer,
   } = useBuyingFertilizerStore();
+
+  const {
+    useFertilizers,
+    isUseFertilizersLoading,
+    isUseFertilizerCreating,
+    isUseFertilizerUpdating,
+    isUseFertilizerDeleting,
+    getUseFertilizers,
+    createUseFertilizer,
+    updateUseFertilizer,
+    deleteUseFertilizer,
+  } = useUseFertilizerStore();
 
   const [localRows, setLocalRows] = useState(
     initialRows ?? SEED_DATA[diary.id] ?? [],
@@ -833,6 +869,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     getBuyingFertilizers({ seasonDiaryId, page: 1, limit: 200 });
   }, [isBuyingFertilizerDiary, seasonDiaryId, getBuyingFertilizers]);
 
+  useEffect(() => {
+    if (!isUseFertilizerDiary || !seasonDiaryId) return;
+    getUseFertilizers({ seasonDiaryId, page: 1, limit: 200 });
+  }, [isUseFertilizerDiary, seasonDiaryId, getUseFertilizers]);
+
   const apiRows = useMemo(
     () => (buyingSeeds || []).map(normalizeBuyingSeed).filter((r) => r.id),
     [buyingSeeds],
@@ -846,11 +887,19 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     [buyingFertilizers],
   );
 
+  const apiUseFertilizerRows = useMemo(
+    () =>
+      (useFertilizers || []).map(normalizeUseFertilizer).filter((r) => r.id),
+    [useFertilizers],
+  );
+
   const rows = isBuyingSeedDiary
     ? apiRows
     : isBuyingFertilizerDiary
       ? apiFertilizerRows
-      : localRows;
+      : isUseFertilizerDiary
+        ? apiUseFertilizerRows
+        : localRows;
 
   const isActionBusy =
     (isBuyingSeedDiary &&
@@ -858,7 +907,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     (isBuyingFertilizerDiary &&
       (isBuyingFertilizerCreating ||
         isBuyingFertilizerUpdating ||
-        isBuyingFertilizerDeleting));
+        isBuyingFertilizerDeleting)) ||
+    (isUseFertilizerDiary &&
+      (isUseFertilizerCreating ||
+        isUseFertilizerUpdating ||
+        isUseFertilizerDeleting));
 
   const filtered = useMemo(() => {
     if (!search) return rows;
@@ -915,6 +968,20 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
         const updated = await updateBuyingFertilizer(editRow.id, payload);
         if (!updated) return;
       }
+    } else if (isUseFertilizerDiary) {
+      if (!seasonDiaryId) {
+        showToast("Thiếu mã mùa vụ, không thể lưu bản ghi", "error");
+        return;
+      }
+
+      const payload = buildUseFertilizerPayload(form, seasonDiaryId);
+      if (modal === "create") {
+        const created = await createUseFertilizer(payload);
+        if (!created) return;
+      } else {
+        const updated = await updateUseFertilizer(editRow.id, payload);
+        if (!updated) return;
+      }
     } else if (modal === "create") {
       setRows((prev) => [{ ...form, id: genId() }, ...prev]);
       showToast("Đã thêm bản ghi mới");
@@ -938,6 +1005,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
     } else if (isBuyingFertilizerDiary) {
       const results = await Promise.all(
         Array.from(ids).map((id) => deleteBuyingFertilizer(id)),
+      );
+      if (results.some((ok) => !ok)) return;
+    } else if (isUseFertilizerDiary) {
+      const results = await Promise.all(
+        Array.from(ids).map((id) => deleteUseFertilizer(id)),
       );
       if (results.some((ok) => !ok)) return;
     } else {
@@ -1146,7 +1218,8 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
             </thead>
             <tbody>
               {(isBuyingSeedDiary && isBuyingSeedsLoading) ||
-              (isBuyingFertilizerDiary && isBuyingFertilizersLoading) ? (
+              (isBuyingFertilizerDiary && isBuyingFertilizersLoading) ||
+              (isUseFertilizerDiary && isUseFertilizersLoading) ? (
                 <tr>
                   <td
                     colSpan={cols.length + 2}
