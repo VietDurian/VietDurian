@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import { useBuyingSeedStore } from "@/store/useBuyingSeedStore";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HƯỚNG DẪN TÍCH HỢP ZUSTAND
 // ─────────────────────────────────────────────────────────────────────────────
-// Thay SEED_DATA bằng data từ store:
-//   import { useDiaryStore } from "@/stores/diaryStore";
-//   const rows    = useDiaryStore((s) => s.rows[activeDiary.id] ?? []);
-//   const addRow  = useDiaryStore((s) => s.addRow);
-//   const editRow = useDiaryStore((s) => s.editRow);
-//   const delRows = useDiaryStore((s) => s.deleteRows);
-// Trong DiaryTable, truyền props: initialRows={rows} onRowsChange={...}
+// import { useDiaryStore } from "@/stores/diaryStore";
+// Trong DiaryTable:
+//   const rows    = useDiaryStore((s) => s.rows[diary.id] ?? []);
+//   const setRows = useDiaryStore((s) => s.setRows);   // (diaryId, rows) => void
+// Truyền props: initialRows={rows} onRowsChange={(r) => setRows(diary.id, r)}
+//
+// Lưu ý khi submit API:
+//   1.9  → reassemble: working_time: { hours, minutes } từ 2 field riêng
+//   1.10 → reassemble: working_time: { hours, minutes } từ 2 field riêng
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── DIARY DEFINITIONS ─────────────────────────────────────────────────────────
@@ -26,58 +30,45 @@ const DIARIES = [
         label: null,
         cols: [
           {
-            key: "ngayMua",
-            label: "Ngày mua\nhoặc SX",
+            key: "purchase_date",
+            label: "Ngày mua",
             type: "date",
             width: "w-28",
           },
           {
-            key: "tenGiong",
-            label: "Tên giống\ntrồng",
+            key: "seed_name",
+            label: "Tên giống cây trồng",
             type: "text",
-            width: "w-32",
+            width: "w-44",
           },
           {
-            key: "soLuong",
-            label: "Số lượng\nmua (cây)",
+            key: "quantity",
+            label: "Số lượng\n(cây)",
             type: "number",
             width: "w-24",
           },
+          {
+            key: "total_price",
+            label: "Tổng giá\n(VNĐ)",
+            type: "currency",
+            width: "w-36",
+          },
         ],
       },
       {
-        label: "Nơi cung cấp",
-        cols: [
-          { key: "tenDaiLy", label: "Tên đại lý", type: "text", width: "w-28" },
-          { key: "diaChi", label: "Địa chỉ", type: "text", width: "w-36" },
-        ],
-      },
-      {
-        label: "Đối với giống tự sản xuất ghi thêm thông tin sau",
+        label: "Nhà cung cấp",
         cols: [
           {
-            key: "nguyenLieu",
-            label: "Nguyên liệu\nsản xuất",
+            key: "supplier_name",
+            label: "Tên nhà\ncung cấp",
             type: "text",
-            width: "w-32",
+            width: "w-40",
           },
           {
-            key: "phuongPhap",
-            label: "Phương\npháp",
+            key: "supplier_address",
+            label: "Địa chỉ",
             type: "text",
-            width: "w-28",
-          },
-          {
-            key: "hoaChat",
-            label: "Hóa chất\nxử lý",
-            type: "text",
-            width: "w-28",
-          },
-          {
-            key: "nguoiSX",
-            label: "Người\nsản xuất",
-            type: "text",
-            width: "w-28",
+            width: "w-44",
           },
         ],
       },
@@ -92,64 +83,41 @@ const DIARIES = [
         label: null,
         cols: [
           {
-            key: "ngayMua",
-            label: "Ngày mua\nhoặc SX",
+            key: "purchase_date",
+            label: "Ngày mua",
             type: "date",
             width: "w-28",
           },
-          { key: "tenVatTu", label: "Tên vật tư", type: "text", width: "w-32" },
           {
-            key: "khoiLuong",
-            label: "Khối lượng\n(kg, g, l, ml)",
+            key: "material_name",
+            label: "Tên vật tư",
             type: "text",
-            width: "w-28",
+            width: "w-44",
+          },
+          { key: "quantity", label: "Số lượng", type: "number", width: "w-24" },
+          { key: "unit", label: "Đơn vị", type: "text", width: "w-20" },
+          {
+            key: "total_price",
+            label: "Tổng giá\n(VNĐ)",
+            type: "currency",
+            width: "w-36",
           },
         ],
       },
       {
-        label: "Nơi cung cấp",
-        cols: [
-          { key: "tenDaiLy", label: "Tên đại lý", type: "text", width: "w-28" },
-          { key: "diaChi", label: "Địa chỉ", type: "text", width: "w-36" },
-        ],
-      },
-      {
-        label: null,
+        label: "Nhà cung cấp",
         cols: [
           {
-            key: "hanSD",
-            label: "Hạn sử dụng\n(ngày/tháng/năm)",
-            type: "date",
-            width: "w-32",
-          },
-        ],
-      },
-      {
-        label: "Đối với vật tư tự sản xuất ghi thêm thông tin sau",
-        cols: [
-          {
-            key: "nguyenLieu",
-            label: "Nguyên liệu\nsản xuất",
+            key: "supplier_name",
+            label: "Tên nhà\ncung cấp",
             type: "text",
-            width: "w-32",
+            width: "w-40",
           },
           {
-            key: "phuongPhap",
-            label: "Phương pháp\nxử lý",
+            key: "supplier_address",
+            label: "Địa chỉ",
             type: "text",
-            width: "w-28",
-          },
-          {
-            key: "hoaChat",
-            label: "Hóa chất\nxử lý",
-            type: "text",
-            width: "w-28",
-          },
-          {
-            key: "nguoiSX",
-            label: "Người\nsản xuất",
-            type: "text",
-            width: "w-28",
+            width: "w-48",
           },
         ],
       },
@@ -164,54 +132,51 @@ const DIARIES = [
         label: null,
         cols: [
           {
-            key: "ngaySuDung",
+            key: "usage_date",
             label: "Ngày\nsử dụng",
             type: "date",
             width: "w-28",
           },
+        ],
+      },
+      {
+        label: "Phân bón",
+        cols: [
           {
-            key: "tenVatTu",
-            label: "Tên phân bón /\nthuốc BVTV",
+            key: "fertilizer_name",
+            label: "Tên phân bón",
             type: "text",
-            width: "w-36",
+            width: "w-44",
           },
           {
-            key: "lieuLuong",
-            label: "Liều lượng\nsử dụng",
-            type: "text",
-            width: "w-28",
-          },
-          {
-            key: "diemPhun",
-            label: "Khu vực /\ndiện tích",
-            type: "text",
-            width: "w-32",
-          },
-          {
-            key: "mucDich",
-            label: "Mục đích\nsử dụng",
-            type: "text",
-            width: "w-36",
-          },
-          {
-            key: "phuongPhap",
-            label: "Phương pháp\nphun / bón",
+            key: "fertilizer_amount",
+            label: "Liều lượng\nphân bón",
             type: "text",
             width: "w-32",
           },
+        ],
+      },
+      {
+        label: "Thuốc BVTV",
+        cols: [
           {
-            key: "thoiGianCachLy",
-            label: "Thời gian\ncách ly (ngày)",
-            type: "number",
-            width: "w-28",
+            key: "pesticide_name",
+            label: "Tên thuốc\nBVTV",
+            type: "text",
+            width: "w-40",
           },
           {
-            key: "nguoiThucHien",
-            label: "Người\nthực hiện",
+            key: "pesticide_concentration_amount",
+            label: "Nồng độ /\nliều lượng",
+            type: "text",
+            width: "w-40",
+          },
+          {
+            key: "preharvest_interval",
+            label: "Thời gian\ncách ly",
             type: "text",
             width: "w-28",
           },
-          { key: "ghiChu", label: "Ghi chú", type: "text", width: "w-36" },
         ],
       },
     ],
@@ -225,24 +190,29 @@ const DIARIES = [
         label: null,
         cols: [
           {
-            key: "ngay",
-            label: "Ngày,\ntháng, năm",
+            key: "handling_date",
+            label: "Ngày\nxử lý",
             type: "date",
             width: "w-28",
           },
           {
-            key: "loaiBaoBi",
-            label: "Loại bao bì, thùng chứa,\nthuốc dư thừa",
+            key: "packaging_type",
+            label: "Loại bao bì / thùng chứa\nthuốc dư thừa",
             type: "text",
             width: "w-48",
           },
           {
-            key: "noiTonTru",
+            key: "storage_location",
             label: "Nơi tồn trữ,\nhuỷ bỏ",
             type: "text",
             width: "w-40",
           },
-          { key: "cachXuLy", label: "Cách xử lý", type: "text", width: "w-40" },
+          {
+            key: "treatment_method",
+            label: "Cách xử lý",
+            type: "text",
+            width: "w-44",
+          },
         ],
       },
     ],
@@ -253,42 +223,167 @@ const DIARIES = [
     icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z",
     groups: [
       {
-        label: null,
+        label: "Thu hoạch",
         cols: [
           {
-            key: "ngay",
-            label: "Ngày,\ntháng, năm",
+            key: "harvest_date",
+            label: "Ngày\nthu hoạch",
             type: "date",
             width: "w-28",
           },
           {
-            key: "sanLuong",
+            key: "harvest_quantity_kg",
             label: "Sản lượng\nthu hoạch (kg)",
             type: "number",
             width: "w-32",
           },
+        ],
+      },
+      {
+        label: "Tiêu thụ",
+        cols: [
+          { key: "sale_date", label: "Ngày\nbán", type: "date", width: "w-28" },
           {
-            key: "diaDiemSoChe",
-            label: "Địa điểm, cách thức\nsơ chế (nếu có)",
+            key: "buyer_or_consumption_address",
+            label: "Tên / địa chỉ\nnơi tiêu thụ",
             type: "text",
-            width: "w-44",
+            width: "w-52",
           },
           {
-            key: "thoiGianXuatBan",
-            label: "Thời gian xuất bán\n(ngày/tháng/năm)",
+            key: "consumed_weight_kg",
+            label: "Khối lượng\ntiêu thụ (kg)",
+            type: "number",
+            width: "w-32",
+          },
+          {
+            key: "sale_unit_price_vnd",
+            label: "Đơn giá\nbán (VNĐ/kg)",
+            type: "currency",
+            width: "w-36",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "1.9",
+    title: "Chi phí tưới tiêu và hệ thống tưới",
+    icon: "M12 3v1m0 16v1m8.66-13l-.87.5M4.21 8.5l-.87-.5M19.78 15.5l-.87-.5M4.21 15.5l-.87.5M21 12h-1M4 12H3m15.36-6.36l-.7.7M6.34 17.66l-.7.7M17.66 17.66l.7.7M6.34 6.34l.7.7",
+    groups: [
+      {
+        label: null,
+        cols: [
+          {
+            key: "execution_date",
+            label: "Ngày\nthực hiện",
             type: "date",
+            width: "w-28",
+          },
+          {
+            key: "irrigation_item",
+            label: "Nội dung\ntưới",
+            type: "text",
+            width: "w-48",
+          },
+          {
+            key: "irrigation_method",
+            label: "Phương pháp\ntưới",
+            type: "select",
+            options: [
+              { value: "nho_giot", label: "Nhỏ giọt" },
+              { value: "phun_mua", label: "Phun mưa" },
+              { value: "thu_cong", label: "Thủ công" },
+            ],
+            width: "w-28",
+          },
+          {
+            key: "irrigation_duration_hours",
+            label: "Thời gian\ntưới (giờ)",
+            type: "number",
+            width: "w-24",
+          },
+          {
+            key: "irrigation_duration_minutes",
+            label: "Thời gian\ntưới (phút)",
+            type: "number",
+            width: "w-24",
+          },
+          {
+            key: "irrigation_area",
+            label: "Diện tích\ntưới",
+            type: "text",
+            width: "w-28",
+          },
+          {
+            key: "electricity_fuel_cost",
+            label: "Chi phí điện /\nnhiên liệu (VNĐ)",
+            type: "currency",
             width: "w-36",
           },
           {
-            key: "tenCoSoThuMua",
-            label: "Tên địa chỉ cơ sở\nthu mua hoặc tiêu thụ",
+            key: "performed_by",
+            label: "Người\nthực hiện",
             type: "text",
-            width: "w-44",
+            width: "w-36",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "1.10",
+    title: "Chi phí thuê lao động",
+    icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
+    groups: [
+      {
+        label: null,
+        cols: [
+          {
+            key: "labor_hire_date",
+            label: "Ngày\nthuê",
+            type: "date",
+            width: "w-28",
           },
           {
-            key: "khoiLuongTieuThu",
-            label: "Khối lượng\ntiêu thụ (kg)",
+            key: "work_description",
+            label: "Mô tả\ncông việc",
+            type: "text",
+            width: "w-48",
+          },
+          {
+            key: "worker_quantity",
+            label: "Số lượng\nlao động",
             type: "number",
+            width: "w-24",
+          },
+          {
+            key: "working_time_hours",
+            label: "Thời gian\nlàm (giờ)",
+            type: "number",
+            width: "w-24",
+          },
+          {
+            key: "working_time_minutes",
+            label: "Thời gian\nlàm (phút)",
+            type: "number",
+            width: "w-24",
+          },
+          {
+            key: "total_price_vnd",
+            label: "Tổng chi phí\n(VNĐ)",
+            type: "currency",
+            width: "w-36",
+          },
+          {
+            key: "worker_or_team_name",
+            label: "Tên nhóm /\nlao động",
+            type: "text",
+            width: "w-40",
+          },
+          {
+            key: "supervisor_name",
+            label: "Người\ngiám sát",
+            type: "text",
             width: "w-32",
           },
         ],
@@ -302,94 +397,172 @@ const genId = () => Math.random().toString(36).slice(2, 10);
 const flatCols = (d) => d.groups.flatMap((g) => g.cols);
 const emptyRow = (d) => Object.fromEntries(flatCols(d).map((c) => [c.key, ""]));
 
+const normalizeBuyingSeed = (item) => ({
+  id: item?._id,
+  purchase_date: item?.purchase_date || "",
+  seed_name: item?.seed_name || "",
+  quantity: item?.quantity ?? "",
+  total_price: item?.total_price ?? "",
+  supplier_name: item?.supplier_name || "",
+  supplier_address: item?.supplier_address || "",
+});
+
+const buildBuyingSeedPayload = (form, seasonDiaryId) => ({
+  season_diary_id: seasonDiaryId,
+  purchase_date: form.purchase_date || null,
+  seed_name: String(form.seed_name || "").trim(),
+  quantity: Number(form.quantity) || 0,
+  total_price: Number(form.total_price) || 0,
+  supplier_name: String(form.supplier_name || "").trim(),
+  supplier_address: String(form.supplier_address || "").trim(),
+});
+
 // ── SEED DATA (thay bằng Zustand store) ──────────────────────────────────────
 const SEED_DATA = {
   1.4: [
     {
-      id: genId(),
-      ngayMua: "2025-01-10",
-      tenGiong: "Sầu riêng Ri6",
-      soLuong: "200",
-      tenDaiLy: "Cty TNHH Xanh",
-      diaChi: "Cần Thơ",
-      nguyenLieu: "",
-      phuongPhap: "",
-      hoaChat: "",
-      nguoiSX: "",
+      id: "681111111111111111111101",
+      purchase_date: "2026-01-05",
+      seed_name: "Sầu riêng Ri6 (Gốc ghép 2 năm)",
+      quantity: 120,
+      total_price: 18000000,
+      supplier_name: "Cơ sở Cây giống Út Hiện",
+      supplier_address: "Huyện Chợ Lách, Tỉnh Bến Tre",
     },
     {
-      id: genId(),
-      ngayMua: "2025-02-15",
-      tenGiong: "Sầu riêng Musang King",
-      soLuong: "150",
-      tenDaiLy: "Vườn ươm Nam Bộ",
-      diaChi: "Tiền Giang",
-      nguyenLieu: "",
-      phuongPhap: "",
-      hoaChat: "",
-      nguoiSX: "",
+      id: "681111111111111111111102",
+      purchase_date: "2026-03-12",
+      seed_name: "Ri6",
+      quantity: 200,
+      total_price: 3500000,
+      supplier_name: "Đại lý cây giống An Phát",
+      supplier_address: "Cái Mơn, Bến Tre",
     },
   ],
   1.5: [
     {
-      id: genId(),
-      ngayMua: "2025-01-20",
-      tenVatTu: "Phân NPK 20-20-15",
-      khoiLuong: "50 kg",
-      tenDaiLy: "Agri Shop",
-      diaChi: "Cần Thơ",
-      hanSD: "2026-12-31",
-      nguyenLieu: "",
-      phuongPhap: "",
-      hoaChat: "",
-      nguoiSX: "",
+      id: "683111111111111111111101",
+      purchase_date: "2026-01-20",
+      material_name: "Phân bón NPK 20-20-15 Đầu Trâu",
+      quantity: 100,
+      unit: "kg",
+      total_price: 2850000,
+      supplier_name: "Đại lý Vật tư Nông nghiệp Tám Hữu",
+      supplier_address: "Chợ Cái Mơn, Huyện Chợ Lách, Tỉnh Bến Tre",
     },
     {
-      id: genId(),
-      ngayMua: "2025-03-01",
-      tenVatTu: "Thuốc trừ sâu Confidor",
-      khoiLuong: "2 l",
-      tenDaiLy: "Bayer VN",
-      diaChi: "HCM",
-      hanSD: "2026-06-30",
-      nguyenLieu: "",
-      phuongPhap: "",
-      hoaChat: "",
-      nguoiSX: "",
+      id: "683111111111111111111102",
+      purchase_date: "2026-03-12",
+      material_name: "NPK 16-16-8",
+      quantity: 200,
+      unit: "kg",
+      total_price: 4800000,
+      supplier_name: "Đại lý vật tư An Phát",
+      supplier_address: "Cái Mơn, Bến Tre",
     },
   ],
   1.6: [
     {
-      id: genId(),
-      ngaySuDung: "2025-03-05",
-      tenVatTu: "Phân NPK 20-20-15",
-      lieuLuong: "2 kg/cây",
-      diemPhun: "Khu A – 1 ha",
-      mucDich: "Bón thúc",
-      phuongPhap: "Rải gốc",
-      thoiGianCachLy: "0",
-      nguoiThucHien: "Nguyễn Văn A",
-      ghiChu: "",
+      id: "684111111111111111111101",
+      usage_date: "2026-02-10",
+      fertilizer_name: "Phân bón NPK 20-20-15 Đầu Trâu",
+      fertilizer_amount: "2 kg/gốc",
+      pesticide_name: "",
+      pesticide_concentration_amount: "",
+      preharvest_interval: "0",
+    },
+    {
+      id: "684111111111111111111102",
+      usage_date: "2026-03-10",
+      fertilizer_name: "NPK 16-16-8",
+      fertilizer_amount: "20 kg",
+      pesticide_name: "Abamectin",
+      pesticide_concentration_amount: "1.8EC - 400ml/200L",
+      preharvest_interval: "14 ngày",
     },
   ],
   1.7: [
     {
-      id: genId(),
-      ngay: "2025-04-10",
-      loaiBaoBi: "Chai nhựa Confidor 1L",
-      noiTonTru: "Kho chứa bao bì",
-      cachXuLy: "Đốt theo quy định",
+      id: "685111111111111111111101",
+      handling_date: "2026-02-15",
+      packaging_type: "Vỏ bao phân bón NPK (Plastic)",
+      storage_location: "Kho chứa phế liệu phía Tây",
+      treatment_method: "Vệ sinh sạch và bán tái chế",
+    },
+    {
+      id: "685111111111111111111102",
+      handling_date: "2026-03-16",
+      packaging_type: "Thùng carton",
+      storage_location: "Kho A - Chợ Lách",
+      treatment_method: "Khử trùng và đóng gói hút ẩm",
     },
   ],
   1.8: [
     {
-      id: genId(),
-      ngay: "2025-06-20",
-      sanLuong: "500",
-      diaDiemSoChe: "Kho tại vườn",
-      thoiGianXuatBan: "2025-06-21",
-      tenCoSoThuMua: "Cty XNK Sầu Riêng Việt",
-      khoiLuongTieuThu: "480",
+      id: "69e111111111111111111102",
+      harvest_date: "2026-03-28",
+      harvest_quantity_kg: 1420,
+      sale_date: "2026-03-30",
+      buyer_or_consumption_address: "Hợp tác xã Sầu Riêng Bến Tre",
+      consumed_weight_kg: 1150.75,
+      sale_unit_price_vnd: 67000,
+    },
+    {
+      id: "69e111111111111111111101",
+      harvest_date: "2026-03-18",
+      harvest_quantity_kg: 1250.5,
+      sale_date: "",
+      buyer_or_consumption_address: "",
+      consumed_weight_kg: "",
+      sale_unit_price_vnd: "",
+    },
+  ],
+  1.9: [
+    {
+      id: "69c111111111111111111102",
+      execution_date: "2026-03-18",
+      irrigation_item: "Tưới duy trì độ ẩm sau bón phân",
+      irrigation_method: "phun_mua",
+      irrigation_duration_hours: 1,
+      irrigation_duration_minutes: 45,
+      irrigation_area: "2.2 ha",
+      electricity_fuel_cost: 280000,
+      performed_by: "Tổ chăm sóc vườn 1",
+    },
+    {
+      id: "69c111111111111111111101",
+      execution_date: "2026-03-10",
+      irrigation_item: "Tưới giai đoạn ra hoa đợt 1",
+      irrigation_method: "nho_giot",
+      irrigation_duration_hours: 2,
+      irrigation_duration_minutes: 30,
+      irrigation_area: "2500 m2",
+      electricity_fuel_cost: 320000,
+      performed_by: "Nguyễn Văn A",
+    },
+  ],
+  "1.10": [
+    {
+      id: "69d111111111111111111102",
+      labor_hire_date: "2026-03-12",
+      work_description: "Tỉa cành tạo tán",
+      worker_quantity: 4,
+      working_time_hours: 6,
+      working_time_minutes: 45,
+      total_price_vnd: 320000,
+      worker_or_team_name: "Nhóm anh Phúc",
+      supervisor_name: "Trần Văn B",
+    },
+    {
+      id: "69d111111111111111111101",
+      labor_hire_date: "2026-03-08",
+      work_description: "Phát cỏ, dọn vệ sinh vườn",
+      worker_quantity: 5,
+      working_time_hours: 7,
+      working_time_minutes: 30,
+      total_price_vnd: 280000,
+      worker_or_team_name: "Tổ lao động Bến Tre 01",
+      supervisor_name: "Nguyễn Văn A",
     },
   ],
 };
@@ -406,10 +579,11 @@ function useToast() {
   return { toast, show };
 }
 
-// ── RECORD MODAL (create / edit) ─────────────────────────────────────────────
+// ── RECORD MODAL ──────────────────────────────────────────────────────────────
 function RecordModal({ diary, row, onSave, onClose }) {
   const [form, setForm] = useState({ ...row });
   const isEdit = !!row.id;
+  const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 py-8 overflow-y-auto">
@@ -442,34 +616,67 @@ function RecordModal({ diary, row, onSave, onClose }) {
                 </p>
               )}
               <div className="grid grid-cols-2 gap-3">
-                {group.cols.map((col) => (
-                  <div
-                    key={col.key}
-                    className={
-                      col.type === "text" && col.width === "w-48"
-                        ? "col-span-2"
-                        : ""
-                    }
-                  >
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      {col.label.replace(/\n/g, " ")}
-                    </label>
-                    <input
-                      type={
-                        col.type === "number"
-                          ? "number"
-                          : col.type === "date"
-                            ? "date"
-                            : "text"
-                      }
-                      value={form[col.key] ?? ""}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, [col.key]: e.target.value }))
-                      }
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
-                    />
-                  </div>
-                ))}
+                {group.cols.map((col) => {
+                  const isWide =
+                    (col.type === "text" && col.width === "w-48") ||
+                    col.type === "textarea";
+                  return (
+                    <div key={col.key} className={isWide ? "col-span-2" : ""}>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">
+                        {col.label.replace(/\n/g, " ")}
+                        {col.type === "currency" && (
+                          <span className="text-gray-400 font-normal ml-1">
+                            (VNĐ)
+                          </span>
+                        )}
+                      </label>
+
+                      {col.type === "select" ? (
+                        <select
+                          value={form[col.key] ?? ""}
+                          onChange={(e) => set(col.key, e.target.value)}
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                        >
+                          <option value="">-- Chọn --</option>
+                          {(col.options ?? []).map((o) => (
+                            <option key={o.value} value={o.value}>
+                              {o.label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div>
+                          <input
+                            type={
+                              col.type === "number" || col.type === "currency"
+                                ? "number"
+                                : col.type === "date"
+                                  ? "date"
+                                  : "text"
+                            }
+                            value={form[col.key] ?? ""}
+                            onChange={(e) => set(col.key, e.target.value)}
+                            min={
+                              col.type === "number" || col.type === "currency"
+                                ? "0"
+                                : undefined
+                            }
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                          />
+                          {col.type === "currency" && form[col.key] && (
+                            <p className="text-xs text-emerald-600 mt-1">
+                              ={" "}
+                              {new Intl.NumberFormat("vi-VN").format(
+                                Number(form[col.key]) || 0,
+                              )}{" "}
+                              ₫
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -545,14 +752,27 @@ function DeleteModal({ count, onConfirm, onClose }) {
 }
 
 // ── DIARY TABLE ───────────────────────────────────────────────────────────────
-function DiaryTable({ diary, initialRows, onRowsChange }) {
+function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
   const cols = flatCols(diary);
+  const isBuyingSeedDiary = diary.id === "1.4";
 
-  const [rows, setRowsInner] = useState(
+  const {
+    buyingSeeds,
+    isBuyingSeedsLoading,
+    isBuyingSeedCreating,
+    isBuyingSeedUpdating,
+    isBuyingSeedDeleting,
+    getBuyingSeeds,
+    createBuyingSeed,
+    updateBuyingSeed,
+    deleteBuyingSeed,
+  } = useBuyingSeedStore();
+
+  const [localRows, setLocalRows] = useState(
     initialRows ?? SEED_DATA[diary.id] ?? [],
   );
   const setRows = (updater) => {
-    setRowsInner((prev) => {
+    setLocalRows((prev) => {
       const next = typeof updater === "function" ? updater(prev) : updater;
       onRowsChange?.(next);
       return next;
@@ -560,12 +780,24 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
   };
 
   const [search, setSearch] = useState("");
-  const [modal, setModal] = useState(null); // null | "create" | "edit"
+  const [modal, setModal] = useState(null);
   const [editRow, setEditRow] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [page, setPage] = useState(1);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const { toast, show: showToast } = useToast();
+
+  useEffect(() => {
+    if (!isBuyingSeedDiary || !seasonDiaryId) return;
+    getBuyingSeeds({ seasonDiaryId, page: 1, limit: 200 });
+  }, [isBuyingSeedDiary, seasonDiaryId, getBuyingSeeds]);
+
+  const apiRows = useMemo(
+    () => (buyingSeeds || []).map(normalizeBuyingSeed).filter((r) => r.id),
+    [buyingSeeds],
+  );
+
+  const rows = isBuyingSeedDiary ? apiRows : localRows;
 
   const filtered = useMemo(() => {
     if (!search) return rows;
@@ -593,8 +825,22 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
     setModal("edit");
   };
 
-  const handleSave = (form) => {
-    if (modal === "create") {
+  const handleSave = async (form) => {
+    if (isBuyingSeedDiary) {
+      if (!seasonDiaryId) {
+        showToast("Thiếu mã mùa vụ, không thể lưu bản ghi", "error");
+        return;
+      }
+
+      const payload = buildBuyingSeedPayload(form, seasonDiaryId);
+      if (modal === "create") {
+        const created = await createBuyingSeed(payload);
+        if (!created) return;
+      } else {
+        const updated = await updateBuyingSeed(editRow.id, payload);
+        if (!updated) return;
+      }
+    } else if (modal === "create") {
       setRows((prev) => [{ ...form, id: genId() }, ...prev]);
       showToast("Đã thêm bản ghi mới");
     } else {
@@ -603,12 +849,21 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
       );
       showToast("Đã cập nhật bản ghi");
     }
+
     setModal(null);
     setPage(1);
   };
 
-  const handleDelete = (ids) => {
-    setRows((prev) => prev.filter((r) => !ids.has(r.id)));
+  const handleDelete = async (ids) => {
+    if (isBuyingSeedDiary) {
+      const results = await Promise.all(
+        Array.from(ids).map((id) => deleteBuyingSeed(id)),
+      );
+      if (results.some((ok) => !ok)) return;
+    } else {
+      setRows((prev) => prev.filter((r) => !ids.has(r.id)));
+    }
+
     setSelected(new Set());
     setDeleteConfirm(null);
     showToast(`Đã xoá ${ids.size} bản ghi`);
@@ -637,7 +892,8 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
   };
 
   const fmtVal = (col, val) => {
-    if (!val) return <span className="text-gray-300">—</span>;
+    if (val === "" || val === null || val === undefined)
+      return <span className="text-gray-300">—</span>;
     if (col.type === "date") {
       try {
         return new Date(val).toLocaleDateString("vi-VN");
@@ -645,12 +901,31 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
         return val;
       }
     }
+    if (col.type === "currency") {
+      const n = Number(val);
+      if (isNaN(n)) return val;
+      return (
+        <span className="font-medium text-emerald-700">
+          {new Intl.NumberFormat("vi-VN").format(n)} ₫
+        </span>
+      );
+    }
+    if (col.type === "select" && col.options) {
+      const opt = col.options.find((o) => o.value === val);
+      return opt ? (
+        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium">
+          {opt.label}
+        </span>
+      ) : (
+        val
+      );
+    }
     return val;
   };
 
   return (
-    <div className="space-y-4 p-5 min-h-screen">
-      {/* ── Toolbar ── */}
+    <div className="space-y-4 ">
+      {/* Toolbar */}
       <div className="flex flex-wrap gap-2 items-center">
         <div className="relative flex-1 min-w-48">
           <svg
@@ -677,18 +952,20 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
             className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
           />
         </div>
-
         {selected.size > 0 && (
           <button
             onClick={() => setDeleteConfirm(new Set(selected))}
+            disabled={isBuyingSeedDeleting}
             className="px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 hover:bg-red-100 transition font-medium"
           >
             Xoá {selected.size} mục
           </button>
         )}
-
         <button
           onClick={openCreate}
+          disabled={
+            isBuyingSeedCreating || isBuyingSeedUpdating || isBuyingSeedDeleting
+          }
           className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-emerald-200"
         >
           <svg
@@ -708,7 +985,7 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
         </button>
       </div>
 
-      {/* ── Table ── */}
+      {/* Table */}
       <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table
@@ -716,7 +993,6 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
             style={{ minWidth: "max-content", width: "100%" }}
           >
             <thead>
-              {/* Row 1: group headers */}
               <tr>
                 <th
                   className="border border-emerald-200 bg-emerald-700 text-white px-3 py-2 text-center"
@@ -730,7 +1006,6 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
                     className="w-3.5 h-3.5 rounded border-emerald-300 text-emerald-600"
                   />
                 </th>
-
                 {diary.groups.map((group, gi) =>
                   group.label ? (
                     <th
@@ -761,7 +1036,6 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
                     ))
                   ),
                 )}
-
                 <th
                   className="border border-emerald-200 bg-emerald-700 text-white px-3 py-2 text-center font-medium"
                   rowSpan={2}
@@ -770,8 +1044,6 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
                   Hành động
                 </th>
               </tr>
-
-              {/* Row 2: sub-headers for grouped columns */}
               <tr>
                 {diary.groups
                   .filter((g) => g.label)
@@ -794,9 +1066,17 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
                   ))}
               </tr>
             </thead>
-
             <tbody>
-              {paginated.length === 0 ? (
+              {isBuyingSeedDiary && isBuyingSeedsLoading ? (
+                <tr>
+                  <td
+                    colSpan={cols.length + 2}
+                    className="text-center py-12 text-gray-400"
+                  >
+                    Đang tải dữ liệu nhật ký...
+                  </td>
+                </tr>
+              ) : paginated.length === 0 ? (
                 <tr>
                   <td
                     colSpan={cols.length + 2}
@@ -840,7 +1120,6 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
                         className="w-3.5 h-3.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
                       />
                     </td>
-
                     {cols.map((col) => (
                       <td
                         key={col.key}
@@ -849,7 +1128,6 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
                         {fmtVal(col, row[col.key])}
                       </td>
                     ))}
-
                     <td className="border border-gray-100 px-2 py-2.5">
                       <div className="flex items-center justify-center gap-1">
                         <button
@@ -940,7 +1218,6 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
         </div>
       </div>
 
-      {/* Modals */}
       {modal && (
         <RecordModal
           diary={diary}
@@ -956,8 +1233,6 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
           onClose={() => setDeleteConfirm(null)}
         />
       )}
-
-      {/* Toast */}
       {toast && (
         <div
           className={`fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-medium text-white ${
@@ -990,27 +1265,30 @@ function DiaryTable({ diary, initialRows, onRowsChange }) {
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function DiaryPage() {
+  const { seasonDiaryId } = useParams();
   const [activeIdx, setActiveIdx] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
   const diary = DIARIES[activeIdx];
 
   return (
-    <div className="space-y-4 p-5" onClick={() => setDropdownOpen(false)}>
-      {/* ── Header with dropdown ── */}
+    <div
+      className="space-y-4 min-h-screen p-5"
+      onClick={() => setDropdownOpen(false)}
+    >
+      {/* Dropdown header */}
       <div className="relative" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={() => setDropdownOpen((o) => !o)}
           className="flex items-center gap-2.5 group"
         >
-          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg shrink-0">
+          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg flex-shrink-0">
             Nhật ký {diary.id}
           </span>
           <h1 className="text-base font-semibold text-gray-800">
             {diary.title}
           </h1>
           <svg
-            className={`w-4 h-4 text-emerald-500 shrink-0 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : "rotate-0"}`}
+            className={`w-4 h-4 text-emerald-500 flex-shrink-0 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : "rotate-0"}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -1024,7 +1302,6 @@ export default function DiaryPage() {
           </svg>
         </button>
 
-        {/* Dropdown */}
         {dropdownOpen && (
           <div className="absolute top-full left-0 mt-2 w-96 bg-white rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/60 py-1.5 z-30 overflow-hidden">
             {DIARIES.map((d, i) => (
@@ -1034,15 +1311,10 @@ export default function DiaryPage() {
                   setActiveIdx(i);
                   setDropdownOpen(false);
                 }}
-                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition hover:bg-emerald-50 ${
-                  i === activeIdx ? "bg-emerald-50" : ""
-                }`}
+                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition hover:bg-emerald-50 ${i === activeIdx ? "bg-emerald-50" : ""}`}
               >
-                {/* Icon */}
                 <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                    i === activeIdx ? "bg-emerald-600" : "bg-gray-100"
-                  }`}
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${i === activeIdx ? "bg-emerald-600" : "bg-gray-100"}`}
                 >
                   <svg
                     className={`w-4 h-4 ${i === activeIdx ? "text-white" : "text-gray-500"}`}
@@ -1058,8 +1330,6 @@ export default function DiaryPage() {
                     />
                   </svg>
                 </div>
-
-                {/* Label */}
                 <div className="flex-1 min-w-0">
                   <p
                     className={`text-xs font-bold mb-0.5 ${i === activeIdx ? "text-emerald-600" : "text-gray-400"}`}
@@ -1072,8 +1342,6 @@ export default function DiaryPage() {
                     {d.title}
                   </p>
                 </div>
-
-                {/* Active check */}
                 {i === activeIdx && (
                   <svg
                     className="w-4 h-4 text-emerald-500 flex-shrink-0 ml-auto mt-1.5"
@@ -1095,8 +1363,8 @@ export default function DiaryPage() {
         )}
       </div>
 
-      {/* ── Table (re-mounts on diary switch) ── */}
-      <DiaryTable key={diary.id} diary={diary} />
+      {/* Table — re-mounts on switch to reset state */}
+      <DiaryTable key={diary.id} diary={diary} seasonDiaryId={seasonDiaryId} />
     </div>
   );
 }
