@@ -1,0 +1,50 @@
+actor "Users" as Farmer
+boundary BlogPage
+control BlogController
+participant ":blogService" as blogService
+participant ":knowledgeBlogModel" as knowledgeBlogModel
+database Database
+
+
+Farmer->BlogPage: 1. Enter search keyword and select sort option
+activate Farmer
+activate BlogPage
+
+BlogPage->BlogController: 2. Get blog list request
+activate BlogController
+
+BlogController->blogService: 3. getKnowledgeBlogs(search, sort)
+activate blogService
+
+blogService->knowledgeBlogModel: 4. find(query, sort)
+activate knowledgeBlogModel
+
+knowledgeBlogModel->Database: 5. Execute query
+activate Database
+Database-->knowledgeBlogModel: 6. Return result
+deactivate Database
+
+knowledgeBlogModel-->blogService: 7. Return blog list
+deactivate knowledgeBlogModel
+
+blogService->blogService: 8. check blog list
+activate blogService
+space
+deactivate blogService
+
+alt Results found
+blogService-->BlogController: 8.1 Return blog list
+BlogController-->BlogPage: 8.1.1 Show blog list
+BlogPage-->Farmer: 8.1.2 Display blog list
+
+else No results found
+blogService-->BlogController: 8.2 Return empty list
+deactivate blogService
+
+BlogController-->BlogPage: 8.2.1 Show empty message
+deactivate BlogController
+BlogPage-->Farmer: 8.2.2 Display "No matching blog found."
+
+deactivate BlogPage
+deactivate Farmer
+end

@@ -1,0 +1,56 @@
+actor Users
+boundary PostPage
+control CommentPostController
+participant ":commentPostService" as commentPostService
+participant ":commentPostModel" as commentPostModel
+database Database
+
+
+Users->PostPage: 1. Click Reply on comment
+activate PostPage
+activate Users
+
+Users->PostPage: 2. Input comment content
+
+PostPage->PostPage: 3. Validate input
+activate PostPage
+space
+deactivate PostPage
+
+opt Invalid Input or fields left empty
+PostPage-->Users: 3.1 Show validation error
+end
+
+PostPage->CommentPostController: 4. Create comment request
+activate CommentPostController
+
+CommentPostController->commentPostService: 5. createComment(commentData, parentCommentId)
+activate commentPostService
+
+commentPostService->commentPostModel: 6. save(commentData)
+activate commentPostModel
+
+commentPostModel->Database: 7. Execute insert query
+activate Database
+Database-->commentPostModel: 8. Return result
+deactivate Database
+
+commentPostModel-->commentPostService: 9. Return created entity
+deactivate commentPostModel
+
+alt Create comment successful
+commentPostService-->CommentPostController: 9.1 Return CommentPostResponse
+CommentPostController-->PostPage: 9.1.1 Return response
+PostPage-->Users: 9.1.2 Redirect to post page with new comment
+
+else Create comment failed
+commentPostService-->CommentPostController: 9.2 Return error
+deactivate commentPostService
+
+CommentPostController-->PostPage: 9.2.1 Return error response
+deactivate CommentPostController
+PostPage-->Users: 9.2.2 Display error message
+
+deactivate PostPage
+deactivate Users
+end
