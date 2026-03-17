@@ -341,7 +341,7 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDeleteConfirm, onC
                                         </span>
                                     );
                                 })()}
-                                <StatusBadge status={post.status} />
+                                <StatusBadge status={post.post_id?.status} />
                             </div>
                             <p className="text-gray-500 text-sm truncate">
                                 {authorInfo.handle && authorInfo.handle}

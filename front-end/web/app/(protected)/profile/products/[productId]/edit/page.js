@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, X, Check, ImageIcon, Package, Edit } from "lucide-react";
+import { ArrowLeft, X, Check, ImageIcon, Edit } from "lucide-react";
 import { useProductStore } from "@/store/useProductStore";
 import { useProductStore as useTypeProductStore } from "@/store/useTypeProduct";
+import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function EditProduct() {
   const router = useRouter();
@@ -16,7 +18,11 @@ export default function EditProduct() {
     isProductDetailsLoading,
   } = useProductStore();
   const { types, fetchTypes, isTypesLoading } = useTypeProductStore();
+  const { authUser } = useAuthStore();
+  const { seasonDiaries, getSeasonDiaries, isSeasonDiariesLoading } =
+    useSeasonDiaryStore();
   const [formData, setFormData] = useState({
+    seasonDiaryId: "",
     name: "",
     description: "",
     price: "",
@@ -46,6 +52,12 @@ export default function EditProduct() {
   }, [productId, fetchProductDetail]);
 
   useEffect(() => {
+    if (authUser?._id) {
+      getSeasonDiaries(authUser._id);
+    }
+  }, [authUser?._id, getSeasonDiaries]);
+
+  useEffect(() => {
     if (productDetail) {
       // Price/weight may come as { $numberDecimal: "..." }
       const resolveDecimal = (val) =>
@@ -64,6 +76,11 @@ export default function EditProduct() {
         "";
       const endDate =
         productDetail.harvest_end_date || productDetail.harvestEndDate || "";
+      const seasonDiaryId =
+        productDetail.season_diary_id?._id ||
+        productDetail.season_diary_id ||
+        productDetail.seasonDiaryId ||
+        "";
 
       // Images may be objects { url: "..." } or plain strings
       const rawImages = productDetail.images || [];
@@ -73,6 +90,7 @@ export default function EditProduct() {
 
       queueMicrotask(() => {
         setFormData({
+          seasonDiaryId,
           name: productDetail.name || "",
           description: productDetail.description || "",
           price: resolveDecimal(productDetail.price),
@@ -95,6 +113,7 @@ export default function EditProduct() {
   const priceValue = Number(formData.price);
   const weightValue = Number(formData.weight);
   const isFormComplete =
+    !!formData.seasonDiaryId &&
     !!formData.name.trim() &&
     !!formData.description.trim() &&
     formData.price !== "" &&
@@ -124,6 +143,11 @@ export default function EditProduct() {
     e.preventDefault();
     setError("");
 
+    if (!formData.seasonDiaryId) {
+      setError("Vui lòng chọn mùa vụ");
+      return;
+    }
+
     if (formData.harvestEndDate < formData.harvestStartDate) {
       setError("Ngày kết thúc không được trước ngày bắt đầu");
       return;
@@ -136,6 +160,8 @@ export default function EditProduct() {
 
     const payload = {
       ...formData,
+      seasonDiaryId: formData.seasonDiaryId,
+      season_diary_id: formData.seasonDiaryId,
       price: Number(formData.price) || 0,
       weight: Number(formData.weight) || 0,
       images: formData.images?.length ? formData.images : [],
@@ -239,6 +265,36 @@ export default function EditProduct() {
           <div className="bg-white rounded-xl shadow-sm p-8 pb-2">
             <p className="font-bold mb-5">Thông tin cơ bản</p>
             <div className="space-y-6">
+              <div>
+                <label
+                  htmlFor="seasonDiaryId"
+                  className="block text-sm font-medium text-gray-900 mb-2"
+                >
+                  Chọn mùa vụ <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="seasonDiaryId"
+                  name="seasonDiaryId"
+                  value={formData.seasonDiaryId}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors bg-white"
+                >
+                  <option value="">Chọn mùa vụ</option>
+                  {seasonDiaries?.map((season, index) => (
+                    <option key={season?._id} value={season?._id}>
+                      {season?.garden_name ||
+                        season?.name ||
+                        season?.planting_area_code ||
+                        `Mùa vụ ${index + 1}`}
+                    </option>
+                  ))}
+                </select>
+                {isSeasonDiariesLoading ? (
+                  <p className="mt-1 text-xs text-gray-500">Đang tải mùa vụ...</p>
+                ) : null}
+              </div>
+
               {/* Name */}
               <div>
                 <label

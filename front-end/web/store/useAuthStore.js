@@ -45,7 +45,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/register", data);
-      toast.success("Kiểm tra mail cho mã OTP");
+      toast.success(res?.data.message || "signup: async(data)");
       return res?.data;
     } catch (error) {
       toast.error(error?.response?.data?.message);
@@ -77,10 +77,10 @@ export const useAuthStore = create((set, get) => ({
     set({ isVerifyingEmail: true });
     try {
       const res = await axiosInstance.post("/auth/verify-email", data);
-      toast.success("Xác nhận thành công! Đang chuyển hướng đến đăng nhập...");
+      toast.success(res?.data.message || "verifyEmail: async(data)");
       return res?.data;
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Xác nhận email thất bại");
+      toast.error(error?.response?.data?.message || "verifyEmail: async(data)");
       return null;
     } finally {
       set({ isVerifyingEmail: false });
@@ -93,10 +93,12 @@ export const useAuthStore = create((set, get) => ({
       const res = await axiosInstance.post("/auth/resend-verification-otp", {
         email,
       });
-      toast.success("Đã gửi lại mã OTP");
+      toast.success(res?.data.message || "resendVerificationOtp: async(email)");
       return res?.data;
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Gửi lại OTP thất bại");
+      toast.error(
+        error?.response?.data?.message || "resendVerificationOtp: async(email)",
+      );
       return null;
     } finally {
       set({ isResendingOtp: false });
@@ -110,10 +112,12 @@ export const useAuthStore = create((set, get) => ({
       const res = await axiosInstance.post("/auth/forgot-password", {
         email: normalizedEmail,
       });
-      toast.success("Đã gửi mã OTP đến email");
+      toast.success(res?.data.message || "forgotPassword: async(email)");
       return res?.data;
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Không thể gửi mã OTP");
+      toast.error(
+        error?.response?.data?.message || "forgotPassword: async(email)",
+      );
       return null;
     } finally {
       set({ isRequestingResetOtp: false });
@@ -129,10 +133,15 @@ export const useAuthStore = create((set, get) => ({
         otp,
       });
 
-      toast.success("Xác nhận OTP thành công");
+      toast.success(
+        res?.data.message || "verifyResetOtp: async ({ email, otp })",
+      );
       return res?.data;
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Xác nhận OTP thất bại");
+      toast.error(
+        error?.response?.data?.message ||
+          "verifyResetOtp: async ({ email, otp })",
+      );
       return null;
     } finally {
       set({ isVerifyingResetOtp: false });
@@ -146,7 +155,10 @@ export const useAuthStore = create((set, get) => ({
         newPassword,
         confirmPassword,
       });
-      toast.success("Đổi mật khẩu thành công! Đang chuyển hướng đăng nhập...");
+      toast.success(
+        res?.data.message ||
+          "resetPassword: async ({ token, newPassword, confirmPassword })",
+      );
       return res?.data;
     } catch (error) {
       toast.error(error?.response?.data?.message || "Đổi mật khẩu thất bại");
@@ -170,7 +182,7 @@ export const useAuthStore = create((set, get) => ({
       localStorage.setItem("auth_token", token);
 
       set({ authUser: user });
-      toast.success("Đăng nhập thành công");
+      toast.success(res?.data.message || "login: async (data)");
       get().connectSocket();
 
       return { user, token };
@@ -187,9 +199,9 @@ export const useAuthStore = create((set, get) => ({
     try {
       set({ authUser: null });
       await axiosInstance.post("/auth/logout");
-      toast.success("Đăng xuất thành công");
+      toast.success(res?.data.message || "logout: async ()");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Đăng xuất thất bại");
+      toast.error(error?.response?.data?.message || "logout: async ()");
     } finally {
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
@@ -203,10 +215,10 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await axiosInstance.put("/auth/update-profile", data);
       set({ authUser: res.data });
-      toast.success("Hồ sơ đã được cập nhật thành công");
+      toast.success(res?.data.message || "updateProfile: async (data)");
     } catch (error) {
       console.log("error in update profile:", error);
-      toast.error(error.response.data.message);
+      toast.error(error.response.data.message || "updateProfile: async (data)");
     } finally {
       set({ isUpdatingProfile: false });
     }

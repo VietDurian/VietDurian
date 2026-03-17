@@ -14,6 +14,7 @@ export default function PermissionPage() {
     const [status, setStatus] = useState('all');
     const [showDetail, setShowDetail] = useState(false)
     const [selectedRequest, setSelectedRequest] = useState(null)
+    const [isLoadingDetail, setIsLoadingDetail] = useState(false)
     const [page, setPage] = useState(1)
     const LIMIT = 10
     const [pagination, setPagination] = useState({ totalItems: 0, totalPages: 0, currentPage: 1, itemsPerPage: LIMIT })
@@ -93,15 +94,14 @@ export default function PermissionPage() {
             user_id: item.user_id?._id,
             requestRole: item.requested_role,
             description: item.description,
-            document: item.document,
             status: item.status,
             user_name: item.user?.full_name || 'Unknown User',
             email: item.user?.email || 'No Email',
             phone: item.user?.phone || 'No Phone',
             avatar: item.user?.avatar || '',
             role: item.user?.role || 'Unknown Role',
-            created_at: item.user_id?.created_at,
-            updated_at: item.user_id?.updated_at,
+            created_at: item.created_at,
+            updated_at: item.updated_at,
         }))
     }, [permission])
 
@@ -172,6 +172,8 @@ export default function PermissionPage() {
     }
 
     const handleViewDetail = async (req) => {
+        setIsLoadingDetail(true);
+        setShowDetail(true);
         try {
             // Call API để lấy chi tiết đầy đủ bao gồm proofs
             const res = await permissionAPI.getPermissionById(req.id)
@@ -195,9 +197,10 @@ export default function PermissionPage() {
             }
 
             setSelectedRequest(fullRequest)
-            setShowDetail(true)
         } catch (error) {
             console.error('Error fetching permission detail:', error)
+        } finally {
+            setIsLoadingDetail(false);
         }
     }
 
@@ -258,8 +261,8 @@ export default function PermissionPage() {
 
                 {/* Permissions Table */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+                    <div>
+                        <table className="w-full min-w-0">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">User</th>
@@ -267,7 +270,6 @@ export default function PermissionPage() {
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Current Role</th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Requested Role</th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Description</th>
-                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Document</th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Created</th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
@@ -291,7 +293,6 @@ export default function PermissionPage() {
                                             <td className="px-6 py-4 text-sm text-gray-700">{req.role}</td>
                                             <td className="px-6 py-4 text-sm text-gray-700">{req.requestRole}</td>
                                             <td className="px-6 py-4 text-sm text-gray-700 max-w-xs truncate" title={req.description}>{req.description || '—'}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">{renderDocuments(req.proofs || req.document)}</td>
                                             <td className="px-6 py-4 text-sm">
                                                 <span
                                                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${req.status === 'approved'
@@ -369,7 +370,12 @@ export default function PermissionPage() {
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" onClick={() => setShowDetail(false)} />
                     <div className="absolute inset-0 flex items-center justify-center p-4">
                         <div className="relative z-10 bg-white rounded-xl shadow-2xl border border-gray-100 p-6 w-full max-w-4xl max-h-[85vh] overflow-y-auto">
-                            <PermissionRequestDetail request={selectedRequest} onClose={() => setShowDetail(false)} onUpdated={handleRequestUpdated} />
+                            <PermissionRequestDetail
+                                request={selectedRequest}
+                                onClose={() => setShowDetail(false)}
+                                onUpdated={handleRequestUpdated}
+                                isLoading={isLoadingDetail}
+                            />
                         </div>
                     </div>
                 </div>

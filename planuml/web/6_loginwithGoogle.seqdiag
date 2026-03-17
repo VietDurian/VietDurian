@@ -1,0 +1,153 @@
+actor User
+boundary loginScreen
+control authenticationController
+participant ":authenticationService" as AuthenticationService
+participant ":googleService" as GoogleService
+participant ":userModel" as UserModel
+participant ":authService" as AuthService
+participant LocalStorage
+participant "Google OAuth" as googleOAuth
+database Database
+
+User->loginScreen: 1. Open login page
+activate User
+activate loginScreen
+
+User->loginScreen: 2. Click "Login with Google" button
+
+loginScreen->authenticationController: 3. getGoogleAuthUrl()
+activate authenticationController
+
+authenticationController->GoogleService: 4. generateAuthUrl()
+activate GoogleService
+GoogleService-->authenticationController: 5. return googleAuthUrl
+deactivate GoogleService
+
+authenticationController-->loginScreen: 6. return googleAuthUrl
+deactivate authenticationController
+
+loginScreen->googleOAuth: 7. Open Google OAuth URL
+activate googleOAuth
+googleOAuth-->User: 8. Show Google login page
+
+opt User cancels or closes Google login
+    User->googleOAuth: 8.1 Cancel/Close login
+    googleOAuth-->loginScreen: 8.2 Login cancelled
+    loginScreen-->User: 8.3 Display "Login cancelled by user"
+end
+
+User->googleOAuth: 9. Enter Google credentials and authorize
+googleOAuth->googleOAuth: 10. Validate credentials
+activate googleOAuth
+space
+deactivate googleOAuth
+
+opt Google authentication failed
+    googleOAuth-->loginScreen: 10.1 Authentication error
+    loginScreen-->User: 10.2 Display "Google authentication failed"
+end
+
+googleOAuth-->loginScreen: 11. Return authorization code
+deactivate googleOAuth
+
+loginScreen->authenticationController: 12. verifyGoogleAuth(authCode)
+activate authenticationController
+
+authenticationController->GoogleService: 13. verifyAuthCode(authCode)
+activate GoogleService
+
+GoogleService->googleOAuth: 14. Exchange code for user info
+activate googleOAuth
+googleOAuth-->GoogleService: 15. Return user info (email, name, etc.)
+deactivate googleOAuth
+
+GoogleService->GoogleService: 16. validateGoogleResponse()
+activate GoogleService
+space
+deactivate GoogleService
+
+opt Google verification failed
+    GoogleService-->authenticationController: 16.1 throw Error('Google verification failed')
+    authenticationController-->loginScreen: 16.2 throw Error('Google verification failed')
+    loginScreen-->User: 16.3 Display error message
+end
+
+GoogleService-->authenticationController: 17. return googleUserInfo
+deactivate GoogleService
+
+authenticationController->AuthenticationService: 18. authenticateWithGoogle(googleUserInfo)
+activate AuthenticationService
+
+AuthenticationService->UserModel: 19. findByEmail(email)
+activate UserModel
+
+UserModel->Database: 20. findOne({email: email})
+activate Database
+Database-->UserModel: 21. Return user document (or null)
+deactivate Database
+
+UserModel-->AuthenticationService: 22. Return user entity (or null)
+deactivate UserModel
+
+AuthenticationService->AuthenticationService: 23. checkUserExists()
+activate AuthenticationService
+space
+deactivate AuthenticationService
+
+alt user not found
+    AuthenticationService->UserModel: 23.1 createNewUser(googleUserInfo)
+    activate UserModel
+    UserModel->Database: 23.2 insertOne({email, name, ...})
+    activate Database
+    Database-->UserModel: 23.3 Return inserted user document
+    deactivate Database
+    UserModel-->AuthenticationService: 23.4 Return new user entity
+    deactivate UserModel
+else user exists
+    AuthenticationService->AuthenticationService: 23.5 Continue with existing user
+    activate AuthenticationService
+    space
+    deactivate AuthenticationService
+end
+
+AuthenticationService->AuthenticationService: 24. checkUserStatus()
+activate AuthenticationService
+space
+deactivate AuthenticationService
+
+opt user is banned
+    AuthenticationService-->authenticationController: 24.1 throw Error('Account has been banned')
+    authenticationController-->loginScreen: 24.2 throw Error('Account has been banned')
+    loginScreen-->User: 24.3 Display error message
+end
+
+opt user is deleted
+    AuthenticationService-->authenticationController: 24.4 throw Error('Account has been deleted')
+    authenticationController-->loginScreen: 24.5 throw Error('Account has been deleted')
+    loginScreen-->User: 24.6 Display error message
+end
+
+AuthenticationService->AuthService: 25. generateToken(userData)
+activate AuthService
+AuthService-->AuthenticationService: 26. Return JWT token
+deactivate AuthService
+
+AuthenticationService-->authenticationController: 27. return {token, userData}
+deactivate AuthenticationService
+
+authenticationController-->loginScreen: 28. return {token, userData}
+deactivate authenticationController
+
+loginScreen->LocalStorage: 29. setItem(\"token\", token)
+activate LocalStorage
+LocalStorage-->loginScreen: 30. Token stored successfully
+deactivate LocalStorage
+
+loginScreen->LocalStorage: 31. setItem(\"userData\", userData)
+activate LocalStorage
+LocalStorage-->loginScreen: 32. User data stored successfully
+deactivate LocalStorage
+
+loginScreen-->User: 33. Login successful, redirect to dashboard
+deactivate loginScreen
+deactivate User

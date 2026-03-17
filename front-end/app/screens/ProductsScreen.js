@@ -3,8 +3,6 @@ import {
   FlatList, Image, ScrollView, ActivityIndicator, Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Header from "../components/Header";
-import BottomTabBar from "../components/BottomTabBar";
 import { useState, useEffect, useCallback } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
@@ -229,8 +227,7 @@ export default function ProductsScreen() {
 
   // ── Render ───────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.container}>
-      <Header />
+    <View style={styles.container}>
 
       {/* ── Hero / Search ── */}
       <View style={styles.hero}>
@@ -284,7 +281,7 @@ export default function ProductsScreen() {
         </TouchableOpacity>
       )}
 
-      {/* ── Products list — infinite scroll ── */}
+      {/* ── Products list ── */}
       <FlatList
         data={displayProducts}
         keyExtractor={(item) => item._id}
@@ -322,8 +319,7 @@ export default function ProductsScreen() {
         showsVerticalScrollIndicator={false}
       />
 
-      <BottomTabBar />
-    </SafeAreaView>
+    </View>
   );
 }
 

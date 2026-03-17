@@ -171,9 +171,9 @@ export function ProductsPage() {
     }, [isTypeOpen]);
 
     const getTypeLabel = (id) => {
-        if (id === 'all') return t('All Types');
+        if (id === 'all') return t('all_types');
         const found = (Array.isArray(productTypes) ? productTypes : []).find((x) => x._id === id);
-        return found ? t(found.name) : t('All Types');
+        return found ? t(found.name) : t('all_types');
     };
 
     useEffect(() => {
@@ -314,10 +314,10 @@ export function ProductsPage() {
             {/* Header */}
             <div className="mb-6 md:mb-8">
                 <h1 className="text-2xl md:text-3xl font-bold text-[#1a4d2e] mb-2">
-                    {t('Product Management')}
+                    {t('products')}
                 </h1>
                 <p className="text-sm md:text-base text-gray-600">
-                    {t('Manage products')}
+                    {t('manage_products')}
                 </p>
             </div>
 
@@ -329,7 +329,7 @@ export function ProductsPage() {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                             type="text"
-                            placeholder={t('Search products')}
+                            placeholder={t('search_product')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
@@ -348,7 +348,7 @@ export function ProductsPage() {
             appearance-none bg-white
         "
                         >
-                            <option value="all">{t('All Status')}</option>
+                            <option value="all">{t('all_status')}</option>
                             <option value="active">{t('active')}</option>
                             <option value="inactive">{t('inactive')}</option>
 
@@ -368,8 +368,8 @@ export function ProductsPage() {
             appearance-none bg-white
         "
                         >
-                            <option value="desc">{t('Rating: High to Low')}</option>
-                            <option value="asc">{t('Rating: Low to High')}</option>
+                            <option value="desc">{t('rating_high_to_low')}</option>
+                            <option value="asc">{t('rating_low_to_high')}</option>
                         </select>
                     </div>
 
@@ -405,7 +405,7 @@ export function ProductsPage() {
                                                 role="option"
                                                 aria-selected={typeFilter === 'all'}
                                             >
-                                                {t('All Types')}
+                                                {t('all_types')}
                                             </button>
                                         </li>
                                         {(Array.isArray(productTypes) ? productTypes : []).map((type) => (
@@ -430,47 +430,47 @@ export function ProductsPage() {
             </div>
 
             {/* Products Table - Desktop */}
-            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="overflow-x-hidden">
-                    <table className="w-full ">
+            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="w-full">
+                    <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('Name')}</th>
-                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('type') || 'Type'}</th>
-                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('price') || 'Price'}</th>
-                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('status') || 'Status'}</th>
-                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('rating') || 'Rating'}</th>
-                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('actions') || 'Actions'}</th>
+                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('name')}</th>
+                                <th className="px-6 pr-10 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('types')}</th>
+                                <th className="pl-8 px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('price')}</th>
+                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('status')}</th>
+                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('rating')}</th>
+                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">{t('actions')}</th>
 
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {paginatedProducts.map((p) => (
                                 <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-4 py-4 whitespace-nowrap max-w-[220px]">
                                         <div className="flex items-center">
-                                            <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f] flex items-center justify-center text-white font-bold ring-1 ring-gray-200">
+                                            <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f] flex items-center justify-center text-white font-bold ring-1 ring-gray-200">
                                                 {p.imageUrl ? (
                                                     <img src={p.imageUrl} alt={p.name || 'product'} className="w-full h-full object-cover" />
                                                 ) : (
                                                     p.name?.charAt(0)
                                                 )}
                                             </div>
-                                            <div className="ml-4">
-                                                <p className="font-medium text-gray-900 break-words">{p.name}</p>
-                                                <p className="ttext-xs text-gray-500 break-words line-clamp-2">{p.description}</p>
+                                            <div className="ml-3 min-w-0">
+                                                <p className="font-medium text-gray-900 truncate" title={p.name}>{p.name}</p>
+                                                <p className="text-xs text-gray-500 truncate" title={p.description}>{p.description}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(p.typeName)}`}>{t(p.typeName) || p.typeName}</span>
+                                    <td className="px-4 pr-8 py-4 whitespace-nowrap max-w-[120px]">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(p.typeName)} truncate`} title={p.typeName}>{t(p.typeName) || p.typeName}</span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatVND(p.price)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(p.status)}`}>{t(p.status) || p.status || '--'}</span>
+                                    <td className="pl-8 px-4 py-4 whitespace-nowrap text-sm text-gray-600 max-w-[100px] truncate" title={formatVND(p.price)}>{formatVND(p.price)}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap max-w-[100px]">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(p.status)} truncate`} title={p.status}>{t(p.status) || p.status || '--'}</span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">{renderRatingStars(p.rating)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                    <td className="px-4 py-4 whitespace-nowrap max-w-[80px]">{renderRatingStars(p.rating)}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap">
                                         <button
                                             type="button"
                                             onClick={() => setSelectedProduct(p)}
@@ -511,16 +511,17 @@ export function ProductsPage() {
                             <div className="flex-1 min-w-0">
                                 <h3 className="font-medium truncate text-gray-900">{p.name}</h3>
                                 <p className="text-xs text-gray-500 line-clamp-2">{p.description}</p>
+                                <p className="text-xs text-gray-500 break-words line-clamp-2 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap" style={{ maxWidth: '200px' }} title={p.description}>{p.description}</p>
                                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-600">
-                                    <span>{t('type') || 'Type'}: <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(p.typeName)}`}>{t(p.typeName) || p.typeName}</span></span>
-                                    <span>{t('price') || 'Price'}: {formatVND(p.price)}</span>
+                                    <span>{t('types')}: <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(p.typeName)}`}>{t(p.typeName) || p.typeName}</span></span>
+                                    <span>{t('price')}: {formatVND(p.price)}</span>
                                     <span>{t('origin') || 'Origin'}: {p.origin}</span>
                                     <span>{t('weight') || 'Weight'}: {p.weight}</span>
                                     <span>{t('Harvest Start')}: {formatDate(p.harvestStartDate)}</span>
                                     <span>{t('Harvest End')}: {formatDate(p.harvestEndDate)}</span>
-                                    <span>{t('status') || 'Status'}: <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(p.status)}`}>{t(p.status) || p.status || '--'}</span></span>
+                                    <span>{t('status')}: <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(p.status)}`}>{t(p.status) || p.status || '--'}</span></span>
                                     <span>{t('views') || 'Views'}: {p.viewCount}</span>
-                                    <span className="flex items-center gap-1">{t('rating') || 'Rating'}: {renderRatingStars(p.rating)}</span>
+                                    <span className="flex items-center gap-1">{t('rating')}: {renderRatingStars(p.rating)}</span>
                                 </div>
                             </div>
                         </div>

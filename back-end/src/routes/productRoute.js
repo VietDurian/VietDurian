@@ -23,7 +23,7 @@ const Router = express.Router();
  *           schema:
  *             type: object
  *             properties:
- *               diaryId:
+ *               seasonDiaryId:
  *                 type: string
  *                 example: "66b111111111111111111111"
  *               name:

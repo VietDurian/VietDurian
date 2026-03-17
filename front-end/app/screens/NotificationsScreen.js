@@ -9,8 +9,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import BottomTabBar from "../components/BottomTabBar";
-import Header from "../components/Header";
 
 // ── Mock Data ──
 const INITIAL_NOTIFICATIONS = [
@@ -136,8 +134,7 @@ export default function NotificationsScreen() {
     );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header />
+    <View style={styles.container}>
 
       {/* Title row */}
       <View style={styles.titleRow}>
@@ -168,18 +165,13 @@ export default function NotificationsScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons
-              name="notifications-off-outline"
-              size={48}
-              color="#D1D5DB"
-            />
+            <Ionicons name="notifications-off-outline" size={48} color="#D1D5DB" />
             <Text style={styles.emptyText}>Không có thông báo mới</Text>
           </View>
         }
       />
 
-      <BottomTabBar />
-    </SafeAreaView>
+    </View>
   );
 }
 
