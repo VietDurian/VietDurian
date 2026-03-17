@@ -1,0 +1,48 @@
+You have exceeded your premium request allowance. We have automatically switched you to GPT-4.1 which is included with your plan. [Enable additional paid premium requests](command:chat.enablePremiumOverages) to continue using premium models.```seqdiag
+actor User
+boundary ProductPage
+control ProductController
+participant ":ProductService" as Service
+participant ":ProductModel" as Model
+database Database
+
+User->ProductPage: 1. Open products list page
+activate ProductPage
+activate User
+ProductPage->ProductController: 2. GET /products
+activate ProductController
+
+ProductController->Service: 5. Process product list retrieval
+activate Service
+
+alt Products not found
+    Service->Model: 6.1 Fetch products
+    activate Model
+    Model->Database: 6.1.1 SELECT products (with filters/paging)
+    activate Database
+    Database-->Model: 6.1.2 Result set (empty)
+    deactivate Database
+    Model-->Service: 6.1.3 Return list (empty)
+    deactivate Model
+    Service-->ProductController: 6.1.4 Return empty result
+    ProductController-->ProductPage: 6.1.5 Return 200 OK + empty list/message
+    ProductPage-->User: 6.1.6 Show "No products available"
+else Products found
+    Service->Model: 6.2 Fetch products
+    activate Model
+    Model->Database: 6.2.1 SELECT products
+    activate Database
+    Database-->Model: 6.2.2 Result set (list)
+    deactivate Database
+    Model-->Service: 6.2.3 Return products list
+    deactivate Model
+    Service-->ProductController: 6.2.4 Return ProductListResponse
+    deactivate Service
+    ProductController-->ProductPage: 6.2.5 Return 200 OK + products data
+    ProductPage->ProductPage: 6.2.6 Render products list
+end
+
+ProductPage-->User: 7. Display page content (list or empty state)
+deactivate ProductPage
+deactivate User
+```

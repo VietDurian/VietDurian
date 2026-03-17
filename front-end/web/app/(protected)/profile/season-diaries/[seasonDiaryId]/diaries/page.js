@@ -29,6 +29,7 @@ import { useLaborCostsStore } from "@/store/useLaborCostsStore";
 const DIARIES = [
   {
     id: "1.4",
+    required: true,
     title: "Mua hoặc sản xuất giống trồng",
     icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
     groups: [
@@ -82,6 +83,7 @@ const DIARIES = [
   },
   {
     id: "1.5",
+    required: true,
     title: "Mua hoặc sản xuất phân bón, thuốc BVTV và hóa chất",
     icon: "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z",
     groups: [
@@ -100,7 +102,12 @@ const DIARIES = [
             type: "text",
             width: "w-44",
           },
-          { key: "quantity", label: "Số lượng", type: "number", width: "w-24" },
+          {
+            key: "quantity",
+            label: "Số lượng",
+            type: "number",
+            width: "w-24",
+          },
           { key: "unit", label: "Đơn vị", type: "text", width: "w-20" },
           {
             key: "total_price",
@@ -131,6 +138,7 @@ const DIARIES = [
   },
   {
     id: "1.6",
+    required: false,
     title: "Sử dụng phân bón và thuốc BVTV",
     icon: "M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1v1a1 1 0 002 0v-1h6v1a1 1 0 002 0v-1h1a1 1 0 001-1V5a1 1 0 00-1-1H3zm2 3h10v2H5V7zm0 4h4v2H5v-2zm7 0h3v2h-3v-2z",
     groups: [
@@ -142,6 +150,7 @@ const DIARIES = [
             label: "Ngày\nsử dụng",
             type: "date",
             width: "w-28",
+            required: true,
           },
         ],
       },
@@ -189,6 +198,7 @@ const DIARIES = [
   },
   {
     id: "1.7",
+    required: true,
     title: "Thu gom, xử lý bao bì chứa đựng và thuốc BVTV dư thừa",
     icon: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16",
     groups: [
@@ -233,12 +243,14 @@ const DIARIES = [
         cols: [
           {
             key: "harvest_date",
+            required: true,
             label: "Ngày\nthu hoạch",
             type: "date",
             width: "w-28",
           },
           {
             key: "harvest_quantity_kg",
+            required: true,
             label: "Sản lượng\nthu hoạch (kg)",
             type: "number",
             width: "w-32",
@@ -273,6 +285,7 @@ const DIARIES = [
   },
   {
     id: "1.9",
+    required: true,
     title: "Chi phí tưới tiêu và hệ thống tưới",
     icon: "M12 3v1m0 16v1m8.66-13l-.87.5M4.21 8.5l-.87-.5M19.78 15.5l-.87-.5M4.21 15.5l-.87.5M21 12h-1M4 12H3m15.36-6.36l-.7.7M6.34 17.66l-.7.7M17.66 17.66l.7.7M6.34 6.34l.7.7",
     groups: [
@@ -338,6 +351,7 @@ const DIARIES = [
   },
   {
     id: "1.10",
+    required: true,
     title: "Chi phí thuê lao động",
     icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
     groups: [
@@ -738,6 +752,11 @@ const SEED_DATA = {
 
 const PAGE_SIZE = 8;
 
+const isFieldRequired = (diary, col) => {
+  if (typeof col.required === "boolean") return col.required;
+  return diary.required === true;
+};
+
 // ── TOAST HOOK ────────────────────────────────────────────────────────────────
 function useToast() {
   const [toast, setToast] = useState(null);
@@ -753,6 +772,20 @@ function RecordModal({ diary, row, onSave, onClose }) {
   const [form, setForm] = useState({ ...row });
   const isEdit = !!row.id;
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
+
+  const isEmptyRequiredValue = (value) => {
+    if (value === null || value === undefined) return true;
+    if (typeof value === "string") return value.trim() === "";
+    return false;
+  };
+
+  const requiredColumns = diary.groups.flatMap((group) =>
+    group.cols.filter((col) => isFieldRequired(diary, col)),
+  );
+  const hasMissingRequired = requiredColumns.some((col) =>
+    isEmptyRequiredValue(form[col.key]),
+  );
+  const disableSubmit = !isEdit && hasMissingRequired;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 py-8 overflow-y-auto">
@@ -789,10 +822,14 @@ function RecordModal({ diary, row, onSave, onClose }) {
                   const isWide =
                     (col.type === "text" && col.width === "w-48") ||
                     col.type === "textarea";
+                  const isRequired = isFieldRequired(diary, col);
                   return (
                     <div key={col.key} className={isWide ? "col-span-2" : ""}>
                       <label className="block text-xs font-medium text-gray-500 mb-1">
                         {col.label.replace(/\n/g, " ")}
+                        {isRequired && (
+                          <span className="text-red-500 ml-1">*</span>
+                        )}
                         {col.type === "currency" && (
                           <span className="text-gray-400 font-normal ml-1">
                             (VNĐ)
@@ -861,7 +898,12 @@ function RecordModal({ diary, row, onSave, onClose }) {
           </button>
           <button
             onClick={() => onSave(form)}
-            className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-sm text-white font-medium transition shadow-sm shadow-emerald-200"
+            disabled={disableSubmit}
+            className={`flex-1 py-2.5 rounded-xl text-sm text-white font-medium transition shadow-sm ${
+              disableSubmit
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200"
+            }`}
           >
             {isEdit ? "Lưu thay đổi" : "Thêm mới"}
           </button>

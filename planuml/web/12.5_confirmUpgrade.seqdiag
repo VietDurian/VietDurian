@@ -1,0 +1,89 @@
+You have exceeded your premium request allowance. We have automatically switched you to GPT-4.1 which is included with your plan. [Enable additional paid premium requests](command:chat.enablePremiumOverages) to continue using premium models.```plantuml
+@startuml 12.5_confirmUpgrade.seqdiag
+actor User
+boundary dashboardPage
+control userManagementController
+participant ":userManagementService" as Service
+participant ":userManagementModel" as Model
+database Database
+
+activate User
+User -> dashboardPage: 1. Review upgrade request
+activate dashboardPage
+User -> dashboardPage: 2. Select approval or rejection decision
+User -> dashboardPage: 3. Click confirm button
+dashboardPage -> dashboardPage: 4. Validate input
+activate dashboardPage
+space
+deactivate dashboardPage
+opt validation error
+    dashboardPage --> User: 4.1 Display error message
+end
+dashboardPage -> userManagementController: 5. PUT /userManagement/confirmUpgrade/:userId
+activate userManagementController
+userManagementController -> userManagementController: 6. validateInput()
+activate userManagementController
+space
+deactivate userManagementController
+opt validation error
+    userManagementController --> dashboardPage: 6.1 Return error
+    dashboardPage --> User: 6.2 Display error message
+end
+userManagementController -> Service: 7. confirmUpgrade(userId, decision)
+activate Service
+Service -> Model: 8. findById(userId)
+activate Model
+Model -> Database: 9. execute query findOne
+activate Database
+Database --> Model: 10. Return user document
+deactivate Database
+Model --> Service: 11. Return user document
+deactivate Model
+Service -> Service: 12. checkDatabaseError()
+activate Service
+space
+deactivate Service
+opt database error
+    Service --> userManagementController: 12.1 Return error
+    userManagementController --> dashboardPage: 12.2 Return error info
+    dashboardPage --> User: 12.3 Display error message
+end
+Service -> Service: 13. checkNotFound()
+activate Service
+space
+deactivate Service
+opt user not found
+    Service --> userManagementController: 13.1 Return error
+    userManagementController --> dashboardPage: 13.2 Return error info
+    dashboardPage --> User: 13.3 Display error message
+end
+Service -> Model: 14. updateAccountLevel(userId, decision)
+activate Model
+Model -> Database: 15. execute query updateOne
+activate Database
+Database --> Model: 16. Return update result
+deactivate Database
+Model --> Service: 17. Return update result
+deactivate Model
+Service -> Service: 18. checkDatabaseError()
+activate Service
+space
+deactivate Service
+opt database error
+    Service --> userManagementController: 18.1 Return error
+    userManagementController --> dashboardPage: 18.2 Return error info
+    dashboardPage --> User: 18.3 Display error message
+end
+Service -> Service: 19. mapToUserDTO()
+activate Service
+space
+
+deactivate Service
+Service --> userManagementController: 20. Return success
+deactivate Service
+userManagementController --> dashboardPage: 21. Return success
+deactivate userManagementController
+dashboardPage --> User: 22. Show updated account level
+deactivate dashboardPage
+deactivate User
+@enduml

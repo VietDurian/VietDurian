@@ -281,7 +281,7 @@ function SeasonDiaryCard({ diary }) {
 
   const handlePages = (e) => {
     e.stopPropagation();
-    router.push(`/profile/season-diaries/${diary._id}/pages`);
+    router.push(`/profile/season-diaries/${diary._id}/diaries`);
   };
 
   const handleStats = (e) => {
@@ -397,7 +397,7 @@ function SeasonDiaryCard({ diary }) {
             className="flex-1 inline-flex items-center justify-center gap-1.5 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white px-3 py-2 rounded-lg font-medium transition-colors text-xs"
           >
             <Layers className="w-3.5 h-3.5" />
-            Trang nhật ký
+            Nhật ký
           </button>
           <button
             onClick={handleStats}
@@ -405,13 +405,6 @@ function SeasonDiaryCard({ diary }) {
             title="Thống kê"
           >
             <BarChart2 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={handleDelete}
-            className="inline-flex items-center justify-center border border-red-300 text-red-400 hover:bg-red-500 hover:text-white w-8 h-8 rounded-lg transition-colors"
-            title="Xóa nhật ký"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

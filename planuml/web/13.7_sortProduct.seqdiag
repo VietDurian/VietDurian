@@ -1,0 +1,47 @@
+You have exceeded your premium request allowance. We have automatically switched you to GPT-4.1 which is included with your plan. [Enable additional paid premium requests](command:chat.enablePremiumOverages) to continue using premium models.```seqdiag
+
+actor User
+boundary ProductPage
+control ProductController
+participant ":ProductService" as ProductService
+participant ":ProductModel" as ProductModel
+database Database
+
+
+User->ProductPage: 1. Choose sort option
+activate ProductPage
+activate User
+
+ProductPage->ProductController: 2. GET /products?sort=&page=&size=
+activate ProductController
+
+ProductController->ProductService: 3. Process product sorting
+activate ProductService
+
+ProductService->ProductModel: 4. Build sort criteria
+activate ProductModel
+
+ProductModel->Database: 5. Retrieve products ordered by criteria
+activate Database
+Database-->ProductModel: 6. Result set
+deactivate Database
+
+ProductModel-->ProductService: 7. Return sorted list + paging info
+deactivate ProductModel
+
+alt No products available
+    ProductService-->ProductController: 8.1. Return empty result
+    ProductController-->ProductPage: 8.1.1. Return 200 OK + empty list/message
+    ProductPage-->User: 8.1.2. Show "No products available"
+else Products available
+    ProductService-->ProductController: 8.2. Return SortProductResponse
+    deactivate ProductService
+    ProductController-->ProductPage: 8.2.1. Return 200 OK + sorted products data
+    deactivate ProductController
+
+
+ProductPage-->User: 9. Display sorted result
+end
+deactivate ProductPage
+deactivate User
+```

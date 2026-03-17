@@ -2,7 +2,7 @@ actor User
 boundary LoginPage
 control AuthController
 participant ":AuthService" as authService
-entity UserModel as userModel
+participant ":UserModel" as userModel
 database Database
 
 User->LoginPage: 1. Input login fields
