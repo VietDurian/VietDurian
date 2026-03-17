@@ -233,7 +233,7 @@ export default function EditProduct() {
       <div>
         <div className="max-w-4xl mx-auto px-6 pt-6">
           <button
-            onClick={() => router.push("/profile/products")}
+            onClick={() => router.push(`/profile/products/${productId}`)}
             className="cursor-pointer inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -291,7 +291,9 @@ export default function EditProduct() {
                   ))}
                 </select>
                 {isSeasonDiariesLoading ? (
-                  <p className="mt-1 text-xs text-gray-500">Đang tải mùa vụ...</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Đang tải mùa vụ...
+                  </p>
                 ) : null}
               </div>
 
@@ -538,7 +540,7 @@ export default function EditProduct() {
             </button>
             <button
               type="button"
-              onClick={() => router.push("/profile/products")}
+              onClick={() => router.push(`/profile/products/${productId}`)}
               className="cursor-pointer inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors border border-gray-300"
             >
               <X className="w-4 h-4" />
