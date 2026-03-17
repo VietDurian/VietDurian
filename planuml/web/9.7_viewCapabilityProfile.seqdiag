@@ -1,0 +1,61 @@
+You have exceeded your premium request allowance. We have automatically switched you to GPT-4.1 which is included with your plan. [Enable additional paid premium requests](command:chat.enablePremiumOverages) to continue using premium models.```seqdiag
+actor Users
+boundary CapabilityProfilePage
+control serviceProviderProfileController
+participant ":serviceProviderProfileService" as Service
+participant ":serviceProviderProfileModel" as Model
+database Database
+
+activate Users
+Users->CapabilityProfilePage: 1. Click "View Capability Profile"
+activate CapabilityProfilePage
+CapabilityProfilePage->serviceProviderProfileController: 2. GET /service-provider-profile/capability
+activate serviceProviderProfileController
+serviceProviderProfileController->Service: 3. getCapabilityProfile(userId)
+activate Service
+Service->Model: 4. findByUserId(userId)
+activate Model
+Model->Database: 5. findOne()
+activate Database
+Database-->Model: 6. Return profile document (or null)
+deactivate Database
+Model-->Service: 7. Return raw result
+deactivate Model
+Service->Service: 8. checkQuerySuccess()
+activate Service
+space
+deactivate Service
+opt database error
+    Service-->serviceProviderProfileController: 8.1 Return error
+    serviceProviderProfileController-->CapabilityProfilePage: 8.2 Return error
+    CapabilityProfilePage-->Users: 8.3 Display error message
+else no database error
+    Service->Service: 9. checkNotFound()
+    activate Service
+    space
+    deactivate Service
+    alt profile not found
+        Service-->serviceProviderProfileController: 9.1 Return error: profile not found
+        serviceProviderProfileController-->CapabilityProfilePage: 9.1.1 Return error
+        CapabilityProfilePage-->Users: 9.1.2 Display error: profile not found
+    else profile found
+        Service->Service: 9.2 filterServiceAreas()
+        activate Service
+        space
+
+        deactivate Service
+        Service->Service: 9.3 mapToCapabilityDTO()
+        activate Service
+        space
+        deactivate Service
+        Service-->serviceProviderProfileController: 9.4 Return success + capability data
+        deactivate Service
+        serviceProviderProfileController-->CapabilityProfilePage: 9.5 Return success + capability data
+        deactivate serviceProviderProfileController
+       
+        CapabilityProfilePage-->Users: 9.6 Display capability + service areas
+        deactivate CapabilityProfilePage
+        deactivate Users
+    end
+end
+```

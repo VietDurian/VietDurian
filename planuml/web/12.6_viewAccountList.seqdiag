@@ -1,0 +1,49 @@
+@startuml 12.6_viewAccountList.seqdiag
+actor Users
+boundary AccountPermissionListPage
+control permissionAccountController
+participant ":permissionAccountService" as Service
+participant ":permissionAccountModel" as Model
+database Database
+
+activate Users
+Users -> AccountPermissionListPage: 1. Open account permission list page
+activate AccountPermissionListPage
+
+AccountPermissionListPage -> permissionAccountController: 2. GET /permission/accounts
+activate permissionAccountController
+
+permissionAccountController -> Service: 3. getAccountPermissionList()
+activate Service
+
+Service -> Model: 4. findEligibleAccounts()
+activate Model
+
+Model -> Database: 5. find()
+activate Database
+
+alt database error
+    Database --> Model: 6. Return database error
+    Model --> Service: 7. Return error
+    Service --> permissionAccountController: 8. Return error
+    permissionAccountController --> AccountPermissionListPage: 9. Return error response
+    AccountPermissionListPage --> Users: 10. Display error message
+else success
+    Database --> Model: 6. Return account documents
+    deactivate Database
+    Model --> Service: 7. Return accounts
+    deactivate Model
+
+
+    Service --> permissionAccountController: 8. Return success + accounts
+    deactivate Service
+
+    permissionAccountController --> AccountPermissionListPage: 9. Return success + accounts
+    deactivate permissionAccountController
+
+    AccountPermissionListPage --> Users: 10. Display account permission list
+end
+
+deactivate AccountPermissionListPage
+deactivate Users
+@enduml

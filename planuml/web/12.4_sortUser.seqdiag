@@ -1,0 +1,62 @@
+You have exceeded your premium request allowance. We have automatically switched you to GPT-4.1 which is included with your plan. [Enable additional paid premium requests](command:chat.enablePremiumOverages) to continue using premium models.```plantuml
+@startuml 12.4_sortUser.seqdiag
+actor User
+boundary dashboardScreen
+control userManagementController
+participant ":userManagementService" as Service
+participant ":userManagementModel" as Model
+database Database
+
+activate User
+User -> dashboardScreen: 1. Select sort field and order
+activate dashboardScreen
+User -> dashboardScreen: 2. Click sort button
+dashboardScreen -> dashboardScreen: 3. Validate sort input
+activate dashboardScreen
+space
+deactivate dashboardScreen
+opt validation error
+    dashboardScreen --> User: 3.1 Display error message
+end
+dashboardScreen -> userManagementController: 4. GET /userManagement/sort?field=sortField&order=asc
+activate userManagementController
+userManagementController -> userManagementController: 5. validateInput()
+activate userManagementController
+space
+deactivate userManagementController
+opt validation error
+    userManagementController --> dashboardScreen: 5.1 Return error
+    dashboardScreen --> User: 5.2 Display error message
+end
+userManagementController -> Service: 6. sortUser(field, order)
+activate Service
+Service -> Model: 7. findWithSort(field, order)
+activate Model
+Model -> Database: 8. execute query with sort({field: order})
+activate Database
+Database --> Model: 9. Return sorted user documents
+deactivate Database
+Model --> Service: 10. Return sorted user documents
+deactivate Model
+Service -> Service: 11. checkDatabaseError()
+activate Service
+space
+deactivate Service
+opt database error
+    Service --> userManagementController: 11.1 Return error
+    userManagementController --> dashboardScreen: 11.2 Return error info
+    dashboardScreen --> User: 11.3 Display error message
+end
+Service -> Service: 12. mapToUserDTOList()
+activate Service
+space
+deactivate Service
+Service --> userManagementController: 13. Return success
+deactivate Service
+userManagementController --> dashboardScreen: 14. Return success
+deactivate userManagementController
+dashboardScreen --> User: 15. Display sorted users
+deactivate dashboardScreen
+deactivate User
+@enduml
+```
