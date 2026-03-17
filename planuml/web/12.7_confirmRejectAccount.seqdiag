@@ -1,0 +1,99 @@
+actor Users
+boundary AccountApprovalPage
+control permissionAccountController
+participant ":permissionAccountService" as Service
+participant ":permissionAccountModel" as Model
+database Database
+
+activate Users
+Users->AccountApprovalPage: 1. Open account approval page
+activate AccountApprovalPage
+Users->AccountApprovalPage: 2. Choose decision (confirm/reject)
+Users->AccountApprovalPage: 3. Click submit decision
+AccountApprovalPage->AccountApprovalPage: 4. Validate input
+activate AccountApprovalPage
+space
+deactivate AccountApprovalPage
+opt Validation error
+    AccountApprovalPage-->Users: 4.1 Display validation error
+end
+
+AccountApprovalPage->permissionAccountController: 5. POST /permission/accounts/:accountId/decision
+activate permissionAccountController
+permissionAccountController->permissionAccountController: 6. validateInput()
+activate permissionAccountController
+space
+deactivate permissionAccountController
+opt invalid input
+    permissionAccountController-->AccountApprovalPage: 6.1 Return error
+    AccountApprovalPage-->Users: 6.2 Display error message
+else input valid
+    permissionAccountController->Service: 7. decideAccountPermission(accountId, decision)
+    activate Service
+    Service->Model: 8. findById(accountId)
+    activate Model
+    Model->Database: 9. findOne()
+    activate Database
+    Database-->Model: 10. Return account request (or null)
+    deactivate Database
+    Model-->Service: 11. Return result
+    deactivate Model
+
+    Service->Service: 12. checkNotFound()
+    activate Service
+    space
+    deactivate Service
+    opt account request not found
+        Service-->permissionAccountController: 12.1 Return error: not found
+        permissionAccountController-->AccountApprovalPage: 12.2 Return error
+        AccountApprovalPage-->Users: 12.3 Display error: request not found
+    else found
+        Service->Service: 13. validateDecision()
+        activate Service
+        space
+        deactivate Service
+        opt invalid decision
+            Service-->permissionAccountController: 13.1 Return error: invalid decision
+            permissionAccountController-->AccountApprovalPage: 13.2 Return error
+            AccountApprovalPage-->Users: 13.3 Display error: invalid decision
+        else decision valid
+            alt decision = confirm
+                Service->Model: 14. updatePermissionStatus(accountId, APPROVED)
+                activate Model
+                Model->Database: 15. updateOne()
+                activate Database
+                Database-->Model: 16. Return update result
+                deactivate Database
+                Model-->Service: 17. Return update result
+                deactivate Model
+                Service->Service: 18. mapToApprovalDTO()
+                activate Service
+                space
+                deactivate Service
+                Service-->permissionAccountController: 19. Return success: approved
+                permissionAccountController-->AccountApprovalPage: 20. Return success: approved
+                AccountApprovalPage-->Users: 21. Show approval confirmation
+            else decision = reject
+                Service->Model: 14.1 updatePermissionStatus(accountId, REJECTED)
+                activate Model
+                Model->Database: 15.1 updateOne()
+                activate Database
+                Database-->Model: 16.1 Return update result
+                deactivate Database
+                Model-->Service: 17.1 Return update result
+                deactivate Model
+                Service->Service: 18.1 mapToRejectionDTO()
+                activate Service
+                space
+                deactivate Service
+                Service-->permissionAccountController: 19.1 Return success: rejected
+                deactivate Service
+                permissionAccountController-->AccountApprovalPage: 20.1 Return success: rejected
+                deactivate permissionAccountController
+                AccountApprovalPage-->Users: 21.1 Show rejection confirmation
+                deactivate AccountApprovalPage
+                deactivate Users
+            end
+        end
+    end
+end

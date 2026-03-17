@@ -1,0 +1,54 @@
+@startuml 12.1.1_viewUserDetail.seqdiag
+actor User
+boundary dashboardPage
+control userManagementController
+participant ":userManagementService" as Service
+participant ":userManagementModel" as Model
+database Database
+
+activate User
+User -> dashboardPage: 1. Click on user to view details
+activate dashboardPage
+dashboardPage -> userManagementController: 2. GET /userManagement/detail/:userId
+activate userManagementController
+userManagementController -> Service: 3. getUserDetail(userId)
+activate Service
+Service -> Model: 4. findById(userId)
+activate Model
+Model -> Database: 5. execute query findOne({_id: userId})
+activate Database
+Database --> Model: 6. Return user document
+deactivate Database
+Model --> Service: 7. Return user document
+deactivate Model
+Service -> Service: 8. checkDatabaseError()
+activate Service
+space
+deactivate Service
+opt database error
+    Service --> userManagementController: 10.1 Return error
+    userManagementController --> dashboardPage: 10.2 Show error message
+    dashboardPage --> User: 10.4 Display error message
+end
+Service -> Service: 9. checkNotFound()
+activate Service
+space
+deactivate Service
+opt user not found
+    Service --> userManagementController: 9.1 Return error
+    userManagementController --> dashboardPage: 9.2 Show error message
+    dashboardPage --> User: 9.3 Display error message
+end
+Service -> Service: 10. mapToUserDetailDTO()
+activate Service
+space
+deactivate Service
+Service --> userManagementController: 11. Return success
+deactivate Service
+userManagementController --> dashboardPage: 12. Return success
+deactivate userManagementController
+
+dashboardPage --> User: 13. Display user detailed information
+deactivate dashboardPage
+deactivate User
+@enduml

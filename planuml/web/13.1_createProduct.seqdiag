@@ -1,0 +1,54 @@
+actor User
+boundary ProductPage
+control ProductController
+participant ":ProductService" as Service
+participant ":ProductModel" as Model
+database Database
+
+User->ProductPage: 1. Input product fields
+activate User
+activate ProductPage
+User->ProductPage: 2. Submit product form
+ProductPage->ProductPage: 3. Validate input
+activate ProductPage
+space
+deactivate ProductPage
+opt Check validation
+    ProductPage-->User: 3.1 Show validation error
+end
+
+ProductPage->ProductController: 4. POST /products/create
+activate ProductController
+
+ProductController->Service: 5. createProduct()
+activate Service
+
+alt Product exists
+    Service->Model: 6.1 checkNameConflict()
+    activate Model
+    Model->Database: 6.1.1 findOne({ name })
+    activate Database
+    Database-->Model: 6.1.2 Return result (true/false)
+    deactivate Database
+    Model-->Service: 6.1.3 Return conflict state
+    deactivate Model
+    Service-->ProductController: 6.1.4 Return error: product already exists
+    ProductController-->ProductPage: 6.1.5 Return error response
+    ProductPage-->User: 6.1.6 Show error
+else Product is valid
+    Service->Model: 6.2 Save new product
+    activate Model
+    Model->Database: 6.2.1 insertOne()
+    activate Database
+    Database-->Model: 6.2.2 Created
+    deactivate Database
+    Model-->Service: 6.2.3 Return created entity
+    deactivate Model
+    Service-->ProductController: 6.2.4 Return product data
+    deactivate Service
+    ProductController-->ProductPage: 6.2.5 Return 200 OK + product data
+    deactivate ProductController
+    ProductPage-->User: 6.2.6 Show success
+    deactivate ProductPage
+    deactivate User
+end

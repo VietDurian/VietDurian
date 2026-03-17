@@ -1,0 +1,62 @@
+You have exceeded your premium request allowance. We have automatically switched you to GPT-4.1 which is included with your plan. [Enable additional paid premium requests](command:chat.enablePremiumOverages) to continue using premium models.```plantuml
+@startuml 12.2_searchUser.seqdiag
+actor User
+boundary dashboardPage
+control userManagementController
+participant ":userManagementService" as Service
+participant ":userManagementModel" as Model
+database Database
+
+activate User
+User -> dashboardPage: 1. Enter search keyword
+activate dashboardPage
+User -> dashboardPage: 2. Click search button
+dashboardPage -> dashboardPage: 3. Validate input
+activate dashboardPage
+space
+deactivate dashboardPage
+opt validation error
+    dashboardPage --> User: 3.1 Display error message
+end
+dashboardPage -> userManagementController: 4. GET /userManagement/search?keyword=searchTerm
+activate userManagementController
+userManagementController -> userManagementController: 5. validateInput()
+activate userManagementController
+space
+deactivate userManagementController
+opt validation error
+    userManagementController --> dashboardPage: 5.1 Return error
+    dashboardPage --> User: 5.2 Display error message
+end
+userManagementController -> Service: 6. searchUser(keyword)
+activate Service
+Service -> Model: 7. findByKeyword(keyword)
+activate Model
+Model -> Database: 8. execute query find
+activate Database
+Database --> Model: 9. Return matching user documents
+deactivate Database
+Model --> Service: 10. Return matching user documents
+deactivate Model
+Service -> Service: 11. checkDatabaseError()
+activate Service
+space
+deactivate Service
+opt database error
+    Service --> userManagementController: 11.1 Return error
+    userManagementController --> dashboardPage: 11.2 Return error info
+    dashboardPage --> User: 11.3 Display error message
+end
+Service -> Service: 12. mapToUserDTOList()
+activate Service
+space
+deactivate Service
+Service --> userManagementController: 13. Return success
+deactivate Service
+userManagementController --> dashboardPage: 14. Return success
+deactivate userManagementController
+dashboardPage --> User: 15. Display matching users
+deactivate dashboardPage
+deactivate User
+@enduml
+```
