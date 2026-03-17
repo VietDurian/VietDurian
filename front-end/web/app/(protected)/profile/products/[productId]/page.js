@@ -215,35 +215,14 @@ export default function ProductDetailPage() {
         </div>
       )}
       <div className=" mx-auto space-y-6">
-        {/* Top bar */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
-          >
-            <ArrowLeft size={15} />
-            Trở lại Sản Phẩm
-          </button>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                router.push(`/profile/products/${productId}/edit`);
-              }}
-              className="flex items-center gap-1.5 border border-gray-200 bg-white text-sm font-medium text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              <SquarePen size={13} />
-              Chỉnh sửa
-            </button>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              disabled={isProductDeleting}
-              className="flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <Trash2 size={13} />
-              {isProductDeleting ? "Đang xóa..." : "Xóa"}
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={() => setShowDeleteModal(true)}
+          disabled={isProductDeleting}
+          className="absolute right-10 top-25 flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <Trash2 size={13} />
+          {isProductDeleting ? "Đang xóa..." : "Xóa"}
+        </button>
 
         {/* Main content */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

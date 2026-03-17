@@ -232,13 +232,6 @@ export default function EditProduct() {
       {/* Header */}
       <div>
         <div className="max-w-4xl mx-auto px-6 pt-6">
-          <button
-            onClick={() => router.push(`/profile/products/${productId}`)}
-            className="cursor-pointer inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Trở lại sản phẩm
-          </button>
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
               <Edit className="w-6 h-6 text-emerald-600" />

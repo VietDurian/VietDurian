@@ -19,6 +19,7 @@ import {
   Bot,
   ChartColumnIncreasing,
   ChevronLeft,
+  Edit,
 } from "lucide-react";
 
 const SidebarItem = ({ icon: Icon, label, href, active, onClick }) => (
@@ -84,8 +85,11 @@ export default function AsideBar({ role }) {
   const seasonDiaryRouteMatch = pathname?.match(
     /^\/profile\/season-diaries\/([^/]+)/,
   );
+  const productRouteMatch = pathname?.match(/^\/profile\/products\/([^/]+)/);
   const seasonDiaryId = seasonDiaryRouteMatch?.[1];
+  const productId = productRouteMatch?.[1];
   const isFarmerSeasonDiarySubRoute = role === "farmer" && !!seasonDiaryId;
+  const isFarmerProductsSubRoute = role === "farmer" && !!productId;
 
   const getMenuItems = (role) => {
     switch (role) {
@@ -112,6 +116,19 @@ export default function AsideBar({ role }) {
               icon: ChartColumnIncreasing,
               label: "Thống Kê",
               href: `/profile/season-diaries/${seasonDiaryId}/statistics`,
+            },
+          ];
+        } else if (isFarmerProductsSubRoute) {
+          return [
+            {
+              icon: Sprout,
+              label: "Chi Tiết",
+              href: `/profile/products/${productId}`,
+            },
+            {
+              icon: Edit,
+              label: "Chỉnh sửa",
+              href: `/profile/products/${productId}/edit`,
             },
           ];
         }
@@ -153,14 +170,18 @@ export default function AsideBar({ role }) {
     <>
       {/* Navigation Links */}
       <nav className="relative z-10 flex flex-col flex-1 space-y-2">
-        {isFarmerSeasonDiarySubRoute && (
+        {(isFarmerSeasonDiarySubRoute || isFarmerProductsSubRoute) && (
           <Link
-            href="/profile/season-diaries"
+            href={
+              isFarmerProductsSubRoute
+                ? "/profile/products"
+                : "/profile/season-diaries"
+            }
             onClick={onItemClick}
             className="flex items-center gap-2 px-4 py-2.5 mb-1 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors duration-300"
           >
             <ChevronLeft size={16} strokeWidth={2.5} />
-            Trở lại vườn
+            {isFarmerProductsSubRoute ? "Trở lại sản phẩm" : "Trở lại vườn"}
           </Link>
         )}
 
