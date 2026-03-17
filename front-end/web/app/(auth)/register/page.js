@@ -72,7 +72,12 @@ export default function RegisterPage() {
     : confirmPassword !== password
       ? "Mật khẩu xác nhận không khớp"
       : "";
-  const phoneError = validateField("phone", phone);
+  const phoneError =
+    phone.length > 0 && !phone.startsWith("0")
+      ? "Số điện thoại phải bắt đầu bằng 0"
+      : phone.length > 0 && phone.length < 10
+        ? "Số điện thoại phải có 10 chữ số"
+        : "";
   const roleError = !selectedRole ? "Vui lòng chọn vai trò" : "";
 
   const stepOneValid =
@@ -169,8 +174,15 @@ export default function RegisterPage() {
   };
 
   const handlePhoneChange = (e) => {
-    const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 10);
-    setPhone(digitsOnly);
+    const value = e.target.value;
+
+    // Chỉ cho phép số
+    if (!/^\d*$/.test(value)) return;
+
+    // Ký tự đầu bắt buộc là 0
+    if (value.length === 1 && value !== "0") return;
+
+    setPhone(value);
   };
 
   const handlePhoneKeyDown = (e) => {
