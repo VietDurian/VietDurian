@@ -30,7 +30,13 @@ const DISEASE_INFO = {
     ],
   },
   Leaf_Healthy: {
-    viName: "Lá khỏe mạnh"
+    viName: "Lá khỏe mạnh",
+    solutions: [
+      "Tiếp tục duy trì chế độ tưới và bón phân cân đối như hiện tại",
+      "Theo dõi định kỳ 3-7 ngày/lần để phát hiện sớm dấu hiệu bất thường",
+      "Giữ vườn thông thoáng, vệ sinh lá rụng và cắt tỉa cành già yếu",
+      "Hạn chế phun thuốc khi không có triệu chứng bệnh để tránh ảnh hưởng sinh trưởng"
+    ],
   },
   Leaf_Phomopsis: {
     viName: "Bệnh đốm lá Phomopsis",
