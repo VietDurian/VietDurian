@@ -433,12 +433,13 @@ export default function CreateSeasonDiary() {
                   name="area"
                   value={formData.area}
                   onChange={handleChange}
-                  min="0"
+                  min="1"
                   step="any"
                   placeholder="0"
                   suffix="m²"
                   onKeyDown={(e) => {
-                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                    if (e.key === "-" || e.key === "e" || e.key === "0")
+                      e.preventDefault();
                   }}
                 />
                 {formData.area && (
@@ -457,11 +458,12 @@ export default function CreateSeasonDiary() {
                   name="row_bed_count"
                   value={formData.row_bed_count}
                   onChange={handleChange}
-                  min="0"
+                  min="1"
                   placeholder="0"
                   suffix="luống"
                   onKeyDown={(e) => {
-                    if (e.key === "-" || e.key === "e") e.preventDefault();
+                    if (e.key === "-" || e.key === "e" || e.key === "0")
+                      e.preventDefault();
                   }}
                 />
               </div>
