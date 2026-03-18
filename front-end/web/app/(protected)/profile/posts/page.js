@@ -63,7 +63,6 @@ const validateContact = (type, value) => {
   return "";
 };
 
-// detect whether a contact string looks like email or phone
 const detectContactType = (val) => {
   if (!val) return "phone";
   return EMAIL_REGEX.test(val) ? "email" : "phone";
@@ -200,57 +199,49 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
             </div>
           </div>
 
-          {/* Category */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Danh mục</label>
             <div className="relative">
-              <button type="button" onClick={() => setDropdownOpen((o) => !o)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white transition-all cursor-pointer text-left flex justify-between items-center">
+              <button type="button" onClick={() => setDropdownOpen((o) => !o)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white transition-all cursor-pointer text-left flex justify-between items-center">
                 <span>{category}</span>
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </button>
               {dropdownOpen && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
                   {categories.map((item) => (
-                    <div key={item} onClick={() => { setCategory(item); setDropdownOpen(false); }} className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item ? "bg-emerald-600 text-white font-medium" : "text-gray-900 hover:bg-emerald-500 hover:text-white"}`}>{item}</div>
+                    <div key={item} onClick={() => { setCategory(item); setDropdownOpen(false); }} className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item ? "bg-emerald-500 text-white font-medium" : "text-gray-900 hover:bg-emerald-500 hover:text-white"}`}>{item}</div>
                   ))}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Title → label "Nội dung" */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Nội dung</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={TITLE_PLACEHOLDERS[category] || TITLE_PLACEHOLDERS["Khác"]} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white font-medium" maxLength={100} />
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={TITLE_PLACEHOLDERS[category] || TITLE_PLACEHOLDERS["Khác"]} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium" maxLength={100} />
             <div className="text-xs text-gray-500 text-right">{title.length}/100</div>
           </div>
 
-          {/* Content → label "Mô tả chi tiết" */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Mô tả chi tiết</label>
-            <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Mô tả chi tiết về bài viết của bạn..." className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-600" maxLength={1000} />
+            <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Mô tả chi tiết về bài viết của bạn..." className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500" maxLength={1000} />
             <div className="text-xs text-gray-500 text-right">{content.length}/1000</div>
           </div>
 
-          {/* Contact */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Thông tin liên hệ</label>
             <div className="flex gap-2">
-              <button type="button" onClick={() => handleContactTypeChange("phone")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "phone" ? "border-emerald-600 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+              <button type="button" onClick={() => handleContactTypeChange("phone")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "phone" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
                 <Phone size={15} />Số điện thoại
               </button>
-              <button type="button" onClick={() => handleContactTypeChange("email")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "email" ? "border-emerald-600 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+              <button type="button" onClick={() => handleContactTypeChange("email")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "email" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
                 <Mail size={15} />Email
               </button>
             </div>
-            <input type={contactType === "phone" ? "tel" : "email"} value={contact} onChange={handleContactChange} placeholder={contactType === "phone" ? "VD: 0901234567" : "VD: example@gmail.com"} className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white ${contactError ? "border-red-400" : "border-gray-200"}`} />
-            {contactError && <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-              <XCircle size={14} strokeWidth={2.5} />
-              {contactError}
-            </p>}
+            <input type={contactType === "phone" ? "tel" : "email"} value={contact} onChange={handleContactChange} placeholder={contactType === "phone" ? "VD: 0901234567" : "VD: example@gmail.com"} className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white ${contactError ? "border-red-400" : "border-gray-200"}`} />
+            {contactError && <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1"><XCircle size={14} strokeWidth={2.5} />{contactError}</p>}
           </div>
 
-          {/* Image */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">Ảnh</label>
             {!imagePreview ? (
@@ -270,7 +261,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
 
           {error && <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2"><AlertCircle size={18} /><span>{error}</span></div>}
 
-          <button type="submit" disabled={!canSubmit || isSubmitting} className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition disabled:opacity-60 disabled:cursor-not-allowed">
+          <button type="submit" disabled={!canSubmit || isSubmitting} className="w-full bg-emerald-500 text-white font-bold py-3 rounded-lg hover:bg-emerald-600 transition disabled:opacity-60 disabled:cursor-not-allowed">
             {isSubmitting ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Đang cập nhật...</span> : "Cập nhật bài viết"}
           </button>
         </form>
@@ -319,7 +310,6 @@ const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm
   return (
     <>
       <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-shadow w-full">
-        {/* Header row: avatar + name + category badge (inside) */}
         <div className="flex justify-between items-start mb-3">
           <div className="flex gap-3 flex-1 min-w-0">
             <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100 cursor-pointer" onClick={() => router.push(`/profile/${post.authorId}`)}>
@@ -328,7 +318,6 @@ const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <h4 className="font-bold text-gray-900 text-base">{post.userName}</h4>
-                {/* Category badge inside header */}
                 {cfg && (() => {
                   const Icon = cfg.icon;
                   return (
@@ -357,9 +346,7 @@ const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm
           </div>
         </div>
 
-        {/* Title */}
         {post.title && <h3 className="font-bold text-gray-900 text-lg leading-snug mb-2">{post.title}</h3>}
-
         <p className="text-base text-gray-600 leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
 
         {post.link && (
@@ -380,11 +367,11 @@ const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm
             {isTogglingFavorite ? <Loader2 size={20} className="animate-spin" /> : <Heart size={20} className={isLiked ? "fill-current" : ""} />}
             {likeCount > 0 && <span className="text-sm font-medium">{likeCount}</span>}
           </button>
-          <button onClick={() => setIsCommentModalOpen(true)} className="flex items-center gap-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition px-3 py-1.5 rounded-lg">
+          <button onClick={() => setIsCommentModalOpen(true)} className="flex items-center gap-2 text-gray-500 hover:text-emerald-500 hover:bg-emerald-50 transition px-3 py-1.5 rounded-lg">
             <MessageCircle size={20} />
             {commentCount > 0 && <span className="text-sm font-medium">{commentCount}</span>}
           </button>
-          <button onClick={() => onContact?.(post)} className="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">Liên Hệ</button>
+          <button onClick={() => onContact?.(post)} className="px-4 py-2 bg-emerald-500 text-white rounded-full font-medium hover:bg-emerald-600 transition-colors text-sm">Liên Hệ</button>
         </div>
       </article>
       <CommentModal isOpen={isCommentModalOpen} onClose={() => setIsCommentModalOpen(false)} postId={post.id} onCommentCountChange={setCommentCount} />
@@ -482,13 +469,14 @@ export default function PostsPage() {
     <div className="min-h-screen bg-white">
       <main className="pt-7 px-4 flex flex-col justify-center items-center">
         <div className="w-full mt-5">
-          <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl p-8 md:p-12 w-full">
+          {/* ── Hero banner: bg-emerald-500 (khớp ProfileDetails) ── */}
+          <div className="bg-emerald-500 rounded-3xl shadow-xl p-8 md:p-12 w-full">
             <div className="flex items-center justify-between flex-wrap gap-6">
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Bài viết của tôi</h1>
                 <p className="text-emerald-50 text-lg">Chia sẻ kinh nghiệm, đăng dịch vụ cho thuê, tìm người thuê và rao bán sản phẩm nông nghiệp</p>
               </div>
-              <Link href="/profile/posts/create" className="bg-white hover:bg-emerald-50 text-emerald-700 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg">
+              <Link href="/profile/posts/create" className="bg-white hover:bg-emerald-50 text-emerald-500 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg">
                 <Plus size={20} />Đăng bài
               </Link>
             </div>
@@ -499,7 +487,7 @@ export default function PostsPage() {
 
         <div className="w-full max-w-4xl mt-8">
           <div className="flex items-center justify-between mb-6">
-            <p className="text-gray-600">Tìm thấy <span className="font-semibold text-emerald-600">{posts.length}</span> bài viết</p>
+            <p className="text-gray-600">Tìm thấy <span className="font-semibold text-emerald-500">{posts.length}</span> bài viết</p>
             <div className="flex items-center gap-3">
               <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Trạng thái:</span>
               <div className="relative status-dropdown">
@@ -520,14 +508,14 @@ export default function PostsPage() {
             </div>
           </div>
 
-          {loadingPosts && <div className="flex flex-col items-center justify-center py-12"><div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div><p className="text-gray-500 font-medium">Đang tải bài viết...</p></div>}
+          {loadingPosts && <div className="flex flex-col items-center justify-center py-12"><div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mb-3"></div><p className="text-gray-500 font-medium">Đang tải bài viết...</p></div>}
           {postsError && <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center"><AlertCircle className="mx-auto text-red-500 mb-3" size={32} /><p className="text-red-600 font-medium">{postsError}</p></div>}
           {!loadingPosts && !postsError && posts.length === 0 && (
             <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><ImageIcon className="text-gray-400" size={28} /></div>
               <h3 className="text-lg font-bold text-gray-800 mb-2">Chưa có bài viết nào</h3>
               <p className="text-gray-500 mb-4">Hãy chia sẻ khoảnh khắc đầu tiên của bạn!</p>
-              <Link href="/profile/posts/create" className="inline-block bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-700 transition">Tạo bài viết</Link>
+              <Link href="/profile/posts/create" className="inline-block bg-emerald-500 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-600 transition">Tạo bài viết</Link>
             </div>
           )}
           {posts.map((post) => (

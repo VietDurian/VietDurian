@@ -37,7 +37,7 @@ export default function AboutPage() {
             </section>
 
             {/* Mission & Vision Section */}
-            <section className="py-16 bg-emerald-800">
+            <section className="py-16 bg-emerald-500">
                 <div className="max-w-[1400px] mx-auto px-4 lg:px-6 space-y-16">
 
                     {/* Our Mission */}
