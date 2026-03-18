@@ -117,6 +117,11 @@ export default function AsideBar({ role }) {
               label: "Thống Kê",
               href: `/profile/season-diaries/${seasonDiaryId}/statistics`,
             },
+            {
+              icon: Edit,
+              label: "Chỉnh Sửa",
+              href: `/profile/season-diaries/${seasonDiaryId}/edit`,
+            },
           ];
         } else if (isFarmerProductsSubRoute) {
           return [

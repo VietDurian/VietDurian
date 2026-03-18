@@ -43,8 +43,10 @@ export const useSeasonDiaryStore = create((set, get) => ({
         seasonDiaries: [res.data.data, ...state.seasonDiaries],
       }));
       toast.success(res.data.message);
+      return res.data.data;
     } catch (error) {
       toast.error(error?.response?.data?.message || "Lỗi tạo nhật ký");
+      return null;
     } finally {
       set({ isSeasonDiaryCreating: false });
     }
@@ -56,8 +58,10 @@ export const useSeasonDiaryStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get(`/season-diary/${seasonDiaryId}`);
       set({ seasonDiaryDetail: res.data.data });
+      return res.data.data;
     } catch (error) {
       toast.error(error?.response?.data?.message || "Lỗi tải chi tiết nhật ký");
+      return null;
     } finally {
       set({ isSeasonDiaryDetailLoading: false });
     }
@@ -67,7 +71,7 @@ export const useSeasonDiaryStore = create((set, get) => ({
   updateSeasonDiary: async (seasonDiaryId, data) => {
     set({ isSeasonDiaryUpdating: true });
     try {
-      const res = await axiosInstance.put(
+      const res = await axiosInstance.patch(
         `/season-diary/${seasonDiaryId}`,
         data,
       );
@@ -78,8 +82,10 @@ export const useSeasonDiaryStore = create((set, get) => ({
         seasonDiaryDetail: res.data.data,
       }));
       toast.success(res.data.message);
+      return res.data.data;
     } catch (error) {
       toast.error(error?.response?.data?.message || "Lỗi cập nhật nhật ký");
+      return null;
     } finally {
       set({ isSeasonDiaryUpdating: false });
     }
