@@ -104,6 +104,7 @@ const localizeAiResult = (aiResult) => {
 };
 
 const predict = async (req, res, next) => {
+  const debugAIGuard = String(process.env.DEBUG_AI_GUARD || "false").toLowerCase() === "true";
   const bypassOnQuota = String(process.env.AI_GUARD_BYPASS_ON_QUOTA || "false").toLowerCase() === "true";
 
   try {
@@ -133,6 +134,16 @@ const predict = async (req, res, next) => {
         filename: file.originalname || "image",
       });
     } catch (guardError) {
+      if (debugAIGuard) {
+        console.error("[AIGuard]", {
+          status: guardError?.status,
+          code: guardError?.code,
+          message: guardError?.message,
+          detail: guardError?.detail || null,
+          retryAfterSeconds: guardError?.retryAfterSeconds || null,
+        });
+      }
+
       if (guardError?.code === "GUARD_NOT_CONFIGURED") {
         return res.status(500).json({
           code: 500,
@@ -168,6 +179,14 @@ const predict = async (req, res, next) => {
           code: 502,
           success: false,
           message: "Khong the kiem tra anh voi AI guard luc nay. Vui long thu lai sau.",
+          data: debugAIGuard
+            ? {
+                providerStatus: guardError?.status || null,
+                providerCode: guardError?.code || null,
+                retryAfterSeconds: guardError?.retryAfterSeconds || null,
+                detail: guardError?.detail || null,
+              }
+            : undefined,
         });
       }
 
