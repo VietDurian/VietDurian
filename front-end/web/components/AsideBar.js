@@ -26,38 +26,34 @@ const SidebarItem = ({ icon: Icon, label, href, active, onClick }) => (
   <Link
     href={href}
     onClick={onClick}
-    className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${
-      active
-        ? "bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white scale-105"
+    className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${active
+        ? "bg-emerald-500 text-white scale-105"
         : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
-    }`}
+      }`}
   >
     {active && (
-      <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 animate-pulse rounded-2xl" />
+      <div className="absolute inset-0 bg-white/10 rounded-2xl" />
     )}
 
     <div
-      className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
-        active
+      className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${active
           ? "bg-white/20 backdrop-blur-sm"
           : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
-      }`}
+        }`}
     >
       <Icon
         size={20}
-        className={`${
-          active
+        className={`${active
             ? "text-white"
-            : "text-emerald-600 group-hover:text-emerald-700 group-hover:scale-110"
-        } transition-all duration-300`}
+            : "text-emerald-500 group-hover:text-emerald-600 group-hover:scale-110"
+          } transition-all duration-300`}
         strokeWidth={2.5}
       />
     </div>
 
     <span
-      className={`relative z-10 text-[15px] font-semibold tracking-wide ${
-        active ? "text-white" : "text-gray-700 group-hover:text-gray-900"
-      } transition-colors duration-300`}
+      className={`relative z-10 text-[15px] font-semibold tracking-wide ${active ? "text-white" : "text-gray-700 group-hover:text-gray-900"
+        } transition-colors duration-300`}
     >
       {label}
     </span>
@@ -65,7 +61,7 @@ const SidebarItem = ({ icon: Icon, label, href, active, onClick }) => (
     {active && (
       <ChevronRight
         size={18}
-        className="relative z-10 ml-auto text-white/80 animate-pulse"
+        className="relative z-10 ml-auto text-white/80"
         strokeWidth={3}
       />
     )}
@@ -89,7 +85,6 @@ export default function AsideBar({ role }) {
   const seasonDiaryId = seasonDiaryRouteMatch?.[1];
   const productId = productRouteMatch?.[1];
 
-  // ── Chỉ hiện nút trở lại khi đang ở trang create ─────────────────────────
   const isSeasonDiaryCreate = pathname === "/profile/season-diaries/create";
   const isProductCreate = pathname === "/profile/products/create";
   const isCreateRoute = isSeasonDiaryCreate || isProductCreate;
@@ -184,7 +179,6 @@ export default function AsideBar({ role }) {
       {/* Navigation Links */}
       <nav className="relative z-10 flex flex-col flex-1 space-y-2">
         {isCreateRoute ? (
-          // ── Create route: chỉ nút trở lại, không có nav items ──
           <Link
             href={
               isProductCreate ? "/profile/products" : "/profile/season-diaries"
@@ -238,14 +232,15 @@ export default function AsideBar({ role }) {
           <div className="w-full h-[4px] rounded-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
         </div>
 
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-4">
-          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent animate-pulse"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shine"></div>
+        {/* ── Branding card: bg-emerald-500 (khớp ProfileDetails) ── */}
+        <div className="relative overflow-hidden rounded-2xl bg-emerald-500 p-4">
+          <div className="absolute inset-0 bg-white/5 rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shine" />
 
           <div className="relative z-10 flex items-center gap-3">
             <div className="relative">
-              <div className="w-3 h-3 rounded-full bg-white animate-pulse"></div>
-              <div className="absolute inset-0 w-3 h-3 rounded-full bg-white animate-ping"></div>
+              <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
+              <div className="absolute inset-0 w-3 h-3 rounded-full bg-white animate-ping" />
             </div>
             <div className="flex flex-col">
               <span className="text-white font-bold text-sm tracking-wide">
@@ -257,8 +252,8 @@ export default function AsideBar({ role }) {
             </div>
           </div>
 
-          <div className="absolute top-0 right-0 w-20 h-20 bg-white/5 rounded-bl-full"></div>
-          <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-tr-full"></div>
+          <div className="absolute top-0 right-0 w-20 h-20 bg-white/5 rounded-bl-full" />
+          <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-tr-full" />
         </div>
       </div>
     </>
@@ -269,7 +264,7 @@ export default function AsideBar({ role }) {
       {/* ── Mobile Toggle Button ── */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed top-20 left-4 z-[999] p-2 bg-white rounded-xl shadow-md border border-gray-200 text-emerald-600"
+        className="md:hidden fixed top-20 left-4 z-[999] p-2 bg-white rounded-xl shadow-md border border-gray-200 text-emerald-500"
       >
         <Menu size={22} strokeWidth={2.5} />
       </button>
@@ -284,11 +279,11 @@ export default function AsideBar({ role }) {
 
       {/* ── Mobile Drawer ── */}
       <aside
-        className={`md:hidden fixed top-0 left-0 z-[1001] h-full w-72 bg-gradient-to-b from-gray-50 via-white to-gray-50 flex flex-col px-4 py-8 border-r border-gray-200/60 backdrop-blur-xl transition-transform duration-300 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`md:hidden fixed top-0 left-0 z-[1001] h-full w-72 bg-gradient-to-b from-gray-50 via-white to-gray-50 flex flex-col px-4 py-8 border-r border-gray-200/60 backdrop-blur-xl transition-transform duration-300 ${mobileOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500" />
+        {/* ── Top accent line: emerald-500 ── */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500" />
         <div
           className="absolute inset-0 opacity-[0.02]"
           style={{
@@ -335,7 +330,8 @@ export default function AsideBar({ role }) {
 
       {/* ── Desktop Sidebar ── */}
       <aside className="hidden md:flex w-64 h-[95vh] fixed top-10 bg-gradient-to-b from-gray-50 via-white to-gray-50 flex-col px-4 py-8 border-r border-gray-200/60 backdrop-blur-xl">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500" />
+        {/* ── Top accent line: emerald-500 ── */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500" />
         <div
           className="absolute inset-0 opacity-[0.02]"
           style={{

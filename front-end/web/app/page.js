@@ -334,7 +334,7 @@ export default function Home() {
       </section>
 
       {/* SECTION: HÀNH TRÌNH PHÁT TRIỂN SẦU RIÊNG */}
-      <section className="py-20 px-4 lg:px-6 bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-900 relative overflow-hidden">
+      <section className="py-20 px-4 lg:px-6 bg-emerald-500 relative overflow-hidden">
         <div className="absolute inset-0 opacity-5">
           <div
             className="absolute inset-0"
@@ -865,7 +865,7 @@ export default function Home() {
       </section>
 
       {/* Featured Products Section */}
-      <section className="relative py-16 px-4 lg:px-6 bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-900 overflow-hidden">
+      <section className="relative py-16 px-4 lg:px-6 bg-emerald-500 overflow-hidden">
         <div className="absolute inset-0 opacity-5">
           <div
             className="absolute inset-0"
@@ -906,7 +906,7 @@ export default function Home() {
                   {products.map((product) => {
                     const rating =
                       typeof product.rating === "object" &&
-                      product.rating.$numberDecimal
+                        product.rating.$numberDecimal
                         ? parseFloat(product.rating.$numberDecimal)
                         : parseFloat(product.rating || 0);
 
