@@ -11,6 +11,7 @@ export const useSeasonDiaryStore = create((set, get) => ({
   isSeasonDiaryCreating: false,
   isSeasonDiaryUpdating: false,
   isSeasonDiaryDeleting: false,
+  isSeasonDiaryFinishing: false,
   isPageUpdating: false,
   isPageDeleting: false,
   isStatisticsLoading: false,
@@ -116,39 +117,51 @@ export const useSeasonDiaryStore = create((set, get) => ({
     }
   },
 
-  // 6. PATCH /season-diary/{season_diary_id}/page
-  updatePage: async (seasonDiaryId, data) => {
-    set({ isPageUpdating: true });
+  // 6. PATCH /season-diary/{season_diary_id}/finish
+  finishSeasonDiary: async (seasonDiaryId) => {
+    set({ isSeasonDiaryFinishing: true });
     try {
       const res = await axiosInstance.patch(
-        `/season-diary/${seasonDiaryId}/page`,
-        data,
+        `/season-diary/${seasonDiaryId}/finish`,
       );
-      set({ seasonDiaryDetail: res.data.data });
-      toast.success(res.data.message);
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Lỗi cập nhật trang nhật ký",
-      );
-    } finally {
-      set({ isPageUpdating: false });
-    }
-  },
+      // Keep UI stable with current shape while waiting for refreshed detail.
+      set((state) => ({
+        seasonDiaries: state.seasonDiaries.map((d) =>
+          d._id === seasonDiaryId
+            ? {
+                ...d,
+                status: "Completed",
+                end_date: res?.data?.data?.end_date || d.end_date,
+              }
+            : d,
+        ),
+        seasonDiaryDetail:
+          state.seasonDiaryDetail?._id === seasonDiaryId
+            ? {
+                ...state.seasonDiaryDetail,
+                status: "Completed",
+                end_date:
+                  res?.data?.data?.end_date || state.seasonDiaryDetail.end_date,
+              }
+            : state.seasonDiaryDetail,
+      }));
 
-  // 7. DELETE /season-diary/{season_diary_id}/page
-  deletePage: async (seasonDiaryId, data) => {
-    set({ isPageDeleting: true });
-    try {
-      const res = await axiosInstance.delete(
-        `/season-diary/${seasonDiaryId}/page`,
-        { data },
-      );
-      set({ seasonDiaryDetail: res.data.data });
+      const refreshedDetail = await get().getSeasonDiaryDetail(seasonDiaryId);
+
+      if (refreshedDetail?._id) {
+        set((state) => ({
+          seasonDiaries: state.seasonDiaries.map((d) =>
+            d._id === seasonDiaryId ? { ...d, ...refreshedDetail } : d,
+          ),
+        }));
+      }
       toast.success(res.data.message);
+      return refreshedDetail || res.data.data;
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Lỗi xóa trang nhật ký");
+      toast.error(error?.response?.data?.message || "Lỗi hoàn thành mùa vụ");
+      return null;
     } finally {
-      set({ isPageDeleting: false });
+      set({ isSeasonDiaryFinishing: false });
     }
   },
 

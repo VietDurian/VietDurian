@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
@@ -72,6 +72,7 @@ export default function SeasonDiaryDetailPage() {
   const router = useRouter();
   const { seasonDiaryId } = useParams();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showFinishSeasonDiary, setShowFinishSeasonDiary] = useState(false);
   const [confirmName, setConfirmName] = useState("");
   const seasonDiaryDetail = useSeasonDiaryStore((s) => s.seasonDiaryDetail);
   const isSeasonDiaryDetailLoading = useSeasonDiaryStore(
@@ -80,10 +81,14 @@ export default function SeasonDiaryDetailPage() {
   const isSeasonDiaryDeleting = useSeasonDiaryStore(
     (s) => s.isSeasonDiaryDeleting,
   );
+  const isSeasonDiaryFinishing = useSeasonDiaryStore(
+    (s) => s.isSeasonDiaryFinishing,
+  );
   const getSeasonDiaryDetail = useSeasonDiaryStore(
     (s) => s.getSeasonDiaryDetail,
   );
   const deleteSeasonDiary = useSeasonDiaryStore((s) => s.deleteSeasonDiary);
+  const finishSeasonDiary = useSeasonDiaryStore((s) => s.finishSeasonDiary);
 
   useEffect(() => {
     if (seasonDiaryId) {
@@ -103,6 +108,12 @@ export default function SeasonDiaryDetailPage() {
       router.push("/profile/season-diaries");
     }
   };
+  const handleFinish = async () => {
+    if (!seasonDiaryId) return;
+    const finished = await finishSeasonDiary(seasonDiaryId);
+    if (!finished) return;
+    setShowFinishSeasonDiary(false);
+  };
 
   if (isSeasonDiaryDetailLoading && !data._id) {
     return (
@@ -121,11 +132,12 @@ export default function SeasonDiaryDetailPage() {
   }
 
   const statusMeta = STATUS[data.status] ?? STATUS["Completed"];
+  const isCompleted = data.status === "Completed";
 
   return (
     <div className="space-y-5 p-5">
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+        <div className="h-screen fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
             <h2 className="text-xl font-bold text-gray-900 mb-2">
               Xác nhận xóa nhật ký
@@ -167,9 +179,38 @@ export default function SeasonDiaryDetailPage() {
           </div>
         </div>
       )}
+      {showFinishSeasonDiary && !isCompleted && (
+        <div className="h-screen fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+            <h2 className="text-xl font-bold text-gray-900 mb-5">
+              Xác nhận hoàn thành mùa vụ?
+            </h2>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowFinishSeasonDiary(false);
+                }}
+                className="cursor-pointer px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                Hủy
+              </button>
+              <button
+                disabled={isSeasonDiaryFinishing}
+                onClick={handleFinish}
+                className={`cursor-pointer px-4 py-2 rounded-lg text-white bg-emerald-600 hover:bg-emerald-700
+                  `}
+              >
+                {isSeasonDiaryFinishing
+                  ? "Đang hoàn thành..."
+                  : "Hoàn thành mùa vụ"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Hero Banner ─────────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5">
+      <div className="bg-linear-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5">
         <div className="flex items-start gap-4 flex-wrap">
           {/* Owner avatar */}
           <img
@@ -202,6 +243,18 @@ export default function SeasonDiaryDetailPage() {
 
           {/* Quick-glance stats */}
           <div className="flex gap-3 flex-wrap">
+            {!isCompleted && (
+              <button
+                onClick={() => setShowFinishSeasonDiary(true)}
+                disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
+                className="cursor-pointer flex items-center gap-1.5 border border-emerald-200 bg-white text-sm font-medium text-emerald-500 px-4 py-2 rounded-xl hover:bg-emerald-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Check size={13} />
+                {isSeasonDiaryFinishing
+                  ? "Đang đánh dấu..."
+                  : "Đánh dấu hoàn thành"}
+              </button>
+            )}
             {[
               { label: "Diện tích", value: `${fmt(data.area)} m²` },
               {
@@ -211,7 +264,7 @@ export default function SeasonDiaryDetailPage() {
             ].map((c) => (
               <div
                 key={c.label}
-                className="bg-white/15 rounded-xl px-4 py-3 text-center min-w-[110px]"
+                className="bg-white/15 rounded-xl px-4 py-3 text-center min-w-27.5"
               >
                 <p className="text-emerald-100 text-xs">{c.label}</p>
                 <p className="text-white font-bold text-sm mt-0.5">{c.value}</p>
@@ -219,8 +272,8 @@ export default function SeasonDiaryDetailPage() {
             ))}
             <button
               onClick={() => setShowDeleteModal(true)}
-              disabled={isSeasonDiaryDeleting}
-              className=" flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
+              className="cursor-pointer flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Trash2 size={13} />
               {isSeasonDiaryDeleting ? "Đang xóa..." : "Xóa"}
