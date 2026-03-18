@@ -1,18 +1,14 @@
-@startuml 85_viewPostList
-skinparam shadowing false
-skinparam sequenceArrowThickness 1
-hide footbox
 
-actor Farmer as "Users"
-boundary PostPage as UI 
-control postController as Controller 
+actor Users
+boundary "PostPage" as UI 
+control "postController" as Controller 
 participant ":postService" as Service 
-participant ":postModel" as Model 
-database Database as DB 
+participant ":generalPostModel" as Model 
+database "Database" as DB 
 
-activate Farmer
+activate Users
 activate UI
-Farmer -> UI : 1. Users click "Post" tab
+Users -> UI : 1. Users click "Post" tab
 
 UI -> Controller : 2. Get posts list request
 activate Controller
@@ -29,18 +25,18 @@ Model --> Service : 7. Return post list
 deactivate Model
     Service -> Service : 8. check post list
 activate Service
+space
 deactivate Service
 alt Post available:
     Service --> Controller : 8.1 Return post list
     Controller --> UI : 8.1.1 Show post list
-    UI --> Farmer : 8.1.2 Display post list
+    UI --> Users : 8.1.2 Display post list
 else No posts available:
     Service --> Controller : 8.2 Return empty list
     deactivate Service
     Controller --> UI : 8.2.1 Show empty message
     deactivate Controller
-    UI --> Farmer : 8.2.2 Display 'No posts found'
+    UI --> Users : 8.2.2 Display 'No posts found'
     deactivate UI
-    deactivate Farmer
+    deactivate Users
 end
-@enduml
