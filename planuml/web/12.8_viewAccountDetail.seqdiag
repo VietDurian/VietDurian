@@ -1,0 +1,45 @@
+You have exceeded your premium request allowance. We have automatically switched you to GPT-4.1 which is included with your plan. [Enable additional paid premium requests](command:chat.enablePremiumOverages) to continue using premium models.```seqdiag
+actor User
+boundary AccountDetailPage
+control AccountController
+participant ":AccountService" as AccountService
+participant ":AccountModel" as AccountModel
+database Database
+
+User->AccountDetailPage: 1. Click view account detail
+activate AccountDetailPage
+activate User
+
+AccountDetailPage->AccountController: 2. GET /accounts/{id}
+activate AccountController
+
+AccountController->AccountService: 3. Get account detail by ID
+activate AccountService
+
+AccountService->AccountModel: 4. Find account by ID
+activate AccountModel
+
+AccountModel->Database: 5. Retrieve account data by ID
+activate Database
+Database-->AccountModel: 6. Result (account data or null)
+deactivate Database
+
+AccountModel-->AccountService: 7. Return account entity or not found
+deactivate AccountModel
+
+alt Account not found
+    AccountService-->AccountController: 8.1. Return not found result
+    AccountController-->AccountDetailPage: 8.1.1. Return 404 Not Found + message
+    AccountDetailPage-->User: 8.1.2. Show error: "Account not found"
+else Account exists
+    AccountService-->AccountController: 8.2. Return AccountDetailResponse
+    deactivate AccountService
+    AccountController-->AccountDetailPage: 8.2.1. Return 200 OK + account data
+    deactivate AccountController
+    AccountDetailPage-->User: 8.2.2. Display result 
+
+end
+
+deactivate AccountDetailPage
+deactivate User
+```
