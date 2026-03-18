@@ -1,12 +1,9 @@
-@startuml 17.1_createRating
-hide footbox
-
-actor User as "Users"
-boundary RatingPage as View
-control "RatingController" as Controller
-participant ":RatingService" as Service
-entity "RatingModel" as Model
-database Database as Database
+actor "Users" as User
+boundary "RatingPage" as View
+control "ratingController" as Controller
+participant ":ratingService" as Service
+entity "ratingModel" as Model
+database Database
 
 
 User -> View : 1. Input rating fields
@@ -14,6 +11,9 @@ activate View
 activate User
 User -> View : 2. Submit rating form
 View -> View : 3. Validate input
+activate View
+space
+deactivate View
 
 opt Check validation
     View --> User : 3.1. Show validation error
@@ -62,4 +62,3 @@ end
 View --> User : 7. Display form result (success or error)
 deactivate View
 deactivate User
-@enduml

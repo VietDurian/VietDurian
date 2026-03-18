@@ -1,0 +1,72 @@
+actor Admin
+boundary TypeManagementPage
+control TypeController
+participant ":typeService" as typeService
+participant ":typeModel" as typeModel
+database Database
+
+
+Admin->TypeManagementPage: 1. Enter name, description & submit
+activate TypeManagementPage
+activate Admin
+
+TypeManagementPage->TypeManagementPage: 2. Validate input
+activate TypeManagementPage
+space
+deactivate TypeManagementPage
+
+opt Invalid Input or fields left empty
+TypeManagementPage-->Admin: 2.1 Display errors message
+end
+
+TypeManagementPage->TypeController: 3. Create type product request
+activate TypeController
+
+TypeController->typeService: 4. createTypeProduct(typeData)
+activate typeService
+
+alt Type was already existed
+typeService->typeModel: 4.1 Check conflicts
+activate typeModel
+
+typeModel->Database: 4.1.1 Check existing type
+activate Database
+Database-->typeModel: 4.1.2 Conflict result
+deactivate Database
+
+typeModel-->typeService: 4.1.3 Return conflict state
+deactivate typeModel
+
+typeService-->TypeController: 4.1.4 Return type already exists
+TypeController-->TypeManagementPage: 4.1.5 Show error message
+TypeManagementPage-->Admin: 4.1.6 Display "Type already exists" message
+
+else Type is valid
+typeService->typeModel: 4.2 save(typeData)
+activate typeModel
+
+typeModel->Database: 4.2.1 save new type
+activate Database
+Database-->typeModel: 4.2.2 Return result
+deactivate Database
+
+typeModel-->typeService: 4.2.3 Return created entity
+deactivate typeModel
+
+alt Create type successful
+typeService-->TypeController: 4.2.3.1 Return create type successful
+TypeController-->TypeManagementPage: 4.2.3.2 Show success message "Create type successful."
+TypeManagementPage-->Admin: 4.2.3.3 Display success message
+
+else Create type failed
+typeService-->TypeController: 4.2.3.a Return TypeResponse
+deactivate typeService
+
+TypeController-->TypeManagementPage: 4.2.3.b Show error message
+deactivate TypeController
+TypeManagementPage-->Admin: 4.2.3.c Display "Create type failed" message
+
+deactivate TypeManagementPage
+deactivate Admin
+end
+end

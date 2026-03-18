@@ -1,0 +1,50 @@
+actor "Content Expert" as User
+boundary "BlogDetailPage" as View
+control "blogController" as Controller
+participant ":blogService" as Service
+participant ":knowledgeBlockModel" as Model
+database Database
+
+
+User -> View : 1. Click "Delete" icon
+activate View
+activate User
+
+View -> Controller : 2. Send delete block request
+activate Controller
+
+Controller -> Service : 3. deleteKnowledgeBlock(blockId)
+activate Service
+
+Service -> Model : 4. findByIdAndDelete(blockId)
+activate Model
+
+Model -> Database : 5. Execute delete query
+activate Database
+Database --> Model : 6. Return result
+deactivate Database
+
+Model --> Service : 7. Return delete result
+deactivate Model
+
+Service -> Service : 8. check delete status
+activate Service
+space
+deactivate Service
+
+alt Delete successful
+    Service --> Controller : 8.1 Return success
+    Controller --> View : 8.1.1 Show success message
+    View --> User : 8.1.2 Display "Block deleted successfully"
+
+else Delete failed
+    Service --> Controller : 8.2 Return failure
+    deactivate Service
+
+    Controller --> View : 8.2.1 Show error message
+    deactivate Controller
+
+    View --> User : 8.2.2 Display "Block deletion failed"
+    deactivate View
+    deactivate User
+end

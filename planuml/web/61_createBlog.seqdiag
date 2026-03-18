@@ -1,0 +1,61 @@
+actor "Content Expert" as User
+boundary BlogPage
+control BlogController
+participant ":blogService" as blogService
+participant ":knowledgeBlogModel" as knowledgeBlogModel
+database Database
+
+
+User->BlogPage: 1. Enter title, content, image & submit
+activate BlogPage
+activate User
+
+BlogPage->BlogPage: 2. Validate input
+activate BlogPage
+space
+deactivate BlogPage
+
+opt Invalid Input or fields left empty
+BlogPage-->User: 2.1 Display errors message
+end
+
+BlogPage->BlogController: 3. Create blog request
+activate BlogController
+
+BlogController->blogService: 4. createKnowledgeBlog(blogData)
+activate blogService
+
+blogService->knowledgeBlogModel: 5. save(blogData)
+activate knowledgeBlogModel
+
+knowledgeBlogModel->Database: 6. save new blog
+activateknowledgeBlogModel
+activate Database
+Database-->knowledgeBlogModel: 7. Return result
+deactivate Database
+
+knowledgeBlogModel-->blogService: 8. Return created entity
+deactivate knowledgeBlogModel
+
+blogService->blogService: 9. check blog creation status
+activate blogService
+space
+deactivate blogService
+
+alt Blog creation successful
+blogService-->BlogController: 9.1 Return BlogResponse
+BlogController-->BlogPage: 9.1.1 Show success message
+BlogPage-->User: 9.1.2 Display "Blog created successfully"
+
+else Blog creation failed
+blogService-->BlogController: 9.2 Return failure
+deactivate blogService
+
+BlogController-->BlogPage: 9.2.1 Show error message
+deactivate BlogController
+
+BlogPage-->User: 9.2.2 Display "Blog creation failed"
+
+deactivate BlogPage
+deactivate User
+end

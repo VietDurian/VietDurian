@@ -1,0 +1,64 @@
+actor Farmer
+boundary CreateSeasonPage
+control seasonDiaryController
+participant ":seasonDiaryService" as seasonDiaryService
+participant ":seasonDiaryModel" as seasonDiaryModel
+database Database
+
+
+Farmer->CreateSeasonPage: 1. Enter season record details & submit
+activate Farmer
+activate CreateSeasonPage
+
+CreateSeasonPage->CreateSeasonPage: 2. Validate input
+activate CreateSeasonPage
+space
+deactivate CreateSeasonPage
+
+opt Invalid input data
+CreateSeasonPage-->Farmer: 2.1 Display error message
+end
+
+CreateSeasonPage->seasonDiaryController: 3. Create season request
+activate seasonDiaryController
+
+seasonDiaryController->seasonDiaryService: 4. createSeasonDiary(data)
+activate seasonDiaryService
+
+seasonDiaryService->seasonDiaryModel: 5. save(data)
+activate seasonDiaryModel
+
+seasonDiaryModel->Database: 6. Execute save
+activate Database
+Database-->seasonDiaryModel: 7. Return result
+deactivate Database
+
+seasonDiaryModel-->seasonDiaryService: 8. Return season entity
+deactivate seasonDiaryModel
+
+seasonDiaryService->seasonDiaryService: 9. checkSaveResult(result)
+activate seasonDiaryService
+space
+deactivate seasonDiaryService
+
+alt Create season success
+seasonDiaryService-->seasonDiaryController: 9.1 Return success
+seasonDiaryController-->CreateSeasonPage: 9.1.1 Show success message
+CreateSeasonPage-->Farmer: 9.1.2 Display season record created
+
+else Garden name already exists
+seasonDiaryService-->seasonDiaryController: 9.2 Return duplicate name error
+seasonDiaryController-->CreateSeasonPage: 9.2.1 Show error message
+CreateSeasonPage-->Farmer: 9.2.2 "Garden name already exists."
+
+else Create season failed
+seasonDiaryService-->seasonDiaryController: 9.3 Return error
+deactivate seasonDiaryService
+
+seasonDiaryController-->CreateSeasonPage: 9.3.1 Show error message
+deactivate seasonDiaryController
+CreateSeasonPage-->Farmer: 9.3.2 Display error message
+
+deactivate CreateSeasonPage
+deactivate Farmer
+end
