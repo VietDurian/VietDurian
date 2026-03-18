@@ -88,8 +88,16 @@ export default function AsideBar({ role }) {
   const productRouteMatch = pathname?.match(/^\/profile\/products\/([^/]+)/);
   const seasonDiaryId = seasonDiaryRouteMatch?.[1];
   const productId = productRouteMatch?.[1];
-  const isFarmerSeasonDiarySubRoute = role === "farmer" && !!seasonDiaryId;
-  const isFarmerProductsSubRoute = role === "farmer" && !!productId;
+
+  // ── Chỉ hiện nút trở lại khi đang ở trang create ─────────────────────────
+  const isSeasonDiaryCreate = pathname === "/profile/season-diaries/create";
+  const isProductCreate = pathname === "/profile/products/create";
+  const isCreateRoute = isSeasonDiaryCreate || isProductCreate;
+
+  const isFarmerSeasonDiarySubRoute =
+    role === "farmer" && !!seasonDiaryId && seasonDiaryId !== "create";
+  const isFarmerProductsSubRoute =
+    role === "farmer" && !!productId && productId !== "create";
 
   const getMenuItems = (role) => {
     switch (role) {
@@ -175,47 +183,61 @@ export default function AsideBar({ role }) {
     <>
       {/* Navigation Links */}
       <nav className="relative z-10 flex flex-col flex-1 space-y-2">
-        {(isFarmerSeasonDiarySubRoute || isFarmerProductsSubRoute) && (
+        {isCreateRoute ? (
+          // ── Create route: chỉ nút trở lại, không có nav items ──
           <Link
             href={
-              isFarmerProductsSubRoute
-                ? "/profile/products"
-                : "/profile/season-diaries"
+              isProductCreate ? "/profile/products" : "/profile/season-diaries"
             }
             onClick={onItemClick}
-            className="flex items-center gap-2 px-4 py-2.5 mb-1 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors duration-300"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors duration-300"
           >
             <ChevronLeft size={16} strokeWidth={2.5} />
-            {isFarmerProductsSubRoute ? "Trở lại sản phẩm" : "Trở lại vườn"}
+            {isProductCreate ? "Trở lại sản phẩm" : "Trở lại nhật ký mùa vụ"}
           </Link>
-        )}
+        ) : (
+          <>
+            {(isFarmerSeasonDiarySubRoute || isFarmerProductsSubRoute) && (
+              <Link
+                href={
+                  isFarmerProductsSubRoute
+                    ? "/profile/products"
+                    : "/profile/season-diaries"
+                }
+                onClick={onItemClick}
+                className="flex items-center gap-2 px-4 py-2.5 mb-1 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors duration-300"
+              >
+                <ChevronLeft size={16} strokeWidth={2.5} />
+                {isFarmerProductsSubRoute ? "Trở lại sản phẩm" : "Trở lại vườn"}
+              </Link>
+            )}
 
-        {menuItems.map((item, index) => (
-          <div
-            key={item.label}
-            style={{
-              animation: `slideInLeft 0.4s ease-out ${index * 0.1}s both`,
-            }}
-          >
-            <SidebarItem
-              icon={item.icon}
-              label={item.label}
-              href={item.href}
-              active={pathname === item.href}
-              onClick={onItemClick}
-            />
-          </div>
-        ))}
+            {menuItems.map((item, index) => (
+              <div
+                key={item.label}
+                style={{
+                  animation: `slideInLeft 0.4s ease-out ${index * 0.1}s both`,
+                }}
+              >
+                <SidebarItem
+                  icon={item.icon}
+                  label={item.label}
+                  href={item.href}
+                  active={pathname === item.href}
+                  onClick={onItemClick}
+                />
+              </div>
+            ))}
+          </>
+        )}
       </nav>
 
       {/* Bottom branding section */}
       <div className="relative z-10 mt-6">
-        {/* Thicker divider, no icon */}
         <div className="mb-6">
           <div className="w-full h-[4px] rounded-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
         </div>
 
-        {/* Brand card */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-4">
           <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent animate-pulse"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shine"></div>
@@ -275,7 +297,6 @@ export default function AsideBar({ role }) {
           }}
         />
 
-        {/* Close button */}
         <button
           onClick={() => setMobileOpen(false)}
           className="absolute top-4 right-4 z-10 p-2 rounded-xl hover:bg-gray-100 text-gray-500"
