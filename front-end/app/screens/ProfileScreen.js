@@ -21,6 +21,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
 import FavoritePostsTab from "../components/FavoritePostsTab";
 import { useProfileStore } from "../store/useProfileStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const ROLE_CONFIG = {
@@ -386,6 +387,7 @@ export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { profileData, profileLoading, profileError, fetchProfile } = useProfileStore();
+  const { logout } = useAuthStore();
 
   useEffect(() => { fetchProfile(); }, []);
 
@@ -394,6 +396,17 @@ export default function ProfileScreen() {
     return new Date(dateString).toLocaleDateString("vi-VN", {
       year: "numeric", month: "long", day: "numeric",
     });
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Đăng xuất",
+      "Bạn có chắc muốn đăng xuất không?",
+      [
+        { text: "Hủy", style: "cancel" },
+        { text: "Đăng xuất", style: "destructive", onPress: logout },
+      ]
+    );
   };
 
   if (profileLoading && !profileData) {
@@ -497,6 +510,19 @@ export default function ProfileScreen() {
                 value={formatDate(profileData?.updated_at)}
               />
             </View>
+
+            {/* ─── Logout Button ─── */}
+            <TouchableOpacity
+              style={styles.logoutBtn}
+              onPress={handleLogout}
+              activeOpacity={0.85}
+            >
+              <View style={styles.logoutIconWrap}>
+                <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+              </View>
+              <Text style={styles.logoutBtnText}>Đăng xuất</Text>
+              <Ionicons name="chevron-forward" size={18} color="#ef4444" style={{ marginLeft: "auto" }} />
+            </TouchableOpacity>
           </>
         )}
 
@@ -658,4 +684,15 @@ const styles = StyleSheet.create({
   },
   saveBtnDisabled: { opacity: 0.45 },
   saveBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+
+  // ─── Logout ───
+  logoutBtn: {
+    flexDirection: "row", alignItems: "center", gap: 14,
+    backgroundColor: "#fff", borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: "#fecaca",
+  },
+  logoutIconWrap: {
+    backgroundColor: "#fef2f2", borderRadius: 10, padding: 10,
+  },
+  logoutBtnText: { fontSize: 15, fontWeight: "700", color: "#ef4444" },
 });
