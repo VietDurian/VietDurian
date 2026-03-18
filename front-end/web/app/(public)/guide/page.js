@@ -1050,21 +1050,16 @@ export default function GuidePage() {
             <Navbar />
 
             {/* Hero Section */}
-            <div className="relative h-[350px] mt-16 w-full overflow-hidden">
-                <div className="absolute inset-0">
-                    <Image src="/images/Durian5.jpg" alt="VietGAP Durian Farm" fill className="object-cover" priority />
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/90 via-emerald-800/70 to-transparent"></div>
-                </div>
-                <div className="relative max-w-7xl mx-auto px-4 h-full flex flex-col justify-center items-center text-center">
-                    <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4 leading-tight max-w-2xl">
-                        Quy Trình Kỹ Thuật <br />
-                        <span className="text-lime-400">Trồng Sầu Riêng VietGAP</span>
+            <section className="bg-emerald-500 pt-40 pb-20 px-4">
+                <div className="max-w-[1400px] mx-auto text-center">
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                        Quy Trình Kỹ Thuật <br /> Trồng Sầu Riêng VietGAP
                     </h1>
-                    <p className="text-emerald-100 text-lg max-w-3xl">
+                    <p className="text-emerald-100 text-lg max-w-2xl mx-auto">
                         Theo Sổ tay Hướng dẫn kỹ thuật – Cục Trồng trọt, Bộ NN&PTNT (SOFRI, 2023)
                     </p>
                 </div>
-            </div>
+            </section>
 
             <main className="max-w-8xl mx-auto px-4 md:px-6 py-12">
                 <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-8">

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   X,
@@ -9,13 +9,10 @@ import {
   Check,
   Loader2,
   Users,
-  Hash,
-  Rows3,
   Sprout,
   Layers,
 } from "lucide-react";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
-import { useTypeProductStore } from "@/store/useTypeProduct";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 
@@ -23,6 +20,15 @@ const LocationPickerMap = dynamic(
   () => import("@/components/LocationPickerMap"),
   { ssr: false },
 );
+
+// ── Sample crop varieties (thay bằng API types nếu cần) ──────────────────────
+const CROP_VARIETIES = [
+  "Ri6",
+  "Monthong",
+  "Musang King",
+  "Dona",
+  "Black Thorn",
+];
 
 const INITIAL_FORM = {
   garden_name: "",
@@ -37,79 +43,6 @@ const INITIAL_FORM = {
   row_bed_count: "",
   area: "",
   land_use_history: "",
-};
-
-// ── Mã tỉnh/thành viết tắt 2 ký tự ─────────────────────────────────────────
-const PROVINCE_CODES = new Set([
-  "AG",
-  "BL",
-  "BK",
-  "BG",
-  "BN",
-  "BR",
-  "BD",
-  "BP",
-  "BT",
-  "CM",
-  "CT",
-  "CB",
-  "DN",
-  "DL",
-  "DK",
-  "DB",
-  "DT",
-  "GL",
-  "HG",
-  "HN",
-  "HA",
-  "HT",
-  "HD",
-  "HP",
-  "HB",
-  "HU",
-  "HY",
-  "KH",
-  "KG",
-  "KT",
-  "LC",
-  "LD",
-  "LS",
-  "LA",
-  "ND",
-  "NA",
-  "NB",
-  "NT",
-  "PT",
-  "PY",
-  "QB",
-  "QN",
-  "QG",
-  "QT",
-  "ST",
-  "SL",
-  "TN",
-  "TB",
-  "TH",
-  "TT",
-  "TG",
-  "TV",
-  "TQ",
-  "VL",
-  "VP",
-  "YB",
-  "SG",
-]);
-
-// VN-XXOR-YYYY  →  XX ∈ PROVINCE_CODES, YYYY = 0001..5999
-const validatePlantingAreaCode = (code) => {
-  if (!code) return null;
-  const match = code.match(/^VN-([A-Z]{2})OR-([0-5]\d{3})$/);
-  if (!match) return "Sai định dạng — ví dụ: VN-BLOR-0001";
-  const [, province, num] = match;
-  if (!PROVINCE_CODES.has(province))
-    return `Mã tỉnh "${province}" không hợp lệ`;
-  if (num === "0000") return "Mã số phải từ 0001 đến 5999";
-  return null; // hợp lệ
 };
 
 // ── Label + optional hint ────────────────────────────────────────────────────
@@ -174,42 +107,68 @@ const Input = ({
 );
 
 // ── Page ─────────────────────────────────────────────────────────────────────
-export default function CreateSeasonDiary() {
+export default function EditSeasonDiary() {
   const router = useRouter();
+  const { seasonDiaryId } = useParams();
 
-  const { createSeasonDiary, isSeasonDiaryCreating } = useSeasonDiaryStore();
-  const { types, fetchTypes, isTypesLoading } = useTypeProductStore();
+  const {
+    seasonDiaryDetail,
+    getSeasonDiaryDetail,
+    isSeasonDiaryDetailLoading,
+    updateSeasonDiary,
+    isSeasonDiaryUpdating,
+  } = useSeasonDiaryStore();
 
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [selectedVariety, setSelectedVariety] = useState("");
   const [memberInput, setMemberInput] = useState("");
 
-  const cropVarieties = Array.from(
-    new Set(
-      (types || [])
-        .map((type) => type?.name?.trim())
-        .filter((name) => typeof name === "string" && name.length > 0),
-    ),
-  );
+  useEffect(() => {
+    if (!seasonDiaryId) return;
+    getSeasonDiaryDetail(seasonDiaryId);
+  }, [seasonDiaryId, getSeasonDiaryDetail]);
 
   useEffect(() => {
-    fetchTypes();
-  }, [fetchTypes]);
+    if (!seasonDiaryDetail?._id) return;
 
-  const plantingAreaCodeError = validatePlantingAreaCode(
-    formData.planting_area_code,
-  );
+    const members = Array.isArray(seasonDiaryDetail.members)
+      ? seasonDiaryDetail.members.join(", ")
+      : seasonDiaryDetail.members || "";
+
+    setFormData({
+      garden_name: seasonDiaryDetail.garden_name || "",
+      farmer_name: seasonDiaryDetail.farmer_name || "",
+      location: seasonDiaryDetail.location || "",
+      latitude: seasonDiaryDetail.latitude
+        ? String(seasonDiaryDetail.latitude)
+        : "",
+      longitude: seasonDiaryDetail.longitude
+        ? String(seasonDiaryDetail.longitude)
+        : "",
+      members,
+      planting_area_code: seasonDiaryDetail.planting_area_code || "",
+      crop_variety: Array.isArray(seasonDiaryDetail.crop_variety)
+        ? seasonDiaryDetail.crop_variety
+        : [],
+      farmer_code: seasonDiaryDetail.farmer_code || "",
+      row_bed_count: seasonDiaryDetail.row_bed_count
+        ? String(seasonDiaryDetail.row_bed_count)
+        : "",
+      area: seasonDiaryDetail.area ? String(seasonDiaryDetail.area) : "",
+      land_use_history: seasonDiaryDetail.land_use_history || "",
+    });
+  }, [seasonDiaryDetail]);
 
   // ── Derived ──────────────────────────────────────────────────────────────
-  const isCreateDisabled =
-    isSeasonDiaryCreating ||
+  const isSubmitDisabled =
+    isSeasonDiaryUpdating ||
+    isSeasonDiaryDetailLoading ||
     !formData.garden_name.trim() ||
     !formData.farmer_name.trim() ||
     !formData.location.trim() ||
     !formData.latitude ||
     !formData.longitude ||
     !formData.planting_area_code.trim() ||
-    !!plantingAreaCodeError ||
     !formData.farmer_code.trim() ||
     formData.crop_variety.length === 0 ||
     !formData.row_bed_count.toString().trim() ||
@@ -289,17 +248,18 @@ export default function CreateSeasonDiary() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!seasonDiaryId) return;
+
     const payload = {
       ...formData,
       row_bed_count: Number(formData.row_bed_count),
       area: Number(formData.area),
     };
 
-    // TODO: thay bằng Zustand action
-    await createSeasonDiary(payload);
-    console.log("Payload:", payload);
-    toast.success("Tạo nhật ký thành công!");
-    router.push("/profile/season-diaries");
+    const updated = await updateSeasonDiary(seasonDiaryId, payload);
+    if (updated) {
+      router.push(`/profile/season-diaries/${seasonDiaryId}`);
+    }
   };
 
   return (
@@ -313,10 +273,10 @@ export default function CreateSeasonDiary() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">
-                Tạo nhật ký mùa vụ mới
+                Chỉnh sửa vườn
               </h1>
               <p className="text-gray-500 text-sm">
-                Ghi lại thông tin canh tác cho mùa vụ sầu riêng của bạn
+                Cập nhật thông tin canh tác cho mùa vụ sầu riêng của bạn
               </p>
             </div>
           </div>
@@ -383,7 +343,7 @@ export default function CreateSeasonDiary() {
               >
                 Mã số vùng trồng
               </FieldLabel>
-              <input
+              <Input
                 id="planting_area_code"
                 name="planting_area_code"
                 value={formData.planting_area_code}
@@ -393,34 +353,8 @@ export default function CreateSeasonDiary() {
                     planting_area_code: e.target.value.toUpperCase(),
                   }))
                 }
-                placeholder="ví dụ: VN-BLOR-0001"
-                maxLength={13}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 outline-none transition-colors text-sm
-      ${
-        plantingAreaCodeError && formData.planting_area_code
-          ? "border-red-400 focus:ring-red-400 focus:border-red-400"
-          : "border-gray-300 focus:ring-emerald-500 focus:border-emerald-500"
-      }`}
+                placeholder="ví dụ: VT-HG-009"
               />
-              {/* hint luôn hiện */}
-              <p className="text-xs text-gray-400 mt-1">
-                Định dạng: <span>VN-[Tỉnh]OR-[0001–5999]</span>
-                &nbsp;·&nbsp;ví dụ: <span>VN-CTOR-0042</span> (Cần Thơ)
-              </p>
-              {/* error chỉ hiện khi có giá trị */}
-              {plantingAreaCodeError && formData.planting_area_code && (
-                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                  <X className="w-3 h-3" />
-                  {plantingAreaCodeError}
-                </p>
-              )}
-              {/* success */}
-              {!plantingAreaCodeError && formData.planting_area_code && (
-                <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
-                  <Check className="w-3 h-3" />
-                  Mã vùng trồng hợp lệ
-                </p>
-              )}
             </div>
 
             {/* Members */}
@@ -487,21 +421,17 @@ export default function CreateSeasonDiary() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors text-sm"
               >
                 <option value="">
-                  {isTypesLoading
-                    ? "Đang tải giống cây..."
-                    : formData.crop_variety.length >= 5
-                      ? "Đã chọn tối đa 5 giống"
-                      : cropVarieties.length === 0
-                        ? "Chưa có dữ liệu giống cây"
-                        : "Chọn giống cây..."}
+                  {formData.crop_variety.length >= 5
+                    ? "Đã chọn tối đa 5 giống"
+                    : "Chọn giống cây..."}
                 </option>
-                {cropVarieties
-                  .filter((v) => !formData.crop_variety.includes(v))
-                  .map((v) => (
-                    <option key={v} value={v}>
-                      {v}
-                    </option>
-                  ))}
+                {CROP_VARIETIES.filter(
+                  (v) => !formData.crop_variety.includes(v),
+                ).map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
               </select>
               {formData.crop_variety.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -634,24 +564,26 @@ export default function CreateSeasonDiary() {
           <div className="flex items-center gap-4 pb-8">
             <button
               type="submit"
-              disabled={isCreateDisabled}
+              disabled={isSubmitDisabled}
               className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-medium text-sm transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
             >
-              {isSeasonDiaryCreating ? (
+              {isSeasonDiaryUpdating ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Đang tạo...
+                  Đang cập nhật...
                 </>
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  Tạo nhật ký
+                  Cập nhật nhật ký
                 </>
               )}
             </button>
             <button
               type="button"
-              onClick={() => router.push("/profile/season-diaries")}
+              onClick={() =>
+                router.push(`/profile/season-diaries/${seasonDiaryId}`)
+              }
               className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-xl font-medium text-sm transition-colors border border-gray-300"
             >
               <X className="w-4 h-4" />

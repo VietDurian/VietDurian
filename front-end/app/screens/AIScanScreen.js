@@ -13,43 +13,148 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "@/store/useAppStore";
 import * as ImagePicker from "expo-image-picker";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImageManipulator from "expo-image-manipulator";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 import { axiosInstance } from "@/lib/axios";
 
-const getAiBaseUrls = () => {
-  const base = String(axiosInstance.defaults.baseURL || "").replace(/\/$/, "");
-  const m = base.match(/^(https?:\/\/[^/:]+)(?::(\d+))?(\/.*)?$/i);
-  if (!m) return base ? [base] : [];
+const AI_REQUEST_TIMEOUT_MS = 10000;
+const MAX_UPLOAD_DIMENSION = 1280;
+const AI_BASE_URL_CACHE_KEY = "last_success_ai_base_url";
 
-  const host = m[1];
-  const basePort = m[2] ? Number(m[2]) : null;
-  const path = m[3] || "/api/v1";
+const EXT_TO_MIME = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  heic: "image/heic",
+  heif: "image/heif",
+};
 
-  // Backend can auto-shift port if 8080 is busy; keep fallback ports broad.
-  const fallbackPorts = [8082, ...Array.from({ length: 11 }, (_, i) => 8080 + i)];
-  const ports = [basePort, ...fallbackPorts].filter(
+const inferMimeTypeFromFilename = (filename) => {
+  if (!filename || typeof filename !== "string") return null;
+  const ext = filename.includes(".") ? filename.split(".").pop()?.toLowerCase() : "";
+  return EXT_TO_MIME[ext] || null;
+};
+
+const buildResizeAction = (asset) => {
+  const width = Number(asset?.width) || 0;
+  const height = Number(asset?.height) || 0;
+  const longestEdge = Math.max(width, height);
+
+  if (!width || !height || longestEdge <= MAX_UPLOAD_DIMENSION) return [];
+
+  if (width >= height) {
+    return [{ resize: { width: MAX_UPLOAD_DIMENSION } }];
+  }
+
+  return [{ resize: { height: MAX_UPLOAD_DIMENSION } }];
+};
+
+const getExpoDevHost = () => {
+  const hostUri =
+    Constants?.expoConfig?.hostUri ||
+    Constants?.manifest2?.extra?.expoGo?.debuggerHost ||
+    Constants?.manifest?.debuggerHost ||
+    "";
+
+  if (!hostUri || typeof hostUri !== "string") return null;
+  const host = hostUri.split(":")[0];
+  return host || null;
+};
+
+const parseBaseUrl = (raw) => {
+  const base = String(raw || "").replace(/\/$/, "");
+  const m = base.match(/^(https?:\/\/)([^/:]+)(?::(\d+))?(\/.*)?$/i);
+  if (!m) {
+    return {
+      protocol: "http://",
+      host: null,
+      port: 8080,
+      path: "/api/v1",
+      base,
+    };
+  }
+
+  return {
+    protocol: m[1] || "http://",
+    host: m[2] || null,
+    port: m[3] ? Number(m[3]) : 8080,
+    path: m[4] || "/api/v1",
+    base,
+  };
+};
+
+const normalizeAssetForUpload = async (asset) => {
+  const originalFilename = asset?.fileName || asset?.uri?.split("/").pop() || "scan.jpg";
+  const safeBaseName = originalFilename.replace(/\.[^/.]+$/, "") || "scan";
+  const _inferredMime = inferMimeTypeFromFilename(originalFilename);
+
+  // Always normalize to JPEG and downscale large images to avoid long uploads.
+  const actions = buildResizeAction(asset);
+  const converted = await ImageManipulator.manipulateAsync(
+    asset.uri,
+    actions,
+    { compress: 0.72, format: ImageManipulator.SaveFormat.JPEG },
+  );
+
+  return {
+    uri: converted.uri,
+    fileName: `${safeBaseName}.jpg`,
+    mimeType: "image/jpeg",
+  };
+};
+
+const getAiBaseUrls = async () => {
+  const parsed = parseBaseUrl(axiosInstance.defaults.baseURL || "");
+  const cachedBase = String((await AsyncStorage.getItem(AI_BASE_URL_CACHE_KEY)) || "").replace(/\/$/, "");
+  const expoHost = getExpoDevHost();
+
+  const hosts = [parsed.host, expoHost, "10.0.2.2", "127.0.0.1", "localhost"].filter(
+    (v, i, arr) => v && arr.indexOf(v) === i,
+  );
+
+  const fallbackPorts = [parsed.port, 8080, 8081, 8082, 8083].filter(
     (p, i, arr) => Number.isFinite(p) && arr.indexOf(p) === i,
   );
 
-  const urls = base ? [base] : [];
-  for (const port of ports) {
-    urls.push(`${host}:${port}${path}`);
+  const generated = [];
+  for (const host of hosts) {
+    for (const port of fallbackPorts) {
+      generated.push(`${parsed.protocol}${host}:${port}${parsed.path}`);
+    }
   }
 
-  return [...new Set(urls)];
+  return [...new Set([cachedBase, parsed.base, ...generated].filter(Boolean))];
 };
 
 const postAiPredict = async ({ baseUrl, formData, token }) => {
-  const response = await fetch(`${baseUrl}/ai/predict`, {
-    method: "POST",
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: formData,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+
+  let response;
+  try {
+    response = await fetch(`${baseUrl}/ai/predict`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err?.name === "AbortError") {
+      const timeoutErr = new Error("Yeu cau quet AI bi timeout");
+      timeoutErr.code = "AI_TIMEOUT";
+      throw timeoutErr;
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   let data = null;
   try {
@@ -67,18 +172,93 @@ const postAiPredict = async ({ baseUrl, formData, token }) => {
   return data;
 };
 
+const shouldRetryAiRequest = (error) => {
+  const status = error?.response?.status;
+
+  // No HTTP status usually means DNS/LAN/socket failure.
+  if (!status) return true;
+
+  // Retry only transient upstream/server conditions.
+  if (status >= 500 || status === 408 || status === 429) return true;
+
+  // Do not retry business/client errors like 400/401/403/404/422.
+  return false;
+};
+
+const isNotDurianImageMessage = (value) => {
+  const text = String(value || "");
+  return /chua phai anh sau rieng|chưa phải ảnh sầu riêng|lien quan den sau rieng|liên quan đến sầu riêng/i.test(
+    text,
+  );
+};
+
+const normalizeText = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
+
+const isNonDiseaseLabel = (label) => {
+  const normalized = normalizeText(label);
+  return (
+    normalized.includes("healthy") ||
+    normalized.includes("khỏe mạnh") ||
+    normalized.includes("khoe manh") ||
+    normalized.includes("binh thuong") ||
+    normalized.includes("bình thường")
+  );
+};
+
 export default function AIScanScreen() {
   const { navigate } = useAppStore();
   const [pickedImageUri, setPickedImageUri] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [scanError, setScanError] = useState(null);
-  const [flashEnabled, setFlashEnabled] = useState(false);
   const [editorVisible, setEditorVisible] = useState(false);
   const [editorImage, setEditorImage] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
+  const [cameraFacing, setCameraFacing] = useState("back");
   const cameraRef = useRef(null);
   const [cameraPermission, requestCameraAccess] = useCameraPermissions();
+  const isNotDurianWarning = isNotDurianImageMessage(scanError);
+
+  const relatedDiseases = useMemo(() => {
+    if (!Array.isArray(scanResult?.top_k)) return [];
+
+    const predictedSet = new Set([
+      normalizeText(scanResult?.predicted_class),
+      normalizeText(scanResult?.predicted_class_en),
+      normalizeText(scanResult?.predicted_class_vi),
+    ]);
+
+    return scanResult.top_k
+      .map((item) => {
+        const probability = Number(item?.probability);
+        if (!Number.isFinite(probability)) return null;
+
+        const label =
+          item?.class_name_vi || item?.class_name_en || item?.class_name || "Không xác định";
+
+        const aliases = [
+          normalizeText(item?.class_name),
+          normalizeText(item?.class_name_en),
+          normalizeText(item?.class_name_vi),
+          normalizeText(label),
+        ];
+
+        const isPredictedClass = aliases.some((name) => predictedSet.has(name));
+        if (isPredictedClass || isNonDiseaseLabel(label)) return null;
+
+        return {
+          id: item?.class_name_en || item?.class_name || item?.class_name_vi || "unknown",
+          label,
+          probability: Math.max(0, Math.min(1, probability)),
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.probability - a.probability)
+      .slice(0, 4);
+  }, [scanResult]);
 
   useEffect(() => {
     const ensureCameraPermission = async () => {
@@ -97,31 +277,33 @@ export default function AIScanScreen() {
   const uploadImageToAI = async (asset) => {
     if (!asset?.uri) return;
 
-    setPickedImageUri(asset.uri);
     setScanResult(null);
     setScanError(null);
     setIsAnalyzing(true);
 
     try {
-      const filename = asset.fileName || asset.uri.split("/").pop() || "scan.jpg";
-      const ext = filename.includes(".") ? filename.split(".").pop() : "jpg";
-      const mimeType = asset.mimeType || `image/${ext === "jpg" ? "jpeg" : ext}`;
+      const normalizedAsset = await normalizeAssetForUpload(asset);
+      setPickedImageUri(normalizedAsset.uri);
+
+      const filename = normalizedAsset.fileName;
+      const mimeType = normalizedAsset.mimeType || "image/jpeg";
 
       const buildFormData = () => {
         const formData = new FormData();
         formData.append("image", {
-          uri: asset.uri,
+          uri: normalizedAsset.uri,
           name: filename,
           type: mimeType,
         });
         return formData;
       };
 
-      const baseUrls = getAiBaseUrls();
+      const baseUrls = await getAiBaseUrls();
       const token = await AsyncStorage.getItem("auth_token");
       let data = null;
       let lastError = null;
       const triedUrls = [];
+      let successBaseUrl = null;
 
       for (const baseUrl of baseUrls) {
         triedUrls.push(baseUrl);
@@ -131,8 +313,20 @@ export default function AIScanScreen() {
             formData: buildFormData(),
             token,
           });
+          successBaseUrl = baseUrl;
           break;
         } catch (err) {
+          // Any HTTP status means this endpoint is reachable; cache it.
+          if (err?.response?.status) {
+            successBaseUrl = baseUrl;
+            axiosInstance.defaults.baseURL = baseUrl;
+            await AsyncStorage.setItem(AI_BASE_URL_CACHE_KEY, baseUrl);
+          }
+
+          if (!shouldRetryAiRequest(err)) {
+            err.triedUrls = triedUrls;
+            throw err;
+          }
           lastError = err;
         }
       }
@@ -147,17 +341,31 @@ export default function AIScanScreen() {
         throw new Error(data?.message || "Không thể phân tích ảnh lúc này");
       }
 
+      if (successBaseUrl) {
+        axiosInstance.defaults.baseURL = successBaseUrl;
+        await AsyncStorage.setItem(AI_BASE_URL_CACHE_KEY, successBaseUrl);
+      }
+
       setScanResult(data.data);
     } catch (error) {
-      const isNetworkError = error?.message === "Network Error" && !error?.response;
+      const isTimeoutError = error?.code === "AI_TIMEOUT";
+      const status = error?.response?.status;
+      const detail = error?.response?.data;
+      const isNetworkError = !status && !isTimeoutError;
       const message =
-        (isNetworkError
-          ? "Không thể kết nối máy chủ AI. Vui lòng kiểm tra backend đang chạy (port 8080-8090)."
+        (isTimeoutError
+          ? "He thong AI phan hoi cham. Vui long thu lai voi anh ro net hon."
           : null) ||
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
+        (isNetworkError
+          ? "Khong the ket noi may chu AI. Vui long kiem tra backend va dien thoai cung Wi-Fi, backend dang mo cong 8080-8083."
+          : null) ||
+        (status === 422
+          ? "Ảnh tải lên chưa được xác định là liên quan đến sầu riêng. Vui lòng chụp rõ lá, thân hoặc trái sầu riêng."
+          : null) ||
+        detail?.message ||
+        detail?.error ||
         error?.message ||
-        "Không thể phân tích ảnh lúc này";
+        "Khong the phan tich anh luc nay";
       setScanError(message);
     } finally {
       setIsAnalyzing(false);
@@ -258,7 +466,7 @@ export default function AIScanScreen() {
 
     try {
       const captured = await cameraRef.current.takePictureAsync({
-        quality: 1,
+        quality: 0.75,
       });
       if (captured?.uri) {
         await uploadImageToAI({
@@ -358,8 +566,7 @@ export default function AIScanScreen() {
           <CameraView
             ref={cameraRef}
             style={styles.cameraPreview}
-            facing="back"
-            enableTorch={flashEnabled}
+            facing={cameraFacing}
           />
         ) : (
           <View style={styles.cameraFallback}>
@@ -401,7 +608,45 @@ export default function AIScanScreen() {
           )}
 
           {scanError && !isAnalyzing && (
-            <Text style={[styles.resultText, styles.errorText]}>{scanError}</Text>
+            <View
+              style={[
+                styles.alertWrap,
+                isNotDurianWarning ? styles.warningWrap : styles.errorWrap,
+              ]}
+            >
+              <View style={styles.alertHeaderRow}>
+                <Ionicons
+                  name="warning-outline"
+                  size={16}
+                  color={isNotDurianWarning ? "#92400E" : "#DC2626"}
+                />
+                <Text
+                  style={[
+                    styles.alertTitle,
+                    isNotDurianWarning ? styles.warningTitle : styles.errorTitle,
+                  ]}
+                >
+                  {isNotDurianWarning
+                    ? "Ảnh chưa phù hợp để chẩn đoán"
+                    : "Không thể phân tích ảnh"}
+                </Text>
+              </View>
+
+              <Text
+                style={[
+                  styles.resultText,
+                  isNotDurianWarning ? styles.warningText : styles.errorText,
+                ]}
+              >
+                {scanError}
+              </Text>
+
+              {isNotDurianWarning && (
+                <Text style={[styles.resultText, styles.warningHint]}>
+                  Gợi ý: Chụp cận cảnh lá hoặc vùng bệnh trên cây sầu riêng, tránh nền nhiều chi tiết.
+                </Text>
+              )}
+            </View>
           )}
 
           {scanResult && !isAnalyzing && !scanError && (
@@ -414,6 +659,33 @@ export default function AIScanScreen() {
                   Độ tin cậy: {(Number(scanResult.confidence) * 100).toFixed(2)}%
                 </Text>
               )}
+
+              {relatedDiseases.length > 0 && (
+                <View style={styles.relatedWrap}>
+                  <Text style={styles.relatedTitle}>Các bệnh AI chẩn đoán có liên quan</Text>
+                  {relatedDiseases.map((disease, index) => (
+                    <View key={`${disease.id}-${index}`} style={styles.relatedItem}>
+                      <View style={styles.relatedRow}>
+                        <Text style={styles.relatedLabel} numberOfLines={1}>
+                          {index + 1}. {disease.label}
+                        </Text>
+                        <Text style={styles.relatedPercent}>
+                          {(disease.probability * 100).toFixed(2)}%
+                        </Text>
+                      </View>
+                      <View style={styles.relatedBarTrack}>
+                        <View
+                          style={[
+                            styles.relatedBarFill,
+                            { width: `${Math.max(2, disease.probability * 100)}%` },
+                          ]}
+                        />
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
               {Array.isArray(scanResult?.solutions) && scanResult.solutions.length > 0 && (
                 <View style={styles.solutionWrap}>
                   <Text style={styles.solutionTitle}>Giải pháp đề xuất:</Text>
@@ -452,12 +724,15 @@ export default function AIScanScreen() {
 
           <TouchableOpacity
             style={styles.actionItem}
-            onPress={() => setFlashEnabled((prev) => !prev)}
+            onPress={() =>
+              setCameraFacing((prev) => (prev === "back" ? "front" : "back"))
+            }
+            disabled={isAnalyzing}
           >
-            <View style={[styles.actionIcon, flashEnabled && styles.actionIconActive]}>
-              <Ionicons name="flash-outline" size={24} color="#FFFFFF" />
+            <View style={styles.actionIcon}>
+              <Ionicons name="camera-reverse-outline" size={24} color="#FFFFFF" />
             </View>
-            <Text style={styles.actionLabel}>Đèn flash</Text>
+            <Text style={styles.actionLabel}>Đổi camera</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -622,8 +897,88 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  alertWrap: {
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    gap: 6,
+  },
+  alertHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  alertTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  warningWrap: {
+    borderColor: "#FDE68A",
+    backgroundColor: "rgba(254,243,199,0.16)",
+  },
+  errorWrap: {
+    borderColor: "rgba(239,68,68,0.4)",
+    backgroundColor: "rgba(127,29,29,0.2)",
+  },
+  warningTitle: {
+    color: "#FCD34D",
+  },
+  errorTitle: {
+    color: "#FECACA",
+  },
+  warningText: {
+    color: "#FDE68A",
+  },
   errorText: {
     color: "#FCA5A5",
+  },
+  warningHint: {
+    color: "#BBF7D0",
+    fontSize: 12,
+  },
+  relatedWrap: {
+    marginTop: 6,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(134,239,172,0.35)",
+    backgroundColor: "rgba(6,78,59,0.2)",
+    gap: 8,
+  },
+  relatedTitle: {
+    color: "#A7F3D0",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  relatedItem: {
+    gap: 4,
+  },
+  relatedRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
+  relatedLabel: {
+    flex: 1,
+    color: "rgba(255,255,255,0.9)",
+    fontSize: 12,
+  },
+  relatedPercent: {
+    color: "#6EE7B7",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  relatedBarTrack: {
+    height: 6,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    overflow: "hidden",
+  },
+  relatedBarFill: {
+    height: "100%",
+    borderRadius: 999,
+    backgroundColor: "#34D399",
   },
   solutionWrap: {
     marginTop: 4,
@@ -659,9 +1014,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.12)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  actionIconActive: {
-    backgroundColor: "rgba(22,163,74,0.6)",
   },
   actionLabel: { color: "rgba(255,255,255,0.7)", fontSize: 12 },
 

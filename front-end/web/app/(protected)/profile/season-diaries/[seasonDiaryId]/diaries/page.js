@@ -773,6 +773,32 @@ function RecordModal({ diary, row, onSave, onClose }) {
   const isEdit = !!row.id;
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
+  const isNumericColumn = (col) =>
+    col.type === "number" || col.type === "currency";
+
+  const handleNumericKeyDown = (e) => {
+    if (["-", "+", "e", "E"].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handleInputChange = (col, value) => {
+    if (!isNumericColumn(col)) {
+      set(col.key, value);
+      return;
+    }
+
+    if (value === "") {
+      set(col.key, value);
+      return;
+    }
+
+    const next = Number(value);
+    if (Number.isNaN(next) || next < 0) return;
+
+    set(col.key, value);
+  };
+
   const isEmptyRequiredValue = (value) => {
     if (value === null || value === undefined) return true;
     if (typeof value === "string") return value.trim() === "";
@@ -861,7 +887,14 @@ function RecordModal({ diary, row, onSave, onClose }) {
                                   : "text"
                             }
                             value={form[col.key] ?? ""}
-                            onChange={(e) => set(col.key, e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange(col, e.target.value)
+                            }
+                            onKeyDown={
+                              isNumericColumn(col)
+                                ? handleNumericKeyDown
+                                : undefined
+                            }
                             min={
                               col.type === "number" || col.type === "currency"
                                 ? "0"

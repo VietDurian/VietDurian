@@ -104,15 +104,39 @@ export function AuthProvider({ children }) {
           token: credential,
         });
 
-        const { user, token } = res.data.data;
+        const responseData = res?.data?.data ?? {};
+        let user = responseData.user;
+        const token = responseData.token;
+
+        if (!user || !token) {
+          throw new Error("Invalid Google login response");
+        }
 
         localStorage.setItem("auth_user", JSON.stringify(user));
         localStorage.setItem("auth_token", token);
 
+        // If role is missing in login payload, fetch the latest profile.
+        if (!user?.role) {
+          const latestUser = await refreshProfile();
+          if (latestUser) {
+            user = latestUser;
+          }
+        }
+
         setUser(user);
         setToken(token);
+        useAuthStore.setState({ authUser: user });
+        useAuthStore.getState().connectSocket?.();
 
-        router.push("/home/trader");
+        const roleRoutes = {
+          admin: "/dashboard",
+          farmer: "/profile/details",
+          trader: "/profile/details",
+          serviceProvider: "/profile/details",
+          contentExpert: "/profile/details",
+        };
+
+        router.replace(roleRoutes[user?.role] || "/");
 
         return res.data;
       } catch (error) {
@@ -120,7 +144,7 @@ export function AuthProvider({ children }) {
         throw error;
       }
     },
-    [router],
+    [refreshProfile, router],
   );
 
   const logout = useCallback(

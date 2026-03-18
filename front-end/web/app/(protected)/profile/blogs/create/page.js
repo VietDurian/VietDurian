@@ -62,13 +62,13 @@ const StepIndicator = ({ currentStep }) => {
             {steps.map((step, index) => (
                 <div key={step.number} className="flex items-center">
                     <div className="flex flex-col items-center">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${currentStep >= step.number ? "bg-emerald-600 text-white" : "bg-gray-200 text-gray-500"}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${currentStep >= step.number ? "bg-emerald-500 text-white" : "bg-gray-200 text-gray-500"}`}>
                             {currentStep > step.number ? <CheckCircle size={20} /> : step.number}
                         </div>
-                        <span className={`text-xs mt-2 font-medium ${currentStep >= step.number ? "text-emerald-600" : "text-gray-500"}`}>{step.title}</span>
+                        <span className={`text-xs mt-2 font-medium ${currentStep >= step.number ? "text-emerald-500" : "text-gray-500"}`}>{step.title}</span>
                     </div>
                     {index < steps.length - 1 && (
-                        <div className={`w-24 h-1 mx-4 transition-all ${currentStep > step.number ? "bg-emerald-600" : "bg-gray-200"}`} />
+                        <div className={`w-24 h-1 mx-4 transition-all ${currentStep > step.number ? "bg-emerald-500" : "bg-gray-200"}`} />
                     )}
                 </div>
             ))}
@@ -105,11 +105,11 @@ const KnowledgeBlockCard = ({ block, index, onEdit, onDelete }) => {
         <div className="bg-white border-2 border-gray-200 rounded-xl p-5 hover:border-emerald-400 transition-all">
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3 flex-1">
-                    <div className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">{index + 1}</div>
+                    <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">{index + 1}</div>
                     <h4 className="font-bold text-gray-900 text-lg line-clamp-1">{block.title}</h4>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => onEdit(index)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Sửa"><Edit2 size={18} /></button>
+                    <button type="button" onClick={() => onEdit(index)} className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors" title="Sửa"><Edit2 size={18} /></button>
                     <button type="button" onClick={() => onDelete(index)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Xóa"><Trash2 size={18} /></button>
                 </div>
             </div>
@@ -132,29 +132,24 @@ export default function CreateBlogPage() {
     const [error, setError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Confirm modal state
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, message: "", onConfirm: null });
     const openConfirm = (message, onConfirm) => setConfirmModal({ isOpen: true, message, onConfirm });
     const closeConfirm = () => setConfirmModal({ isOpen: false, message: "", onConfirm: null });
 
-    // Blog info state
     const [blogTitle, setBlogTitle] = useState("");
     const [blogContent, setBlogContent] = useState("");
     const [blogImage, setBlogImage] = useState("");
     const [blogImageData, setBlogImageData] = useState("");
 
-    // Knowledge blocks state
     const [knowledgeBlocks, setKnowledgeBlocks] = useState([]);
     const [isAddingBlock, setIsAddingBlock] = useState(false);
     const [editingBlockIndex, setEditingBlockIndex] = useState(null);
 
-    // Block form state
     const [blockTitle, setBlockTitle] = useState("");
     const [blockContent, setBlockContent] = useState("");
     const [blockImage, setBlockImage] = useState("");
     const [blockImageData, setBlockImageData] = useState("");
 
-    // ==================== IMAGE HANDLERS ====================
     const handleBlogImageChange = (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -173,7 +168,6 @@ export default function CreateBlogPage() {
         reader.readAsDataURL(file);
     };
 
-    // ==================== STEP 1 ====================
     const canProceedToStep2 = () => blogTitle.trim() !== "" && blogContent.trim() !== "" && blogImageData !== "";
 
     const handleProceedToStep2 = () => {
@@ -182,7 +176,6 @@ export default function CreateBlogPage() {
         setCurrentStep(2);
     };
 
-    // ==================== BLOCK HANDLERS ====================
     const handleSaveBlock = () => {
         if (!blockTitle.trim() || !blockContent.trim() || !blockImageData) {
             setError("Vui lòng điền đầy đủ thông tin chương và chọn ảnh");
@@ -221,7 +214,6 @@ export default function CreateBlogPage() {
         setIsAddingBlock(false); setEditingBlockIndex(null); setError("");
     };
 
-    // ==================== SUBMIT ====================
     const handleSubmitBlog = async () => {
         if (knowledgeBlocks.length === 0) { setError("Vui lòng thêm ít nhất một chương"); return; }
         setIsSubmitting(true); setError("");
@@ -247,15 +239,14 @@ export default function CreateBlogPage() {
         }
     };
 
-    // ==================== RENDER ====================
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar />
 
-            {/* ── Header ── */}
+            {/* ── Header: bg-emerald-500 (khớp ProfileDetails) ── */}
             <section className="pt-10 pb-8 px-4">
                 <div className="max-w-4xl mx-auto">
-                    <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl p-4 md:p-4">
+                    <div className="bg-emerald-500 rounded-3xl shadow-xl p-8">
                         <button onClick={() => router.back()} className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer">
                             <ArrowLeft size={20} /><span>Quay lại</span>
                         </button>
@@ -287,22 +278,22 @@ export default function CreateBlogPage() {
                     {currentStep === 1 && (
                         <div className="bg-white rounded-2xl shadow-lg p-8">
                             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                <BookOpen className="text-emerald-600" size={28} />Thông tin Blog
+                                <BookOpen className="text-emerald-500" size={28} />Thông tin Blog
                             </h2>
                             <div className="space-y-6">
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Tiêu đề Blog <span className="text-red-500">*</span></label>
-                                    <input type="text" value={blogTitle} onChange={(e) => setBlogTitle(e.target.value)} placeholder="Nhập tiêu đề blog..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent" maxLength={200} />
+                                    <input type="text" value={blogTitle} onChange={(e) => setBlogTitle(e.target.value)} placeholder="Nhập tiêu đề blog..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" maxLength={200} />
                                     <div className="text-xs text-gray-500 text-right mt-1">{blogTitle.length}/200</div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">Giới thiệu <span className="text-red-500">*</span></label>
-                                    <textarea value={blogContent} onChange={(e) => setBlogContent(e.target.value)} placeholder="Giới thiệu tổng quan về blog..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent resize-none" rows={6} maxLength={1000} />
+                                    <textarea value={blogContent} onChange={(e) => setBlogContent(e.target.value)} placeholder="Giới thiệu tổng quan về blog..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none" rows={6} maxLength={1000} />
                                     <div className="text-xs text-gray-500 text-right mt-1">{blogContent.length}/1000</div>
                                 </div>
                                 <ImageUpload image={blogImage} onImageChange={handleBlogImageChange} onImageRemove={() => { setBlogImage(""); setBlogImageData(""); }} label={<>Ảnh đại diện <span className="text-red-500">*</span></>} />
                                 <div className="flex justify-end pt-4">
-                                    <button onClick={handleProceedToStep2} disabled={!canProceedToStep2()} className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                    <button onClick={handleProceedToStep2} disabled={!canProceedToStep2()} className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                                         Tiếp theo<ChevronRight size={20} />
                                     </button>
                                 </div>
@@ -315,9 +306,9 @@ export default function CreateBlogPage() {
                         <div className="space-y-6">
                             <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-emerald-200">
                                 <div className="flex items-center gap-2 mb-4">
-                                    <CheckCircle className="text-emerald-600" size={24} />
+                                    <CheckCircle className="text-emerald-500" size={24} />
                                     <h3 className="text-lg font-bold text-gray-900">Thông tin Blog</h3>
-                                    <button onClick={() => setCurrentStep(1)} className="ml-auto text-emerald-600 hover:text-emerald-700 text-sm font-medium">Chỉnh sửa</button>
+                                    <button onClick={() => setCurrentStep(1)} className="ml-auto text-emerald-500 hover:text-emerald-600 text-sm font-medium">Chỉnh sửa</button>
                                 </div>
                                 <div className="flex gap-4">
                                     {blogImage && <img src={blogImage} alt={blogTitle} className="w-32 h-32 object-cover rounded-lg flex-shrink-0" />}
@@ -331,10 +322,10 @@ export default function CreateBlogPage() {
                             <div className="bg-white rounded-2xl shadow-lg p-8">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                        <BookOpen className="text-emerald-600" size={28} />Các chương ({knowledgeBlocks.length})
+                                        <BookOpen className="text-emerald-500" size={28} />Các chương ({knowledgeBlocks.length})
                                     </h2>
                                     {!isAddingBlock && (
-                                        <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2">
+                                        <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2">
                                             <Plus size={20} />Thêm chương
                                         </button>
                                     )}
@@ -352,7 +343,7 @@ export default function CreateBlogPage() {
                                     <div className="text-center py-12">
                                         <BookOpen className="mx-auto text-gray-300 mb-4" size={64} />
                                         <p className="text-gray-500 text-lg mb-4">Chưa có chương nào</p>
-                                        <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all inline-flex items-center gap-2">
+                                        <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-all inline-flex items-center gap-2">
                                             <Plus size={20} />Thêm chương đầu tiên
                                         </button>
                                     </div>
@@ -363,11 +354,11 @@ export default function CreateBlogPage() {
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Tiêu đề chương <span className="text-red-500">*</span></label>
-                                        <input type="text" value={blockTitle} onChange={(e) => setBlockTitle(e.target.value)} placeholder="Nhập tiêu đề chương..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white" maxLength={200} />
+                                        <input type="text" value={blockTitle} onChange={(e) => setBlockTitle(e.target.value)} placeholder="Nhập tiêu đề chương..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white" maxLength={200} />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Nội dung chương <span className="text-red-500">*</span></label>
-                                        <textarea value={blockContent} onChange={(e) => setBlockContent(e.target.value)} placeholder="Nhập nội dung chương..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent resize-none bg-white" rows={6} maxLength={5000} />
+                                        <textarea value={blockContent} onChange={(e) => setBlockContent(e.target.value)} placeholder="Nhập nội dung chương..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none bg-white" rows={6} maxLength={5000} />
                                         <div className="text-xs text-gray-500 text-right mt-1">{blockContent.length}/5000</div>
                                     </div>
                                     <ImageUpload image={blockImage} onImageChange={handleBlockImageChange} onImageRemove={() => { setBlockImage(""); setBlockImageData(""); }} label={<>Ảnh chương <span className="text-red-500">*</span></>} />
@@ -376,7 +367,7 @@ export default function CreateBlogPage() {
                                             type="button"
                                             onClick={handleSaveBlock}
                                             disabled={!blockTitle.trim() || !blockContent.trim() || !blockImageData}
-                                            className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                            className="w-full bg-emerald-500 text-white font-bold py-3 rounded-lg hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
                                             {editingBlockIndex !== null ? "Cập nhật" : "Thêm"}
                                         </button>
                                     </div>
@@ -385,7 +376,7 @@ export default function CreateBlogPage() {
 
                             <div className="flex justify-between items-center">
                                 <button onClick={() => setCurrentStep(1)} className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">Quay lại</button>
-                                <button onClick={handleSubmitBlog} disabled={knowledgeBlocks.length === 0 || isSubmitting} className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                <button onClick={handleSubmitBlog} disabled={knowledgeBlocks.length === 0 || isSubmitting} className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                                     {isSubmitting ? (<><Loader2 className="w-5 h-5 animate-spin" />Đang lưu...</>) : (<><CheckCircle size={20} />Tạo Blog</>)}
                                 </button>
                             </div>
@@ -394,7 +385,6 @@ export default function CreateBlogPage() {
                 </div>
             </section>
 
-            {/* ========== CONFIRM MODAL ========== */}
             <ConfirmModal
                 isOpen={confirmModal.isOpen}
                 onClose={closeConfirm}
