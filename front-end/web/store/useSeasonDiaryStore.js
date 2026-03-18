@@ -10,6 +10,8 @@ export const useSeasonDiaryStore = create((set, get) => ({
   isSeasonDiaryDetailLoading: false,
   isSeasonDiaryCreating: false,
   isSeasonDiaryUpdating: false,
+  isSeasonDiaryDeleting: false,
+  isSeasonDiaryFinishing: false,
   isPageUpdating: false,
   isPageDeleting: false,
   isStatisticsLoading: false,
@@ -43,8 +45,10 @@ export const useSeasonDiaryStore = create((set, get) => ({
         seasonDiaries: [res.data.data, ...state.seasonDiaries],
       }));
       toast.success(res.data.message);
+      return res.data.data;
     } catch (error) {
       toast.error(error?.response?.data?.message || "Lỗi tạo nhật ký");
+      return null;
     } finally {
       set({ isSeasonDiaryCreating: false });
     }
@@ -56,8 +60,10 @@ export const useSeasonDiaryStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get(`/season-diary/${seasonDiaryId}`);
       set({ seasonDiaryDetail: res.data.data });
+      return res.data.data;
     } catch (error) {
       toast.error(error?.response?.data?.message || "Lỗi tải chi tiết nhật ký");
+      return null;
     } finally {
       set({ isSeasonDiaryDetailLoading: false });
     }
@@ -67,7 +73,7 @@ export const useSeasonDiaryStore = create((set, get) => ({
   updateSeasonDiary: async (seasonDiaryId, data) => {
     set({ isSeasonDiaryUpdating: true });
     try {
-      const res = await axiosInstance.put(
+      const res = await axiosInstance.patch(
         `/season-diary/${seasonDiaryId}`,
         data,
       );
@@ -78,50 +84,88 @@ export const useSeasonDiaryStore = create((set, get) => ({
         seasonDiaryDetail: res.data.data,
       }));
       toast.success(res.data.message);
+      return res.data.data;
     } catch (error) {
       toast.error(error?.response?.data?.message || "Lỗi cập nhật nhật ký");
+      return null;
     } finally {
       set({ isSeasonDiaryUpdating: false });
     }
   },
 
-  // 5. PATCH /season-diary/{season_diary_id}/page
-  updatePage: async (seasonDiaryId, data) => {
-    set({ isPageUpdating: true });
+  // 5. DELETE /season-diary/{season_diary_id}
+  deleteSeasonDiary: async (seasonDiaryId) => {
+    set({ isSeasonDiaryDeleting: true });
+    try {
+      const res = await axiosInstance.delete(`/season-diary/${seasonDiaryId}`);
+      set((state) => ({
+        seasonDiaries: state.seasonDiaries.filter(
+          (d) => d._id !== seasonDiaryId,
+        ),
+        seasonDiaryDetail:
+          state.seasonDiaryDetail?._id === seasonDiaryId
+            ? {}
+            : state.seasonDiaryDetail,
+      }));
+      toast.success(res.data.message);
+      return true;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Lỗi xóa nhật ký");
+      return false;
+    } finally {
+      set({ isSeasonDiaryDeleting: false });
+    }
+  },
+
+  // 6. PATCH /season-diary/{season_diary_id}/finish
+  finishSeasonDiary: async (seasonDiaryId) => {
+    set({ isSeasonDiaryFinishing: true });
     try {
       const res = await axiosInstance.patch(
-        `/season-diary/${seasonDiaryId}/page`,
-        data,
+        `/season-diary/${seasonDiaryId}/finish`,
       );
-      set({ seasonDiaryDetail: res.data.data });
+      // Keep UI stable with current shape while waiting for refreshed detail.
+      set((state) => ({
+        seasonDiaries: state.seasonDiaries.map((d) =>
+          d._id === seasonDiaryId
+            ? {
+                ...d,
+                status: "Completed",
+                end_date: res?.data?.data?.end_date || d.end_date,
+              }
+            : d,
+        ),
+        seasonDiaryDetail:
+          state.seasonDiaryDetail?._id === seasonDiaryId
+            ? {
+                ...state.seasonDiaryDetail,
+                status: "Completed",
+                end_date:
+                  res?.data?.data?.end_date || state.seasonDiaryDetail.end_date,
+              }
+            : state.seasonDiaryDetail,
+      }));
+
+      const refreshedDetail = await get().getSeasonDiaryDetail(seasonDiaryId);
+
+      if (refreshedDetail?._id) {
+        set((state) => ({
+          seasonDiaries: state.seasonDiaries.map((d) =>
+            d._id === seasonDiaryId ? { ...d, ...refreshedDetail } : d,
+          ),
+        }));
+      }
       toast.success(res.data.message);
+      return refreshedDetail || res.data.data;
     } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Lỗi cập nhật trang nhật ký",
-      );
+      toast.error(error?.response?.data?.message || "Lỗi hoàn thành mùa vụ");
+      return null;
     } finally {
-      set({ isPageUpdating: false });
+      set({ isSeasonDiaryFinishing: false });
     }
   },
 
-  // 6. DELETE /season-diary/{season_diary_id}/page
-  deletePage: async (seasonDiaryId, data) => {
-    set({ isPageDeleting: true });
-    try {
-      const res = await axiosInstance.delete(
-        `/season-diary/${seasonDiaryId}/page`,
-        { data },
-      );
-      set({ seasonDiaryDetail: res.data.data });
-      toast.success(res.data.message);
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Lỗi xóa trang nhật ký");
-    } finally {
-      set({ isPageDeleting: false });
-    }
-  },
-
-  // 7. GET /season-diary/{season_diary_id}/statistics
+  // 8. GET /season-diary/{season_diary_id}/statistics
   getSeasonDiaryStatistics: async (seasonDiaryId) => {
     set({ isStatisticsLoading: true });
     try {

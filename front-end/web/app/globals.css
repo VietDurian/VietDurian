@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@plugin "daisyui";
 
 :root {
   --background: #ffffff;
@@ -72,9 +71,9 @@ body {
   background: linear-gradient(
     to bottom,
     transparent,
-    rgba(34, 211, 238, 0.0),
+    rgba(34, 211, 238, 0),
     rgba(34, 211, 238, 0.55),
-    rgba(34, 211, 238, 0.0),
+    rgba(34, 211, 238, 0),
     transparent
   );
   height: 40%;

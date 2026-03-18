@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   X,
@@ -9,13 +9,10 @@ import {
   Check,
   Loader2,
   Users,
-  Hash,
-  Rows3,
   Sprout,
   Layers,
 } from "lucide-react";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
-import { useTypeProductStore } from "@/store/useTypeProduct";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 
@@ -110,19 +107,62 @@ const Input = ({
 );
 
 // ── Page ─────────────────────────────────────────────────────────────────────
-export default function CreateSeasonDiary() {
+export default function EditSeasonDiary() {
   const router = useRouter();
+  const { seasonDiaryId } = useParams();
 
-  // TODO: thay sample bằng Zustand
-  const { createSeasonDiary, isSeasonDiaryCreating } = useSeasonDiaryStore();
+  const {
+    seasonDiaryDetail,
+    getSeasonDiaryDetail,
+    isSeasonDiaryDetailLoading,
+    updateSeasonDiary,
+    isSeasonDiaryUpdating,
+  } = useSeasonDiaryStore();
 
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [selectedVariety, setSelectedVariety] = useState("");
   const [memberInput, setMemberInput] = useState("");
 
+  useEffect(() => {
+    if (!seasonDiaryId) return;
+    getSeasonDiaryDetail(seasonDiaryId);
+  }, [seasonDiaryId, getSeasonDiaryDetail]);
+
+  useEffect(() => {
+    if (!seasonDiaryDetail?._id) return;
+
+    const members = Array.isArray(seasonDiaryDetail.members)
+      ? seasonDiaryDetail.members.join(", ")
+      : seasonDiaryDetail.members || "";
+
+    setFormData({
+      garden_name: seasonDiaryDetail.garden_name || "",
+      farmer_name: seasonDiaryDetail.farmer_name || "",
+      location: seasonDiaryDetail.location || "",
+      latitude: seasonDiaryDetail.latitude
+        ? String(seasonDiaryDetail.latitude)
+        : "",
+      longitude: seasonDiaryDetail.longitude
+        ? String(seasonDiaryDetail.longitude)
+        : "",
+      members,
+      planting_area_code: seasonDiaryDetail.planting_area_code || "",
+      crop_variety: Array.isArray(seasonDiaryDetail.crop_variety)
+        ? seasonDiaryDetail.crop_variety
+        : [],
+      farmer_code: seasonDiaryDetail.farmer_code || "",
+      row_bed_count: seasonDiaryDetail.row_bed_count
+        ? String(seasonDiaryDetail.row_bed_count)
+        : "",
+      area: seasonDiaryDetail.area ? String(seasonDiaryDetail.area) : "",
+      land_use_history: seasonDiaryDetail.land_use_history || "",
+    });
+  }, [seasonDiaryDetail]);
+
   // ── Derived ──────────────────────────────────────────────────────────────
-  const isCreateDisabled =
-    isSeasonDiaryCreating ||
+  const isSubmitDisabled =
+    isSeasonDiaryUpdating ||
+    isSeasonDiaryDetailLoading ||
     !formData.garden_name.trim() ||
     !formData.farmer_name.trim() ||
     !formData.location.trim() ||
@@ -208,21 +248,22 @@ export default function CreateSeasonDiary() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!seasonDiaryId) return;
+
     const payload = {
       ...formData,
       row_bed_count: Number(formData.row_bed_count),
       area: Number(formData.area),
     };
 
-    // TODO: thay bằng Zustand action
-    await createSeasonDiary(payload);
-    console.log("Payload:", payload);
-    toast.success("Tạo nhật ký thành công!");
-    router.push("/profile/season-diaries");
+    const updated = await updateSeasonDiary(seasonDiaryId, payload);
+    if (updated) {
+      router.push(`/profile/season-diaries/${seasonDiaryId}`);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/30">
       {/* ── Header ── */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-3xl mx-auto px-6 py-5">
@@ -232,10 +273,10 @@ export default function CreateSeasonDiary() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">
-                Tạo nhật ký mùa vụ mới
+                Chỉnh sửa vườn
               </h1>
               <p className="text-gray-500 text-sm">
-                Ghi lại thông tin canh tác cho mùa vụ sầu riêng của bạn
+                Cập nhật thông tin canh tác cho mùa vụ sầu riêng của bạn
               </p>
             </div>
           </div>
@@ -523,24 +564,26 @@ export default function CreateSeasonDiary() {
           <div className="flex items-center gap-4 pb-8">
             <button
               type="submit"
-              disabled={isCreateDisabled}
+              disabled={isSubmitDisabled}
               className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-medium text-sm transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
             >
-              {isSeasonDiaryCreating ? (
+              {isSeasonDiaryUpdating ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Đang tạo...
+                  Đang cập nhật...
                 </>
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  Tạo nhật ký
+                  Cập nhật nhật ký
                 </>
               )}
             </button>
             <button
               type="button"
-              onClick={() => router.push("/profile/season-diaries")}
+              onClick={() =>
+                router.push(`/profile/season-diaries/${seasonDiaryId}`)
+              }
               className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-xl font-medium text-sm transition-colors border border-gray-300"
             >
               <X className="w-4 h-4" />

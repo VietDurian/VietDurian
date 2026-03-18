@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Check, Trash2 } from "lucide-react";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
@@ -68,14 +69,26 @@ function InfoRow({ label, value, fullWidth, children }) {
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function SeasonDiaryDetailPage() {
+  const router = useRouter();
   const { seasonDiaryId } = useParams();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showFinishSeasonDiary, setShowFinishSeasonDiary] = useState(false);
+  const [confirmName, setConfirmName] = useState("");
   const seasonDiaryDetail = useSeasonDiaryStore((s) => s.seasonDiaryDetail);
   const isSeasonDiaryDetailLoading = useSeasonDiaryStore(
     (s) => s.isSeasonDiaryDetailLoading,
   );
+  const isSeasonDiaryDeleting = useSeasonDiaryStore(
+    (s) => s.isSeasonDiaryDeleting,
+  );
+  const isSeasonDiaryFinishing = useSeasonDiaryStore(
+    (s) => s.isSeasonDiaryFinishing,
+  );
   const getSeasonDiaryDetail = useSeasonDiaryStore(
     (s) => s.getSeasonDiaryDetail,
   );
+  const deleteSeasonDiary = useSeasonDiaryStore((s) => s.deleteSeasonDiary);
+  const finishSeasonDiary = useSeasonDiaryStore((s) => s.finishSeasonDiary);
 
   useEffect(() => {
     if (seasonDiaryId) {
@@ -86,6 +99,21 @@ export default function SeasonDiaryDetailPage() {
   const data = seasonDiaryDetail || {};
   const owner = data.user_id || {};
   const cropVariety = Array.isArray(data.crop_variety) ? data.crop_variety : [];
+  const diaryName = (data.garden_name || "").trim();
+
+  const handleDelete = async () => {
+    if (!seasonDiaryId) return;
+    const deleted = await deleteSeasonDiary(seasonDiaryId);
+    if (deleted) {
+      router.push("/profile/season-diaries");
+    }
+  };
+  const handleFinish = async () => {
+    if (!seasonDiaryId) return;
+    const finished = await finishSeasonDiary(seasonDiaryId);
+    if (!finished) return;
+    setShowFinishSeasonDiary(false);
+  };
 
   if (isSeasonDiaryDetailLoading && !data._id) {
     return (
@@ -104,11 +132,85 @@ export default function SeasonDiaryDetailPage() {
   }
 
   const statusMeta = STATUS[data.status] ?? STATUS["Completed"];
+  const isCompleted = data.status === "Completed";
 
   return (
     <div className="space-y-5 p-5">
+      {showDeleteModal && (
+        <div className="h-screen fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Xác nhận xóa nhật ký
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Nhập tên vườn <b>{diaryName || "(không có tên)"}</b> để xác nhận
+              xóa.
+            </p>
+            <input
+              value={confirmName}
+              onChange={(e) => setConfirmName(e.target.value)}
+              placeholder="Nhập tên vườn..."
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-red-500 outline-none"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setConfirmName("");
+                }}
+                className="cursor-pointer px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                Hủy
+              </button>
+              <button
+                disabled={
+                  confirmName.trim() !== diaryName || isSeasonDiaryDeleting
+                }
+                onClick={handleDelete}
+                className={`cursor-pointer px-4 py-2 rounded-lg text-white ${
+                  confirmName.trim() === diaryName
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-red-300 cursor-not-allowed"
+                }`}
+              >
+                {isSeasonDiaryDeleting ? "Đang xóa..." : "Xóa vĩnh viễn"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showFinishSeasonDiary && !isCompleted && (
+        <div className="h-screen fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+            <h2 className="text-xl font-bold text-gray-900 mb-5">
+              Xác nhận hoàn thành mùa vụ?
+            </h2>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowFinishSeasonDiary(false);
+                }}
+                className="cursor-pointer px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                Hủy
+              </button>
+              <button
+                disabled={isSeasonDiaryFinishing}
+                onClick={handleFinish}
+                className={`cursor-pointer px-4 py-2 rounded-lg text-white bg-emerald-600 hover:bg-emerald-700
+                  `}
+              >
+                {isSeasonDiaryFinishing
+                  ? "Đang hoàn thành..."
+                  : "Hoàn thành mùa vụ"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Hero Banner ─────────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5">
+      <div className="bg-linear-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5">
         <div className="flex items-start gap-4 flex-wrap">
           {/* Owner avatar */}
           <img
@@ -141,6 +243,18 @@ export default function SeasonDiaryDetailPage() {
 
           {/* Quick-glance stats */}
           <div className="flex gap-3 flex-wrap">
+            {!isCompleted && (
+              <button
+                onClick={() => setShowFinishSeasonDiary(true)}
+                disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
+                className="cursor-pointer flex items-center gap-1.5 border border-emerald-200 bg-white text-sm font-medium text-emerald-500 px-4 py-2 rounded-xl hover:bg-emerald-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Check size={13} />
+                {isSeasonDiaryFinishing
+                  ? "Đang đánh dấu..."
+                  : "Đánh dấu hoàn thành"}
+              </button>
+            )}
             {[
               { label: "Diện tích", value: `${fmt(data.area)} m²` },
               {
@@ -150,12 +264,20 @@ export default function SeasonDiaryDetailPage() {
             ].map((c) => (
               <div
                 key={c.label}
-                className="bg-white/15 rounded-xl px-4 py-3 text-center min-w-[110px]"
+                className="bg-white/15 rounded-xl px-4 py-3 text-center min-w-27.5"
               >
                 <p className="text-emerald-100 text-xs">{c.label}</p>
                 <p className="text-white font-bold text-sm mt-0.5">{c.value}</p>
               </div>
             ))}
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
+              className="cursor-pointer flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Trash2 size={13} />
+              {isSeasonDiaryDeleting ? "Đang xóa..." : "Xóa"}
+            </button>
           </div>
         </div>
       </div>
