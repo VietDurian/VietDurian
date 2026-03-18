@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
@@ -68,14 +69,21 @@ function InfoRow({ label, value, fullWidth, children }) {
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function SeasonDiaryDetailPage() {
+  const router = useRouter();
   const { seasonDiaryId } = useParams();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [confirmName, setConfirmName] = useState("");
   const seasonDiaryDetail = useSeasonDiaryStore((s) => s.seasonDiaryDetail);
   const isSeasonDiaryDetailLoading = useSeasonDiaryStore(
     (s) => s.isSeasonDiaryDetailLoading,
   );
+  const isSeasonDiaryDeleting = useSeasonDiaryStore(
+    (s) => s.isSeasonDiaryDeleting,
+  );
   const getSeasonDiaryDetail = useSeasonDiaryStore(
     (s) => s.getSeasonDiaryDetail,
   );
+  const deleteSeasonDiary = useSeasonDiaryStore((s) => s.deleteSeasonDiary);
 
   useEffect(() => {
     if (seasonDiaryId) {
@@ -86,6 +94,15 @@ export default function SeasonDiaryDetailPage() {
   const data = seasonDiaryDetail || {};
   const owner = data.user_id || {};
   const cropVariety = Array.isArray(data.crop_variety) ? data.crop_variety : [];
+  const diaryName = (data.garden_name || "").trim();
+
+  const handleDelete = async () => {
+    if (!seasonDiaryId) return;
+    const deleted = await deleteSeasonDiary(seasonDiaryId);
+    if (deleted) {
+      router.push("/profile/season-diaries");
+    }
+  };
 
   if (isSeasonDiaryDetailLoading && !data._id) {
     return (
@@ -107,6 +124,50 @@ export default function SeasonDiaryDetailPage() {
 
   return (
     <div className="space-y-5 p-5">
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Xác nhận xóa nhật ký
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Nhập tên vườn <b>{diaryName || "(không có tên)"}</b> để xác nhận
+              xóa.
+            </p>
+            <input
+              value={confirmName}
+              onChange={(e) => setConfirmName(e.target.value)}
+              placeholder="Nhập tên vườn..."
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-red-500 outline-none"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setConfirmName("");
+                }}
+                className="cursor-pointer px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                Hủy
+              </button>
+              <button
+                disabled={
+                  confirmName.trim() !== diaryName || isSeasonDiaryDeleting
+                }
+                onClick={handleDelete}
+                className={`cursor-pointer px-4 py-2 rounded-lg text-white ${
+                  confirmName.trim() === diaryName
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-red-300 cursor-not-allowed"
+                }`}
+              >
+                {isSeasonDiaryDeleting ? "Đang xóa..." : "Xóa vĩnh viễn"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Hero Banner ─────────────────────────────────────────────────────── */}
       <div className="bg-gradient-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5">
         <div className="flex items-start gap-4 flex-wrap">
@@ -156,6 +217,14 @@ export default function SeasonDiaryDetailPage() {
                 <p className="text-white font-bold text-sm mt-0.5">{c.value}</p>
               </div>
             ))}
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              disabled={isSeasonDiaryDeleting}
+              className=" flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Trash2 size={13} />
+              {isSeasonDiaryDeleting ? "Đang xóa..." : "Xóa"}
+            </button>
           </div>
         </div>
       </div>

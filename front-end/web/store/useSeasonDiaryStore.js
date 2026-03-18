@@ -10,6 +10,7 @@ export const useSeasonDiaryStore = create((set, get) => ({
   isSeasonDiaryDetailLoading: false,
   isSeasonDiaryCreating: false,
   isSeasonDiaryUpdating: false,
+  isSeasonDiaryDeleting: false,
   isPageUpdating: false,
   isPageDeleting: false,
   isStatisticsLoading: false,
@@ -91,7 +92,31 @@ export const useSeasonDiaryStore = create((set, get) => ({
     }
   },
 
-  // 5. PATCH /season-diary/{season_diary_id}/page
+  // 5. DELETE /season-diary/{season_diary_id}
+  deleteSeasonDiary: async (seasonDiaryId) => {
+    set({ isSeasonDiaryDeleting: true });
+    try {
+      const res = await axiosInstance.delete(`/season-diary/${seasonDiaryId}`);
+      set((state) => ({
+        seasonDiaries: state.seasonDiaries.filter(
+          (d) => d._id !== seasonDiaryId,
+        ),
+        seasonDiaryDetail:
+          state.seasonDiaryDetail?._id === seasonDiaryId
+            ? {}
+            : state.seasonDiaryDetail,
+      }));
+      toast.success(res.data.message);
+      return true;
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Lỗi xóa nhật ký");
+      return false;
+    } finally {
+      set({ isSeasonDiaryDeleting: false });
+    }
+  },
+
+  // 6. PATCH /season-diary/{season_diary_id}/page
   updatePage: async (seasonDiaryId, data) => {
     set({ isPageUpdating: true });
     try {
@@ -110,7 +135,7 @@ export const useSeasonDiaryStore = create((set, get) => ({
     }
   },
 
-  // 6. DELETE /season-diary/{season_diary_id}/page
+  // 7. DELETE /season-diary/{season_diary_id}/page
   deletePage: async (seasonDiaryId, data) => {
     set({ isPageDeleting: true });
     try {
@@ -127,7 +152,7 @@ export const useSeasonDiaryStore = create((set, get) => ({
     }
   },
 
-  // 7. GET /season-diary/{season_diary_id}/statistics
+  // 8. GET /season-diary/{season_diary_id}/statistics
   getSeasonDiaryStatistics: async (seasonDiaryId) => {
     set({ isStatisticsLoading: true });
     try {
