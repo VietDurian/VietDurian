@@ -7,6 +7,8 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ChatHeader from "../components/ChatHeader";
@@ -130,46 +132,51 @@ export default function ChatDetailScreen() {
         avatar={contactAvatar}
         isOnline={isOnline}
       />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={60}
+      >
+        {isMessagesLoading ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator size="small" color="#16A34A" />
+            <Text style={styles.loadingText}>Đang tải tin nhắn...</Text>
+          </View>
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            extraData={messages}
+            keyExtractor={(item) =>
+              item?._id || `${item?.createdAt}-${item?.senderId}`
+            }
+            renderItem={({ item }) => (
+              <MessageBubble
+                msg={item}
+                avatar={contactAvatar}
+                authUserId={authUser?._id}
+              />
+            )}
+            contentContainerStyle={styles.messageList}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyMessagesWrap}>
+                <Text style={styles.emptyMessagesText}>
+                  Bắt đầu cuộc trò chuyện với người dùng này.
+                </Text>
+              </View>
+            }
+          />
+        )}
 
-      {isMessagesLoading ? (
-        <View style={styles.loadingWrap}>
-          <ActivityIndicator size="small" color="#16A34A" />
-          <Text style={styles.loadingText}>Đang tải tin nhắn...</Text>
-        </View>
-      ) : (
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          extraData={messages}
-          keyExtractor={(item) =>
-            item?._id || `${item?.createdAt}-${item?.senderId}`
-          }
-          renderItem={({ item }) => (
-            <MessageBubble
-              msg={item}
-              avatar={contactAvatar}
-              authUserId={authUser?._id}
-            />
-          )}
-          contentContainerStyle={styles.messageList}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyMessagesWrap}>
-              <Text style={styles.emptyMessagesText}>
-                Bắt đầu cuộc trò chuyện với người dùng này.
-              </Text>
-            </View>
-          }
-        />
-      )}
-
-      <ChatInput onSend={handleSend} />
+        <ChatInput onSend={handleSend} />
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
+  container: { flex: 1, backgroundColor: "#FFFFFF" },
   messageList: { padding: 16, gap: 12 },
   loadingWrap: {
     flex: 1,
