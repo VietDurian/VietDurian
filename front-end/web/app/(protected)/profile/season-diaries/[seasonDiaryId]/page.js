@@ -270,14 +270,16 @@ export default function SeasonDiaryDetailPage() {
                 <p className="text-white font-bold text-sm mt-0.5">{c.value}</p>
               </div>
             ))}
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
-              className="cursor-pointer flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <Trash2 size={13} />
-              {isSeasonDiaryDeleting ? "Đang xóa..." : "Xóa"}
-            </button>
+            {!isCompleted && (
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
+                className="cursor-pointer flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Trash2 size={13} />
+                {isSeasonDiaryDeleting ? "Đang xóa..." : "Xóa"}
+              </button>
+            )}
           </div>
         </div>
       </div>
