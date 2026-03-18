@@ -13,7 +13,6 @@ const generateToken = (userId) => {
 const verifyToken = (token) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    console.log("✅ Token decoded:", decoded);
     return { valid: true, expired: false, decoded };
   } catch (error) {
     console.log("❌ JWT verify failed:", error.message);
