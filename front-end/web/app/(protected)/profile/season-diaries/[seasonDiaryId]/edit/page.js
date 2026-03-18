@@ -258,7 +258,7 @@ export default function EditSeasonDiary() {
 
     const updated = await updateSeasonDiary(seasonDiaryId, payload);
     if (updated) {
-      router.push("/profile/season-diaries");
+      router.push(`/profile/season-diaries/${seasonDiaryId}`);
     }
   };
 
@@ -581,7 +581,9 @@ export default function EditSeasonDiary() {
             </button>
             <button
               type="button"
-              onClick={() => router.push("/profile/season-diaries")}
+              onClick={() =>
+                router.push(`/profile/season-diaries/${seasonDiaryId}`)
+              }
               className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-xl font-medium text-sm transition-colors border border-gray-300"
             >
               <X className="w-4 h-4" />

@@ -7,7 +7,6 @@ import { useProductStore as useTypeProductStore } from "@/store/useTypeProduct";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useAuthStore } from "@/store/useAuthStore";
 
-
 export default function CreateProduct() {
   const router = useRouter();
   const { createProduct, isProductCreating } = useProductStore();
@@ -167,13 +166,6 @@ export default function CreateProduct() {
       {/* Header */}
       <div>
         <div className="max-w-4xl mx-auto px-6 pt-6">
-          <button
-            onClick={() => router.push("/profile/products")}
-            className="cursor-pointer inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Trở lại sản phẩm
-          </button>
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
               <Package className="w-6 h-6 text-emerald-600" />
@@ -229,7 +221,9 @@ export default function CreateProduct() {
                   ))}
                 </select>
                 {isSeasonDiariesLoading ? (
-                  <p className="mt-1 text-xs text-gray-500">Đang tải mùa vụ...</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Đang tải mùa vụ...
+                  </p>
                 ) : null}
               </div>
 

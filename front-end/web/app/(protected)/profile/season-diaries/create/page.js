@@ -226,13 +226,6 @@ export default function CreateSeasonDiary() {
       {/* ── Header ── */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="max-w-3xl mx-auto px-6 py-5">
-          <button
-            onClick={() => router.push("/profile/season-diaries")}
-            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-4 transition-colors group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            Trở lại nhật ký mùa vụ
-          </button>
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-emerald-600" />
