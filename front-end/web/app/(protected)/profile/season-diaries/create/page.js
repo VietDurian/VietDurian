@@ -48,6 +48,79 @@ const INITIAL_FORM = {
   land_use_history: "",
 };
 
+// ── Mã tỉnh/thành viết tắt 2 ký tự ─────────────────────────────────────────
+const PROVINCE_CODES = new Set([
+  "AG",
+  "BL",
+  "BK",
+  "BG",
+  "BN",
+  "BR",
+  "BD",
+  "BP",
+  "BT",
+  "CM",
+  "CT",
+  "CB",
+  "DN",
+  "DL",
+  "DK",
+  "DB",
+  "DT",
+  "GL",
+  "HG",
+  "HN",
+  "HA",
+  "HT",
+  "HD",
+  "HP",
+  "HB",
+  "HU",
+  "HY",
+  "KH",
+  "KG",
+  "KT",
+  "LC",
+  "LD",
+  "LS",
+  "LA",
+  "ND",
+  "NA",
+  "NB",
+  "NT",
+  "PT",
+  "PY",
+  "QB",
+  "QN",
+  "QG",
+  "QT",
+  "ST",
+  "SL",
+  "TN",
+  "TB",
+  "TH",
+  "TT",
+  "TG",
+  "TV",
+  "TQ",
+  "VL",
+  "VP",
+  "YB",
+  "SG",
+]);
+
+// VN-XXOR-YYYY  →  XX ∈ PROVINCE_CODES, YYYY = 0001..5999
+const validatePlantingAreaCode = (code) => {
+  if (!code) return null;
+  const match = code.match(/^VN-([A-Z]{2})OR-([0-5]\d{3})$/);
+  if (!match) return "Sai định dạng — ví dụ: VN-BLOR-0001";
+  const [, province, num] = match;
+  if (!PROVINCE_CODES.has(province))
+    return `Mã tỉnh "${province}" không hợp lệ`;
+  if (num === "0000") return "Mã số phải từ 0001 đến 5999";
+  return null; // hợp lệ
+};
+
 // ── Label + optional hint ────────────────────────────────────────────────────
 const FieldLabel = ({ htmlFor, children, hint, required }) => (
   <label
@@ -120,6 +193,10 @@ export default function CreateSeasonDiary() {
   const [selectedVariety, setSelectedVariety] = useState("");
   const [memberInput, setMemberInput] = useState("");
 
+  const plantingAreaCodeError = validatePlantingAreaCode(
+    formData.planting_area_code,
+  );
+
   // ── Derived ──────────────────────────────────────────────────────────────
   const isCreateDisabled =
     isSeasonDiaryCreating ||
@@ -129,6 +206,7 @@ export default function CreateSeasonDiary() {
     !formData.latitude ||
     !formData.longitude ||
     !formData.planting_area_code.trim() ||
+    !!plantingAreaCodeError ||
     !formData.farmer_code.trim() ||
     formData.crop_variety.length === 0 ||
     !formData.row_bed_count.toString().trim() ||
@@ -302,7 +380,7 @@ export default function CreateSeasonDiary() {
               >
                 Mã số vùng trồng
               </FieldLabel>
-              <Input
+              <input
                 id="planting_area_code"
                 name="planting_area_code"
                 value={formData.planting_area_code}
@@ -312,8 +390,34 @@ export default function CreateSeasonDiary() {
                     planting_area_code: e.target.value.toUpperCase(),
                   }))
                 }
-                placeholder="ví dụ: VT-HG-009"
+                placeholder="ví dụ: VN-BLOR-0001"
+                maxLength={13}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 outline-none transition-colors text-sm
+      ${
+        plantingAreaCodeError && formData.planting_area_code
+          ? "border-red-400 focus:ring-red-400 focus:border-red-400"
+          : "border-gray-300 focus:ring-emerald-500 focus:border-emerald-500"
+      }`}
               />
+              {/* hint luôn hiện */}
+              <p className="text-xs text-gray-400 mt-1">
+                Định dạng: <span>VN-[Tỉnh]OR-[0001–5999]</span>
+                &nbsp;·&nbsp;ví dụ: <span>VN-CTOR-0042</span> (Cần Thơ)
+              </p>
+              {/* error chỉ hiện khi có giá trị */}
+              {plantingAreaCodeError && formData.planting_area_code && (
+                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                  <X className="w-3 h-3" />
+                  {plantingAreaCodeError}
+                </p>
+              )}
+              {/* success */}
+              {!plantingAreaCodeError && formData.planting_area_code && (
+                <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
+                  <Check className="w-3 h-3" />
+                  Mã vùng trồng hợp lệ
+                </p>
+              )}
             </div>
 
             {/* Members */}
