@@ -1,27 +1,13 @@
 from __future__ import annotations
-
-
-
-
 import io
 from pathlib import Path
 from typing import Any
-
-
-
-
 import numpy as np
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from PIL import Image
-
-
-
-
 import tensorflow as tf
 from tensorflow.keras.applications.mobilenet_v3 import preprocess_input
-
-
 
 
 APP_DIR = Path(__file__).resolve().parent
