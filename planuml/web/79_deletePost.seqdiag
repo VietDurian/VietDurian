@@ -29,6 +29,7 @@ deactivate Model
 
 Service -> Service : 8. check delete status
 activate Service
+space
 deactivate Service
 
 alt Delete post successful

@@ -1,14 +1,10 @@
-@startuml 85_viewPostList
-skinparam shadowing false
-skinparam sequenceArrowThickness 1
-hide footbox
 
-actor Farmer as "Users"
-boundary PostPage as UI 
-control postController as Controller 
+actor "Users" as Farmer
+boundary "PostPage" as UI 
+control "postController" as Controller 
 participant ":postService" as Service 
-participant ":postModel" as Model 
-database Database as DB 
+participant ":generalPostModel" as Model 
+database "Database" as DB 
 
 activate Farmer
 activate UI
@@ -43,4 +39,3 @@ else No matching posts
     deactivate Farmer
 end
 
-@enduml

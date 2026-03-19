@@ -9,8 +9,26 @@ import cookieParser from "cookie-parser";
 import { postService } from "@/services/postService";
 require("dotenv").config();
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB and start server after connection
+// (wrap startup so background jobs don't run before DB is ready)
+
+const start = async () => {
+  await connectDB();
+
+  // Background jobs
+  postService.startPostExpiryJob();
+
+  const PORT = process.env.PORT || 8080;
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`Swagger UI is available at http://localhost:${PORT}/api-docs`);
+  });
+};
+
+start().catch((err) => {
+  console.error("Failed to start server:", err);
+  process.exit(1);
+});
 
 // Cors
 app.use(
@@ -32,8 +50,6 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Api V1 Routes
 app.use("/api/v1", API_v1);
 
-// Background jobs
-postService.startPostExpiryJob();
 
 // Error responses
 app.use((err, req, res, next) => {
@@ -46,8 +62,4 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Swagger UI is available at http://localhost:${PORT}/api-docs`);
-});
+// (server started in start())
