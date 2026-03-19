@@ -80,7 +80,7 @@ const confirmAccount = async (req, res, next) => {
         );
         res.status(200).json({
             code: 200,
-            message: "Account upgrade approved successfully",
+            message: "Permission request approved successfully (proofs verified)",
             data: result,
         });
     } catch (error) {
