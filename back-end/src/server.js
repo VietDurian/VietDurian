@@ -4,13 +4,15 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "@/config/swagger";
 import { API_v1 } from "@/routes/index";
 import connectDB from "@/config/mongoose";
-import { app } from "@/lib/socket";
+import { app, server } from "@/lib/socket";
 import cookieParser from "cookie-parser";
 import serverless from 'serverless-http';
 
 require("dotenv").config();
 
 let dbInitPromise = null;
+
+// connectDB()
 
 const ensureDbConnected = async () => {
   if (!dbInitPromise) {
@@ -61,7 +63,7 @@ app.use((err, req, res, next) => {
 });
 
 // (server started in start())
-const PORT = process.env.PORT || 8080;
+// const PORT = process.env.PORT || 8080;
 // server.listen(PORT, () => {
 //   console.log(`Server is running on port ${PORT}`);
 //   console.log(`Swagger UI is available at http://localhost:${PORT}/api-docs`);
@@ -71,4 +73,4 @@ const baseHandler = serverless(app);
 module.exports.handler = async (event, context) => {
   await ensureDbConnected();
   return baseHandler(event, context);
-};gin/PhucNew
+};

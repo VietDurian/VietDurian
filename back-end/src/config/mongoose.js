@@ -5,15 +5,17 @@ dotenv.config();
 
 const connectDB = async () => {
   try {
+    // const uri = process.env.MONGODB_URI;
     const uri = "mongodb+srv://ChanPotter:Password123!@cluster0.jdsmxen.mongodb.net/?appName=Cluster0";
     const dbName = process.env.DATABASE_NAME;
 
     if (!uri) {
       throw new Error("MONGODB_URI_ATLAS is not defined in .env file");
     }
-    // Disable mongoose operation buffering so queries fail fast if not connected
-    mongoose.set("bufferCommands", false);
 
+    // await mongoose.connect(uri, {
+    //   dbName: dbName,
+    // });
     await mongoose.connect(uri);
 
     console.log("MongoDB Connected Successfully");
