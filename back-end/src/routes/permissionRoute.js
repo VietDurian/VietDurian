@@ -384,7 +384,7 @@ Router.get(
   authorizationMiddleware.isAdmin,
   permissionController.sortPermissionRequests,
 );
-Router.post(
+Router.patch(
   "/requests/:request_id/confirm",
   authMiddleware.protect,
   authorizationMiddleware.isAdmin,
