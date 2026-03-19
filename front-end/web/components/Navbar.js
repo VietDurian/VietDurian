@@ -17,33 +17,33 @@ import { useAuth } from "@/context/AuthContext";
 import NotificationPost from "@/components/NotificationPost";
 import { axiosInstance } from "@/lib/axios";
 import { useChatStore } from "@/store/useChatStore";
+import { useLanguage } from "@/context/LanguageContext";
 
 const NAV_LINKS = [
-  { label: "Trang Chủ", href: "/" },
-  { label: "Hướng Dẫn", href: "/guide" },
-  { label: "Sản Phẩm", href: "/products" },
-  { label: "Blog", href: "/blogs" },
-  { label: "Bài viết", href: "/posts" },
-  { label: "Về Chúng Tôi", href: "/about-us" },
+  { labelKey: "nav_home", href: "/" },
+  { labelKey: "nav_guide", href: "/guide" },
+  { labelKey: "nav_products", href: "/products" },
+  { labelKey: "nav_blog", href: "/blogs" },
+  { labelKey: "nav_posts", href: "/posts" },
+  { labelKey: "nav_about", href: "/about-us" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { setSelectedUser, addContact } = useChatStore();
+  const { t, language, setLanguage } = useLanguage();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const navRef = useRef(null);
   const router = useRouter();
 
-  // Close menus on route change
   useEffect(() => {
     setMobileOpen(false);
     setProfileOpen(false);
   }, [pathname]);
 
-  // Close profile when clicking outside
   useEffect(() => {
     function handleClickOutside(e) {
       if (navRef.current && !navRef.current.contains(e.target)) {
@@ -90,9 +90,19 @@ export default function Navbar() {
     }
   };
 
+  // Nút chuyển ngôn ngữ
+  const LangToggle = () => (
+    <button
+      onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
+      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gray-200 hover:border-emerald-500 hover:text-emerald-600 text-gray-600 text-sm font-semibold transition"
+    >
+      {language === "vi" ? "EN" : "VI"}
+    </button>
+  );
+
   return (
     <nav className="fixed top-0 inset-x-0 z-1001 bg-white backdrop-blur-md border-b border-gray-200">
-      <div className=" mx-auto px-5">
+      <div className="mx-auto px-5">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
@@ -111,21 +121,22 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition ${
-                  pathname === link.href
+                className={`text-sm font-medium transition ${pathname === link.href
                     ? "text-emerald-700"
                     : "text-gray-600 hover:text-emerald-600"
-                }`}
+                  }`}
               >
-                {link.label}
+                {t(link.labelKey)}
               </Link>
             ))}
           </div>
 
           {/* Right Side */}
           <div className="flex items-center justify-end gap-4" ref={navRef}>
-            {user && (
+            {user ? (
+              // ĐÃ ĐĂNG NHẬP: LangToggle trước chuông
               <div className="flex items-center gap-5">
+                <LangToggle />
                 <NotificationPost user={user} />
                 <button
                   onClick={() => router.push("/chat")}
@@ -134,9 +145,27 @@ export default function Navbar() {
                   <MessageCircle className="w-5 h-5 text-gray-600 hover:text-emerald-600" />
                 </button>
               </div>
+            ) : (
+              // CHƯA ĐĂNG NHẬP: LangToggle trước nút đăng nhập
+              <div className="hidden md:flex items-center gap-3">
+                <LangToggle />
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-sm font-semibold text-emerald-700 border border-emerald-700 rounded-full hover:bg-emerald-50"
+                >
+                  {t("nav_login")}
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-4 py-2 text-sm font-semibold text-white bg-emerald-700 rounded-full hover:bg-emerald-800"
+                >
+                  {t("nav_register")}
+                </Link>
+              </div>
             )}
 
-            {user ? (
+            {/* Avatar + dropdown - chỉ hiện khi đã đăng nhập */}
+            {user && (
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen((p) => !p)}
@@ -150,11 +179,9 @@ export default function Navbar() {
                       className="object-cover"
                     />
                   </div>
-
                   <ChevronDown
-                    className={`w-4 h-4 text-black transition ${
-                      profileOpen ? "rotate-180" : ""
-                    }`}
+                    className={`w-4 h-4 text-black transition ${profileOpen ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
 
@@ -166,7 +193,7 @@ export default function Navbar() {
                           src={user.avatar}
                           alt="Avatar"
                           fill
-                          className=" "
+                          className="object-cover"
                         />
                       </div>
                       <div>
@@ -183,13 +210,13 @@ export default function Navbar() {
                       href="/profile/details"
                       className="text-black flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100"
                     >
-                      <User className="w-4 h-4" /> Trang cá nhân
+                      <User className="w-4 h-4" /> {t("nav_profile")}
                     </Link>
                     <button
                       onClick={handleSupportClick}
                       className="text-black flex w-full items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer"
                     >
-                      <Info className="w-4 h-4" /> Hỗ trợ
+                      <Info className="w-4 h-4" /> {t("nav_support")}
                     </button>
 
                     <div className="my-2 border-t border-gray-200" />
@@ -198,25 +225,10 @@ export default function Navbar() {
                       onClick={handleLogout}
                       className="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 cursor-pointer"
                     >
-                      <LogOut className="w-4 h-4" /> Đăng xuất
+                      <LogOut className="w-4 h-4" /> {t("nav_logout")}
                     </button>
                   </div>
                 )}
-              </div>
-            ) : (
-              <div className="hidden md:flex items-center gap-3">
-                <Link
-                  href="/login"
-                  className="px-4 py-2 text-sm font-semibold text-emerald-700 border border-emerald-700 rounded-full hover:bg-emerald-50"
-                >
-                  Đăng Nhập
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-4 py-2 text-sm font-semibold text-white bg-emerald-700 rounded-full hover:bg-emerald-800"
-                >
-                  Đăng Ký
-                </Link>
               </div>
             )}
 
@@ -240,7 +252,7 @@ export default function Navbar() {
               href={link.href}
               className="block text-gray-700 font-medium"
             >
-              {link.label}
+              {t(link.labelKey)}
             </Link>
           ))}
         </div>
