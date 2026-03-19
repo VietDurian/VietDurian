@@ -38,10 +38,10 @@ const getPermissionRequestDetail = async (request_id) => {
   }
 };
 
-const searchPermissionRequests = async ({ status = "", keyword = "" }) => {
+const searchPermissionRequests = async ({ verify_cccd = "", keyword = "" }) => {
   try {
     const query = {};
-    if (status !== "all") query.status = status;
+    if (verify_cccd && verify_cccd !== "all") query.verify_cccd = verify_cccd;
 
     const pipeline = [
       { $match: query },
@@ -66,6 +66,8 @@ const searchPermissionRequests = async ({ status = "", keyword = "" }) => {
         },
       });
     }
+
+    pipeline.push({ $sort: { created_at: -1 } });
 
     return await PermissionAccountModel.aggregate(pipeline);
   } catch (error) {
@@ -108,21 +110,33 @@ const confirmPermissionRequest = async (request_id, adminId) => {
     if (request.status !== "pending")
       throw new Error("Request already processed");
 
-    // Update user role
-    const user = await User.findById(request.user_id);
-    if (!user) throw new Error("User not found");
-    user.role = request.requested_role;
-    await user.save();
+    // Kiểm tra proofs đã đủ chưa
+    const proofs = request.proofs || [];
+    const types = new Set(proofs.map((p) => p.type));
+    const hasFront = types.has("cccd_front");
+    const hasBack = types.has("cccd_back");
+    const hasCertificate = types.has("certificate");
+    if (!hasFront || !hasBack || !hasCertificate) {
+      const error = new Error("CCCD front, back, and certificate are required");
+      error.status = 400;
+      throw error;
+    }
 
-    // Update request status
+    // Chỉ cập nhật trạng thái request
     request.status = "approved";
     await request.save();
 
     // Notify user
+    let user = null;
+    try {
+      user = await User.findById(request.user_id);
+    } catch {
+      /* bỏ qua */
+    }
     try {
       await emailService.sendPermissionStatusEmail({
-        name: user.full_name || "User",
-        email: user.email,
+        name: user?.full_name || "User",
+        email: user?.email,
         status: "approved",
         role: request.requested_role,
       });
@@ -171,37 +185,38 @@ const rejectPermissionRequest = async (request_id, adminId, reason = "") => {
   }
 };
 const submitProofs = async (userId, proofs = []) => {
-  const request = await PermissionAccountModel.findOne({
-    user_id: userId,
-  });
-
-  if (!request) {
-    const error = new Error(
-      "Permission request not found or already processed",
-    );
-    error.status = 404;
-    throw error;
-  }
-
   const types = new Set(proofs.map((p) => p.type));
   const hasFront = types.has("cccd_front");
   const hasBack = types.has("cccd_back");
   const hasCertificate = types.has("certificate");
+
   if (!hasFront || !hasBack || !hasCertificate) {
     const error = new Error("CCCD front, back, and certificate are required");
     error.status = 400;
     throw error;
   }
 
-  request.proofs = proofs;
+  let request = await PermissionAccountModel.findOne({ user_id: userId });
+
+  if (!request) {
+    request = new PermissionAccountModel({
+      user_id: userId,
+      proofs,
+      verify_cccd: "pending",
+      rejection_reason: "",
+    });
+  } else {
+    request.proofs = proofs;
+    request.verify_cccd = "pending";
+    request.rejection_reason = "";
+  }
+
   await request.save();
   return request;
 };
 
 const isMyAccountApproved = async (userId) => {
-  const request = await PermissionAccountModel.findOne({
-    user_id: userId,
-  });
+  const request = await PermissionAccountModel.findOne({ user_id: userId });
 
   if (!request) return false;
 
