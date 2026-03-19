@@ -1,0 +1,61 @@
+actor Farmer
+boundary CreateIrrigationDiaryPage
+control irrigationCostsController
+participant ":irrigationCostService" as irrigationService
+participant ":irrigationCostModel" as irrigationModel
+database Database
+
+
+Farmer->CreateIrrigationDiaryPage: 1. Enter irrigation data and click "Thêm bản ghi"
+activate Farmer
+activate CreateIrrigationDiaryPage
+
+CreateIrrigationDiaryPage->CreateIrrigationDiaryPage: 2. Check validation (date, method, duration, cost)
+activate CreateIrrigationDiaryPage
+space
+deactivate CreateIrrigationDiaryPage
+
+opt Invalid Input or fields left empty
+    CreateIrrigationDiaryPage-->Farmer: 2.1 Show validation errors
+end
+
+CreateIrrigationDiaryPage->irrigationCostsController: 3. Create irrigation diary request
+activate irrigationCostsController
+
+irrigationCostsController->irrigationService: 4. createIrrigationCosts({ userId, data })
+activate irrigationService
+
+irrigationService->irrigationModel: 5. save(data)
+activate irrigationModel
+
+irrigationModel->Database: 6. Execute query
+activate Database
+Database-->irrigationModel: 7. Return query result
+deactivate Database
+
+irrigationModel-->irrigationService: 8. Return result
+deactivate irrigationModel
+
+irrigationService->irrigationService: 9 Check irrigation diary status
+activate irrigationService
+space
+deactivate irrigationService
+
+alt Create irrigation diary successfully
+    irrigationService-->irrigationCostsController: 9.1 Return savedDiary
+    deactivate irrigationService
+
+    irrigationCostsController-->CreateIrrigationDiaryPage: 9.1.1 201 Created + data
+    CreateIrrigationDiaryPage-->Farmer: 9.1.2 Redirect to season diary list
+
+else Create failed due to server error
+    irrigationService-->irrigationCostsController: 9.2 Return error
+    deactivate irrigationService
+
+    irrigationCostsController-->CreateIrrigationDiaryPage: 9.2.1 500 Internal Server Error
+    deactivate irrigationCostsController
+
+    CreateIrrigationDiaryPage-->Farmer: 9.2.2 Show server error message
+    deactivate CreateIrrigationDiaryPage
+    deactivate Farmer
+end

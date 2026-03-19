@@ -1,0 +1,61 @@
+actor Farmer
+boundary CreateContainerHandlingDiaryPage
+control packagingHandlingController
+participant ":packagingHandlingService" as containerHandlingService
+participant ":packagingHandlingModel" as containerHandlingModel
+database Database
+
+
+Farmer->CreateContainerHandlingDiaryPage: 1. Enter handling info and click "Thêm bản ghi"
+activate Farmer
+activate CreateContainerHandlingDiaryPage
+
+CreateContainerHandlingDiaryPage->CreateContainerHandlingDiaryPage: 2. Check validation (method, quantity, date)
+activate CreateContainerHandlingDiaryPage
+space
+deactivate CreateContainerHandlingDiaryPage
+
+opt Invalid Input or fields left empty
+    CreateContainerHandlingDiaryPage-->Farmer: 2.1 Show validation errors
+end
+
+CreateContainerHandlingDiaryPage->packagingHandlingController: 3. Create handling diary request
+activate packagingHandlingController
+
+packagingHandlingController->containerHandlingService: 4. create({ userId, data })
+activate containerHandlingService
+
+containerHandlingService->containerHandlingModel: 5. save(data)
+activate containerHandlingModel
+
+containerHandlingModel->Database: 6. Execute query
+activate Database
+Database-->containerHandlingModel: 7. Return query result
+deactivate Database
+
+containerHandlingModel-->containerHandlingService: 8. Return result
+deactivate containerHandlingModel
+
+containerHandlingService->containerHandlingService: 9 Check handling diary status
+activate containerHandlingService
+space
+deactivate containerHandlingService
+
+alt Create handling diary successfully
+    containerHandlingService-->packagingHandlingController: 9.1 Return savedDiary
+    deactivate containerHandlingService
+
+    packagingHandlingController-->CreateContainerHandlingDiaryPage: 9.1.1 201 Created + data
+    CreateContainerHandlingDiaryPage-->Farmer: 9.1.2 Redirect to season diary list
+
+else Create failed due to server error
+    containerHandlingService-->packagingHandlingController: 9.2 Return error
+    deactivate containerHandlingService
+
+    packagingHandlingController-->CreateContainerHandlingDiaryPage: 9.2.1 500 Internal Server Error
+    deactivate packagingHandlingController
+
+    CreateContainerHandlingDiaryPage-->Farmer: 9.2.2 Show server error message
+    deactivate CreateContainerHandlingDiaryPage
+    deactivate Farmer 
+end

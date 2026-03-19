@@ -1,0 +1,111 @@
+actor Farmer
+boundary StatisticsDetailPage
+control seasonDiaryController
+participant ":seasonDiaryService" as seasonDiaryService
+participant ":seasonDiaryModel" as seasonDiaryModel
+participant ":buyingSeedModel" as buyingSeedModel
+participant ":buyingFertilizersModel" as buyingFertilizersModel
+participant ":laborCostsModel" as laborCostsModel
+participant ":irrigationCostsModel" as irrigationCostsModel
+participant ":harvestConsumptionModel" as harvestConsumptionModel
+database Database
+
+Farmer->StatisticsDetailPage: 1. Select the crop log and open the statistics detail
+activate Farmer
+activate StatisticsDetailPage
+
+StatisticsDetailPage->seasonDiaryController: 2. Get statistics request
+activate seasonDiaryController
+
+seasonDiaryController->seasonDiaryService: 3. getSeasonDiaryStatistics(seasonDiaryId)
+activate seasonDiaryService
+
+seasonDiaryService->seasonDiaryModel: 4. findById(seasonDiaryId)
+activate seasonDiaryModel
+seasonDiaryModel->Database: 5. Query season diary
+activate Database
+Database-->seasonDiaryModel: 6. Return diary/null
+deactivate Database
+seasonDiaryModel-->seasonDiaryService: 7. Return result
+deactivate seasonDiaryModel
+
+seasonDiaryService->seasonDiaryService: 8. Check if season diary exists
+activate seasonDiaryService
+space
+deactivate seasonDiaryService
+
+alt No season diary found
+	seasonDiaryService-->seasonDiaryController: 8.1 Throw 404 Not Found
+	deactivate seasonDiaryService
+	seasonDiaryController-->StatisticsDetailPage: 8.1.1 404 + message
+	StatisticsDetailPage-->Farmer: 8.1.2 Display not found error
+else Season diary found
+	par Aggregate seed cost
+		seasonDiaryService->buyingSeedModel: 8.2. aggregate(total_price)
+        activate seasonDiaryService
+		activate buyingSeedModel
+		buyingSeedModel->Database: 8.2.1 Execute aggregate
+		activate Database
+		Database-->buyingSeedModel: 8.2.2 Return total
+		deactivate Database
+		buyingSeedModel-->seasonDiaryService: 8.2.3 Return seedAgg
+		deactivate buyingSeedModel
+	and Aggregate fertilizer cost
+		seasonDiaryService->buyingFertilizersModel: 8.3. aggregate(total_price)
+		activate buyingFertilizersModel
+		buyingFertilizersModel->Database: 8.3.1 Execute aggregate
+		activate Database
+		Database-->buyingFertilizersModel: 8.3.2 Return total
+		deactivate Database
+		buyingFertilizersModel-->seasonDiaryService: 8.3.3 Return fertilizerAgg
+		deactivate buyingFertilizersModel
+	and Aggregate labor cost
+		seasonDiaryService->laborCostsModel: 8.4. aggregate(computed_cost)
+		activate laborCostsModel
+		laborCostsModel->Database: 8.4.1 Execute aggregate
+		activate Database
+		Database-->laborCostsModel: 8.4.2 Return total
+		deactivate Database
+		laborCostsModel-->seasonDiaryService: 8.4.3 Return laborAgg
+		deactivate laborCostsModel
+	and Aggregate irrigation cost
+		seasonDiaryService->irrigationCostsModel: 8.5. aggregate(electricity_fuel_cost)
+		activate irrigationCostsModel
+		irrigationCostsModel->Database: 8.5.1 Execute aggregate
+		activate Database
+		Database-->irrigationCostsModel: 8.5.2 Return total
+		deactivate Database
+		irrigationCostsModel-->seasonDiaryService: 8.5.3 Return irrigationAgg
+		deactivate irrigationCostsModel
+	and Aggregate harvest/revenue
+		seasonDiaryService->harvestConsumptionModel: 8.6. aggregate(harvest, consumed, revenue)
+		activate harvestConsumptionModel
+		harvestConsumptionModel->Database: 8.6.1 Execute aggregate
+		activate Database
+		Database-->harvestConsumptionModel: 8.6.2 Return totals
+		deactivate Database
+		harvestConsumptionModel-->seasonDiaryService: 8.6.3 Return harvestAgg
+		deactivate harvestConsumptionModel
+	end
+
+	seasonDiaryService->seasonDiaryService: 9. Calculate profit and other statistics
+	activate seasonDiaryService
+	space
+	deactivate seasonDiaryService
+    
+
+	alt Diary exists but has no actual activity data yet
+        seasonDiaryService-->seasonDiaryController: 9.1 Return zeroed statistics
+        seasonDiaryController-->StatisticsDetailPage: 9.1.1 200 OK & empty data 
+        StatisticsDetailPage-->Farmer: 9.1.2 Display info with zeroed statistics
+    else Diary has activity data
+        seasonDiaryService-->seasonDiaryController: 9.2. Return statistics
+	    deactivate seasonDiaryService
+	    seasonDiaryController-->StatisticsDetailPage: 9.2.1 200 OK & data 
+	    deactivate seasonDiaryController
+	    StatisticsDetailPage-->Farmer: 9.2.2 Display statistics data
+        deactivate StatisticsDetailPage
+        deactivate Farmer
+    end
+end
+

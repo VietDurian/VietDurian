@@ -37,14 +37,8 @@ activate buyingSeedService
 space
 deactivate buyingSeedService
  
-alt Garden name already exists
-buyingSeedService-->seasonDiaryController: 9.1 throw 409
-seasonDiaryController-->CreateSeedsDiaryPage: 9.1.1 409 Conflict
-CreateSeedsDiaryPage-->Farmer: 9.1.2 Show duplicate garden name error
-
-else Create new seed diary successfully
+alt Create new seed diary successfully
 buyingSeedService-->seasonDiaryController: 9.2. Return savedDiary
-deactivate buyingSeedService
 seasonDiaryController-->CreateSeedsDiaryPage: 9.2.1. 201 Created + data
 CreateSeedsDiaryPage-->Farmer: 9.2.2. Redirect to season diary list
 else Create failed due to server error
@@ -53,7 +47,6 @@ deactivate buyingSeedService
 seasonDiaryController-->CreateSeedsDiaryPage: 9.3.1. 500 Internal Server Error
 deactivate seasonDiaryController
 CreateSeedsDiaryPage-->Farmer: 9.3.2. Show server error message
-end
-
 deactivate CreateSeedsDiaryPage
 deactivate Farmer
+end
