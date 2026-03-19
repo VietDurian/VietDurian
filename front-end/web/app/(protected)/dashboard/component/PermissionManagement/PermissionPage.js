@@ -94,7 +94,8 @@ export default function PermissionPage() {
             user_id: item.user_id?._id,
             requestRole: item.requested_role,
             description: item.description,
-            status: item.status,
+            status: item?.verify_cccd,
+            verify_cccd: item?.verify_cccd,
             user_name: item.user?.full_name || 'Unknown User',
             email: item.user?.email || 'No Email',
             phone: item.user?.phone || 'No Phone',
@@ -167,8 +168,8 @@ export default function PermissionPage() {
     }
 
     const handleRequestUpdated = ({ id, status }) => {
-        setPermission((prev) => Array.isArray(prev) ? prev.map((item) => item?._id === id ? { ...item, status } : item) : prev)
-        setSelectedRequest((prev) => prev ? { ...prev, status } : prev)
+        setPermission((prev) => Array.isArray(prev) ? prev.map((item) => item?._id === id ? { ...item, status, verify_cccd: status } : item) : prev)
+        setSelectedRequest((prev) => prev ? { ...prev, status, verify_cccd: status } : prev)
     }
 
     const handleViewDetail = async (req) => {
@@ -187,13 +188,14 @@ export default function PermissionPage() {
                 phone: detailData.user_id?.phone || req.phone,
                 avatar: detailData.user_id?.avatar || req.avatar,
                 role: detailData.user_id?.role || req.role,
-                requestRole: detailData.requested_role,          // ← sửa
-                description: detailData.description,              // ← thêm
+                requestRole: detailData.requested_role,
+                description: detailData.description,
                 document: detailData.document,
                 proofs: detailData.proofs,
-                status: detailData.status,
-                created_at: detailData.user_id?.created_at,              // ← từ permission, không phải user
-                updated_at: detailData.user_id?.updated_at,              // ← từ permission, không phải user
+                status: detailData.verify_cccd || detailData.status || req.status || 'pending',
+                verify_cccd: detailData.verify_cccd || detailData.status || req.status || 'pending',
+                created_at: detailData.user_id?.created_at || detailData.created_at,
+                updated_at: detailData.user_id?.updated_at || detailData.updated_at,
             }
 
             setSelectedRequest(fullRequest)
