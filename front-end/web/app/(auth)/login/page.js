@@ -26,9 +26,8 @@ export default function LoginPage() {
     password: "",
   });
   const { login, isLoggingIn } = useAuthStore();
-  const { login: loginContext, user, loading } = useAuth();
+  const { login: loginContext, user, loading, loginWithGoogle } = useAuth();
   const [activeRole, setActiveRole] = useState(null);
-  const { loginWithGoogle } = useAuth();
 
   useEffect(() => {
     if (loading) return;
@@ -178,9 +177,7 @@ export default function LoginPage() {
             {/* Google Button */}
             <div className="space-y-3">
               <GoogleLogin
-                onSuccess={(response) => {
-                  loginWithGoogle(response.credential);
-                }}
+                onSuccess={handleSuccess}
                 onError={() => console.log("Login Failed")}
               />
             </div>

@@ -124,23 +124,16 @@ export default function ProductDetailPage() {
       {
         icon: Star,
         iconColor: "text-yellow-500",
-        label: "Rating",
+        label: "Đánh giá",
         value: ratingValue,
-        sub: "out of 5.0",
+        sub: "Trên 5 sao",
       },
       {
         icon: Eye,
         iconColor: "text-blue-500",
-        label: "Views",
+        label: "Lượt xem",
         value: productDetail?.view_count ?? 0,
-        sub: "total views",
-      },
-      {
-        icon: Tag,
-        iconColor: "text-green-500",
-        label: "Stock",
-        value: productDetail?.stock ?? "-",
-        sub: "availability",
+        sub: "Tổng lượt xem",
       },
     ],
     [productDetail, ratingValue],
@@ -221,36 +214,15 @@ export default function ProductDetailPage() {
           </div>
         </div>
       )}
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Top bar */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
-          >
-            <ArrowLeft size={15} />
-            Back to Products
-          </button>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                router.push(`/profile/products/${productId}/edit`);
-              }}
-              className="flex items-center gap-1.5 border border-gray-200 bg-white text-sm font-medium text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              <SquarePen size={13} />
-              Chỉnh sửa
-            </button>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              disabled={isProductDeleting}
-              className="flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <Trash2 size={13} />
-              {isProductDeleting ? "Đang xóa..." : "Xóa"}
-            </button>
-          </div>
-        </div>
+      <div className=" mx-auto space-y-6">
+        <button
+          onClick={() => setShowDeleteModal(true)}
+          disabled={isProductDeleting}
+          className="absolute right-10 top-25 flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <Trash2 size={13} />
+          {isProductDeleting ? "Đang xóa..." : "Xóa"}
+        </button>
 
         {/* Main content */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -289,7 +261,7 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Name */}
-              <h1 className="text-2xl font-extrabold text-gray-900 leading-tight">
+              <h1 className="text-2xl font-bold text-gray-900 leading-tight">
                 {p.name}
               </h1>
 
@@ -303,7 +275,7 @@ export default function ProductDetailPage() {
               {/* Description */}
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Description
+                  Mô tả sản phẩm
                 </p>
                 <p className="text-sm text-gray-600">{p.description}</p>
               </div>
@@ -311,37 +283,37 @@ export default function ProductDetailPage() {
               {/* Product Details */}
               <div className="pt-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Product Details
+                  Chi tiết sản phẩm{" "}
                 </p>
                 <div className="divide-y divide-gray-100">
                   <DetailRow
                     icon={Tag}
-                    label="Type"
+                    label="Thể loại"
                     value={p.type_id?.name || "N/A"}
                   />
                   <DetailRow
                     icon={MapPin}
-                    label="Origin"
+                    label="Xuất xứ"
                     value={p.origin || "-"}
                   />
                   <DetailRow
                     icon={Weight}
-                    label="Weight"
+                    label="Khối lượng"
                     value={formatWeight(p.weight)}
                   />
                   <DetailRow
                     icon={Calendar}
-                    label="Harvest Start"
+                    label="Ngày bắt đầu"
                     value={formatDate(p.harvest_start_date)}
                   />
                   <DetailRow
                     icon={Calendar}
-                    label="Harvest End"
+                    label="Ngày kết thúc"
                     value={formatDate(p.harvest_end_date)}
                   />
                   <DetailRow
                     icon={Tag}
-                    label="Status"
+                    label="Trạng thái"
                     value={p.status || "-"}
                     valueClass={
                       p.status === "active" ? "text-green-600" : "text-gray-500"
@@ -354,7 +326,7 @@ export default function ProductDetailPage() {
             {/* Seller Information */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                Seller Information
+                Thông tin người bán
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
@@ -383,13 +355,13 @@ export default function ProductDetailPage() {
             {/* Timeline */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                Timeline
+                Dòng thời gian
               </p>
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2 text-gray-500">
                     <Calendar size={13} className="text-gray-400" />
-                    Created
+                    Ngày tạo
                   </span>
                   <span className="text-gray-700 font-medium">
                     {formatDate(p.created_at)}
@@ -398,7 +370,7 @@ export default function ProductDetailPage() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2 text-gray-500">
                     <Calendar size={13} className="text-gray-400" />
-                    Last Updated
+                    Ngày cập nhật cuối cùng
                   </span>
                   <span className="text-gray-700 font-medium">
                     {formatDate(p.updated_at)}

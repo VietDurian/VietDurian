@@ -116,7 +116,7 @@ export default function BlogDetailPage() {
         <div className="min-h-screen bg-gray-50">
             <Navbar />
             {/* Hero Section with Back Button and Title */}
-            <section className="bg-gradient-to-r from-emerald-700 to-emerald-900 pt-20 pb-12">
+            <section className="bg-emerald-500 pt-20 pb-12">
                 <div className="max-w-[1400px] mx-auto">
                     {/* Back Button - Far Left */}
                     <div className="px-4">
@@ -184,13 +184,13 @@ export default function BlogDetailPage() {
                                                     });
                                                 }}
                                                 className={`w-full flex items-center gap-3 px-4 py-5 text-sm font-medium rounded-lg transition-all duration-200 text-left border-l-4 ${activeBlock === index
-                                                        ? "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm"
-                                                        : "border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                                                    ? "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm"
+                                                    : "border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                                                     }`}
                                             >
                                                 <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${activeBlock === index
-                                                        ? 'bg-emerald-100 text-emerald-600'
-                                                        : 'bg-gray-100 text-gray-500'
+                                                    ? 'bg-emerald-100 text-emerald-600'
+                                                    : 'bg-gray-100 text-gray-500'
                                                     }`}>
                                                     {index + 1}
                                                 </span>

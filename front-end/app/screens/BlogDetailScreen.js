@@ -51,7 +51,7 @@ export default function BlogDetailScreen() {
     // ── Loading ──────────────────────────────────────────────────────────────────
     if (blogDetailLoading && !blog) {
         return (
-            <SafeAreaView style={styles.container}>
+            <View style={styles.container}>
                 <View style={styles.topBar}>
                     <TouchableOpacity style={styles.backButton} onPress={() => navigate("blogs")}>
                         <Feather name="chevron-left" size={22} color="#065f46" />
@@ -63,14 +63,14 @@ export default function BlogDetailScreen() {
                     <ActivityIndicator size="large" color="#059669" />
                     <Text style={styles.loadingText}>Đang tải bài viết...</Text>
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     // ── Error ────────────────────────────────────────────────────────────────────
     if (blogDetailError && !blog) {
         return (
-            <SafeAreaView style={styles.container}>
+            <View style={styles.container}>
                 <View style={styles.topBar}>
                     <TouchableOpacity style={styles.backButton} onPress={() => navigate("blogs")}>
                         <Feather name="chevron-left" size={22} color="#065f46" />
@@ -88,13 +88,12 @@ export default function BlogDetailScreen() {
                         <Text style={styles.retryBtnText}>Thử lại</Text>
                     </TouchableOpacity>
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
-
     // ── Main render ──────────────────────────────────────────────────────────────
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             {/* Top Bar */}
             <View style={styles.topBar}>
                 <TouchableOpacity
@@ -129,9 +128,7 @@ export default function BlogDetailScreen() {
                 >
                     <View style={styles.tocOverlay}>
                         <View style={styles.tocCard}>
-                            <Text style={styles.tocTitle}>
-                                MỤC LỤC
-                            </Text>
+                            <Text style={styles.tocTitle}>MỤC LỤC</Text>
                             {blog.knowledgeBlocks?.map((block, index) => (
                                 <TouchableOpacity
                                     key={block._id}
@@ -205,7 +202,7 @@ export default function BlogDetailScreen() {
                     <Text style={styles.sectionBody}>{blog?.content}</Text>
                 </View>
 
-                {/* Loading shimmer cho blocks nếu đang fetch detail */}
+                {/* Loading shimmer */}
                 {blogDetailLoading && (
                     <View style={styles.loadingBlockRow}>
                         <ActivityIndicator size="small" color="#059669" />
@@ -257,7 +254,7 @@ export default function BlogDetailScreen() {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 

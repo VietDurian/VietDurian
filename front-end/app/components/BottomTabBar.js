@@ -4,33 +4,14 @@ import { useAppStore } from "../store/useAppStore";
 
 const TABS = [
   { key: "home", label: "Bài viết", icon: "home-outline", iconActive: "home" },
-  {
-    key: "blogs",
-    label: "Blogs",
-    icon: "newspaper-outline",
-    iconActive: "newspaper",
-  },
+  { key: "blogs", label: "Blogs", icon: "newspaper-outline", iconActive: "newspaper" },
   { key: "AI", label: "Quét AI", icon: "scan-outline", iconActive: "scan" },
-  {
-    key: "products",
-    label: "Sản phẩm",
-    icon: "cart-outline",
-    iconActive: "cart",
-  },
-  {
-    key: "profile",
-    label: "Hồ sơ",
-    icon: "person-outline",
-    iconActive: "person",
-  },
+  { key: "products", label: "Sản phẩm", icon: "cart-outline", iconActive: "cart" },
+  { key: "profile", label: "Hồ sơ", icon: "person-outline", iconActive: "person" },
 ];
 
 export default function BottomTabBar() {
   const { activeTab, setTab } = useAppStore();
-
-  const handleTabPress = (key) => {
-    setTab(key);
-  };
 
   return (
     <View style={styles.tabBar}>
@@ -43,25 +24,19 @@ export default function BottomTabBar() {
             <TouchableOpacity
               key={tab.key}
               style={styles.tabItem}
-              onPress={() => handleTabPress(tab.key)}
+              onPress={() => setTab(tab.key)}
               activeOpacity={0.8}
             >
-              <View
-                style={[styles.aiButton, isActive && styles.aiButtonActive]}
-              >
-                <Ionicons
-                  name={isActive ? "scan" : "scan-outline"}
-                  size={26}
-                  color="#FFFFFF"
-                />
+              <View style={styles.aiPlaceholder}>
+                <View style={[styles.aiButton, isActive && styles.aiButtonActive]}>
+                  <Ionicons
+                    name={isActive ? "scan" : "scan-outline"}
+                    size={26}
+                    color="#FFFFFF"
+                  />
+                </View>
               </View>
-              <Text
-                style={[
-                  styles.label,
-                  styles.aiLabel,
-                  isActive && styles.labelActive,
-                ]}
-              >
+              <Text style={[styles.label, isActive && styles.labelActive]}>
                 {tab.label}
               </Text>
             </TouchableOpacity>
@@ -72,7 +47,7 @@ export default function BottomTabBar() {
           <TouchableOpacity
             key={tab.key}
             style={styles.tabItem}
-            onPress={() => handleTabPress(tab.key)}
+            onPress={() => setTab(tab.key)}
             activeOpacity={0.7}
           >
             <View style={styles.iconWrapper}>
@@ -105,12 +80,17 @@ const styles = StyleSheet.create({
     borderTopColor: "#F3F4F6",
     paddingVertical: 8,
     paddingHorizontal: 4,
+    overflow: "visible",
   },
-  tabItem: { flex: 1, alignItems: "center", gap: 2 },
+  tabItem: {
+    flex: 1,
+    alignItems: "center",
+    gap: 2,
+    overflow: "visible",
+  },
   iconWrapper: { position: "relative" },
   label: { fontSize: 11, color: "#9CA3AF" },
   labelActive: { color: "#16A34A", fontWeight: "600" },
-  aiLabel: { marginTop: 4 },
   badge: {
     position: "absolute",
     top: -4,
@@ -125,7 +105,13 @@ const styles = StyleSheet.create({
   },
   badgeText: { color: "#FFFFFF", fontSize: 10, fontWeight: "700" },
 
-  // AI Button
+
+  aiPlaceholder: {
+    width: 56,
+    height: 28,
+    alignItems: "center",
+    overflow: "visible",
+  },
   aiButton: {
     width: 56,
     height: 56,
@@ -133,8 +119,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#16A34A",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 2,
-    marginTop: -40,
+    position: "absolute",
+    bottom: 0,
     shadowColor: "#16A34A",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,

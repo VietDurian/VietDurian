@@ -80,7 +80,7 @@ export default function BlogPage() {
             <Navbar />
 
             {/* Hero Section */}
-            <section className="bg-gradient-to-r from-emerald-700 to-emerald-900 pt-32 pb-16 px-4">
+            <section className="bg-emerald-500 pt-32 pb-16 px-4">
                 <div className="max-w-[1400px] mx-auto text-center">
                     <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
                         Kiến Thức Sầu Riêng

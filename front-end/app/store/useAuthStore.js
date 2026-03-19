@@ -63,7 +63,6 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post("/auth/login", data);
 
-      console.log("SADSAHDHKJSADKJHSADKJ", res);
       const { user, token } = res?.data?.data || {};
       if (!user || !token) throw new Error("Invalid login response");
 

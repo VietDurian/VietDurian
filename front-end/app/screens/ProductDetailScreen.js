@@ -79,7 +79,7 @@ export default function ProductDetailScreen() {
     // ── Loading / Error ─────────────────────────────────
     if (productDetailLoading && !selectedProduct) {
         return (
-            <SafeAreaView style={styles.safeArea}>
+            <View style={styles.safeArea}>
                 <View style={styles.breadcrumbBar}>
                     <TouchableOpacity onPress={() => navigate("products")}>
                         <Text style={styles.breadcrumbLink}>Sản phẩm</Text>
@@ -89,12 +89,12 @@ export default function ProductDetailScreen() {
                     <ActivityIndicator size="large" color="#059669" />
                     <Text style={styles.loadingText}>Đang tải sản phẩm...</Text>
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <View style={styles.safeArea}>
 
             {/* ── Breadcrumb ────────────────────────────────── */}
             <View style={styles.breadcrumbBar}>
@@ -292,7 +292,7 @@ export default function ProductDetailScreen() {
 
                 <View style={{ height: 40 }} />
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -309,7 +309,7 @@ function MetaRow({ icon, label, value, green }) {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor: "#F9FAFB" },
+    container: { flex: 1, backgroundColor: "#F9FAFB" },
 
     breadcrumbBar: {
         flexDirection: "row", alignItems: "center", flexWrap: "wrap",

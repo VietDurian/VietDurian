@@ -1,0 +1,55 @@
+You have exceeded your premium request allowance. We have automatically switched you to GPT-4.1 which is included with your plan. [Enable additional paid premium requests](command:chat.enablePremiumOverages) to continue using premium models.```seqdiag
+actor User
+boundary dashboardPage
+control userManagementController
+participant ":userManagementService" as Service
+participant ":userManagementModel" as Model
+database Database
+
+User->dashboardPage: 1. Open user list page
+activate User
+activate dashboardPage
+
+dashboardPage->userManagementController: 2. GET /user/list
+activate userManagementController
+
+userManagementController->Service: 3. getUserList()
+activate Service
+
+Service->Model: 4. findAllUsers()
+activate Model
+
+Model->Database: 5. execute query find
+activate Database
+Database-->Model: 6. Return user documents
+deactivate Database
+
+Model-->Service: 7. Return user documents
+deactivate Model
+
+Service->Service: 8. checkDatabaseError()
+activate Service
+space
+deactivate Service
+
+opt database error
+    Service-->userManagementController: 8.1 Return error
+    userManagementController-->dashboardPage: 8.2 Return error info
+    dashboardPage-->User: 8.3 Display error message
+end
+
+Service->Service: 9. mapToUserDTO()
+activate Service
+space
+deactivate Service
+
+Service-->userManagementController: 10. Return success
+deactivate Service
+
+userManagementController-->dashboardPage: 11. Return success
+deactivate userManagementController
+
+dashboardPage-->User: 12. Display user list
+deactivate dashboardPage
+deactivate User
+```

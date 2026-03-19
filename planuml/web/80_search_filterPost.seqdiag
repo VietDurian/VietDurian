@@ -1,0 +1,41 @@
+
+actor "Users" as Farmer
+boundary "PostPage" as UI 
+control "postController" as Controller 
+participant ":postService" as Service 
+participant ":generalPostModel" as Model 
+database "Database" as DB 
+
+activate Farmer
+activate UI
+
+' ===== Search / Filter =====
+Farmer -> UI : 1. Enter search keywords / select filter
+UI -> Controller : 2. Search/filter posts request
+activate Controller
+
+Controller -> Service : 3. searchPosts(search, filter)
+activate Service
+Service -> Model : 4. find(search, filter)
+activate Model
+Model -> DB : 5. Execute query
+activate DB
+DB --> Model : 6. Return result
+deactivate DB
+Model --> Service : 7. Return post list
+deactivate Model
+
+alt Posts found
+    Service --> Controller : 7.1. Return post list
+    Controller --> UI : 7.1.1. Display filtered post list
+    UI --> Farmer : 7.1.2. Show posts
+else No matching posts
+    Service --> Controller : 7.2. Return empty list
+    deactivate Service
+    Controller --> UI : 7.2.1. Display empty message
+    deactivate Controller
+    UI --> Farmer : 7.2.2. Show "No matching posts found"
+    deactivate UI
+    deactivate Farmer
+end
+

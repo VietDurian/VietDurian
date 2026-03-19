@@ -1,132 +1,133 @@
+@startuml 1_register.seqdiag
 actor User
 boundary RegisterPage
 control AuthController
 control OtpController
 participant ":AuthService" as authService
 participant ":SmsService" as smsService
-entity UserModel as userModel
+participant ":UserModel" as userModel
 database Database
 participant ":SmsAPI" as smsAPI
 
-
-User->RegisterPage: 1. Input register fields
 activate User
+User -> RegisterPage: 1. Input register fields
 activate RegisterPage
 
-User->RegisterPage: 2. Submit register form
+User -> RegisterPage: 2. Submit register form
 
-RegisterPage->RegisterPage: 3. Validate input
+RegisterPage -> RegisterPage: 3. Validate input
 activate RegisterPage
 space
 deactivate RegisterPage
 
 opt Empty or malformed information
-RegisterPage-->User: 2.1 Display error message
+    RegisterPage --> User: 3.1 Display error message
 end
 
-
-RegisterPage->AuthController: 4. Create register request
+RegisterPage -> AuthController: 4. Create register request
 activate AuthController
 
-
-AuthController->authService: 5. register(data)
+AuthController -> authService: 5. register(data)
 activate authService
 
-
-authService->userModel: 6. findByEmail(email)
+authService -> userModel: 6. findByEmail(email)
 activate userModel
-userModel->Database: 7. findOne()
+userModel -> Database: 7. findOne()
 activate Database
-Database-->userModel: 8. Return user (or null)
+Database --> userModel: 8. Return user (or null)
 deactivate Database
-userModel-->authService: 9. Return user (or null)
+userModel --> authService: 9. Return user (or null)
 deactivate userModel
 
-authService->authService: 10. checkEmailUnique()
+authService -> authService: 10. checkEmailUnique()
 activate authService
 space
 deactivate authService
 
 alt User already exists
-
-authService-->AuthController: 10.1 Return error: email exists
-AuthController-->RegisterPage: 10.1.1 Show error message
-RegisterPage-->User: 10.1.2 Display error: email exists
+    authService --> AuthController: 10.1 Return error: email exists
+    AuthController --> RegisterPage: 10.1.1 Show error message
+    RegisterPage --> User: 10.1.2 Display error: email exists
 
 else User does not exist
+    authService -> userModel: 10.2 createAccount(is_verified=false)
+    activate userModel
+    userModel -> Database: 10.3 insertOne()
+    activate Database
+    Database --> userModel: 10.4 Return insert result
+    deactivate Database
+    userModel --> authService: 10.5 Return account created
+    deactivate userModel
+    authService --> AuthController: 10.6 Return success
+    deactivate authService
 
-authService->userModel: 10.2 createAccount(is_verified=false)
-activate userModel
-userModel->Database: 10.3 insertOne()
-activate Database
-Database-->userModel: 10.4 Return insert result
-deactivate Database
-userModel-->authService: 10.5 Return account created
-deactivate userModel
-authService-->AuthController: 10.6 Return success
-deactivate authService
+    AuthController -> OtpController: 10.7 sendOtp()
+    activate OtpController
+    OtpController -> smsService: 10.8 sendOtp()
+    activate smsService
+    smsService -> smsService: 10.9 generateOtp()
+    activate smsService
+    space
+    deactivate smsService
+    smsService -> smsAPI: 10.10 sendSms()
+    activate smsAPI
+    smsAPI --> smsService: 10.11 Return SMS API response
+    deactivate smsAPI
+    smsService -> smsService: 10.12 saveOtpToCache()
+    activate smsService
+    space
+    deactivate smsService
+    smsService --> OtpController: 10.13 Return OTP
+    OtpController --> AuthController: 10.14 Return OTP
+    deactivate OtpController
+    AuthController --> RegisterPage: 10.15 Return OTP
+    deactivate AuthController
+    RegisterPage --> User: 10.16 Display OTP modal
 
-AuthController->OtpController: 10.8 sendOtp()
-activate OtpController
-OtpController->smsService: 10.9 sendOtp()
-activate smsService
-smsService->smsService: 10.10 generateOtp()
-activate smsService
-deactivate smsService
-smsService->smsAPI: 10.11 sendSms()
-activate smsAPI
-smsAPI-->smsService: 10.12 Return SMS API response
-deactivate smsAPI
-smsService->smsService: 10.13 saveOtpToCache()
-activate smsService
-deactivate smsService
-smsService-->OtpController: 10.14 Return OTP
-OtpController-->AuthController: 10.15 Return OTP
-deactivate OtpController
-AuthController-->RegisterPage: 10.15 Return OTP
-deactivate AuthController
-RegisterPage-->User: 10.16 Display OTP modal
-User->RegisterPage: 10.17 inputOtp()
-RegisterPage->RegisterPage: 10.18 Check form valid
-activate RegisterPage
-deactivate RegisterPage
+    User -> RegisterPage: 10.17 inputOtp()
+    RegisterPage -> RegisterPage: 10.18 Check form valid
+    activate RegisterPage
+    space
+    deactivate RegisterPage
 
-opt Empty or malformed information
-RegisterPage-->User: 10.18.1 Display validation error
+    opt Empty or malformed information
+        RegisterPage --> User: 10.18.1 Display validation error
+    end
+
+    RegisterPage -> OtpController: 10.19 POST /verify-otp 
+    activate OtpController
+    OtpController -> smsService: 10.20 verifyOtp()
+    smsService -> smsService: 10.21 checkOtpInCache()
+    activate smsService
+    space
+    deactivate smsService
+
+    alt Otp does not match
+        smsService --> OtpController: 10.22 Return false
+        OtpController --> RegisterPage: 10.22.1 Show error: OTP mismatch
+        RegisterPage --> User: 10.22.2 Display error: OTP mismatch
+
+    else Otp match
+        smsService --> OtpController: 10.23 Return true
+        deactivate smsService
+        OtpController --> RegisterPage: 10.23.1 Return verified
+        OtpController -> authService: 10.23.2 updateVerificationStatus()
+        activate authService
+        authService -> userModel: 10.23.3 setIsVerifiedTrue()
+        activate userModel
+        userModel -> Database: 10.23.4 updateOne()
+        activate Database
+        Database --> userModel: 10.23.5 Return update result
+        deactivate Database
+        userModel --> authService: 10.23.6 Return updated
+        deactivate userModel
+        authService --> OtpController: 10.23.7 Return success
+        deactivate authService
+        OtpController --> RegisterPage: 10.23.8 Return success
+        deactivate OtpController
+        RegisterPage --> User: 10.24 Redirect to login page
+        deactivate RegisterPage
+        deactivate User
+    end
 end
-
-RegisterPage->OtpController: 10.19 Verify OTP
-activate OtpController
-OtpController->smsService: 10.20 verifyOtp()
-smsService->smsService: 10.21 checkOtpInCache()
-activate smsService
-deactivate smsService
-
-alt Otp does not match
-smsService-->OtpController: 10.22 Return false
-OtpController-->RegisterPage: 10.22.1 Show error: OTP mismatch
-RegisterPage-->User: 10.22.2 Display error: OTP mismatch
-
-else Otp match
-smsService-->OtpController: 10.23 Return true
-deactivate smsService
-OtpController-->RegisterPage: 10.23.1 Return verified
-OtpController->authService: 10.23.2 updateVerificationStatus()
-activate authService
-authService->userModel: 10.23.3 setIsVerifiedTrue()
-activate userModel
-userModel->Database: 10.23.4 updateOne()
-activate Database
-Database-->userModel: 10.23.5 Return update result
-deactivate Database
-userModel-->authService: 10.23.6 Return updated
-deactivate userModel
-authService-->OtpController: 10.23.7 Return success
-deactivate authService
-OtpController-->RegisterPage: 10.23.8 Return success
-deactivate OtpController
-RegisterPage-->User: 10.24 Redirect to login page
-deactivate RegisterPage
-deactivate User
-end
-end
+@enduml

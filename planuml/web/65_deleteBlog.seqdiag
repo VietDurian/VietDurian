@@ -1,0 +1,50 @@
+actor "Content Expert" as Farmer
+boundary BlogPage
+control blogController
+participant ":blogService" as blogService
+participant ":knowledgeBlogModel" as knowledgeBlogModel
+database Database
+
+
+Farmer->BlogPage: 1. Click "Delete" button on a blog
+activate Farmer
+activate BlogPage
+
+BlogPage->blogController: 2. Send delete blog request
+activate blogController
+
+blogController->blogService: 3. deleteKnowledgeBlog(blogId)
+activate blogService
+
+blogService->knowledgeBlogModel: 4. findByIdAndDelete(blogId)
+activate knowledgeBlogModel
+
+knowledgeBlogModel->Database: 5. Execute delete query
+activate Database
+Database-->knowledgeBlogModel: 6. Return result
+deactivate Database
+
+knowledgeBlogModel-->blogService: 7. Return delete result
+deactivate knowledgeBlogModel
+
+blogService->blogService: 8. check delete result
+activate blogService
+space
+deactivate blogService
+
+alt Delete successful
+blogService-->blogController: 8.1 Return success
+blogController-->BlogPage: 8.1.1 Show success message
+BlogPage-->Farmer: 8.1.2 Display "Blog deleted successfully"
+
+else Delete failed
+blogService-->blogController: 8.2 Return failure
+deactivate blogService
+
+blogController-->BlogPage: 8.2.1 Show error message
+deactivate blogController
+BlogPage-->Farmer: 8.2.2 Display "Blog deletion failed"
+
+deactivate BlogPage
+deactivate Farmer
+end

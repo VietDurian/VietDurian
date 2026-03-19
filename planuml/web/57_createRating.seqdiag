@@ -1,0 +1,64 @@
+actor "Users" as User
+boundary "RatingPage" as View
+control "ratingController" as Controller
+participant ":ratingService" as Service
+entity "ratingModel" as Model
+database Database
+
+
+User -> View : 1. Input rating fields
+activate View
+activate User
+User -> View : 2. Submit rating form
+View -> View : 3. Validate input
+activate View
+space
+deactivate View
+
+opt Check validation
+    View --> User : 3.1. Show validation error
+end
+
+    View -> Controller : 4. POST /ratings/add
+    activate Controller
+
+    Controller -> Service : 5. createRating()
+    activate Service
+
+alt Rating exists
+    Service -> Model : 6.1. checkExistingRating()
+    activate Model
+
+    Model -> Database : 6.1.1. findOne()
+    activate Database
+    Database --> Model : 6.1.2. Return result (true/false)
+    deactivate Database
+
+    Model --> Service : 6.1.3. Return conflict state
+    deactivate Model
+
+        Service --> Controller : 6.1.4. Return error: rating already exists
+        Controller --> View : 6.1.5. Return error response
+        View --> User : 6.1.6. Show error
+else Rating is valid
+        Service -> Model : 6.2. Save new rating
+        activate Model
+
+        Model -> Database : 6.2.1. insertOne()
+        activate Database
+        Database --> Model : 6.2.2. Created
+        deactivate Database
+
+        Model --> Service : 6.2.3. Return created entity
+        deactivate Model
+
+        Service --> Controller : 6.2.4. Return rating data
+        deactivate Service
+        Controller --> View : 6.2.5. Return 200 OK + rating data
+        deactivate Controller
+        View --> User : 6.2.6. Show success
+end
+
+View --> User : 7. Display form result (success or error)
+deactivate View
+deactivate User

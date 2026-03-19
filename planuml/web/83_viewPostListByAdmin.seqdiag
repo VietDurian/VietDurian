@@ -1,0 +1,51 @@
+actor "Admin" as Admin
+boundary PostManagementPage
+control "postController" as Controller
+participant ":postService" as Service
+participant ":generalPostModel" as Model
+database Database
+
+
+Admin -> PostManagementPage : 1. Click "Manage Posts"
+activate Admin
+activate PostManagementPage
+
+PostManagementPage -> Controller : 2. Get post list request
+activate Controller
+
+Controller -> Service : 3. getGeneralPost()
+activate Service
+
+Service -> Model : 4. find()
+activate Model
+
+Model -> Database : 5. Execute query
+activate Database
+Database --> Model : 6. Return result
+deactivate Database
+
+Model --> Service : 7. Return post list
+deactivate Model
+
+Service -> Service : 8. check post list
+activate Service
+space
+deactivate Service
+
+alt Posts available
+    Service --> Controller : 8.1 Return post list
+    Controller --> PostManagementPage : 8.1.1 Show post list
+    PostManagementPage --> Admin : 8.1.2 Display post list
+
+else No posts available
+    Service --> Controller : 8.2 Return empty list
+    deactivate Service
+
+    Controller --> PostManagementPage : 8.2.1 Show empty message
+    deactivate Controller
+
+    PostManagementPage --> Admin : 8.2.2 Display "No posts found"
+
+    deactivate PostManagementPage
+    deactivate Admin
+end

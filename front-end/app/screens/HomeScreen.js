@@ -15,8 +15,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import BottomTabBar from "../components/BottomTabBar";
-import Header from "../components/Header";
 import { usePostStore } from "../store/usePostStore";
 import { useAppStore } from "../store/useAppStore";
 
@@ -428,22 +426,19 @@ export default function HomeScreen() {
   // Full-screen loading (first load)
   if (postsLoading && posts.length === 0) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Header />
+      <View style={styles.container}>
         <View style={styles.centerWrap}>
           <ActivityIndicator size="large" color="#16a34a" />
           <Text style={styles.loadingText}>Đang tải bài viết...</Text>
         </View>
-        <BottomTabBar />
-      </SafeAreaView>
+      </View>
     );
   }
 
   // Full-screen error (first load)
   if (postsError && posts.length === 0) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Header />
+      <View style={styles.container}>
         <View style={styles.centerWrap}>
           <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
           <Text style={styles.errorText}>{postsError}</Text>
@@ -451,14 +446,12 @@ export default function HomeScreen() {
             <Text style={styles.retryBtnText}>Thử lại</Text>
           </TouchableOpacity>
         </View>
-        <BottomTabBar />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header />
+    <View style={styles.container}>
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id}
@@ -479,8 +472,7 @@ export default function HomeScreen() {
         onRefresh={fetchPosts}
         refreshing={postsLoading}
       />
-      <BottomTabBar />
-    </SafeAreaView>
+    </View>
   );
 }
 

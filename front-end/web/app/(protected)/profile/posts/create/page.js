@@ -112,9 +112,10 @@ export default function CreatePostPage() {
         <div className="min-h-screen bg-gray-50">
             <Navbar />
 
+            {/* ── Hero banner: bg-emerald-500 (khớp ProfileDetails) ── */}
             <section className="pt-10 pb-8 px-4">
                 <div className="max-w-5xl mx-auto">
-                    <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-3xl shadow-xl p-4 md:p-4">
+                    <div className="bg-emerald-500 rounded-3xl shadow-xl p-8">
                         <button onClick={() => router.back()} className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer">
                             <ArrowLeft size={20} /><span>Quay lại</span>
                         </button>
@@ -133,7 +134,6 @@ export default function CreatePostPage() {
                 <div className="max-w-5xl mx-auto">
                     <form onSubmit={handleSubmit} className="space-y-4">
 
-                        {/* User info */}
                         <div className="flex items-center gap-3 pt-2">
                             <img src={user?.avatar || "/images/avatar.jpg"} className="w-16 h-16 rounded-full border border-gray-200 object-cover" alt="Avatar" />
                             <div>
@@ -142,25 +142,23 @@ export default function CreatePostPage() {
                             </div>
                         </div>
 
-                        {/* Category */}
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-gray-700">Danh mục</label>
                             <div className="relative">
-                                <button type="button" onClick={() => setDropdownOpen((o) => !o)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white transition-all cursor-pointer text-left flex justify-between items-center">
+                                <button type="button" onClick={() => setDropdownOpen((o) => !o)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white transition-all cursor-pointer text-left flex justify-between items-center">
                                     <span>{category}</span>
                                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                 </button>
                                 {dropdownOpen && (
                                     <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
                                         {categories.map((item) => (
-                                            <div key={item} onClick={() => { setCategory(item); setDropdownOpen(false); }} className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item ? "bg-emerald-600 text-white font-medium" : "text-gray-900 hover:bg-emerald-500 hover:text-white"}`}>{item}</div>
+                                            <div key={item} onClick={() => { setCategory(item); setDropdownOpen(false); }} className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item ? "bg-emerald-500 text-white font-medium" : "text-gray-900 hover:bg-emerald-500 hover:text-white"}`}>{item}</div>
                                         ))}
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Title field — label "Nội dung", max 100 */}
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-gray-700">Nội dung</label>
                             <input
@@ -168,33 +166,31 @@ export default function CreatePostPage() {
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder={TITLE_PLACEHOLDERS[category] || TITLE_PLACEHOLDERS["Khác"]}
-                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white font-medium"
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium"
                                 maxLength={100}
                             />
                             <div className="text-xs text-gray-500 text-right">{title.length}/100</div>
                         </div>
 
-                        {/* Content field — label "Mô tả chi tiết" */}
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-gray-700">Mô tả chi tiết</label>
                             <textarea
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
                                 placeholder="Mô tả chi tiết về bài viết của bạn..."
-                                className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-600"
+                                className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500"
                                 maxLength={1000}
                             />
                             <div className="text-xs text-gray-500 text-right">{content.length}/1000</div>
                         </div>
 
-                        {/* Contact — phone / email toggle */}
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-gray-700">Thông tin liên hệ</label>
                             <div className="flex gap-2">
-                                <button type="button" onClick={() => handleContactTypeChange("phone")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "phone" ? "border-emerald-600 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                                <button type="button" onClick={() => handleContactTypeChange("phone")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "phone" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
                                     <Phone size={15} />Số điện thoại
                                 </button>
-                                <button type="button" onClick={() => handleContactTypeChange("email")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "email" ? "border-emerald-600 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                                <button type="button" onClick={() => handleContactTypeChange("email")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "email" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
                                     <Mail size={15} />Email
                                 </button>
                             </div>
@@ -203,7 +199,7 @@ export default function CreatePostPage() {
                                 value={contact}
                                 onChange={handleContactChange}
                                 placeholder={contactType === "phone" ? "VD: 0901234567" : "VD: example@gmail.com"}
-                                className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 bg-white ${contactError ? "border-red-400" : "border-gray-200"}`}
+                                className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white ${contactError ? "border-red-400" : "border-gray-200"}`}
                             />
                             {contactError && (
                                 <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
@@ -213,7 +209,6 @@ export default function CreatePostPage() {
                             )}
                         </div>
 
-                        {/* Image */}
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-gray-700">Ảnh</label>
                             {!imagePreview ? (
@@ -237,7 +232,7 @@ export default function CreatePostPage() {
                             </div>
                         )}
 
-                        <button type="submit" disabled={!canSubmit || isSubmitting} className="w-full bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition disabled:opacity-60 disabled:cursor-not-allowed">
+                        <button type="submit" disabled={!canSubmit || isSubmitting} className="w-full bg-emerald-500 text-white font-bold py-3 rounded-lg hover:bg-emerald-600 transition disabled:opacity-60 disabled:cursor-not-allowed">
                             {isSubmitting ? (
                                 <span className="flex items-center justify-center gap-2">
                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Đang đăng...

@@ -1,0 +1,49 @@
+actor Farmer
+boundary seasonPage
+control seasonDiaryController
+participant ":seasonDiaryService" as seasonDiaryService
+participant ":seasonDiaryModel" as seasonDiaryModel
+database Database
+
+
+Farmer->seasonPage: 1. Users click "Garden" tab
+activate Farmer
+activate seasonPage
+
+seasonPage->seasonDiaryController: 2. Get season list request
+activate seasonDiaryController
+
+seasonDiaryController->seasonDiaryService: 3. viewSeasonDiaryList(userId)
+activate seasonDiaryService
+
+seasonDiaryService->seasonDiaryModel: 4. find(userId)
+activate seasonDiaryModel
+
+seasonDiaryModel->Database: 5. Execute query
+activate Database
+Database-->seasonDiaryModel: 6. Return result
+deactivate Database
+
+seasonDiaryModel-->seasonDiaryService: 7. Return season list
+deactivate seasonDiaryModel
+
+seasonDiaryService->seasonDiaryService: 8. check season list
+activate seasonDiaryService
+space
+deactivate seasonDiaryService
+
+alt Season list not empty
+seasonDiaryService-->seasonDiaryController: 8.1 Return season list
+seasonDiaryController-->seasonPage: 8.1.1 Show season list
+seasonPage-->Farmer: 8.1.2 Display season list
+else Season list empty
+seasonDiaryService-->seasonDiaryController: 8.2 Return empty list
+deactivate seasonDiaryService
+
+seasonDiaryController-->seasonPage: 8.2.1 Show empty message
+deactivate seasonDiaryController
+seasonPage-->Farmer: 8.2.2 Display "No seasons found"
+
+deactivate seasonPage
+deactivate Farmer
+end

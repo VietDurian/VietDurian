@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   View,
   Text,
   StyleSheet,
@@ -9,93 +10,64 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import BottomTabBar from "../components/BottomTabBar";
 import { useAppStore } from "../store/useAppStore";
-import Header from "../components/Header";
+import { useChatStore } from "../store/useChatStore";
+import { useAuthStore } from "../store/useAuthStore";
+import { useEffect, useMemo, useState } from "react";
 
-// ── Mock Data ──
-const CHATS = [
-  {
-    id: "1",
-    name: "Trần Thị Lan",
-    avatar: "https://i.pravatar.cc/100?img=47",
-    message: "Vườn của anh năm nay được mùa khô...",
-    time: "10:32",
-    unread: 3,
-    online: true,
-  },
-  {
-    id: "2",
-    name: "Phạm Thu Hà",
-    avatar: "https://i.pravatar.cc/100?img=5",
-    message: "Cảm ơn anh đã chia sẻ bài viết!",
-    time: "Hôm qua",
-    unread: 0,
-    online: false,
-  },
-  {
-    id: "3",
-    name: "Lê Minh Tuấn",
-    avatar: "https://i.pravatar.cc/100?img=11",
-    message: "Giá Ri6 ở khu vực anh bao nhiêu vậy?",
-    time: "Hôm qua",
-    unread: 1,
-    online: true,
-  },
-  {
-    id: "4",
-    name: "Võ Đức Hùng",
-    avatar: "https://i.pravatar.cc/100?img=8",
-    message: "Ok anh, hẹn gặp tại hội chợ nông nghiệp!",
-    time: "12/03",
-    unread: 0,
-    online: false,
-  },
-  {
-    id: "5",
-    name: "Nguyễn Văn An",
-    avatar: "https://i.pravatar.cc/100?img=3",
-    message: "Anh cho hỏi giống Musang King ở đâu?",
-    time: "10/03",
-    unread: 0,
-    online: false,
-  },
-  {
-    id: "6",
-    name: "Bùi Thị Mai",
-    avatar: "https://i.pravatar.cc/100?img=20",
-    message: "Em cần tư vấn về phân bón cho vườn",
-    time: "08/03",
-    unread: 0,
-    online: true,
-  },
-];
+const formatName = (user) => user?.full_name || user?.name || "Người dùng";
+
+const formatTime = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 // ── Chat Item ──
-function ChatItem({ item }) {
+function ChatItem({ item, isOnline, onPress }) {
   const { navigate } = useAppStore();
-  const hasUnread = item.unread > 0;
+  const name = formatName(item);
+  const previewText =
+    item?.lastMessage?.text || item?.email || "Nhấn để bắt đầu trò chuyện";
+  const timeText = formatTime(
+    item?.lastMessage?.createdAt || item?.updated_at || item?.created_at,
+  );
+  const unread = Number(item?.unreadCount || 0);
+  const hasUnread = unread > 0;
 
   return (
     <TouchableOpacity
       style={styles.chatItem}
-      onPress={() => navigate("chat-detail")}
+      onPress={() => {
+        onPress(item);
+        navigate("chat-detail");
+      }}
       activeOpacity={0.7}
     >
       {/* Avatar */}
       <View style={styles.avatarWrapper}>
-        <Image source={{ uri: item.avatar }} style={styles.avatar} />
-        {item.online && <View style={styles.onlineDot} />}
+        <Image
+          source={{
+            uri: item?.avatar || "https://i.pravatar.cc/100?img=1",
+          }}
+          style={styles.avatar}
+        />
+        {isOnline && <View style={styles.onlineDot} />}
       </View>
 
       {/* Content */}
       <View style={styles.chatContent}>
         <View style={styles.chatTopRow}>
           <Text style={[styles.chatName, hasUnread && styles.chatNameUnread]}>
-            {item.name}
+            {name}
           </Text>
           <Text style={[styles.chatTime, hasUnread && styles.chatTimeUnread]}>
-            {item.time}
+            {timeText}
           </Text>
         </View>
         <View style={styles.chatBottomRow}>
@@ -103,11 +75,11 @@ function ChatItem({ item }) {
             style={[styles.chatMessage, hasUnread && styles.chatMessageUnread]}
             numberOfLines={1}
           >
-            {item.message}
+            {previewText}
           </Text>
           {hasUnread && (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{item.unread}</Text>
+              <Text style={styles.badgeText}>{unread}</Text>
             </View>
           )}
         </View>
@@ -118,11 +90,59 @@ function ChatItem({ item }) {
 
 // ── Main Screen ──
 export default function ChatListScreen() {
+  const [searchText, setSearchText] = useState("");
+  const { socket, onlineUsers } = useAuthStore();
+  const { users, loadContacts, setSelectedUser, isUsersLoading } =
+    useChatStore();
+
+  useEffect(() => {
+    loadContacts();
+  }, [loadContacts]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = () => {
+      loadContacts();
+    };
+
+    socket.on("newMessage", handleNewMessage);
+
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+    };
+  }, [socket, loadContacts]);
+
+  const filteredChats = useMemo(() => {
+    const keyword = searchText.trim().toLowerCase();
+    if (!keyword) return users;
+
+    return (users || []).filter((user) => {
+      const fullName = (user?.full_name || user?.name || "").toLowerCase();
+      const email = (user?.email || "").toLowerCase();
+      return fullName.includes(keyword) || email.includes(keyword);
+    });
+  }, [users, searchText]);
+
+  const renderEmpty = () => {
+    if (isUsersLoading) {
+      return (
+        <View style={styles.stateBox}>
+          <ActivityIndicator size="small" color="#16A34A" />
+          <Text style={styles.stateText}>Đang tải danh sách trò chuyện...</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.stateBox}>
+        <Text style={styles.stateText}>Chưa có cuộc trò chuyện nào</Text>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <Header />
-
       {/* Search Bar */}
       <View style={styles.searchWrapper}>
         <Ionicons
@@ -135,19 +155,26 @@ export default function ChatListScreen() {
           style={styles.searchInput}
           placeholder="Tìm kiếm cuộc trò chuyện..."
           placeholderTextColor="#9CA3AF"
+          value={searchText}
+          onChangeText={setSearchText}
         />
       </View>
 
       {/* Chat List */}
       <FlatList
-        data={CHATS}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ChatItem item={item} />}
+        data={filteredChats}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item }) => (
+          <ChatItem
+            item={item}
+            isOnline={onlineUsers.includes(item._id)}
+            onPress={setSelectedUser}
+          />
+        )}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={renderEmpty}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-
-      <BottomTabBar />
     </SafeAreaView>
   );
 }
@@ -168,6 +195,14 @@ const styles = StyleSheet.create({
   },
   searchIcon: { marginRight: 8 },
   searchInput: { flex: 1, fontSize: 14, color: "#111827" },
+
+  stateBox: {
+    paddingVertical: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  stateText: { color: "#6B7280", fontSize: 13 },
 
   // Chat Item
   chatItem: {

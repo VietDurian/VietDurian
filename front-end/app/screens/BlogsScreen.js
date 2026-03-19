@@ -3,8 +3,6 @@ import {
   FlatList, Image, Dimensions, ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Header from "../components/Header";
-import BottomTabBar from "../components/BottomTabBar";
 import { useState, useEffect, useCallback } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import { useAppStore } from "../store/useAppStore";
@@ -123,8 +121,7 @@ export default function BlogsScreen() {
   ) : null;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header />
+    <View style={styles.container}>
 
       {/* Hero + Search */}
       <View style={styles.heroBanner}>
@@ -177,14 +174,13 @@ export default function BlogsScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Loading toàn màn hình - chỉ lần đầu */}
+      {/* Loading / Error / List */}
       {blogsLoading && blogs.length === 0 ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color="#059669" />
           <Text style={styles.loadingText}>Đang tải bài viết...</Text>
         </View>
       ) : blogsError && blogs.length === 0 ? (
-        /* Error state */
         <View style={styles.centered}>
           <Feather name="wifi-off" size={44} color="#d1d5db" />
           <Text style={styles.errorText}>{blogsError}</Text>
@@ -238,8 +234,7 @@ export default function BlogsScreen() {
         />
       )}
 
-      <BottomTabBar />
-    </SafeAreaView>
+    </View>
   );
 }
 

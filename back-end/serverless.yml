@@ -1,0 +1,40 @@
+service: vietdurian-nodejs-service # Name of your service
+useDotenv: true
+provider:
+  name: aws
+  runtime: nodejs22.x # Use a current Node.js version, e.g., nodejs20.x or nodejs18.x
+  timeout: 900 # Set timeout to 15 minutes (900 seconds) for long-running processes
+  memorySize: 1024 # Set memory to 2048 MB for better performance
+  stage: prod
+  region: ap-southeast-1
+  iam:
+    role: arn:aws:iam::867490540757:role/lambda_role
+
+build:
+  esbuild: false
+
+plugins:
+  - serverless-esbuild
+
+functions:
+  app:
+    handler: src/server.handler # The file (server.js) and the exported handler (handler)
+    events:
+      - http: ANY /
+      - http: 'ANY /{proxy+}' # For all other routes
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    platform: node
+    target: node22
+    format: cjs
+    keepNames: true
+    alias:
+      "@": ./src
+    external:
+      - aws-sdk
+
+  

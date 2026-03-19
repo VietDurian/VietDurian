@@ -1,0 +1,59 @@
+actor "Users" as User
+boundary "ChatPage" as View
+control "messageController" as Controller
+participant ":messageService" as Service
+participant ":messageModel" as Model
+database Database
+
+
+User -> View : 1. Enter content and click "Send" icon
+activate View
+activate User
+
+View -> View : 2. Validate input
+activate View
+space
+deactivate View
+
+opt Fields left empty
+    View --> User : 2.1 Display errors message
+end
+
+View -> Controller : 3. Send message request
+activate Controller
+
+Controller -> Service : 4. sendMessage(messageData)
+activate Service
+
+Service -> Model : 5. save(messageData)
+activate Model
+
+Model -> Database : 6. Save new message
+activate Database
+Database --> Model : 7. Return result
+deactivate Database
+
+Model --> Service : 8. Return created entity
+deactivate Model
+
+Service -> Service : 9. check message creation status
+activate Service
+space
+deactivate Service
+
+alt Send message successful
+    Service --> Controller : 9.1 Return MessageResponse
+    Controller --> View : 9.1.1 Show success message
+    View --> User : 9.1.2 Display "Message sent successfully"
+
+else Send message failed
+    Service --> Controller : 9.2 Return failure
+    deactivate Service
+
+    Controller --> View : 9.2.1 Show error message
+    deactivate Controller
+
+    View --> User : 9.2.2 Display "Message sending failed"
+    deactivate View
+    deactivate User
+end

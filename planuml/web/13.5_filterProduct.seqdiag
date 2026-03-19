@@ -1,0 +1,45 @@
+You have exceeded your premium request allowance. We have automatically switched you to GPT-4.1 which is included with your plan. [Enable additional paid premium requests](command:chat.enablePremiumOverages) to continue using premium models.```seqdiag
+actor User
+boundary ProductPage
+control ProductController
+participant ":ProductService" as ProductService
+participant ":ProductModel" as ProductModel
+database Database
+
+User->ProductPage: 1. Select filter options (keyword, category, price)
+activate ProductPage
+activate User
+
+ProductPage->ProductController: 2. GET /products/filter?keyword=&categoryId=&price=
+activate ProductController
+
+ProductController->ProductService: 5. filterProducts(params)
+activate ProductService
+
+ProductService->ProductModel: 6. Build filter criteria
+activate ProductModel
+
+ProductModel->Database: 7. Retrieve filtered product data
+activate Database
+Database-->ProductModel: 8. Result set
+deactivate Database
+
+ProductModel-->ProductService: 9. Return filtered list + paging info
+deactivate ProductModel
+
+alt No products match
+    ProductService-->ProductController: 10.1. Return empty result
+    ProductController-->ProductPage: 10.1.1. Return 200 OK + empty list/message
+    ProductPage-->User: 10.1.2. Show "No products found" + keep filters
+else Products match
+    ProductService-->ProductController: 10.2. Return FilterProductResponse
+    deactivate ProductService
+    ProductController-->ProductPage: 10.2.1. Return 200 OK + filtered products data
+    deactivate ProductController
+
+
+ProductPage-->User: 10.2.2. Display filter result
+end
+deactivate ProductPage
+deactivate User
+```

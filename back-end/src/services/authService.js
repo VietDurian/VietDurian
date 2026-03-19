@@ -279,23 +279,6 @@ const login = async (email, password) => {
       );
     }
 
-    const permission = await PermissionAccountModel.findOne({
-      user_id: user._id,
-    });
-
-    if (permission && permission.status === "pending") {
-      throw createError(
-        403,
-        "Yêu cầu nâng cấp tài khoản của bạn vẫn đang chờ duyệt.",
-      );
-    }
-    if (permission && permission.status === "rejected") {
-      throw createError(
-        403,
-        "Yêu cầu nâng cấp tài khoản của bạn đã bị từ chối.",
-      );
-    }
-    console.log("Đăng nhập thành công user logged in:", user._id);
     const token = generateToken(user._id);
 
     user.password = undefined;

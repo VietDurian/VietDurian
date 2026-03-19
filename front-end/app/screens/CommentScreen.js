@@ -479,7 +479,7 @@ export default function CommentScreen({ onBack }) {
 
     // ── Render ───────────────────────────────────────────────────────────────────
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={8} activeOpacity={0.8}>
@@ -608,7 +608,7 @@ export default function CommentScreen({ onBack }) {
                 onSubmit={handleSubmitReport}
                 submitting={reportSubmitting}
             />
-        </SafeAreaView>
+        </View>
     );
 }
 
