@@ -1,0 +1,51 @@
+actor "Users" as Farmer
+boundary HomePage
+control "notificationController" as Controller
+participant ":notificationService" as Service
+participant ":notificationModel" as Model
+database Database
+
+
+Farmer -> HomePage : 1. Users click "Bell" icon
+activate Farmer
+activate HomePage
+
+HomePage -> Controller : 2. Get notifications list request
+activate Controller
+
+Controller -> Service : 3. getNotifications(userId)
+activate Service
+
+Service -> Model : 4. find(query)
+activate Model
+
+Model -> Database : 5. Execute query
+activate Database
+Database --> Model : 6. Return result
+deactivate Database
+
+Model --> Service : 7. Return notification list
+deactivate Model
+
+Service -> Service : 8. check notification list
+activate Service
+space
+deactivate Service
+
+alt Notification available
+    Service --> Controller : 8.1 Return notification list
+    Controller --> HomePage : 8.1.1 Show notification list
+    HomePage --> Farmer : 8.1.2 Display notification list
+
+else No notifications
+    Service --> Controller : 8.2 Return empty list
+    deactivate Service
+
+    Controller --> HomePage : 8.2.1 Show empty notification
+    deactivate Controller
+
+    HomePage --> Farmer : 8.2.2 Display "Không có thông báo"
+
+    deactivate HomePage
+    deactivate Farmer
+end
