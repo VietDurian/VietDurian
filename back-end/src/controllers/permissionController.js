@@ -10,6 +10,8 @@ const getPermissionRequests = async (req, res, next) => {
             message: "Permission requests retrieved successfully",
             data: requests,
         });
+        console.log("Permission requests list:", results);
+
     } catch (error) {
         next(error);
     }
@@ -26,10 +28,24 @@ const getPermissionRequestDetail = async (req, res, next) => {
                 .status(404)
                 .json({ code: 404, message: "Permission request not found" });
         }
-        res.status(200).json({
-            code: 200,
-            message: "Permission request detail retrieved successfully",
-            data: request,
+        return res.status(200).json({
+            success: true,
+            data: {
+                id: request._id,
+                user_name: request.user_id?.full_name || "",
+                email: request.user_id?.email || "",
+                phone: request.user_id?.phone || "",
+                avatar: request.user_id?.avatar || "",
+                role: request.user_id?.role || "",
+                requestRole: request.requested_role || "",
+                description: request.description || "",
+                document: request.document || [],
+                proofs: request.proofs || [],
+                verify_cccd: request.verify_cccd || "pending",
+                rejection_reason: request.rejection_reason || "",
+                created_at: request.created_at,
+                updated_at: request.updated_at,
+            },
         });
     } catch (error) {
         next(error);
@@ -80,7 +96,7 @@ const confirmAccount = async (req, res, next) => {
         );
         res.status(200).json({
             code: 200,
-            message: "Account upgrade approved successfully",
+            message: "Permission request approved successfully (proofs verified)",
             data: result,
         });
     } catch (error) {
