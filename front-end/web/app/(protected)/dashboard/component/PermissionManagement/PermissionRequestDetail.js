@@ -63,7 +63,8 @@ export default function PermissionRequestDetail({
     onUpdated,
     isLoading,
 }) {
-    const requestId = request?.id || request?._id || "";
+    const requestId = request?._id || request?.id || request?.data?._id || request?.data?.id || "";
+    console.log("Rendering PermissionRequestDetail with requestId:", requestId);
     const normalizedStatus =
         request?.verify_cccd || request?.status || request?.data?.verify_cccd || "pending";
     const documentsToDisplay =
@@ -383,21 +384,14 @@ export default function PermissionRequestDetail({
 
                                     <div className="rounded-2xl bg-white/75 px-4 py-3 shadow-sm ring-1 ring-white/70 backdrop-blur">
                                         <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                                            Vai trò hiện tại
+                                            Vai trò
                                         </div>
                                         <div className="mt-1 text-sm font-semibold text-slate-900">
                                             {role || "—"}
                                         </div>
                                     </div>
 
-                                    <div className="rounded-2xl bg-white/75 px-4 py-3 shadow-sm ring-1 ring-white/70 backdrop-blur">
-                                        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                                            Vai trò yêu cầu
-                                        </div>
-                                        <div className="mt-1 text-sm font-semibold text-slate-900">
-                                            {requestRole || "—"}
-                                        </div>
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
