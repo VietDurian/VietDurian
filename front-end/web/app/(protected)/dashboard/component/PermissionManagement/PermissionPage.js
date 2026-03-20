@@ -179,13 +179,12 @@ export default function PermissionPage() {
             // Call API để lấy chi tiết đầy đủ bao gồm proofs
             const res = await permissionAPI.getPermissionById(req.id)
             const detailData = res?.data?.data || res?.data
-            console.log("Fetched permission detail:", res)
             console.log("Detail data:", detailData)
+            console.log("oooooooooooooooooooooooooooooooo", res)
 
             // Map lại dữ liệu để phù hợp với request object
             const fullRequest = {
-                id: detailData,
-                user_name: detailData.user_id?.full_name || req.user_name,
+                id: detailData.id,
                 email: detailData.user_id?.email || req.email,
                 phone: detailData.user_id?.phone || req.phone,
                 avatar: detailData.user_id?.avatar || req.avatar,
@@ -199,7 +198,7 @@ export default function PermissionPage() {
                 created_at: detailData.user_id?.created_at || detailData.created_at,
                 updated_at: detailData.user_id?.updated_at || detailData.updated_at,
             }
-
+            console.log("ddiidididididid", detailData.id)
             setSelectedRequest(fullRequest)
         } catch (error) {
             console.error('Error fetching permission detail:', error)
