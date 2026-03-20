@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  distDir: "out",
+  output: process.env.NODE_ENV === "production" ? "export" : undefined,
   images: {
     domains: [
       "res.cloudinary.com",
