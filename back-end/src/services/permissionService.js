@@ -21,9 +21,9 @@ const getPermissionRequests = async () => {
     pipeline.push({ $sort: { created_at: -1 } });
     const results = await PermissionAccountModel.aggregate(pipeline);
     // Always return verify_cccd as the main status
-    return results.map(r => ({
+    return results.map((r) => ({
       ...r,
-      status: r.verify_cccd // FE will use verify_cccd as status
+      status: r.verify_cccd, // FE will use verify_cccd as status
     }));
   } catch (error) {
     throw error;
@@ -33,12 +33,14 @@ const getPermissionRequests = async () => {
 const getPermissionRequestDetail = async (request_id) => {
   try {
     const request = await PermissionAccountModel.findById(request_id)
-      .populate("user_id", "full_name email phone avatar role is_verified verify_cccd is_banned created_at updated_at")
+      .populate(
+        "user_id",
+        "full_name email phone avatar role is_verified verify_cccd is_banned created_at updated_at",
+      )
       .lean();
     console.log("Request detail:", request);
     console.log("verify_cccd =", request?.verify_cccd);
     return request;
-
   } catch (error) {
     throw error;
   }
@@ -76,9 +78,9 @@ const searchPermissionRequests = async ({ verify_cccd = "", keyword = "" }) => {
     pipeline.push({ $sort: { created_at: -1 } });
     const results = await PermissionAccountModel.aggregate(pipeline);
     // Always return verify_cccd as the main status
-    return results.map(r => ({
+    return results.map((r) => ({
       ...r,
-      status: r.verify_cccd // FE will use verify_cccd as status
+      status: r.verify_cccd, // FE will use verify_cccd as status
     }));
   } catch (error) {
     throw error;
@@ -109,9 +111,9 @@ const sortPermissionRequests = async ({
 
     const results = await PermissionAccountModel.aggregate(pipeline);
     // Always return verify_cccd as the main status
-    return results.map(r => ({
+    return results.map((r) => ({
       ...r,
-      status: r.verify_cccd // FE will use verify_cccd as status
+      status: r.verify_cccd, // FE will use verify_cccd as status
     }));
   } catch (error) {
     throw error;
@@ -146,7 +148,7 @@ const confirmPermissionRequest = async (request_id, adminId) => {
     let user = null;
     try {
       user = await User.findById(request.user_id);
-    } catch { }
+    } catch {}
 
     try {
       await emailService.sendPermissionStatusEmail({
@@ -180,7 +182,7 @@ const rejectPermissionRequest = async (request_id, adminId, reason = "") => {
     let user = null;
     try {
       user = await User.findById(request.user_id);
-    } catch { }
+    } catch {}
 
     try {
       await emailService.sendPermissionStatusEmail({
@@ -236,6 +238,13 @@ const isMyAccountApproved = async (userId) => {
 
   return request.verify_cccd === "approved";
 };
+const getVerifyCCCDStatus = async (userId) => {
+  const request = await PermissionAccountModel.findOne({ user_id: userId });
+
+  if (!request) return "error at getVerifyCCCDStatus";
+
+  return request.verify_cccd;
+};
 export const permissionService = {
   getPermissionRequests,
   searchPermissionRequests,
@@ -245,4 +254,5 @@ export const permissionService = {
   rejectPermissionRequest,
   submitProofs,
   isMyAccountApproved,
+  getVerifyCCCDStatus,
 };

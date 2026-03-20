@@ -354,6 +354,36 @@ const Router = express.Router();
  *       404:
  *         description: Permission request not found
  */
+/**
+ * @swagger
+ * /permission/my-account/verify-cccd/status:
+ *   get:
+ *     summary: Get verify CCCD status of current account
+ *     description: Authenticated users retrieve current verify_cccd status for their own account upgrade request.
+ *     tags: [Permission]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Get verify_cccd status success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Get verify_cccd status success
+ *                 data:
+ *                   type: string
+ *                   enum: [pending, approved, rejected]
+ *                   description: Current verify_cccd status
+ *       401:
+ *         description: Unauthorized
+ */
 Router.post(
   "/requests/proofs",
   authMiddleware.protect,
@@ -406,6 +436,11 @@ Router.get(
   "/my-account/approved",
   authMiddleware.protect,
   permissionController.isMyAccountApproved,
+);
+Router.get(
+  "/my-account/verify-cccd/status",
+  authMiddleware.protect,
+  permissionController.getVerifyCCCDStatus,
 );
 
 export const permissionRoute = Router;

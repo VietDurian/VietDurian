@@ -25,56 +25,93 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 import { usePermissionStore } from "@/store/usePermissionStore";
 
-const SidebarItem = ({ icon: Icon, label, href, active, onClick }) => (
-  <Link
-    href={href}
-    onClick={onClick}
-    className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${
-      active
+const SidebarItem = ({
+  icon: Icon,
+  label,
+  href,
+  active,
+  onClick,
+  disabled,
+}) => {
+  const itemClass = `relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${
+    disabled
+      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+      : active
         ? "bg-emerald-500 text-white scale-105"
         : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
-    }`}
-  >
-    {active && <div className="absolute inset-0 bg-white/10 rounded-2xl" />}
-    <div
-      className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${active ? "bg-white/20 backdrop-blur-sm" : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"}`}
-    >
-      <Icon
-        size={20}
-        className={`${active ? "text-white" : "text-emerald-500 group-hover:text-emerald-600 group-hover:scale-110"} transition-all duration-300`}
-        strokeWidth={2.5}
-      />
-    </div>
-    <span
-      className={`relative z-10 text-[15px] font-semibold tracking-wide ${active ? "text-white" : "text-gray-700 group-hover:text-gray-900"} transition-colors duration-300`}
-    >
-      {label}
-    </span>
-    {active && (
-      <ChevronRight
-        size={18}
-        className="relative z-10 ml-auto text-white/80"
-        strokeWidth={3}
-      />
-    )}
-    {!active && (
-      <div className="absolute inset-0 border-2 border-transparent group-hover:border-emerald-200 rounded-2xl transition-all duration-300" />
-    )}
-    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-  </Link>
-);
+  }`;
+
+  const content = (
+    <>
+      {active && <div className="absolute inset-0 bg-white/10 rounded-2xl" />}
+      <div
+        className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
+          disabled
+            ? "bg-gray-200"
+            : active
+              ? "bg-white/20 backdrop-blur-sm"
+              : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
+        }`}
+      >
+        <Icon
+          size={20}
+          className={`${
+            disabled
+              ? "text-gray-400"
+              : active
+                ? "text-white"
+                : "text-emerald-500 group-hover:text-emerald-600 group-hover:scale-110"
+          } transition-all duration-300`}
+          strokeWidth={2.5}
+        />
+      </div>
+      <span
+        className={`relative z-10 text-[15px] font-semibold tracking-wide ${active ? "text-white" : "text-gray-700 group-hover:text-gray-900"} transition-colors duration-300`}
+      >
+        {label}
+      </span>
+      {active && (
+        <ChevronRight
+          size={18}
+          className="relative z-10 ml-auto text-white/80"
+          strokeWidth={3}
+        />
+      )}
+      {!active && !disabled && (
+        <div className="absolute inset-0 border-2 border-transparent group-hover:border-emerald-200 rounded-2xl transition-all duration-300" />
+      )}
+      {!disabled && (
+        <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      )}
+    </>
+  );
+
+  if (disabled) {
+    return (
+      <div className={itemClass} aria-disabled="true">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link href={href} onClick={onClick} className={itemClass}>
+      {content}
+    </Link>
+  );
+};
 
 export default function AsideBar({ role }) {
-  const { checkApprovedAccount, isApprovedAccount } = usePermissionStore();
+  const { verifyCCCDStatus, getVerifyCCCDStatus } = usePermissionStore();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useLanguage();
 
   useEffect(() => {
     if (["farmer", "contentExpert", "serviceProvider"].includes(role)) {
-      checkApprovedAccount();
+      getVerifyCCCDStatus();
     }
-  }, [role, checkApprovedAccount]);
+  }, [role, getVerifyCCCDStatus]);
 
   const seasonDiaryRouteMatch = pathname?.match(
     /^\/profile\/season-diaries\/([^/]+)/,
@@ -93,7 +130,14 @@ export default function AsideBar({ role }) {
     role === "farmer" && !!productId && productId !== "create";
   const shouldShowVerification =
     ["farmer", "contentExpert", "serviceProvider"].includes(role) &&
-    !isApprovedAccount;
+    verifyCCCDStatus !== "approved";
+  const isVerificationPending = verifyCCCDStatus === "pending";
+  const verificationMenuItem = {
+    icon: Shield,
+    label: isVerificationPending ? "Đã gửi xác thực" : "Xác Thực Thông Tin",
+    href: "/submit-proof",
+    disabled: isVerificationPending,
+  };
 
   const getMenuItems = (role) => {
     switch (role) {
@@ -146,11 +190,7 @@ export default function AsideBar({ role }) {
             { icon: User, label: t("aside_info"), href: "/profile/details" },
             { icon: FileText, label: t("aside_posts"), href: "/profile/posts" },
             { icon: Bot, label: t("aside_ai"), href: "/profile/ai" },
-            {
-              icon: Shield,
-              label: "Xác Thực Thông Tin",
-              href: "/submit-proof",
-            },
+            verificationMenuItem,
           ];
         }
         return [
@@ -175,13 +215,7 @@ export default function AsideBar({ role }) {
         ];
       case "contentExpert":
         if (shouldShowVerification) {
-          return [
-            {
-              icon: Shield,
-              label: "Xác Thực Thông Tin",
-              href: "/submit-proof",
-            },
-          ];
+          return [verificationMenuItem];
         }
         return [
           { icon: User, label: t("aside_info"), href: "/profile/details" },
@@ -191,13 +225,7 @@ export default function AsideBar({ role }) {
         ];
       case "serviceProvider":
         if (shouldShowVerification) {
-          return [
-            {
-              icon: Shield,
-              label: "Xác Thực Thông Tin",
-              href: "/submit-proof",
-            },
-          ];
+          return [verificationMenuItem];
         }
         return [
           { icon: User, label: t("aside_info"), href: "/profile/details" },
@@ -212,7 +240,7 @@ export default function AsideBar({ role }) {
 
   const menuItems = getMenuItems(role);
 
-  const SidebarContent = ({ onItemClick }) => (
+  const renderSidebarContent = (onItemClick) => (
     <>
       <nav className="relative z-10 flex flex-col flex-1 space-y-2">
         {isCreateRoute ? (
@@ -256,6 +284,7 @@ export default function AsideBar({ role }) {
                   label={item.label}
                   href={item.href}
                   active={pathname === item.href}
+                  disabled={item.disabled}
                   onClick={onItemClick}
                 />
               </div>
@@ -326,7 +355,7 @@ export default function AsideBar({ role }) {
           <X size={20} strokeWidth={2.5} />
         </button>
         <div className="mt-8 flex flex-col flex-1">
-          <SidebarContent onItemClick={() => setMobileOpen(false)} />
+          {renderSidebarContent(() => setMobileOpen(false))}
         </div>
         <style jsx>{`
           @keyframes slideInLeft {
@@ -362,7 +391,7 @@ export default function AsideBar({ role }) {
             backgroundSize: "40px 40px",
           }}
         />
-        <SidebarContent onItemClick={undefined} />
+        {renderSidebarContent(undefined)}
         <style jsx>{`
           @keyframes slideInLeft {
             from {

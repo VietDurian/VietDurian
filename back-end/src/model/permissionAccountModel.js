@@ -31,8 +31,8 @@ const permissionAccountSchema = new mongoose.Schema(
     ],
     verify_cccd: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
-      default: "pending",
+      enum: ["none", "pending", "approved", "rejected"],
+      default: "none",
     },
     rejection_reason: {
       type: String,

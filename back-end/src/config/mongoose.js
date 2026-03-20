@@ -5,8 +5,8 @@ dotenv.config();
 
 const connectDB = async () => {
   try {
-    // const uri = process.env.MONGODB_URI;
-    const uri = "mongodb+srv://ChanPotter:Password123!@cluster0.jdsmxen.mongodb.net/?appName=Cluster0";
+    const uri = process.env.MONGODB_URI;
+    // const uri = "mongodb+srv://ChanPotter:Password123!@cluster0.jdsmxen.mongodb.net/?appName=Cluster0";
     const dbName = process.env.DATABASE_NAME;
 
     if (!uri) {
