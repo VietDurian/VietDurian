@@ -63,7 +63,8 @@ export default function PermissionRequestDetail({
     onUpdated,
     isLoading,
 }) {
-    const requestId = request?.id || request?._id || "";
+    const requestId = request?._id || request?.id || request?.data?._id || request?.data?.id || "";
+    console.log("Rendering PermissionRequestDetail with requestId:", requestId);
     const normalizedStatus =
         request?.verify_cccd || request?.status || request?.data?.verify_cccd || "pending";
     const documentsToDisplay =
@@ -435,7 +436,7 @@ export default function PermissionRequestDetail({
                                     >
                                         <polyline points="20 6 9 17 4 12" />
                                     </svg>
-                                    Duyệt hồ sơ
+                                    Duyệt hồ sơ 11111111111111111111111111111
                                 </button>
 
                                 <button

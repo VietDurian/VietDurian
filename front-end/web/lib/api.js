@@ -145,10 +145,12 @@ export const permissionAPI = {
       reason,
     });
     return response.data;
+
   },
 
   async approvePermissionRequest(id) {
     const response = await apiClient.patch(`/permission/requests/${id}/confirm`);
+    console.log("Response from approvePermissionRequest:", response.data);
     return response.data;
   },
 };
