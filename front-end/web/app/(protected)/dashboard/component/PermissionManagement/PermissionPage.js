@@ -167,9 +167,45 @@ export default function PermissionPage() {
         )
     }
 
-    const handleRequestUpdated = ({ id, status }) => {
-        setPermission((prev) => Array.isArray(prev) ? prev.map((item) => item?._id === id ? { ...item, status, verify_cccd: status } : item) : prev)
-        setSelectedRequest((prev) => prev ? { ...prev, status, verify_cccd: status } : prev)
+    // Khi update status, fetch lại danh sách (không đổi biến)
+    const handleRequestUpdated = async ({ id, status }) => {
+        setSelectedRequest((prev) => prev ? { ...prev, status, verify_cccd: status } : prev);
+        // Đóng popup detail
+        setShowDetail(false);
+        // Fetch lại danh sách permissions
+        try {
+            const params = {
+                page,
+                limit: LIMIT,
+                ...(status !== 'all' ? { status } : {}),
+            };
+            let res;
+            if (!query.trim()) {
+                res = await permissionAPI.getAllPermissions(params);
+            } else {
+                res = await permissionAPI.searchPermissions(query.trim(), params);
+            }
+            const listRaw = Array.isArray(res?.data)
+                ? res.data
+                : Array.isArray(res?.data?.data)
+                    ? res.data.data
+                    : [];
+            setPermission(listRaw);
+            const pgn = res?.data?.pagination || res?.pagination || null;
+            setPagination(pgn ? {
+                totalItems: Number(pgn.totalItems ?? 0),
+                totalPages: Number(pgn.totalPages ?? 0),
+                currentPage: Number(pgn.currentPage ?? page),
+                itemsPerPage: Number(pgn.itemsPerPage ?? LIMIT),
+            } : {
+                totalItems: Number(res?.data?.totalItems ?? listRaw.length ?? 0),
+                totalPages: Math.max(1, Number(res?.data?.totalPages ?? Math.ceil(listRaw.length / LIMIT))),
+                currentPage: page,
+                itemsPerPage: LIMIT,
+            });
+        } catch (error) {
+            console.error('Error refreshing permissions:', error);
+        }
     }
 
     const handleViewDetail = async (req) => {
@@ -179,8 +215,7 @@ export default function PermissionPage() {
             // Call API để lấy chi tiết đầy đủ bao gồm proofs
             const res = await permissionAPI.getPermissionById(req.id)
             const detailData = res?.data?.data || res?.data
-            console.log("Detail data:", detailData)
-            console.log("oooooooooooooooooooooooooooooooo", res)
+
 
             // Map lại dữ liệu để phù hợp với request object
             const fullRequest = {
@@ -263,43 +298,43 @@ export default function PermissionPage() {
 
 
                 {/* Permissions Table */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div>
-                        <table className="w-full min-w-0">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+                    <div className="min-w-[700px] md:min-w-0">
+                        <table className="w-full min-w-[700px] md:min-w-0 text-sm">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">User</th>
-                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Phone</th>
-                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"> Role</th>
-                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Description</th>
-                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Created</th>
-                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">User</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Phone</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Role</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Description</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Status</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Created</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {filteredPermissions.length === 0 ? (
                                     <tr>
-                                        <td className="px-6 py-6 text-center text-gray-500" colSpan={9}>
+                                        <td className="px-3 py-6 md:px-6 text-center text-gray-500" colSpan={9}>
                                             No permission requests match your filters.
                                         </td>
                                     </tr>
                                 ) : (
                                     filteredPermissions.map((req) => (
                                         <tr key={req.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4">
+                                            <td className="px-3 py-3 md:px-6 md:py-4">
                                                 <div className="font-medium text-gray-900">{req.user_name}</div>
-                                                <div className="text-xs text-gray-500">{req.email}</div>
+                                                <div className="text-xs text-gray-500 break-all">{req.email}</div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">{req.phone}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">{req.role}</td>
+                                            <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-gray-700 break-all">{req.phone}</td>
+                                            <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-gray-700 break-all">{req.role}</td>
                                             <td
-                                                className="px-6 py-4 text-sm text-gray-700 max-w-xs overflow-hidden whitespace-nowrap text-ellipsis"
+                                                className="px-3 py-3 md:px-6 md:py-4 text-sm text-gray-700 max-w-xs overflow-hidden whitespace-nowrap text-ellipsis"
                                                 title={req.description}
                                             >
                                                 {req.description || '—'}
                                             </td>
-                                            <td className="px-6 py-4 text-sm">
+                                            <td className="px-3 py-3 md:px-6 md:py-4 text-sm">
                                                 <span
                                                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${req.status === 'approved'
                                                         ? 'bg-green-100 text-green-700'
@@ -311,14 +346,13 @@ export default function PermissionPage() {
                                                     {req.status || 'pending'}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">
+                                            <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-gray-700">
                                                 {req.created_at ? new Date(req.created_at).toLocaleString() : '—'}
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">
+                                            <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-gray-700">
                                                 <Eye className='w-4 h-4 cursor-pointer hover:text-[#1a4d2e] transition'
                                                     onClick={() => handleViewDetail(req)}
                                                 >
-
                                                 </Eye>
                                             </td>
                                         </tr>
