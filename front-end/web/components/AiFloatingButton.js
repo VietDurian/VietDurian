@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   X,
   RefreshCcw,
@@ -12,6 +13,7 @@ import {
   MessageCircleMore,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import { askGemini } from "@/lib/gemini";
 
 const initialMessages = [
   {
@@ -97,7 +99,7 @@ export default function AiFloatingButton() {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if ((!input.trim() && !image) || isLoading) return;
 
     const userMessage = {
       id: `u-${Date.now()}`,
@@ -117,31 +119,22 @@ export default function AiFloatingButton() {
         .filter((m) => m.id !== "welcome" && !m.isError)
         .map((m) => ({ role: m.role, content: m.content }));
 
-      const res = await fetch("/api/gemini", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userMessage.content,
-          history,
-          image: image
-            ? { data: image.dataUrl, mimeType: image.mimeType }
-            : null,
-        }),
+      const reply = await askGemini({
+        message: userMessage.content,
+        history,
+        image: image
+          ? { data: image.dataUrl, mimeType: image.mimeType, name: image.name }
+          : null,
       });
 
-      const data = await res.json();
-      if (data.success) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `m-${Date.now()}`,
-            role: "model",
-            content: data.data,
-          },
-        ]);
-      } else {
-        throw new Error(data.error || "Không thể gọi AI");
-      }
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `m-${Date.now()}`,
+          role: "model",
+          content: reply,
+        },
+      ]);
     } catch (err) {
       const failMessage = {
         id: `e-${Date.now()}`,
@@ -150,10 +143,27 @@ export default function AiFloatingButton() {
         isError: true,
       };
       setMessages((prev) => [...prev, failMessage]);
-      setError(err.message);
+      setError(err?.message || "Không thể gọi AI");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getMessageImageSrc = (msg) => {
+    const msgImage = msg?.image;
+    if (!msgImage) return null;
+
+    if (typeof msgImage.dataUrl === "string" && msgImage.dataUrl) {
+      return msgImage.dataUrl;
+    }
+
+    if (typeof msgImage.data === "string" && msgImage.data) {
+      if (msgImage.data.startsWith("data:")) return msgImage.data;
+      const mimeType = msgImage.mimeType || "image/jpeg";
+      return `data:${mimeType};base64,${msgImage.data}`;
+    }
+
+    return null;
   };
 
   return (
@@ -182,27 +192,41 @@ export default function AiFloatingButton() {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${
-                  msg.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
+            {messages.map((msg) => {
+              const imageSrc = getMessageImageSrc(msg);
+
+              return (
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm whitespace-pre-wrap ${
-                    msg.role === "user"
-                      ? "bg-green-600 text-white rounded-br-none"
-                      : msg.isError
-                        ? "bg-red-50 text-red-600 border border-red-100"
-                        : "bg-white text-gray-800 border border-gray-100 rounded-bl-none"
-                  }
-                  `}
+                  key={msg.id}
+                  className={`flex ${
+                    msg.role === "user" ? "justify-end" : "justify-start"
+                  }`}
                 >
-                  {msg.content}
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm whitespace-pre-wrap ${
+                      msg.role === "user"
+                        ? "bg-green-600 text-white rounded-br-none"
+                        : msg.isError
+                          ? "bg-red-50 text-red-600 border border-red-100"
+                          : "bg-white text-gray-800 border border-gray-100 rounded-bl-none"
+                    }
+                    `}
+                  >
+                    {imageSrc && (
+                      <Image
+                        src={imageSrc}
+                        alt="Ảnh đã gửi"
+                        width={256}
+                        height={256}
+                        unoptimized
+                        className="mb-2 w-full max-w-64 rounded-xl border border-black/10 object-cover"
+                      />
+                    )}
+                    {msg.content && <p>{msg.content}</p>}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {isLoading && (
               <div className="text-xs text-gray-500">AI đang trả lời...</div>
             )}
@@ -264,7 +288,7 @@ export default function AiFloatingButton() {
               </div>
               <button
                 type="submit"
-                disabled={!input.trim() || isLoading}
+                disabled={(!input.trim() && !image) || isLoading}
                 className="w-10 h-10 rounded-full bg-gray-100 text-gray-500 hover:bg-emerald-400 flex items-center justify-center disabled:opacity-60 cursor-pointer"
               >
                 <ArrowUp size={18} />

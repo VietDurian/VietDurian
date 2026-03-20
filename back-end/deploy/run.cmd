@@ -1,0 +1,1 @@
+serverless deploy --region ap-southeast-1 --aws-profile vietdurian --force

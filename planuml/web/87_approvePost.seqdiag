@@ -1,0 +1,113 @@
+actor "Admin" as Farmer
+boundary PostRequestPage
+control "postController" as Controller
+participant ":postService" as Service
+participant ":notificationService" as Service1
+participant ":generalPostModel" as Model
+participant ":notificationModel" as Model1
+database Database
+
+Farmer -> PostRequestPage : 1. Click post in request management
+activate Farmer
+activate PostRequestPage
+Farmer -> PostRequestPage : 2. Click "Confirm/Reject" icon
+
+alt Confirm action
+PostRequestPage -> Controller : 2.1 Approve post request
+activate Controller
+
+Controller -> Service : 2.1.1 approveGeneralPost(postData)
+activate Service
+
+Service -> Model : 2.1.2 findByIdAndUpdate(postData)
+activate Model
+
+Model -> Database : 2.1.3 Execute query
+activate Database
+Database --> Model : 2.1.4 Return result
+deactivate Database
+
+Model --> Service : 2.1.5 Return updated post
+deactivate Model
+
+Service -> Service1 : 2.1.6 createNotification(data)
+activate Service1
+
+Service1 -> Model1 : 2.1.7 save(notificationData)
+activate Model1
+
+Model1 -> Database : 2.1.8 Execute query
+activate Database
+Database --> Model1 : 2.1.9 Return result
+deactivate Database
+
+Model1 --> Service1 : 2.1.10 Notification saved
+deactivate Model1
+
+Service1 --> Service : 2.1.11 Notification created
+deactivate Service1
+
+Service --> Controller : 2.1.12 Return post approved
+deactivate Service
+Controller --> PostRequestPage : 2.1.13 Show success message
+deactivate Controller
+PostRequestPage --> Farmer : 2.1.14 Display "Post approved successfully"
+
+else Reject action
+PostRequestPage --> Farmer : 2.2 Prompt for rejection reason
+Farmer -> PostRequestPage : 2.2.1 Enter rejection reason
+
+PostRequestPage -> PostRequestPage : 2.2.2 Validate input
+activate PostRequestPage
+space
+deactivate PostRequestPage
+
+opt Invalid Input or fields left empty
+    PostRequestPage --> Farmer : 2.2.2.1 Display error message
+end
+
+PostRequestPage -> Controller : 2.2.3 Reject post request
+activate Controller
+
+Controller -> Service : 2.2.4 rejectGeneralPost(postData, reason)
+activate Service
+
+Service -> Model : 2.2.5 findByIdAndUpdate(postData)
+activate Model
+
+Model -> Database : 2.2.6 Execute query
+activate Database
+Database --> Model : 2.2.7 Return result
+deactivate Database
+
+Model --> Service : 2.2.8 Return updated post
+deactivate Model
+
+Service -> Service1 : 2.2.9 createNotification(data)
+activate Service1
+
+Service1 -> Model1 : 2.2.10 save(notificationData)
+activate Model1
+
+Model1 -> Database : 2.2.11 Execute query
+activate Database
+Database --> Model1 : 2.2.12 Return result
+deactivate Database
+
+Model1 --> Service1 : 2.2.13 Notification saved
+deactivate Model1
+
+Service1 --> Service : 2.2.14 Notification created
+deactivate Service1
+
+Service --> Controller : 2.2.15 Return post rejected
+deactivate Service
+
+Controller --> PostRequestPage : 2.2.16 Show rejection message
+deactivate Controller
+
+PostRequestPage --> Farmer : 2.2.17 Display "Post rejected" with reason
+
+deactivate PostRequestPage
+deactivate Farmer
+end
