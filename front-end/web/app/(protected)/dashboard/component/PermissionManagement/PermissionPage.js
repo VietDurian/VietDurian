@@ -269,8 +269,7 @@ export default function PermissionPage() {
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">User</th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Phone</th>
-                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Current Role</th>
-                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Requested Role</th>
+                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"> Role</th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Description</th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Status</th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Created</th>
@@ -293,8 +292,12 @@ export default function PermissionPage() {
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-700">{req.phone}</td>
                                             <td className="px-6 py-4 text-sm text-gray-700">{req.role}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">{req.requestRole}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-700 max-w-xs truncate" title={req.description}>{req.description || '—'}</td>
+                                            <td
+                                                className="px-6 py-4 text-sm text-gray-700 max-w-xs overflow-hidden whitespace-nowrap text-ellipsis"
+                                                title={req.description}
+                                            >
+                                                {req.description || '—'}
+                                            </td>
                                             <td className="px-6 py-4 text-sm">
                                                 <span
                                                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${req.status === 'approved'
