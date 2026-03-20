@@ -30,7 +30,7 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-ap-southeast-1-1365b344-b52f",
-                "S3Key": "serverless/vietdurian-nodejs-service/prod/1773845272018-2026-03-18T14:47:52.018Z/vietdurian-nodejs-service.zip"
+                "S3Key": "serverless/vietdurian-nodejs-service/prod/1773999717205-2026-03-20T09:41:57.205Z/vietdurian-nodejs-service.zip"
               },
               "Handler": "src/server.handler",
               "Runtime": "nodejs22.x",
@@ -43,14 +43,14 @@
               "AppLogGroup"
             ]
           },
-          "AppLambdaVersion14Y2qmDqy2hbpca62G3Beeyt8GF8aucsjl24fBOw8Ec": {
+          "AppLambdaVersionn59azp2shjQ4u4dX3WEqORlDZZeLQjycYXCNc85AnE": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "AppLambdaFunction"
               },
-              "CodeSha256": "XvaysfMu/MtdQKAS1pIBKY5kDMB+8ZdpZHm4GuKjw/w="
+              "CodeSha256": "XJ+yB9xETAZVClZJcOMjhvUJSs7AjV4HSoNCA0RR7YY="
             }
           },
           "ApiGatewayRestApi": {
@@ -175,7 +175,7 @@
               "AppLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1773845264464": {
+          "ApiGatewayDeployment1773999706972": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -236,7 +236,7 @@
           "AppLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "AppLambdaVersion14Y2qmDqy2hbpca62G3Beeyt8GF8aucsjl24fBOw8Ec"
+              "Ref": "AppLambdaVersionn59azp2shjQ4u4dX3WEqORlDZZeLQjycYXCNc85AnE"
             },
             "Export": {
               "Name": "sls-vietdurian-nodejs-service-prod-AppLambdaFunctionQualifiedArn"
@@ -310,7 +310,7 @@
         "timeout": 900,
         "runtime": "nodejs22.x",
         "vpc": {},
-        "versionLogicalId": "AppLambdaVersion14Y2qmDqy2hbpca62G3Beeyt8GF8aucsjl24fBOw8Ec"
+        "versionLogicalId": "AppLambdaVersionn59azp2shjQ4u4dX3WEqORlDZZeLQjycYXCNc85AnE"
       }
     },
     "configValidationMode": "warn",
@@ -342,7 +342,7 @@
     "layers": {}
   },
   "package": {
-    "artifactDirectoryName": "serverless/vietdurian-nodejs-service/prod/1773845272018-2026-03-18T14:47:52.018Z",
+    "artifactDirectoryName": "serverless/vietdurian-nodejs-service/prod/1773999717205-2026-03-20T09:41:57.205Z",
     "artifact": "vietdurian-nodejs-service.zip"
   }
 }

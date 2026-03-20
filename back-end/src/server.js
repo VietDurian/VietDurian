@@ -12,23 +12,26 @@ require("dotenv").config();
 
 let dbInitPromise = null;
 
-connectDB()
+// connectDB()
 
-// const ensureDbConnected = async () => {
-//   if (!dbInitPromise) {
-//     dbInitPromise = connectDB().catch((error) => {
-//       dbInitPromise = null;
-//       throw error;
-//     });
-//   }
+const ensureDbConnected = async () => {
+  if (!dbInitPromise) {
+    dbInitPromise = connectDB().catch((error) => {
+      dbInitPromise = null;
+      throw error;
+    });
+  }
 
-//   await dbInitPromise;
-// };
+  await dbInitPromise;
+};
 
 // Cors
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin:  [
+      "http://localhost:3000",
+      "https://dev.d2k0kt672erqlu.amplifyapp.com",
+    ],
     credentials: true,
   }),
 );
@@ -63,11 +66,11 @@ app.use((err, req, res, next) => {
 });
 
 // (server started in start())
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Swagger UI is available at http://localhost:${PORT}/api-docs`);
-});
+// const PORT = process.env.PORT || 8080;
+// server.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+//   console.log(`Swagger UI is available at http://localhost:${PORT}/api-docs`);
+// });
 const baseHandler = serverless(app);
 
 module.exports.handler = async (event, context) => {
