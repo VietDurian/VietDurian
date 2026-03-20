@@ -8,6 +8,7 @@ const BASE_URL = "http://localhost:8080";
 export const usePermissionStore = create((set, get) => ({
   isSubmittingProof: false,
   isApprovedAccount: false,
+  verifyCCCDStatus: "",
 
   // POST: /permission/requests/proofs
   submitProof: async (data) => {
@@ -33,6 +34,21 @@ export const usePermissionStore = create((set, get) => ({
       return isApproved;
     } catch (error) {
       set({ isApprovedAccount: false });
+      return null;
+    }
+  },
+
+  // GET: /permission/my-account/verify-cccd/status - Get CCCD status
+  getVerifyCCCDStatus: async () => {
+    try {
+      const res = await axiosInstance.get(
+        "/permission/my-account/verify-cccd/status",
+      );
+      const status = res?.data?.data || "none";
+      set({ verifyCCCDStatus: status });
+      return status;
+    } catch (error) {
+      set({ verifyCCCDStatus: "none" });
       return null;
     }
   },

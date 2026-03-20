@@ -46,7 +46,7 @@ const register = async (userData) => {
         requested_role: requestedRole,
         description: userData.description || "",
         document: userData.document || "",
-        status: "pending",
+        status: "none",
       });
     }
 
