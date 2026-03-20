@@ -201,7 +201,8 @@ const Router = express.Router();
  * @swagger
  * /permission/requests/{request_id}/confirm:
  *   post:
- *     summary: Approve a permission request and update user role
+ *     summary: Admin xác nhận duyệt proofs của permission request
+ *     description: Admin kiểm tra proofs (cccd_front, cccd_back, certificate) và xác nhận hợp lệ. Không đổi role user, chỉ cập nhật trạng thái request thành approved.
  *     tags: [Permission]
  *     security:
  *       - bearerAuth: []
@@ -213,9 +214,20 @@ const Router = express.Router();
  *           type: string
  *     responses:
  *       200:
- *         description: Account upgrade approved successfully
+ *         description: Permission request approved successfully (proofs verified)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/PermissionRequest'
  *       400:
- *         description: Request already processed or invalid
+ *         description: Request already processed, proofs thiếu hoặc không hợp lệ
  *       404:
  *         description: Request not found
  */

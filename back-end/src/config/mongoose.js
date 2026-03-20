@@ -13,10 +13,9 @@ const connectDB = async () => {
       throw new Error("MONGODB_URI_ATLAS is not defined in .env file");
     }
 
-    // await mongoose.connect(uri, {
-    //   dbName: dbName,
-    // });
-    await mongoose.connect(uri);
+    await mongoose.connect(uri, {
+      dbName: dbName,
+    });
 
     console.log("MongoDB Connected Successfully");
   } catch (error) {

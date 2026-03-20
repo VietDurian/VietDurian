@@ -1,0 +1,60 @@
+actor Farmer
+boundary CreateAgroInputDiaryPage
+control buyingFertilizersController
+participant ":buyingFertilizersService" as buyingAgroInputService
+participant ":buyingFertilizersModel" as buyingAgroInputModel
+database Database
+
+Farmer->CreateAgroInputDiaryPage: 1. Enter data and click "Thêm bản ghi"
+activate Farmer
+activate CreateAgroInputDiaryPage
+
+CreateAgroInputDiaryPage->CreateAgroInputDiaryPage: 2. Check validation (required fields, format)
+activate CreateAgroInputDiaryPage
+space
+deactivate CreateAgroInputDiaryPage
+
+opt Invalid Input or fields left empty
+     CreateAgroInputDiaryPage-->Farmer: 2.1 Show validation errors
+end
+
+CreateAgroInputDiaryPage->buyingFertilizersController: 3. Create agro-input diary request
+activate buyingFertilizersController
+
+buyingFertilizersController->buyingAgroInputService: 4. createBuyingFertilizers({ userId, data })
+activate buyingAgroInputService
+
+buyingAgroInputService->buyingAgroInputModel: 5. save(data)
+activate buyingAgroInputModel
+
+buyingAgroInputModel->Database: 6. Execute query
+activate Database
+Database-->buyingAgroInputModel: 7. Return query result
+deactivate Database
+
+buyingAgroInputModel-->buyingAgroInputService: 8. Return result
+deactivate buyingAgroInputModel
+
+buyingAgroInputService->buyingAgroInputService: 9 Check diary status
+activate buyingAgroInputService
+space
+deactivate buyingAgroInputService
+ 
+alt Create agro-input diary successfully
+buyingAgroInputService-->buyingFertilizersController: 9.2 Return savedDiary
+
+buyingFertilizersController-->CreateAgroInputDiaryPage: 9.2.1 201 Created + data
+CreateAgroInputDiaryPage-->Farmer: 9.2.2 Redirect to season diary list
+
+else Create failed due to server error
+buyingAgroInputService-->buyingFertilizersController: 9.3 Return error
+deactivate buyingAgroInputService
+
+buyingFertilizersController-->CreateAgroInputDiaryPage: 9.3.1 500 Internal Server Error
+deactivate buyingFertilizersController
+
+CreateAgroInputDiaryPage-->Farmer: 9.3.2 Show server error message
+
+deactivate CreateAgroInputDiaryPage
+deactivate Farmer
+end

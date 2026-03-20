@@ -117,39 +117,40 @@ export const usersAPI = {
 //Permission API
 export const permissionAPI = {
   async getAllPermissions(params = {}) {
-    const response = await apiClient.get("permission/requests", { params });
+    const response = await apiClient.get("/permission/requests", { params });
     return response.data;
   },
+
   async getPermissionById(id) {
-    const response = await apiClient.get(`permission/requests/${id}`);
+    const response = await apiClient.get(`/permission/requests/${id}`);
     return response.data;
   },
-  async filterPermissions(filters = {}) {
-    const response = await apiClient.get("permission/requests/filter", {
-      params: filters,
-    });
-    return response.data;
-  },
+
   async searchPermissions(keyword, params = {}) {
-    const response = await apiClient.get("permission/requests/search", {
+    const response = await apiClient.get("/permission/requests/search", {
       params: { keyword, ...params },
     });
     return response.data;
   },
-  async sortPermissions(sortBy, sortOrder = "desc", params = {}) {
-    const response = await apiClient.get("permission/requests/sort", {
-      params: { sortBy, sortOrder, ...params },
+
+  async sortPermissions(verify_cccd = "pending", sort = "desc") {
+    const response = await apiClient.get("/permission/requests/sort", {
+      params: { verify_cccd, sort },
     });
     return response.data;
   },
+
   async rejectPermissionRequest(id, reason) {
-    const response = await apiClient.patch(`permission/requests/${id}/reject`, {
+    const response = await apiClient.patch(`/permission/requests/${id}/reject`, {
       reason,
     });
     return response.data;
+
   },
+
   async approvePermissionRequest(id) {
-    const response = await apiClient.patch(`permission/requests/${id}/confirm`);
+    const response = await apiClient.patch(`/permission/requests/${id}/confirm`);
+    console.log("Response from approvePermissionRequest:", response.data);
     return response.data;
   },
 };

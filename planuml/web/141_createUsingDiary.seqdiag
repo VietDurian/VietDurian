@@ -1,0 +1,61 @@
+actor Farmer
+boundary CreateUseAgroInputDiaryPage
+control useFertilizersController
+participant ":useFertilizersService" as useAgroInputService
+participant ":useFertilizersModel" as useAgroInputModel
+database Database
+
+
+Farmer->CreateUseAgroInputDiaryPage: 1. Enter usage data and click "Thêm bản ghi"
+activate Farmer
+activate CreateUseAgroInputDiaryPage
+
+CreateUseAgroInputDiaryPage->CreateUseAgroInputDiaryPage: 2. Check validation (required fields, dosage, date)
+activate CreateUseAgroInputDiaryPage
+space
+deactivate CreateUseAgroInputDiaryPage
+
+opt Invalid Input or fields left empty
+     CreateUseAgroInputDiaryPage-->Farmer: 2.1 Show validation errors
+end
+
+CreateUseAgroInputDiaryPage->useFertilizersController: 3. Create usage diary request
+activate useFertilizersController
+
+useFertilizersController->useAgroInputService: 4. createUseFertilizers({ userId, data })
+activate useAgroInputService
+
+useAgroInputService->useAgroInputModel: 5. save(data)
+activate useAgroInputModel
+
+useAgroInputModel->Database: 6. Execute query
+activate Database
+Database-->useAgroInputModel: 7. Return query result
+deactivate Database
+
+useAgroInputModel-->useAgroInputService: 8. Return result
+deactivate useAgroInputModel
+
+useAgroInputService->useAgroInputService: 9 Check usage diary status
+activate useAgroInputService
+space
+deactivate useAgroInputService
+ 
+alt Create usage diary successfully
+useAgroInputService-->useFertilizersController: 9.1 Return savedDiary
+deactivate useAgroInputService
+
+useFertilizersController-->CreateUseAgroInputDiaryPage: 9.1.1 201 Created + data
+CreateUseAgroInputDiaryPage-->Farmer: 9.1.2 Redirect to season diary list
+
+else Create failed due to server error
+useAgroInputService-->useFertilizersController: 9.2 Return error
+deactivate useAgroInputService
+
+useFertilizersController-->CreateUseAgroInputDiaryPage: 9.2.1 500 Internal Server Error
+deactivate useFertilizersController
+
+CreateUseAgroInputDiaryPage-->Farmer: 9.2.2 Show server error message
+deactivate CreateUseAgroInputDiaryPage
+deactivate Farmer
+end

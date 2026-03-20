@@ -5,34 +5,46 @@ import { proofUploadService } from "@/services/proofUploadService.js";
 const getPermissionRequests = async (req, res, next) => {
     try {
         const requests = await permissionService.getPermissionRequests();
-        res.status(200).json({
+        // Nếu muốn log, log requests, không phải results
+        // console.log("Permission requests list:", requests);
+        return res.status(200).json({
             code: 200,
             message: "Permission requests retrieved successfully",
             data: requests,
         });
     } catch (error) {
-        next(error);
+        return next(error);
     }
 };
 
 const getPermissionRequestDetail = async (req, res, next) => {
     try {
         const { request_id } = req.params;
-        const request = await permissionService.getPermissionRequestDetail(
-            request_id
-        );
+        const request = await permissionService.getPermissionRequestDetail(request_id);
         if (!request) {
-            return res
-                .status(404)
-                .json({ code: 404, message: "Permission request not found" });
+            return res.status(404).json({ code: 404, message: "Permission request not found" });
         }
-        res.status(200).json({
-            code: 200,
-            message: "Permission request detail retrieved successfully",
-            data: request,
+        return res.status(200).json({
+            success: true,
+            data: {
+                id: request._id,
+                user_name: request.user_id?.full_name || "",
+                email: request.user_id?.email || "",
+                phone: request.user_id?.phone || "",
+                avatar: request.user_id?.avatar || "",
+                role: request.user_id?.role || "",
+                requestRole: request.requested_role || "",
+                description: request.description || "",
+                document: request.document || [],
+                proofs: request.proofs || [],
+                verify_cccd: request.verify_cccd || "pending",
+                rejection_reason: request.rejection_reason || "",
+                created_at: request.created_at,
+                updated_at: request.updated_at,
+            },
         });
     } catch (error) {
-        next(error);
+        return next(error);
     }
 };
 
@@ -43,13 +55,13 @@ const searchPermissionRequests = async (req, res, next) => {
             status,
             keyword,
         });
-        res.status(200).json({
+        return res.status(200).json({
             code: 200,
             message: "Permission requests searched successfully",
             data: requests,
         });
     } catch (error) {
-        next(error);
+        return next(error);
     }
 };
 
@@ -60,13 +72,13 @@ const sortPermissionRequests = async (req, res, next) => {
             status,
             sort,
         });
-        res.status(200).json({
+        return res.status(200).json({
             code: 200,
             message: "Permission requests sorted successfully",
             data: requests,
         });
     } catch (error) {
-        next(error);
+        return next(error);
     }
 };
 
@@ -78,13 +90,13 @@ const confirmAccount = async (req, res, next) => {
             request_id,
             adminId
         );
-        res.status(200).json({
+        return res.status(200).json({
             code: 200,
-            message: "Account upgrade approved successfully",
+            message: "Permission request approved successfully (proofs verified)",
             data: result,
         });
     } catch (error) {
-        next(error);
+        return next(error);
     }
 };
 
@@ -98,42 +110,40 @@ const rejectAccount = async (req, res, next) => {
             adminId,
             reason
         );
-        res.status(200).json({
+        return res.status(200).json({
             code: 200,
             message: "Account upgrade rejected successfully",
             data: result,
         });
     } catch (error) {
-        next(error);
+        return next(error);
     }
 };
 const submitProofs = async (req, res, next) => {
     try {
         const userId = req.user._id;
         const { proofs } = req.body;
-
         const result = await permissionService.submitProofs(userId, proofs);
-
-        res.status(200).json({
+        return res.status(200).json({
             code: 200,
             message: "Proofs submitted successfully",
             data: result,
         });
     } catch (err) {
-        next(err);
+        return next(err);
     }
 };
 const isMyAccountApproved = async (req, res, next) => {
     try {
         const userId = req.user._id;
         const result = await permissionService.isMyAccountApproved(userId);
-        res.status(200).json({
+        return res.status(200).json({
             code: 200,
             message: "Account approval status retrieved successfully",
             data: result,
         });
     } catch (err) {
-        next(err);
+        return next(err);
     }
 };
 
@@ -170,13 +180,13 @@ const uploadProof = async (req, res, next) => {
             proofType,
         );
 
-        res.status(200).json({
+        return res.status(200).json({
             code: 200,
             message: "Proof file uploaded successfully",
             data: uploadResult,
         });
     } catch (err) {
-        next(err);
+        return next(err);
     }
 };
 

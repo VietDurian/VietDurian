@@ -1,9 +1,4 @@
-@startuml 124_Assistant
-skinparam shadowing false
-skinparam sequenceArrowThickness 1
-hide footbox
-
-actor User as "User"
+actor "Users" as User
 participant "HomePage" as UI
 participant "Route Handler" as API
 participant "Google SDK" as SDK
@@ -14,6 +9,7 @@ activate User
 activate UI
 UI -> UI : 2. Show chat widget
 activate UI
+space
 deactivate UI
 
 opt Fields left empty
@@ -29,27 +25,30 @@ API -> Gemini : 5. Fetch available models list (REST API)
 activate Gemini
 Gemini --> API : 6. Return listJson.models
 deactivate Gemini
+API -> API : 7. Check for appropriate model based on input (message, history, image)
+activate API
+space
+deactivate API
 
 alt No appropriate AI model found
-    API --> UI : 6.1. Return 502 (Error: No model available)
-    UI --> User : 6.1.1 Show "The service is currently unavailable" error
+    API --> UI : 7.1. Return 502 (Error: No model available)
+    UI --> User : 7.1.1 Show "The service is currently unavailable" error
 else Model found
-    API -> SDK : 6.2. model.generateContent({contents, generationConfig})
+    API -> SDK : 7.2. model.generateContent({contents, generationConfig})
     activate SDK
 
-    SDK -> Gemini : 6.2.1. Send Request
+    SDK -> Gemini : 7.2.1. Send Request
     activate Gemini
-    Gemini --> SDK : 6.2.2. Return Result Object
+    Gemini --> SDK : 7.2.2. Return Result Object
     deactivate Gemini
 
-    SDK --> API : 6.2.3. Return Response Text
+    SDK --> API : 7.2.3. Return Response Text
     deactivate SDK
 
-    API --> UI : 6.2.4. Return JSON {success: true, data: text}
+    API --> UI : 7.2.4. Return JSON {success: true, data: text}
     deactivate API
 
-    UI --> User : 6.2.5. Display Response (Plain Text)
+    UI --> User : 7.2.5. Display Response (Plain Text)
     deactivate UI
     deactivate User
 end
-@enduml

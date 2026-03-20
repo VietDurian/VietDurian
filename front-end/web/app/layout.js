@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "sonner";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,7 +25,6 @@ export default function RootLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Check user's authentication
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
@@ -39,17 +39,21 @@ export default function RootLayout({ children }) {
           clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
         >
           <Toaster
-            expand={true} // show all toasts expanded
-            richColors // enable semantic colors (green success, red error, etc.)
-            closeButton // show X button on each toast
-            duration={4000} // default duration in ms
-            visibleToasts={3} // max toasts visible at once
-            offset="24px" // distance from screen edge
-            gap={8} // gap between toasts
-            theme="light" // light | dark | system
-            invert // invert colors
+            expand={true}
+            richColors
+            closeButton
+            duration={4000}
+            visibleToasts={3}
+            offset="24px"
+            gap={8}
+            theme="light"
+            invert
           />
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <LanguageProvider>
+              {children}
+            </LanguageProvider>
+          </AuthProvider>
         </GoogleOAuthProvider>
       </body>
     </html>

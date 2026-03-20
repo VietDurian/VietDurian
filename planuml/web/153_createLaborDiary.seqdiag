@@ -1,0 +1,62 @@
+actor Farmer
+boundary CreateLaborDiaryPage
+control laborCostController
+participant ":laborCostService" as laborService
+participant ":laborCostModel" as laborModel
+database Database
+
+
+Farmer->CreateLaborDiaryPage: 1. Enter labor data and click "Thêm bản ghi"
+activate Farmer
+activate CreateLaborDiaryPage
+
+CreateLaborDiaryPage->CreateLaborDiaryPage: 2. Check validation (date, quantity, working time, cost)
+activate CreateLaborDiaryPage
+space
+deactivate CreateLaborDiaryPage
+
+opt Invalid Input or fields left empty
+    CreateLaborDiaryPage-->Farmer: 2.1 Show validation errors
+end
+
+CreateLaborDiaryPage->laborCostController: 3. Create labor diary request
+activate laborCostController
+
+laborCostController->laborService: 4. createLaborCosts({ userId, data })
+activate laborService
+
+laborService->laborModel: 5. save(data)
+activate laborModel
+
+laborModel->Database: 6. Execute query
+activate Database
+Database-->laborModel: 7. Return query result
+deactivate Database
+
+laborModel-->laborService: 8. Return result
+deactivate laborModel
+
+laborService->laborService: 9 Check labor diary status
+activate laborService
+space
+deactivate laborService
+
+alt Create labor diary successfully
+    laborService-->laborCostController: 9.1 Return savedDiary
+    deactivate laborService
+
+    laborCostController-->CreateLaborDiaryPage: 9.1.1 201 Created + data
+    CreateLaborDiaryPage-->Farmer: 9.1.2 Redirect to season diary list
+
+else Create failed due to server error
+    laborService-->laborCostController: 9.2 Return error
+    deactivate laborService
+
+    laborCostController-->CreateLaborDiaryPage: 9.2.1 500 Internal Server Error
+    deactivate laborCostController
+
+    CreateLaborDiaryPage-->Farmer: 9.2.2 Show server error message
+    
+deactivate CreateLaborDiaryPage
+deactivate Farmer
+end
