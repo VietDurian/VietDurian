@@ -8,6 +8,7 @@ import { profileAPI, authAPI } from "@/lib/api";
 import FavoritePostsModal from "@/components/FavoritePostsModal";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
+import AiFloatingButton from "@/components/AiFloatingButton";
 
 const TabButton = ({ icon: Icon, label, active, onClick }) => (
   <button onClick={onClick} className={`relative flex items-center gap-3 px-6 py-4 rounded-xl transition-all duration-300 ${active ? "bg-emerald-500 text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"}`}>
@@ -419,6 +420,8 @@ export default function ProfileDetails() {
           </div>
         </div>
       )}
+
+      <AiFloatingButton />
 
       <style jsx>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

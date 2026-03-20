@@ -1,0 +1,59 @@
+actor "Users" as User
+boundary "ChatPage" as View
+control "messageController" as Controller
+participant ":messageService" as Service
+participant ":conversationModel" as Model
+database Database
+
+
+User -> View : 1. Click "Chat" icon on product/post
+activate View
+activate User
+
+View -> Controller : 2. Create/Get conversation request
+activate Controller
+
+Controller -> Service : 3. createOrGetConversation(senderId, receiverId)
+activate Service
+
+Service -> Model : 4. findConversation(senderId, receiverId)
+activate Model
+
+Model -> Database : 5. Execute query
+activate Database
+Database --> Model : 6. Return result
+deactivate Database
+
+
+alt Conversation already exists
+    Model --> Service : 6.1. Return existing conversation
+
+    Service --> Controller : 6.1.1 Return conversation
+    Controller --> View : 6.1.2 Open chat box
+    View --> User : 6.1.3 Display messages
+
+else Create a new conversation
+    Model --> Service : 6.2. No conversation found
+    deactivate Model
+
+    Service -> Model : 6.2.1 createConversation(data)
+    activate Model
+
+    Model -> Database : 6.2.2 Save new conversation
+    activate Database
+    Database --> Model : 6.2.3 Return result
+    deactivate Database
+
+    Model --> Service : 6.2.4 Return new conversation
+    deactivate Model
+
+    Service --> Controller : 6.2.5 Return new conversation
+    deactivate Service
+
+    Controller --> View : 6.2.6 Open new chat box
+    deactivate Controller
+
+    View --> User : 6.2.7 Display empty chat
+    deactivate View
+    deactivate User
+end
