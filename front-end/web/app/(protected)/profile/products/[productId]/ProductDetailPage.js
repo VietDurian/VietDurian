@@ -16,6 +16,7 @@ import {
   User,
 } from "lucide-react";
 import { useProductStore } from "../../../../../store/useProductStore";
+import { useLanguage } from "@/context/LanguageContext";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -86,6 +87,8 @@ function DetailRow({ icon: Icon, label, value, valueClass = "text-gray-700" }) {
 export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const { t } = useLanguage();
+
   const productId = useMemo(() => {
     const id = params?.productId;
     return Array.isArray(id) ? id[0] : id;
@@ -101,7 +104,7 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (!productId) return;
-    fetchProductDetail(productId).catch(() => {});
+    fetchProductDetail(productId).catch(() => { });
   }, [productId, fetchProductDetail]);
 
   const primaryImage = useMemo(() => {
@@ -124,19 +127,19 @@ export default function ProductDetailPage() {
       {
         icon: Star,
         iconColor: "text-yellow-500",
-        label: "Đánh giá",
+        label: t("product_detail_stat_rating"),
         value: ratingValue,
-        sub: "Trên 5 sao",
+        sub: t("product_detail_stat_rating_sub"),
       },
       {
         icon: Eye,
         iconColor: "text-blue-500",
-        label: "Lượt xem",
+        label: t("product_detail_stat_views"),
         value: productDetail?.view_count ?? 0,
-        sub: "Tổng lượt xem",
+        sub: t("product_detail_stat_views_sub"),
       },
     ],
-    [productDetail, ratingValue],
+    [productDetail, ratingValue, t],
   );
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -155,7 +158,7 @@ export default function ProductDetailPage() {
   if (isProductDetailsLoading && !productDetail) {
     return (
       <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center text-sm text-gray-500">
-        Loading product...
+        {t("product_detail_loading")}
       </div>
     );
   }
@@ -163,7 +166,7 @@ export default function ProductDetailPage() {
   if (!productDetail) {
     return (
       <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center text-sm text-gray-500">
-        Product not found.
+        {t("product_detail_not_found")}
       </div>
     );
   }
@@ -176,15 +179,16 @@ export default function ProductDetailPage() {
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
             <h2 className="text-xl font-bold text-gray-900 mb-2">
-              Xác nhận xóa sản phẩm
+              {t("product_detail_delete_title")}
             </h2>
             <p className="text-gray-600 mb-4">
-              Nhập tên sản phẩm <b>{productDetail?.name}</b> để xác nhận xóa.
+              {t("product_detail_delete_desc")} <b>{productDetail?.name}</b>{" "}
+              {t("product_detail_delete_desc2")}
             </p>
             <input
               value={confirmName}
               onChange={(e) => setConfirmName(e.target.value)}
-              placeholder="Nhập tên sản phẩm..."
+              placeholder={t("product_detail_delete_placeholder")}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-red-500 outline-none"
             />
             <div className="flex justify-end gap-3">
@@ -195,20 +199,21 @@ export default function ProductDetailPage() {
                 }}
                 className="cursor-pointer px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
               >
-                Hủy
+                {t("product_detail_delete_cancel")}
               </button>
               <button
                 disabled={
                   confirmName !== productDetail?.name || isProductDeleting
                 }
                 onClick={handleDelete}
-                className={`cursor-pointer px-4 py-2 rounded-lg text-white ${
-                  confirmName === productDetail?.name
+                className={`cursor-pointer px-4 py-2 rounded-lg text-white ${confirmName === productDetail?.name
                     ? "bg-red-600 hover:bg-red-700"
                     : "bg-red-300 cursor-not-allowed"
-                }`}
+                  }`}
               >
-                {isProductDeleting ? "Đang xóa..." : "Xóa vĩnh viễn"}
+                {isProductDeleting
+                  ? t("product_detail_deleting")
+                  : t("product_detail_delete_confirm")}
               </button>
             </div>
           </div>
@@ -221,7 +226,9 @@ export default function ProductDetailPage() {
           className="absolute right-10 top-25 flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <Trash2 size={13} />
-          {isProductDeleting ? "Đang xóa..." : "Xóa"}
+          {isProductDeleting
+            ? t("product_detail_deleting")
+            : t("product_detail_delete_btn")}
         </button>
 
         {/* Main content */}
@@ -275,7 +282,7 @@ export default function ProductDetailPage() {
               {/* Description */}
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Mô tả sản phẩm
+                  {t("product_detail_desc_label")}
                 </p>
                 <p className="text-sm text-gray-600">{p.description}</p>
               </div>
@@ -283,37 +290,37 @@ export default function ProductDetailPage() {
               {/* Product Details */}
               <div className="pt-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Chi tiết sản phẩm{" "}
+                  {t("product_detail_info_label")}
                 </p>
                 <div className="divide-y divide-gray-100">
                   <DetailRow
                     icon={Tag}
-                    label="Thể loại"
+                    label={t("product_detail_category")}
                     value={p.type_id?.name || "N/A"}
                   />
                   <DetailRow
                     icon={MapPin}
-                    label="Xuất xứ"
+                    label={t("product_detail_origin")}
                     value={p.origin || "-"}
                   />
                   <DetailRow
                     icon={Weight}
-                    label="Khối lượng"
+                    label={t("product_detail_weight")}
                     value={formatWeight(p.weight)}
                   />
                   <DetailRow
                     icon={Calendar}
-                    label="Ngày bắt đầu"
+                    label={t("product_detail_start_date")}
                     value={formatDate(p.harvest_start_date)}
                   />
                   <DetailRow
                     icon={Calendar}
-                    label="Ngày kết thúc"
+                    label={t("product_detail_end_date")}
                     value={formatDate(p.harvest_end_date)}
                   />
                   <DetailRow
                     icon={Tag}
-                    label="Trạng thái"
+                    label={t("product_detail_status")}
                     value={p.status || "-"}
                     valueClass={
                       p.status === "active" ? "text-green-600" : "text-gray-500"
@@ -326,7 +333,7 @@ export default function ProductDetailPage() {
             {/* Seller Information */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                Thông tin người bán
+                {t("product_detail_seller_label")}
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
@@ -355,13 +362,13 @@ export default function ProductDetailPage() {
             {/* Timeline */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                Dòng thời gian
+                {t("product_detail_timeline_label")}
               </p>
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2 text-gray-500">
                     <Calendar size={13} className="text-gray-400" />
-                    Ngày tạo
+                    {t("product_detail_created_at")}
                   </span>
                   <span className="text-gray-700 font-medium">
                     {formatDate(p.created_at)}
@@ -370,7 +377,7 @@ export default function ProductDetailPage() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2 text-gray-500">
                     <Calendar size={13} className="text-gray-400" />
-                    Ngày cập nhật cuối cùng
+                    {t("product_detail_updated_at")}
                   </span>
                   <span className="text-gray-700 font-medium">
                     {formatDate(p.updated_at)}

@@ -6,9 +6,11 @@ import { useProductStore } from "@/store/useProductStore";
 import { useProductStore as useTypeProductStore } from "@/store/useTypeProduct";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function CreateProduct() {
   const router = useRouter();
+  const { t } = useLanguage();
   const { createProduct, isProductCreating } = useProductStore();
   const { types, fetchTypes, isTypesLoading } = useTypeProductStore();
   const { authUser } = useAuthStore();
@@ -78,17 +80,17 @@ export default function CreateProduct() {
     setError("");
 
     if (!formData.seasonDiaryId) {
-      setError("Vui lòng chọn mùa vụ");
+      setError(t("edit_product_err_season"));
       return;
     }
 
     if (formData.harvestEndDate < formData.harvestStartDate) {
-      setError("Ngày kết thúc không được trước ngày bắt đầu");
+      setError(t("edit_product_err_date"));
       return;
     }
 
     if (!formData.images.length) {
-      setError("Vui lòng chọn ảnh sản phẩm");
+      setError(t("edit_product_err_image"));
       return;
     }
 
@@ -105,7 +107,7 @@ export default function CreateProduct() {
       await createProduct(payload);
       router.push("/profile/products");
     } catch (err) {
-      setError(err?.response?.data?.message || "Không thể tạo sản phẩm");
+      setError(err?.response?.data?.message || t("create_product_err_create"));
     }
   };
 
@@ -143,7 +145,7 @@ export default function CreateProduct() {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      setError("Ảnh quá lớn. Tối đa 5MB");
+      setError(t("edit_product_err_image_size"));
       return;
     }
 
@@ -172,10 +174,10 @@ export default function CreateProduct() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Tạo sản phẩm mới
+                {t("create_product_title")}
               </h1>
               <p className="text-gray-600 text-sm">
-                Thêm một sản phẩm vào kho sản phẩm của bạn
+                {t("create_product_subtitle")}
               </p>
             </div>
           </div>
@@ -193,14 +195,14 @@ export default function CreateProduct() {
         <form onSubmit={handleSubmit} className="">
           {/* First block */}
           <div className="bg-white rounded-xl shadow-sm p-8 pb-2">
-            <p className="font-bold mb-5">Thông tin cơ bản</p>
+            <p className="font-bold mb-5">{t("edit_product_basic_info")}</p>
             <div className="space-y-6">
               <div>
                 <label
                   htmlFor="seasonDiaryId"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  Chọn mùa vụ <span className="text-red-500">*</span>
+                  {t("edit_product_season")} <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="seasonDiaryId"
@@ -210,19 +212,19 @@ export default function CreateProduct() {
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors bg-white"
                 >
-                  <option value="">Chọn mùa vụ</option>
+                  <option value="">{t("edit_product_season_placeholder")}</option>
                   {seasonDiaries?.map((season, index) => (
                     <option key={season?._id} value={season?._id}>
                       {season?.garden_name ||
                         season?.name ||
                         season?.planting_area_code ||
-                        `Mùa vụ ${index + 1}`}
+                        `${t("edit_product_season_fallback")} ${index + 1}`}
                     </option>
                   ))}
                 </select>
                 {isSeasonDiariesLoading ? (
                   <p className="mt-1 text-xs text-gray-500">
-                    Đang tải mùa vụ...
+                    {t("edit_product_season_loading")}
                   </p>
                 ) : null}
               </div>
@@ -233,7 +235,7 @@ export default function CreateProduct() {
                   htmlFor="name"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  Tên sản phẩm <span className="text-red-500">*</span>
+                  {t("edit_product_name")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -242,7 +244,7 @@ export default function CreateProduct() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  placeholder="ví dụ: Sầu riêng"
+                  placeholder={t("edit_product_name_placeholder")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
                 />
               </div>
@@ -253,7 +255,7 @@ export default function CreateProduct() {
                   htmlFor="description"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  Mô tả
+                  {t("edit_product_desc")}
                 </label>
                 <textarea
                   id="description"
@@ -262,7 +264,7 @@ export default function CreateProduct() {
                   onChange={handleChange}
                   required
                   rows={4}
-                  placeholder="Mô tả khu vườn của bạn..."
+                  placeholder={t("edit_product_desc_placeholder")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors resize-none"
                 />
               </div>
@@ -276,7 +278,7 @@ export default function CreateProduct() {
                   htmlFor="price"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  Giá (VND) <span className="text-red-500">*</span>
+                  {t("edit_product_price")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -286,7 +288,7 @@ export default function CreateProduct() {
                   onChange={handleChange}
                   min={0}
                   required
-                  placeholder="ví dụ: 120000"
+                  placeholder={t("edit_product_price_placeholder")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
                 />
               </div>
@@ -297,7 +299,7 @@ export default function CreateProduct() {
                   htmlFor="weight"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  Cân nặng (KG) <span className="text-red-500">*</span>
+                  {t("edit_product_weight")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -307,7 +309,7 @@ export default function CreateProduct() {
                   onChange={handleChange}
                   min={0}
                   required
-                  placeholder="ví dụ: 2"
+                  placeholder={t("edit_product_weight_placeholder")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
                 />
               </div>
@@ -318,7 +320,7 @@ export default function CreateProduct() {
                   htmlFor="origin"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  Xuất xứ <span className="text-red-500">*</span>
+                  {t("edit_product_origin")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -327,7 +329,7 @@ export default function CreateProduct() {
                   value={formData.origin}
                   onChange={handleChange}
                   required
-                  placeholder="ví dụ: Cần Thơ"
+                  placeholder={t("edit_product_origin_placeholder")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
                 />
               </div>
@@ -338,7 +340,7 @@ export default function CreateProduct() {
                   htmlFor="typeId"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  Loại sản phẩm <span className="text-red-500">*</span>
+                  {t("edit_product_type")} <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="typeId"
@@ -348,7 +350,7 @@ export default function CreateProduct() {
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors bg-white"
                 >
-                  <option value="">Chọn loại sản phẩm</option>
+                  <option value="">{t("edit_product_type_placeholder")}</option>
                   {types?.map((type) => (
                     <option key={type?._id} value={type?._id}>
                       {type?.name}
@@ -357,7 +359,7 @@ export default function CreateProduct() {
                 </select>
                 {isTypesLoading ? (
                   <p className="mt-1 text-xs text-gray-500">
-                    Đang tải loại sản phẩm...
+                    {t("edit_product_type_loading")}
                   </p>
                 ) : null}
               </div>
@@ -366,7 +368,7 @@ export default function CreateProduct() {
 
           {/* Second block */}
           <div className="bg-white rounded-xl shadow-sm p-8 pb-2 mt-5">
-            <p className="font-bold mb-5">Ngày thu hoạch</p>
+            <p className="font-bold mb-5">{t("edit_product_harvest")}</p>
             {/* Harvest date */}
             <div className="grid grid-cols-2 gap-5 my-5">
               {/* Start date */}
@@ -375,7 +377,7 @@ export default function CreateProduct() {
                   htmlFor="harvestStartDate"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  Ngày bắt đầu <span className="text-red-500">*</span>
+                  {t("edit_product_start_date")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -394,7 +396,7 @@ export default function CreateProduct() {
                   htmlFor="harvestEndDate"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  Ngày kết thúc <span className="text-red-500">*</span>
+                  {t("edit_product_end_date")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -413,7 +415,7 @@ export default function CreateProduct() {
           {/* Image Upload */}
           <div className="bg-white rounded-xl shadow-sm p-8 mt-5 space-y-2">
             <label className="text-sm font-semibold text-gray-700">
-              Ảnh <span className="text-red-500">*</span>
+              {t("edit_product_image")} <span className="text-red-500">*</span>
             </label>
 
             {!imagePreview ? (
@@ -423,10 +425,10 @@ export default function CreateProduct() {
               >
                 <ImageIcon className="mx-auto text-gray-400 mb-2" size={32} />
                 <p className="text-sm font-medium text-gray-600">
-                  Nhấp để chọn ảnh
+                  {t("edit_product_image_click")}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  PNG, JPG, GIF tối đa 5MB
+                  {t("edit_product_image_hint")}
                 </p>
               </div>
             ) : (
@@ -466,7 +468,7 @@ export default function CreateProduct() {
               className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
             >
               <Check className="w-4 h-4" />
-              {isProductCreating ? "Đang tạo..." : "Tạo sản phẩm"}
+              {isProductCreating ? t("create_product_creating") : t("create_product_submit")}
             </button>
             <button
               type="button"
@@ -474,7 +476,7 @@ export default function CreateProduct() {
               className="cursor-pointer inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors border border-gray-300"
             >
               <X className="w-4 h-4" />
-              Hủy
+              {t("edit_product_cancel")}
             </button>
           </div>
         </form>
