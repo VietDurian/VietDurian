@@ -215,9 +215,8 @@ export default function NotificationPost({ user }) {
 									<div
 										key={notif.id}
 										onClick={() => handleNotificationClick(notif)}
-										className={`group flex cursor-pointer items-start gap-3 p-4 transition hover:bg-gray-50 ${
-											!notif.read ? "bg-emerald-50" : ""
-										}`}
+										className={`group flex cursor-pointer items-start gap-3 p-4 transition hover:bg-gray-50 ${!notif.read ? "bg-emerald-50" : ""
+											}`}
 									>
 										{notif.sender?.avatar ? (
 											<div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full">
@@ -235,11 +234,10 @@ export default function NotificationPost({ user }) {
 										<div className="min-w-0 flex-1">
 											<div className="flex items-start justify-between gap-2">
 												<p
-													className={`text-sm ${
-														!notif.read
+													className={`text-sm ${!notif.read
 															? "font-semibold text-gray-800"
 															: "text-gray-700"
-													}`}
+														}`}
 												>
 													{notif.message}
 												</p>

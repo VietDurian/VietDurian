@@ -13,8 +13,8 @@ const options = {
 		},
 		servers: [
 			{
-				url: 'http://localhost:8080/api/v1',
-				description: 'Development server',
+				url: '../api/v1',
+				description: 'Current server',
 			},
 		],
 		components: {

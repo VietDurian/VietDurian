@@ -1,7 +1,7 @@
 {
-  "C:\\Users\\ADMIN\\Desktop\\VietDurian\\back-end\\serverless.yml": {
+  "C:\\Users\\ADMIN\\Documents\\GitHub\\VietDurian\\back-end\\serverless.yml": {
     "versionFramework": "4.33.0",
-    "servicePath": "C:\\Users\\ADMIN\\Desktop\\VietDurian\\back-end\\serverless.yml",
+    "servicePath": "C:\\Users\\ADMIN\\Documents\\GitHub\\VietDurian\\back-end\\serverless.yml",
     "serviceConfigFileName": "serverless.yml",
     "service": {
       "service": "vietdurian-nodejs-service",
@@ -13,6 +13,13 @@
         "memorySize": 1024,
         "stage": "prod",
         "region": "ap-southeast-1",
+        "environment": {
+          "MONGODB_URI_ATLAS": "mongodb+srv://ChanPotter:Password123!@cluster0.jdsmxen.mongodb.net/?appName=Cluster0",
+          "MONGODB_URI": "mongodb://localhost:27017",
+          "DATABASE_NAME": "VietDurian_DB",
+          "JWT_SECRET": "<REDACTED>",
+          "JWT_EXPIRES_IN": "7d"
+        },
         "iam": {
           "role": "arn:aws:iam::867490540757:role/lambda_role"
         },
@@ -32,27 +39,36 @@
               "Properties": {
                 "Code": {
                   "S3Bucket": "serverless-framework-deployments-ap-southeast-1-1365b344-b52f",
-                  "S3Key": "serverless/vietdurian-nodejs-service/prod/1773999717205-2026-03-20T09:41:57.205Z/vietdurian-nodejs-service.zip"
+                  "S3Key": "serverless/vietdurian-nodejs-service/prod/1774088153635-2026-03-21T10:15:53.635Z/vietdurian-nodejs-service.zip"
                 },
                 "Handler": "src/server.handler",
                 "Runtime": "nodejs22.x",
                 "FunctionName": "vietdurian-nodejs-service-prod-app",
                 "MemorySize": 1024,
                 "Timeout": 900,
+                "Environment": {
+                  "Variables": {
+                    "MONGODB_URI_ATLAS": "mongodb+srv://ChanPotter:Password123!@cluster0.jdsmxen.mongodb.net/?appName=Cluster0",
+                    "MONGODB_URI": "mongodb://localhost:27017",
+                    "DATABASE_NAME": "VietDurian_DB",
+                    "JWT_SECRET": "<REDACTED>",
+                    "JWT_EXPIRES_IN": "7d"
+                  }
+                },
                 "Role": "arn:aws:iam::867490540757:role/lambda_role"
               },
               "DependsOn": [
                 "AppLogGroup"
               ]
             },
-            "AppLambdaVersionn59azp2shjQ4u4dX3WEqORlDZZeLQjycYXCNc85AnE": {
+            "AppLambdaVersionVmPxf88UQlGBndZ6x5O5l3WgdaT5bT5pbtolCN2uag": {
               "Type": "AWS::Lambda::Version",
               "DeletionPolicy": "Retain",
               "Properties": {
                 "FunctionName": {
                   "Ref": "AppLambdaFunction"
                 },
-                "CodeSha256": "XJ+yB9xETAZVClZJcOMjhvUJSs7AjV4HSoNCA0RR7YY="
+                "CodeSha256": "0Xp5v7OTb1Y2RqgnXbRN4DuAUAbYkvKRZN2o0lQA/Ao="
               }
             },
             "ApiGatewayRestApi": {
@@ -177,7 +193,7 @@
                 "AppLambdaPermissionApiGateway"
               ]
             },
-            "ApiGatewayDeployment1773999706972": {
+            "ApiGatewayDeployment1774088144376": {
               "Type": "AWS::ApiGateway::Deployment",
               "Properties": {
                 "RestApiId": {
@@ -238,7 +254,7 @@
             "AppLambdaFunctionQualifiedArn": {
               "Description": "Current Lambda function version",
               "Value": {
-                "Ref": "AppLambdaVersionn59azp2shjQ4u4dX3WEqORlDZZeLQjycYXCNc85AnE"
+                "Ref": "AppLambdaVersionVmPxf88UQlGBndZ6x5O5l3WgdaT5bT5pbtolCN2uag"
               },
               "Export": {
                 "Name": "sls-vietdurian-nodejs-service-prod-AppLambdaFunctionQualifiedArn"
@@ -280,6 +296,15 @@
       "plugins": [
         "serverless-esbuild"
       ],
+      "package": {
+        "patterns": [
+          "src/routes/**",
+          "src/model/**",
+          "src/config/swagger.js"
+        ],
+        "artifactsS3KeyDirname": "serverless/vietdurian-nodejs-service/prod/code-artifacts",
+        "deploymentBucket": "serverless-framework-deployments-ap-southeast-1-1365b344-b52f"
+      },
       "functions": {
         "app": {
           "handler": "src/server.handler",
@@ -297,7 +322,7 @@
           "timeout": 900,
           "runtime": "nodejs22.x",
           "vpc": {},
-          "versionLogicalId": "AppLambdaVersionn59azp2shjQ4u4dX3WEqORlDZZeLQjycYXCNc85AnE"
+          "versionLogicalId": "AppLambdaVersionVmPxf88UQlGBndZ6x5O5l3WgdaT5bT5pbtolCN2uag"
         }
       },
       "custom": {
@@ -325,6 +350,13 @@
       "memorySize": 1024,
       "stage": "prod",
       "region": "ap-southeast-1",
+      "environment": {
+        "MONGODB_URI_ATLAS": "mongodb+srv://ChanPotter:Password123!@cluster0.jdsmxen.mongodb.net/?appName=Cluster0",
+        "MONGODB_URI": "mongodb://localhost:27017",
+        "DATABASE_NAME": "VietDurian_DB",
+        "JWT_SECRET": "<REDACTED>",
+        "JWT_EXPIRES_IN": "7d"
+      },
       "iam": {
         "role": "arn:aws:iam::867490540757:role/lambda_role"
       },
@@ -344,27 +376,36 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-ap-southeast-1-1365b344-b52f",
-                "S3Key": "serverless/vietdurian-nodejs-service/prod/1773999717205-2026-03-20T09:41:57.205Z/vietdurian-nodejs-service.zip"
+                "S3Key": "serverless/vietdurian-nodejs-service/prod/1774088153635-2026-03-21T10:15:53.635Z/vietdurian-nodejs-service.zip"
               },
               "Handler": "src/server.handler",
               "Runtime": "nodejs22.x",
               "FunctionName": "vietdurian-nodejs-service-prod-app",
               "MemorySize": 1024,
               "Timeout": 900,
+              "Environment": {
+                "Variables": {
+                  "MONGODB_URI_ATLAS": "mongodb+srv://ChanPotter:Password123!@cluster0.jdsmxen.mongodb.net/?appName=Cluster0",
+                  "MONGODB_URI": "mongodb://localhost:27017",
+                  "DATABASE_NAME": "VietDurian_DB",
+                  "JWT_SECRET": "<REDACTED>",
+                  "JWT_EXPIRES_IN": "7d"
+                }
+              },
               "Role": "arn:aws:iam::867490540757:role/lambda_role"
             },
             "DependsOn": [
               "AppLogGroup"
             ]
           },
-          "AppLambdaVersionn59azp2shjQ4u4dX3WEqORlDZZeLQjycYXCNc85AnE": {
+          "AppLambdaVersionVmPxf88UQlGBndZ6x5O5l3WgdaT5bT5pbtolCN2uag": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "AppLambdaFunction"
               },
-              "CodeSha256": "XJ+yB9xETAZVClZJcOMjhvUJSs7AjV4HSoNCA0RR7YY="
+              "CodeSha256": "0Xp5v7OTb1Y2RqgnXbRN4DuAUAbYkvKRZN2o0lQA/Ao="
             }
           },
           "ApiGatewayRestApi": {
@@ -489,7 +530,7 @@
               "AppLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1773999706972": {
+          "ApiGatewayDeployment1774088144376": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -550,7 +591,7 @@
           "AppLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "AppLambdaVersionn59azp2shjQ4u4dX3WEqORlDZZeLQjycYXCNc85AnE"
+              "Ref": "AppLambdaVersionVmPxf88UQlGBndZ6x5O5l3WgdaT5bT5pbtolCN2uag"
             },
             "Export": {
               "Name": "sls-vietdurian-nodejs-service-prod-AppLambdaFunctionQualifiedArn"
@@ -595,7 +636,7 @@
       "serviceProvider": null,
       "instanceParameters": null
     },
-    "serviceRawFile": "service: vietdurian-nodejs-service # Name of your service\r\nuseDotenv: true\r\nprovider:\r\n  name: aws\r\n  runtime: nodejs22.x # Use a current Node.js version, e.g., nodejs20.x or nodejs18.x\r\n  timeout: 900 # Set timeout to 15 minutes (900 seconds) for long-running processes\r\n  memorySize: 1024 # Set memory to 2048 MB for better performance\r\n  stage: prod\r\n  region: ap-southeast-1\r\n  iam:\r\n    role: arn:aws:iam::867490540757:role/lambda_role\r\n\r\nbuild:\r\n  esbuild: false\r\n\r\nplugins:\r\n  - serverless-esbuild\r\n\r\nfunctions:\r\n  app:\r\n    handler: src/server.handler # The file (server.js) and the exported handler (handler)\r\n    events:\r\n      - http: ANY /\r\n      - http: 'ANY /{proxy+}' # For all other routes\r\n\r\ncustom:\r\n  esbuild:\r\n    bundle: true\r\n    minify: false\r\n    sourcemap: true\r\n    platform: node\r\n    target: node22\r\n    format: cjs\r\n    keepNames: true\r\n    alias:\r\n      \"@\": ./src\r\n    external:\r\n      - aws-sdk\r\n\r\n  ",
+    "serviceRawFile": "service: vietdurian-nodejs-service # Name of your service\r\nuseDotenv: true\r\nprovider:\r\n  name: aws\r\n  runtime: nodejs22.x # Use a current Node.js version, e.g., nodejs20.x or nodejs18.x\r\n  timeout: 900 # Set timeout to 15 minutes (900 seconds) for long-running processes\r\n  memorySize: 1024 # Set memory to 2048 MB for better performance\r\n  stage: prod\r\n  region: ap-southeast-1\r\n  environment:\r\n    MONGODB_URI_ATLAS: ${env:MONGODB_URI_ATLAS}\r\n    MONGODB_URI: ${env:MONGODB_URI}\r\n    DATABASE_NAME: ${env:DATABASE_NAME, 'VietDurian_DB'}\r\n    JWT_SECRET: ${env:JWT_SECRET}\r\n    JWT_EXPIRES_IN: ${env:JWT_EXPIRES_IN, '7d'}\r\n  iam:\r\n    role: arn:aws:iam::867490540757:role/lambda_role\r\n\r\nbuild:\r\n  esbuild: false\r\n\r\nplugins:\r\n  - serverless-esbuild\r\n\r\npackage:\r\n  patterns:\r\n    - src/routes/**\r\n    - src/model/**\r\n    - src/config/swagger.js\r\n\r\nfunctions:\r\n  app:\r\n    handler: src/server.handler # The file (server.js) and the exported handler (handler)\r\n    events:\r\n      - http: ANY /\r\n      - http: 'ANY /{proxy+}' # For all other routes\r\n\r\ncustom:\r\n  esbuild:\r\n    bundle: true\r\n    minify: false\r\n    sourcemap: true\r\n    platform: node\r\n    target: node22\r\n    format: cjs\r\n    keepNames: true\r\n    alias:\r\n      \"@\": ./src\r\n    external:\r\n      - aws-sdk\r\n\r\n  ",
     "command": [
       "deploy"
     ],
@@ -612,12 +653,12 @@
     "serviceProviderAwsCfStackName": "vietdurian-nodejs-service-prod",
     "serviceProviderAwsCfStackId": "arn:aws:cloudformation:ap-southeast-1:867490540757:stack/vietdurian-nodejs-service-prod/24d5a510-22cc-11f1-833f-0681eab53861",
     "serviceProviderAwsCfStackCreated": "2026-03-18T13:12:41.979Z",
-    "serviceProviderAwsCfStackUpdated": "2026-03-20T09:35:05.002Z",
+    "serviceProviderAwsCfStackUpdated": "2026-03-21T10:07:13.591Z",
     "serviceProviderAwsCfStackStatus": "UPDATE_COMPLETE",
     "serviceProviderAwsCfStackOutputs": [
       {
         "OutputKey": "AppLambdaFunctionQualifiedArn",
-        "OutputValue": "arn:aws:lambda:ap-southeast-1:867490540757:function:vietdurian-nodejs-service-prod-app:14",
+        "OutputValue": "arn:aws:lambda:ap-southeast-1:867490540757:function:vietdurian-nodejs-service-prod-app:25",
         "Description": "Current Lambda function version",
         "ExportName": "sls-vietdurian-nodejs-service-prod-AppLambdaFunctionQualifiedArn"
       },
@@ -648,27 +689,36 @@
           "Properties": {
             "Code": {
               "S3Bucket": "serverless-framework-deployments-ap-southeast-1-1365b344-b52f",
-              "S3Key": "serverless/vietdurian-nodejs-service/prod/1773999717205-2026-03-20T09:41:57.205Z/vietdurian-nodejs-service.zip"
+              "S3Key": "serverless/vietdurian-nodejs-service/prod/1774088153635-2026-03-21T10:15:53.635Z/vietdurian-nodejs-service.zip"
             },
             "Handler": "src/server.handler",
             "Runtime": "nodejs22.x",
             "FunctionName": "vietdurian-nodejs-service-prod-app",
             "MemorySize": 1024,
             "Timeout": 900,
+            "Environment": {
+              "Variables": {
+                "MONGODB_URI_ATLAS": "mongodb+srv://ChanPotter:Password123!@cluster0.jdsmxen.mongodb.net/?appName=Cluster0",
+                "MONGODB_URI": "mongodb://localhost:27017",
+                "DATABASE_NAME": "VietDurian_DB",
+                "JWT_SECRET": "<REDACTED>",
+                "JWT_EXPIRES_IN": "7d"
+              }
+            },
             "Role": "arn:aws:iam::867490540757:role/lambda_role"
           },
           "DependsOn": [
             "AppLogGroup"
           ]
         },
-        "AppLambdaVersionn59azp2shjQ4u4dX3WEqORlDZZeLQjycYXCNc85AnE": {
+        "AppLambdaVersionVmPxf88UQlGBndZ6x5O5l3WgdaT5bT5pbtolCN2uag": {
           "Type": "AWS::Lambda::Version",
           "DeletionPolicy": "Retain",
           "Properties": {
             "FunctionName": {
               "Ref": "AppLambdaFunction"
             },
-            "CodeSha256": "XJ+yB9xETAZVClZJcOMjhvUJSs7AjV4HSoNCA0RR7YY="
+            "CodeSha256": "0Xp5v7OTb1Y2RqgnXbRN4DuAUAbYkvKRZN2o0lQA/Ao="
           }
         },
         "ApiGatewayRestApi": {
@@ -793,7 +843,7 @@
             "AppLambdaPermissionApiGateway"
           ]
         },
-        "ApiGatewayDeployment1773999706972": {
+        "ApiGatewayDeployment1774088144376": {
           "Type": "AWS::ApiGateway::Deployment",
           "Properties": {
             "RestApiId": {
@@ -854,7 +904,7 @@
         "AppLambdaFunctionQualifiedArn": {
           "Description": "Current Lambda function version",
           "Value": {
-            "Ref": "AppLambdaVersionn59azp2shjQ4u4dX3WEqORlDZZeLQjycYXCNc85AnE"
+            "Ref": "AppLambdaVersionVmPxf88UQlGBndZ6x5O5l3WgdaT5bT5pbtolCN2uag"
           },
           "Export": {
             "Name": "sls-vietdurian-nodejs-service-prod-AppLambdaFunctionQualifiedArn"

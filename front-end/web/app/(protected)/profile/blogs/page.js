@@ -1,19 +1,8 @@
 "use client";
 import Navbar from "@/components/Navbar";
 import {
-  X,
-  ImageIcon,
-  BookOpen,
-  Plus,
-  ChevronRight,
-  CheckCircle,
-  Trash2,
-  Edit2,
-  Calendar,
-  Book,
-  AlertCircle,
-  Loader2,
-  ArrowLeft,
+  X, ImageIcon, BookOpen, Plus, ChevronRight, CheckCircle,
+  Trash2, Edit2, Calendar, Book, AlertCircle, Loader2, ArrowLeft,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -22,17 +11,19 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { blogAPI } from "@/lib/api";
 import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 
 // ==================== CONFIRM MODAL ====================
 const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
+  const { t } = useLanguage();
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
         <p className="text-gray-800 text-sm mb-6 text-center">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm">Hủy</button>
-          <button onClick={onConfirm} className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm">Xóa</button>
+          <button onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm">{t('blog_mgmt_cancel')}</button>
+          <button onClick={onConfirm} className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm">{t('blog_mgmt_delete')}</button>
         </div>
       </div>
     </div>
@@ -59,7 +50,11 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 
 // ==================== STEP INDICATOR ====================
 const StepIndicator = ({ currentStep }) => {
-  const steps = [{ number: 1, title: "Thông tin blog" }, { number: 2, title: "Thêm chương" }];
+  const { t } = useLanguage();
+  const steps = [
+    { number: 1, title: t('blog_edit_step1_title') },
+    { number: 2, title: t('blog_edit_step2_title') },
+  ];
   return (
     <div className="flex items-center justify-center mb-8">
       {steps.map((step, index) => (
@@ -79,6 +74,7 @@ const StepIndicator = ({ currentStep }) => {
 
 // ==================== IMAGE UPLOAD COMPONENT ====================
 const ImageUpload = ({ image, onImageChange, onImageRemove, label }) => {
+  const { t } = useLanguage();
   const fileInputRef = useRef(null);
   return (
     <div className="space-y-2">
@@ -86,8 +82,8 @@ const ImageUpload = ({ image, onImageChange, onImageRemove, label }) => {
       {!image ? (
         <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
           <ImageIcon className="mx-auto text-gray-400 mb-2" size={40} />
-          <p className="text-sm font-medium text-gray-600">Nhấp để chọn ảnh</p>
-          <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF tối đa 5MB</p>
+          <p className="text-sm font-medium text-gray-600">{t('blog_edit_image_upload_click')}</p>
+          <p className="text-xs text-gray-400 mt-1">{t('blog_edit_image_upload_hint')}</p>
         </div>
       ) : (
         <div className="relative rounded-xl overflow-hidden border-2 border-gray-200">
@@ -123,6 +119,7 @@ const KnowledgeBlockCard = ({ block, index, onEdit, onDelete, displayIndex }) =>
 
 // ==================== BLOG CARD ====================
 const BlogCard = ({ blog, onEdit, onDelete, onAddBlock, onView, onDeleteConfirm }) => {
+  const { t } = useLanguage();
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
   return (
     <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 group">
@@ -136,9 +133,9 @@ const BlogCard = ({ blog, onEdit, onDelete, onAddBlock, onView, onDeleteConfirm 
             </div>
           )}
           <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <button onClick={(e) => { e.stopPropagation(); onAddBlock(blog); }} className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-all" title="Thêm chương"><Plus size={16} /></button>
-            <button onClick={(e) => { e.stopPropagation(); onEdit(blog); }} className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-lg transition-all" title="Chỉnh sửa"><Edit2 size={16} /></button>
-            <button onClick={(e) => { e.stopPropagation(); onDeleteConfirm(blog._id); }} className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-all" title="Xóa"><Trash2 size={16} /></button>
+            <button onClick={(e) => { e.stopPropagation(); onAddBlock(blog); }} className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-all" title={t('blog_mgmt_add_chapter_btn')}><Plus size={16} /></button>
+            <button onClick={(e) => { e.stopPropagation(); onEdit(blog); }} className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-lg transition-all" title={t('blog_mgmt_edit_btn')}><Edit2 size={16} /></button>
+            <button onClick={(e) => { e.stopPropagation(); onDeleteConfirm(blog._id); }} className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-all" title={t('blog_mgmt_delete_btn')}><Trash2 size={16} /></button>
           </div>
         </div>
       </div>
@@ -150,11 +147,11 @@ const BlogCard = ({ blog, onEdit, onDelete, onAddBlock, onView, onDeleteConfirm 
         <div className="flex items-center justify-between pt-4 border-t border-gray-100">
           <div className="flex items-center gap-2 text-sm text-gray-500"><Calendar className="w-4 h-4" /><span>{formatDate(blog.created_at)}</span></div>
           {blog.knowledgeBlocks?.length > 0 && (
-            <div className="flex items-center gap-1 text-sm text-emerald-500 font-medium"><Book className="w-4 h-4" /><span>{blog.knowledgeBlocks.length} chương</span></div>
+            <div className="flex items-center gap-1 text-sm text-emerald-500 font-medium"><Book className="w-4 h-4" /><span>{blog.knowledgeBlocks.length} {t('blog_mgmt_chapters')}</span></div>
           )}
         </div>
         <div onClick={() => onView(blog)} className="mt-4 flex items-center text-emerald-500 font-medium hover:text-emerald-600 cursor-pointer group">
-          <span>Xem chi tiết</span>
+          <span>{t('blog_mgmt_view_detail')}</span>
           <ChevronRight className="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
         </div>
       </div>
@@ -164,6 +161,7 @@ const BlogCard = ({ blog, onEdit, onDelete, onAddBlock, onView, onDeleteConfirm 
 
 // ==================== MAIN COMPONENT ====================
 export default function BlogManagementContent() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -197,7 +195,6 @@ export default function BlogManagementContent() {
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [newBlocks, setNewBlocks] = useState([]);
 
-  const [viewingBlog, setViewingBlog] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -208,10 +205,10 @@ export default function BlogManagementContent() {
         setLoading(true); setError("");
         const result = await blogAPI.getAllBlogs({ author_id: user._id || user.id, sort: "newest" });
         if (result.code === 200 && result.data) setBlogs(result.data);
-        else setError("Không thể tải danh sách blog");
+        else setError(t('blog_mgmt_load_fail'));
       } catch (err) {
         console.error("Error fetching blogs:", err);
-        setError("Không thể tải danh sách blog");
+        setError(t('blog_mgmt_load_fail'));
       } finally { setLoading(false); }
     };
     fetchUserBlogs();
@@ -219,7 +216,7 @@ export default function BlogManagementContent() {
 
   const handleBlogImageChange = (event) => {
     const file = event.target.files?.[0]; if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setError("Ảnh quá lớn. Tối đa 5MB"); return; }
+    if (file.size > 5 * 1024 * 1024) { setError(t('blog_edit_image_too_large')); return; }
     const reader = new FileReader();
     reader.onload = () => { const r = reader.result?.toString() || ""; setBlogImageData(r); setBlogImage(r); setBlogImageChanged(true); };
     reader.readAsDataURL(file);
@@ -227,7 +224,7 @@ export default function BlogManagementContent() {
 
   const handleBlockImageChange = (event) => {
     const file = event.target.files?.[0]; if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setError("Ảnh quá lớn. Tối đa 5MB"); return; }
+    if (file.size > 5 * 1024 * 1024) { setError(t('blog_edit_image_too_large')); return; }
     const reader = new FileReader();
     reader.onload = () => { const r = reader.result?.toString() || ""; setBlockImageData(r); setBlockImage(r); setBlockImageChanged(true); };
     reader.readAsDataURL(file);
@@ -243,7 +240,7 @@ export default function BlogManagementContent() {
   const canProceedToStep2 = () => blogTitle.trim() !== "" && blogContent.trim() !== "" && blogImageData !== "";
 
   const handleSaveBlock = () => {
-    if (!blockTitle.trim() || !blockContent.trim() || !blockImageData) { setError("Vui lòng điền đầy đủ thông tin chương và chọn ảnh"); return; }
+    if (!blockTitle.trim() || !blockContent.trim() || !blockImageData) { setError(t('block_save_required')); return; }
     const newBlock = { title: blockTitle.trim(), content: blockContent.trim(), image: blockImageData, imageChanged: blockImageChanged };
     if (view === "addBlock") {
       if (editingBlockIndex !== null) { const u = [...newBlocks]; u[editingBlockIndex] = newBlock; setNewBlocks(u); setEditingBlockIndex(null); }
@@ -266,7 +263,7 @@ export default function BlogManagementContent() {
   };
 
   const handleDeleteBlock = (index) => {
-    openConfirm("Bạn có chắc chắn muốn xóa chương này?", async () => {
+    openConfirm(t('blog_mgmt_delete_block_confirm'), async () => {
       closeConfirm();
       try {
         const blocks = view === "addBlock" ? newBlocks : knowledgeBlocks;
@@ -277,7 +274,7 @@ export default function BlogManagementContent() {
             if (view === "addBlock") setNewBlocks(newBlocks.filter((_, i) => i !== index));
             else setKnowledgeBlocks(knowledgeBlocks.filter((_, i) => i !== index));
           } else {
-            toast.error("Không thể xóa chương");
+            toast.error(t('blog_mgmt_delete_block_fail'));
           }
         } else {
           if (view === "addBlock") setNewBlocks(newBlocks.filter((_, i) => i !== index));
@@ -285,7 +282,7 @@ export default function BlogManagementContent() {
         }
       } catch (err) {
         console.error("Error deleting block:", err);
-        toast.error(err.message || "Không thể xóa chương");
+        toast.error(err.message || t('blog_mgmt_delete_block_fail'));
       }
     });
   };
@@ -296,13 +293,13 @@ export default function BlogManagementContent() {
   };
 
   const handleSubmitBlog = async () => {
-    if (knowledgeBlocks.length === 0) { setError("Vui lòng thêm ít nhất một chương"); return; }
+    if (knowledgeBlocks.length === 0) { setError(t('blog_edit_chapter_required')); return; }
     setIsSubmitting(true); setError("");
     try {
       const blogUpdateData = { title: blogTitle, content: blogContent };
       if (blogImageChanged) blogUpdateData.image = blogImageData;
       const blogResult = await blogAPI.updateBlog(editingBlog._id, blogUpdateData);
-      if (blogResult.code !== 200) throw new Error("Không thể cập nhật thông tin blog");
+      if (blogResult.code !== 200) throw new Error(t('blog_edit_update_info_fail'));
 
       const originalBlocks = editingBlog.knowledgeBlocks || [];
       for (const block of knowledgeBlocks) {
@@ -320,22 +317,22 @@ export default function BlogManagementContent() {
           try { await blogAPI.deleteKnowledgeBlock(ob._id); } catch (e) { console.error(e); }
         }
       }
-      toast.success("Blog đã được cập nhật thành công!");
+      toast.success(t('blog_edit_update_success'));
       setView("list"); resetForm();
-    } catch (err) { console.error("Error saving blog:", err); setError(err.message || "Có lỗi xảy ra khi lưu blog"); }
+    } catch (err) { console.error("Error saving blog:", err); setError(err.message || t('blog_edit_update_fail')); }
     finally { setIsSubmitting(false); }
   };
 
   const handleSubmitNewBlocks = async () => {
-    if (newBlocks.length === 0) { setError("Vui lòng thêm ít nhất một chương mới"); return; }
+    if (newBlocks.length === 0) { setError(t('add_block_required')); return; }
     setIsSubmitting(true); setError("");
     try {
       for (const block of newBlocks) {
         await blogAPI.addKnowledgeBlock(selectedBlog._id, { title: block.title, content: block.content, image: block.image });
       }
-      toast.success(`Đã thêm ${newBlocks.length} chương mới vào blog!`);
+      toast.success(`${t('add_block_success')} ${newBlocks.length} ${t('add_block_success_suffix')}`);
       setView("list"); resetForm();
-    } catch (err) { console.error("Error adding blocks:", err); setError(err.message || "Có lỗi xảy ra khi thêm chương"); }
+    } catch (err) { console.error("Error adding blocks:", err); setError(err.message || t('add_block_fail')); }
     finally { setIsSubmitting(false); }
   };
 
@@ -346,33 +343,27 @@ export default function BlogManagementContent() {
   };
 
   const handleDeleteBlog = (blogId) => {
-    openConfirm("Bạn có chắc chắn muốn xóa blog này?", async () => {
+    openConfirm(t('blog_mgmt_delete_blog_confirm'), async () => {
       closeConfirm();
       try {
         const result = await blogAPI.deleteBlog(blogId);
         if (result.code === 200) {
           setBlogs((prev) => prev.filter((b) => b._id !== blogId));
-          toast.success("Xóa blog thành công!");
+          toast.success(t('blog_mgmt_delete_blog_success'));
         } else {
-          toast.error("Không thể xóa blog");
+          toast.error(t('blog_mgmt_delete_blog_fail'));
         }
       } catch (err) {
         console.error("Error deleting blog:", err);
-        toast.error(err.message || "Không thể xóa blog");
+        toast.error(err.message || t('blog_mgmt_delete_blog_fail'));
       }
     });
   };
 
   const handleAddBlockToBlog = (blog) => { setSelectedBlog(blog); setNewBlocks([]); setView("addBlock"); };
 
-  const handleViewBlog = async (blog) => {
-    try {
-      setLoading(true); setError("");
-      const result = await blogAPI.getBlogById(blog._id);
-      if (result.code === 200 && result.data) { setViewingBlog(result.data); setView("detail"); }
-      else setError("Không thể tải chi tiết blog");
-    } catch (err) { console.error("Error fetching blog detail:", err); setError(err.message || "Không thể tải chi tiết blog"); }
-    finally { setLoading(false); }
+  const handleViewBlog = (blog) => {
+    router.push(`/profile/blogs/${blog._id}`);
   };
 
   const handleBackToList = () => { resetForm(); setView("list"); };
@@ -386,15 +377,14 @@ export default function BlogManagementContent() {
         <>
           <section className="pt-12 pb-8 px-4">
             <div className="max-w-7xl mx-auto">
-              {/* ── Hero banner: bg-emerald-500 (khớp ProfileDetails) ── */}
               <div className="bg-emerald-500 rounded-3xl shadow-xl p-8 md:p-12">
                 <div className="flex items-center justify-between flex-wrap gap-6">
                   <div>
-                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Blog Của Tôi</h1>
-                    <p className="text-emerald-50 text-lg">Quản lý và chia sẻ kiến thức của bạn</p>
+                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{t('blog_mgmt_title')}</h1>
+                    <p className="text-emerald-50 text-lg">{t('blog_mgmt_subtitle')}</p>
                   </div>
                   <Link href="/profile/blogs/create" className="bg-white hover:bg-emerald-50 text-emerald-500 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg">
-                    <Plus size={20} />Tạo Blog Mới
+                    <Plus size={20} />{t('blog_mgmt_create_btn')}
                   </Link>
                 </div>
               </div>
@@ -405,7 +395,7 @@ export default function BlogManagementContent() {
               {loading ? (
                 <div className="flex flex-col justify-center items-center py-20">
                   <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mb-4" />
-                  <p className="text-gray-600">Đang tải blog...</p>
+                  <p className="text-gray-600">{t('blog_mgmt_loading')}</p>
                 </div>
               ) : error ? (
                 <div className="flex flex-col justify-center items-center py-20">
@@ -419,16 +409,16 @@ export default function BlogManagementContent() {
                   <div className="w-32 h-32 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
                     <BookOpen className="w-16 h-16 text-emerald-500" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Chưa có blog nào</h3>
-                  <p className="text-gray-500 text-lg mb-6">Hãy tạo blog đầu tiên của bạn ngay hôm nay!</p>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('blog_mgmt_empty_title')}</h3>
+                  <p className="text-gray-500 text-lg mb-6">{t('blog_mgmt_empty_desc')}</p>
                   <Link href="/profile/blogs/create" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all inline-flex items-center gap-2">
-                    <Plus size={20} />Tạo Blog Mới
+                    <Plus size={20} />{t('blog_mgmt_create_btn')}
                   </Link>
                 </div>
               ) : (
                 <>
                   <div className="mb-6">
-                    <p className="text-gray-600">Tổng cộng <span className="font-semibold text-emerald-500">{blogs.length}</span> blog</p>
+                    <p className="text-gray-600">{t('blog_mgmt_total')} <span className="font-semibold text-emerald-500">{blogs.length}</span> {t('blog_mgmt_total_label')}</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {blogs.map((blog) => (
@@ -447,17 +437,16 @@ export default function BlogManagementContent() {
         <>
           <section className="pt-10 pb-8 px-4">
             <div className="max-w-4xl mx-auto">
-              {/* ── Hero banner: bg-emerald-500 ── */}
               <div className="bg-emerald-500 rounded-3xl shadow-xl p-8">
                 <button onClick={handleBackToList} className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer">
-                  <ArrowLeft size={20} /><span>Quay lại</span>
+                  <ArrowLeft size={20} /><span>{t('blog_edit_back')}</span>
                 </button>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <BookOpen className="w-10 h-10 text-white" />
                   </div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Chỉnh sửa Blog</h1>
-                  <p className="text-emerald-50 text-lg">Chia sẻ kiến thức của bạn với cộng đồng</p>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{t('blog_edit_title')}</h1>
+                  <p className="text-emerald-50 text-lg">{t('blog_edit_subtitle')}</p>
                 </div>
               </div>
             </div>
@@ -474,22 +463,22 @@ export default function BlogManagementContent() {
               )}
               {currentStep === 1 && (
                 <div className="bg-white rounded-2xl shadow-lg p-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"><BookOpen className="text-emerald-500" size={28} />Thông tin Blog</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"><BookOpen className="text-emerald-500" size={28} />{t('blog_edit_info_title')}</h2>
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Tiêu đề Blog <span className="text-red-500">*</span></label>
-                      <input type="text" value={blogTitle} onChange={(e) => setBlogTitle(e.target.value)} placeholder="Nhập tiêu đề blog..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" maxLength={200} />
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">{t('blog_edit_blog_title_label')} <span className="text-red-500">*</span></label>
+                      <input type="text" value={blogTitle} onChange={(e) => setBlogTitle(e.target.value)} placeholder={t('blog_edit_blog_title_placeholder')} className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" maxLength={200} />
                       <div className="text-xs text-gray-500 text-right mt-1">{blogTitle.length}/200</div>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Giới thiệu <span className="text-red-500">*</span></label>
-                      <textarea value={blogContent} onChange={(e) => setBlogContent(e.target.value)} placeholder="Giới thiệu tổng quan về blog..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none" rows={6} maxLength={1000} />
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">{t('blog_edit_blog_intro_label')} <span className="text-red-500">*</span></label>
+                      <textarea value={blogContent} onChange={(e) => setBlogContent(e.target.value)} placeholder={t('blog_edit_blog_intro_placeholder')} className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none" rows={6} maxLength={1000} />
                       <div className="text-xs text-gray-500 text-right mt-1">{blogContent.length}/1000</div>
                     </div>
                     <ImageUpload image={blogImage} onImageChange={handleBlogImageChange} onImageRemove={() => { setBlogImage(""); setBlogImageData(""); }} label={<>Ảnh đại diện <span className="text-red-500">*</span></>} />
                     <div className="flex justify-end pt-4">
-                      <button onClick={() => { if (!canProceedToStep2()) { setError("Vui lòng điền đầy đủ thông tin blog và chọn ảnh"); return; } setError(""); setCurrentStep(2); }} disabled={!canProceedToStep2()} className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                        Tiếp theo<ChevronRight size={20} />
+                      <button onClick={() => { if (!canProceedToStep2()) { setError(t('blog_edit_required')); return; } setError(""); setCurrentStep(2); }} disabled={!canProceedToStep2()} className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                        {t('blog_edit_next_btn')}<ChevronRight size={20} />
                       </button>
                     </div>
                   </div>
@@ -500,8 +489,8 @@ export default function BlogManagementContent() {
                   <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-emerald-200">
                     <div className="flex items-center gap-2 mb-4">
                       <CheckCircle className="text-emerald-500" size={24} />
-                      <h3 className="text-lg font-bold text-gray-900">Thông tin Blog</h3>
-                      <button onClick={() => setCurrentStep(1)} className="ml-auto text-emerald-500 hover:text-emerald-600 text-sm font-medium">Chỉnh sửa</button>
+                      <h3 className="text-lg font-bold text-gray-900">{t('blog_edit_info_title')}</h3>
+                      <button onClick={() => setCurrentStep(1)} className="ml-auto text-emerald-500 hover:text-emerald-600 text-sm font-medium">{t('blog_edit_step_edit')}</button>
                     </div>
                     <div className="flex gap-4">
                       {blogImage && <img src={blogImage} alt={blogTitle} className="w-32 h-32 object-cover rounded-lg flex-shrink-0" />}
@@ -510,8 +499,8 @@ export default function BlogManagementContent() {
                   </div>
                   <div className="bg-white rounded-2xl shadow-lg p-8">
                     <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><BookOpen className="text-emerald-500" size={28} />Các chương ({knowledgeBlocks.length})</h2>
-                      {!isAddingBlock && <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2"><Plus size={20} />Thêm chương</button>}
+                      <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><BookOpen className="text-emerald-500" size={28} />{t('blog_edit_chapters_title')} ({knowledgeBlocks.length})</h2>
+                      {!isAddingBlock && <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2"><Plus size={20} />{t('blog_edit_add_chapter_btn')}</button>}
                     </div>
                     {knowledgeBlocks.length > 0 && (
                       <div className="grid grid-cols-1 gap-4 mb-6">
@@ -521,33 +510,34 @@ export default function BlogManagementContent() {
                     {knowledgeBlocks.length === 0 && !isAddingBlock && (
                       <div className="text-center py-12">
                         <BookOpen className="mx-auto text-gray-300 mb-4" size={64} />
-                        <p className="text-gray-500 text-lg mb-4">Chưa có chương nào</p>
-                        <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-all inline-flex items-center gap-2"><Plus size={20} />Thêm chương đầu tiên</button>
+                        <p className="text-gray-500 text-lg mb-4">{t('blog_edit_no_chapters')}</p>
+                        <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-all inline-flex items-center gap-2"><Plus size={20} />{t('blog_edit_add_first_chapter')}</button>
                       </div>
                     )}
                   </div>
-                  <Modal isOpen={isAddingBlock} onClose={handleCancelBlock} title={editingBlockIndex !== null ? "Chỉnh sửa chương" : "Thêm chương mới"}>
+                  <Modal isOpen={isAddingBlock} onClose={handleCancelBlock} title={editingBlockIndex !== null ? t('block_modal_edit_title') : t('block_modal_add_title')}>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Tiêu đề chương <span className="text-red-500">*</span></label>
-                        <input type="text" value={blockTitle} onChange={(e) => setBlockTitle(e.target.value)} placeholder="Nhập tiêu đề chương..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white" maxLength={200} />
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">{t('block_title_label')} <span className="text-red-500">*</span></label>
+                        <input type="text" value={blockTitle} onChange={(e) => setBlockTitle(e.target.value)} placeholder={t('block_title_placeholder')} className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white" maxLength={200} />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Nội dung chương <span className="text-red-500">*</span></label>
-                        <textarea value={blockContent} onChange={(e) => setBlockContent(e.target.value)} placeholder="Nhập nội dung chương..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none bg-white" rows={6} maxLength={5000} />
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">{t('block_content_label')} <span className="text-red-500">*</span></label>
+                        <textarea value={blockContent} onChange={(e) => setBlockContent(e.target.value)} placeholder={t('block_content_placeholder')} className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none bg-white" rows={6} maxLength={5000} />
                         <div className="text-xs text-gray-500 text-right mt-1">{blockContent.length}/5000</div>
                       </div>
-                      <ImageUpload image={blockImage} onImageChange={handleBlockImageChange} onImageRemove={() => { setBlockImage(""); setBlockImageData(""); }} label={<>Ảnh chương <span className="text-red-500">*</span></>} />
+                      <ImageUpload image={blockImage} onImageChange={handleBlockImageChange} onImageRemove={() => { setBlockImage(""); setBlockImageData(""); }} label={<>{t('block_image_label')} <span className="text-red-500">*</span></>} />
                       <div className="pt-4">
                         <button type="button" onClick={handleSaveBlock} disabled={!blockTitle.trim() || !blockContent.trim() || !blockImageData} className="w-full bg-emerald-500 text-white font-bold py-3 rounded-lg hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                          {editingBlockIndex !== null ? "Cập nhật" : "Thêm"}</button>
+                          {editingBlockIndex !== null ? t('block_update_btn') : t('block_add_btn')}
+                        </button>
                       </div>
                     </div>
                   </Modal>
                   <div className="flex justify-between items-center">
-                    <button onClick={() => setCurrentStep(1)} className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">Quay lại</button>
+                    <button onClick={() => setCurrentStep(1)} className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">{t('blog_edit_back_btn')}</button>
                     <button onClick={handleSubmitBlog} disabled={knowledgeBlocks.length === 0 || isSubmitting} className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                      {isSubmitting ? (<><Loader2 className="w-5 h-5 animate-spin" />Đang lưu...</>) : (<><CheckCircle size={20} />Cập nhật Blog</>)}
+                      {isSubmitting ? (<><Loader2 className="w-5 h-5 animate-spin" />{t('blog_edit_saving')}</>) : (<><CheckCircle size={20} />{t('blog_edit_update_btn')}</>)}
                     </button>
                   </div>
                 </div>
@@ -562,17 +552,16 @@ export default function BlogManagementContent() {
         <>
           <section className="pt-10 pb-8 px-4">
             <div className="max-w-5xl mx-auto">
-              {/* ── Hero banner: bg-emerald-500 ── */}
               <div className="bg-emerald-500 rounded-3xl shadow-xl p-8">
                 <button onClick={handleBackToList} className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer">
-                  <ArrowLeft size={20} /><span>Quay lại</span>
+                  <ArrowLeft size={20} /><span>{t('add_block_back')}</span>
                 </button>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <BookOpen className="w-10 h-10 text-white" />
                   </div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Thêm Chương Mới</h1>
-                  <p className="text-emerald-50 text-lg">Mở rộng nội dung blog của bạn</p>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{t('add_block_title')}</h1>
+                  <p className="text-emerald-50 text-lg">{t('add_block_subtitle')}</p>
                 </div>
               </div>
             </div>
@@ -587,19 +576,19 @@ export default function BlogManagementContent() {
                 </div>
               )}
               <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-emerald-200">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><BookOpen className="text-emerald-500" size={24} />Thông tin Blog</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><BookOpen className="text-emerald-500" size={24} />{t('add_block_blog_info')}</h3>
                 <div className="flex gap-4">
                   {selectedBlog?.image && <img src={selectedBlog.image} alt={selectedBlog.title} className="w-32 h-32 object-cover rounded-lg flex-shrink-0" />}
                   <div className="flex-1">
                     <h4 className="font-bold text-gray-900 text-xl mb-2">{selectedBlog?.title}</h4>
                     <p className="text-gray-600 text-sm line-clamp-2 mb-3">{selectedBlog?.content}</p>
-                    <div className="text-sm text-emerald-500 font-medium">{selectedBlog?.knowledgeBlocks?.length || 0} chương hiện tại</div>
+                    <div className="text-sm text-emerald-500 font-medium">{selectedBlog?.knowledgeBlocks?.length || 0} {t('add_block_current_chapters')}</div>
                   </div>
                 </div>
               </div>
               {selectedBlog?.knowledgeBlocks && selectedBlog.knowledgeBlocks.length > 0 && (
                 <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Các chương hiện có ({selectedBlog.knowledgeBlocks.length})</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">{t('add_block_existing_title')} ({selectedBlog.knowledgeBlocks.length})</h3>
                   <div className="space-y-3">
                     {selectedBlog.knowledgeBlocks.map((block, index) => (
                       <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -612,8 +601,8 @@ export default function BlogManagementContent() {
               )}
               <div className="bg-white rounded-2xl shadow-lg p-8">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Plus className="text-emerald-500" size={28} />Chương mới ({newBlocks.length})</h2>
-                  {!isAddingBlock && <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2"><Plus size={20} />Thêm chương</button>}
+                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Plus className="text-emerald-500" size={28} />{t('add_block_new_title')} ({newBlocks.length})</h2>
+                  {!isAddingBlock && <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2"><Plus size={20} />{t('blog_edit_add_chapter_btn')}</button>}
                 </div>
                 {newBlocks.length > 0 && (
                   <div className="grid grid-cols-1 gap-4 mb-6">
@@ -623,85 +612,36 @@ export default function BlogManagementContent() {
                 {newBlocks.length === 0 && !isAddingBlock && (
                   <div className="text-center py-12">
                     <Plus className="mx-auto text-gray-300 mb-4" size={64} />
-                    <p className="text-gray-500 text-lg mb-4">Chưa có chương mới nào</p>
-                    <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-all inline-flex items-center gap-2"><Plus size={20} />Thêm chương đầu tiên</button>
+                    <p className="text-gray-500 text-lg mb-4">{t('add_block_no_new')}</p>
+                    <button onClick={() => setIsAddingBlock(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold transition-all inline-flex items-center gap-2"><Plus size={20} />{t('add_block_add_first')}</button>
                   </div>
                 )}
               </div>
-              <Modal isOpen={isAddingBlock} onClose={handleCancelBlock} title={editingBlockIndex !== null ? "Chỉnh sửa chương" : "Thêm chương mới"}>
+              <Modal isOpen={isAddingBlock} onClose={handleCancelBlock} title={editingBlockIndex !== null ? t('block_modal_edit_title') : t('block_modal_add_title')}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Tiêu đề chương <span className="text-red-500">*</span></label>
-                    <input type="text" value={blockTitle} onChange={(e) => setBlockTitle(e.target.value)} placeholder="Nhập tiêu đề chương..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white" maxLength={200} />
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t('block_title_label')} <span className="text-red-500">*</span></label>
+                    <input type="text" value={blockTitle} onChange={(e) => setBlockTitle(e.target.value)} placeholder={t('block_title_placeholder')} className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white" maxLength={200} />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nội dung chương <span className="text-red-500">*</span></label>
-                    <textarea value={blockContent} onChange={(e) => setBlockContent(e.target.value)} placeholder="Nhập nội dung chương..." className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none bg-white" rows={6} maxLength={5000} />
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t('block_content_label')} <span className="text-red-500">*</span></label>
+                    <textarea value={blockContent} onChange={(e) => setBlockContent(e.target.value)} placeholder={t('block_content_placeholder')} className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none bg-white" rows={6} maxLength={5000} />
                     <div className="text-xs text-gray-500 text-right mt-1">{blockContent.length}/5000</div>
                   </div>
-                  <ImageUpload image={blockImage} onImageChange={handleBlockImageChange} onImageRemove={() => { setBlockImage(""); setBlockImageData(""); }} label={<>Ảnh chương <span className="text-red-500">*</span></>} />
+                  <ImageUpload image={blockImage} onImageChange={handleBlockImageChange} onImageRemove={() => { setBlockImage(""); setBlockImageData(""); }} label={<>{t('block_image_label')} <span className="text-red-500">*</span></>} />
                   <div className="pt-4">
                     <button type="button" onClick={handleSaveBlock} disabled={!blockTitle.trim() || !blockContent.trim() || !blockImageData} className="w-full bg-emerald-500 text-white font-bold py-3 rounded-lg hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                      {editingBlockIndex !== null ? "Cập nhật" : "Thêm"}</button>
+                      {editingBlockIndex !== null ? t('block_update_btn') : t('block_add_btn')}
+                    </button>
                   </div>
                 </div>
               </Modal>
               <div className="flex justify-between items-center">
-                <button onClick={handleBackToList} className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">Hủy</button>
+                <button onClick={handleBackToList} className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">{t('add_block_cancel')}</button>
                 <button onClick={handleSubmitNewBlocks} disabled={newBlocks.length === 0 || isSubmitting} className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                  {isSubmitting ? (<><Loader2 className="w-5 h-5 animate-spin" />Đang lưu...</>) : (<><CheckCircle size={20} />Lưu {newBlocks.length} chương mới</>)}
-                </button>
-              </div>
-            </div>
-          </section>
-        </>
-      )}
-
-      {/* ========== BLOG DETAIL VIEW ========== */}
-      {view === "detail" && viewingBlog && (
-        <>
-          <section className="pt-10 pb-8 px-4">
-            <div className="max-w-4xl mx-auto">
-              {/* ── Hero banner: bg-emerald-500 ── */}
-              <div className="bg-emerald-500 rounded-3xl shadow-xl p-8">
-                <button onClick={handleBackToList} className="flex items-center gap-2 text-white/90 hover:text-white transition-colors mb-8 font-medium cursor-pointer">
-                  <ArrowLeft size={20} /><span>Quay lại</span>
-                </button>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <BookOpen className="w-10 h-10 text-white" />
-                  </div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">{viewingBlog.title}</h1>
-                  <div className="flex items-center justify-center gap-4 text-emerald-50 text-lg flex-wrap">
-                    <div className="flex items-center gap-2"><Calendar className="w-5 h-5" /><span>{new Date(viewingBlog.created_at).toLocaleDateString("vi-VN")}</span></div>
-                    {viewingBlog.knowledgeBlocks?.length > 0 && (<><span>•</span><div className="flex items-center gap-2"><Book className="w-5 h-5" /><span>{viewingBlog.knowledgeBlocks.length} chương</span></div></>)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-          <section className="py-12 px-4">
-            <div className="max-w-4xl mx-auto space-y-8">
-              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2"><BookOpen className="text-emerald-500" size={28} />Giới thiệu</h2>
-                <p className="text-gray-700 leading-relaxed text-lg">{viewingBlog.content}</p>
-              </div>
-              {viewingBlog.knowledgeBlocks?.map((block, index) => (
-                <div key={block._id || index} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
-                  {block.image && <div className="relative h-96 w-full"><Image src={block.image} alt={block.title} fill className="object-cover" /></div>}
-                  <div className="p-8">
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className="flex-shrink-0 w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-lg">{index + 1}</div>
-                      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 flex-1">{block.title}</h2>
-                    </div>
-                    <div className="text-gray-700 leading-relaxed text-lg whitespace-pre-line">{block.content}</div>
-                  </div>
-                </div>
-              ))}
-              <div className="flex justify-center pt-8">
-                <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex items-center gap-2 px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-all shadow-lg">
-                  Lên đầu trang
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+                  {isSubmitting
+                    ? (<><Loader2 className="w-5 h-5 animate-spin" />{t('add_block_saving')}</>)
+                    : (<><CheckCircle size={20} />{t('add_block_save_btn')} {newBlocks.length} {t('add_block_new_chapters_label')}</>)}
                 </button>
               </div>
             </div>

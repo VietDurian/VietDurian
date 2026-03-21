@@ -7,6 +7,12 @@ provider:
   memorySize: 1024 # Set memory to 2048 MB for better performance
   stage: prod
   region: ap-southeast-1
+  environment:
+    MONGODB_URI_ATLAS: ${env:MONGODB_URI_ATLAS}
+    MONGODB_URI: ${env:MONGODB_URI}
+    DATABASE_NAME: ${env:DATABASE_NAME, 'VietDurian_DB'}
+    JWT_SECRET: ${env:JWT_SECRET}
+    JWT_EXPIRES_IN: ${env:JWT_EXPIRES_IN, '7d'}
   iam:
     role: arn:aws:iam::867490540757:role/lambda_role
 
@@ -15,6 +21,12 @@ build:
 
 plugins:
   - serverless-esbuild
+
+package:
+  patterns:
+    - src/routes/**
+    - src/model/**
+    - src/config/swagger.js
 
 functions:
   app:

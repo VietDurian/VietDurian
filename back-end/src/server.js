@@ -7,6 +7,7 @@ import connectDB from "@/config/mongoose";
 import { app, server } from "@/lib/socket";
 import cookieParser from "cookie-parser";
 import serverless from 'serverless-http';
+import { postService } from "@/services/postService";
 
 require("dotenv").config();
 
@@ -47,8 +48,47 @@ app.use("/api-docs", swaggerUi.serve);
 app.get("/api-docs", swaggerUi.setup(swaggerSpec));
 app.get("/api-docs/", swaggerUi.setup(swaggerSpec));
 
+// Provide raw swagger JSON for UI (relative path will resolve with stage)
+app.get(["/swagger/swagger.json", "/swagger.json"], (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+// Serve a minimal Swagger UI HTML that loads assets from CDN (avoids API Gateway MIME/404 issues)
+app.get(["/swagger/ui", "/swagger/ui/", "/swagger"], (req, res) => {
+  const html = `<!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+    <title>VietDurian API Docs</title>
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
+    <script>
+      const specUrl = './swagger.json';
+      window.ui = SwaggerUIBundle({
+        url: specUrl,
+        dom_id: '#swagger-ui',
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+        layout: 'BaseLayout'
+      });
+    </script>
+  </body>
+  </html>`;
+
+  res.setHeader('Content-Type', 'text/html');
+  res.send(html);
+});
+
 // Api V1 Routes
 app.use("/api/v1", API_v1);
+
+// Background jobs
+  postService.startPostExpiryJob();
 
 app.get("/", (req, res) => {
   res.send("Welcome to VietDurian API!");

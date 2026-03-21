@@ -8,15 +8,16 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { blogAPI } from "@/lib/api";
 import { BookOpen, Calendar, Book } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function BlogDetailPage() {
+  const { t } = useLanguage();
   const params = useParams();
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeBlock, setActiveBlock] = useState(0);
 
-  // Fetch blog detail từ API
   useEffect(() => {
     const fetchBlogDetail = async () => {
       try {
@@ -28,11 +29,11 @@ export default function BlogDetailPage() {
         if (result.code === 200 && result.data) {
           setBlog(result.data);
         } else {
-          setError("Không thể tải bài viết");
+          setError(t('blog_detail_load_fail'));
         }
       } catch (err) {
         console.error("Error fetching blog detail:", err);
-        setError("Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau.");
+        setError(t('blog_detail_error_load'));
       } finally {
         setLoading(false);
       }
@@ -43,7 +44,6 @@ export default function BlogDetailPage() {
     }
   }, [params.id]);
 
-  // Scroll spy effect - tự động highlight section khi scroll
   useEffect(() => {
     const handleScroll = () => {
       if (!blog?.knowledgeBlocks) return;
@@ -83,7 +83,7 @@ export default function BlogDetailPage() {
         <Navbar />
         <div className="flex flex-col justify-center items-center h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
-          <p className="text-gray-600">Đang tải bài viết...</p>
+          <p className="text-gray-600">{t('blog_detail_loading')}</p>
         </div>
       </div>
     );
@@ -108,15 +108,15 @@ export default function BlogDetailPage() {
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <h3 className="text-xl font-semibold text-red-900 mb-2">Lỗi</h3>
+            <h3 className="text-xl font-semibold text-red-900 mb-2">{t('blog_detail_error_title')}</h3>
             <p className="text-red-700 mb-4">
-              {error || "Không tìm thấy bài viết"}
+              {error || t('blog_detail_not_found')}
             </p>
             <Link
               href="/blogs"
               className="inline-block px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
             >
-              ← Quay lại danh sách
+              ← {t('blog_detail_back_list')}
             </Link>
           </div>
         </div>
@@ -127,10 +127,8 @@ export default function BlogDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      {/* Hero Section with Back Button and Title */}
       <section className="bg-emerald-500 pt-20 pb-12">
         <div className="max-w-[1400px] mx-auto">
-          {/* Back Button - Far Left */}
           <div className="px-4">
             <Link
               href="/blogs"
@@ -149,11 +147,10 @@ export default function BlogDetailPage() {
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-              <span className="font-medium">Quay lại</span>
+              <span className="font-medium">{t('blog_detail_back')}</span>
             </Link>
           </div>
 
-          {/* Title - Centered */}
           <div className="max-w-[1000px] mx-auto text-center px-4">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
               {blog.title}
@@ -168,7 +165,7 @@ export default function BlogDetailPage() {
                   <span>•</span>
                   <div className="flex items-center gap-2">
                     <Book className="w-5 h-5" />
-                    <span>{blog.knowledgeBlocks.length} chương</span>
+                    <span>{blog.knowledgeBlocks.length} {t('blog_chapters')}</span>
                   </div>
                 </>
               )}
@@ -176,17 +173,16 @@ export default function BlogDetailPage() {
           </div>
         </div>
       </section>
-      {/* Content Section */}
+
       <section className="py-12 px-4">
         <div className="max-w-[1500px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-8">
-            {/* Sidebar - Table of Contents - UPDATED STYLE */}
             {blog.knowledgeBlocks && blog.knowledgeBlocks.length > 0 && (
               <div className="lg:sticky lg:top-24 h-fit">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
                   <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 uppercase text-sm tracking-wide">
                     <BookOpen className="w-4 h-4 text-emerald-600" />
-                    Mục lục
+                    {t('blog_detail_toc')}
                   </h3>
                   <nav className="space-y-1">
                     {blog.knowledgeBlocks.map((block, index) => (
@@ -201,18 +197,16 @@ export default function BlogDetailPage() {
                               block: "start",
                             });
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-5 text-sm font-medium rounded-lg transition-all duration-200 text-left border-l-4 ${
-                          activeBlock === index
+                        className={`w-full flex items-center gap-3 px-4 py-5 text-sm font-medium rounded-lg transition-all duration-200 text-left border-l-4 ${activeBlock === index
                             ? "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm"
                             : "border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
-                        }`}
+                          }`}
                       >
                         <span
-                          className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                            activeBlock === index
+                          className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${activeBlock === index
                               ? "bg-emerald-100 text-emerald-600"
                               : "bg-gray-100 text-gray-500"
-                          }`}
+                            }`}
                         >
                           {index + 1}
                         </span>
@@ -224,19 +218,16 @@ export default function BlogDetailPage() {
               </div>
             )}
 
-            {/* Main Content */}
             <div className="space-y-8">
-              {/* Introduction */}
               <div className="bg-white rounded-xl shadow-md p-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Giới thiệu
+                  {t('blog_detail_intro')}
                 </h2>
                 <p className="text-gray-700 leading-relaxed text-lg">
                   {blog.content}
                 </p>
               </div>
 
-              {/* Knowledge Blocks */}
               {blog.knowledgeBlocks &&
                 blog.knowledgeBlocks.map((block, index) => (
                   <div
@@ -244,7 +235,6 @@ export default function BlogDetailPage() {
                     id={`block-${index}`}
                     className="bg-white rounded-xl shadow-md overflow-hidden scroll-mt-32"
                   >
-                    {/* Block Image */}
                     {block.image && (
                       <div className="relative h-80 w-full">
                         <Image
@@ -256,7 +246,6 @@ export default function BlogDetailPage() {
                       </div>
                     )}
 
-                    {/* Block Content */}
                     <div className="p-8">
                       <div className="flex items-start gap-4 mb-4">
                         <div className="flex-shrink-0 w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold">
@@ -273,7 +262,6 @@ export default function BlogDetailPage() {
                   </div>
                 ))}
 
-              {/* Navigation Buttons */}
               <div className="flex justify-between items-center pt-8">
                 <Link
                   href="/blogs"
@@ -292,7 +280,7 @@ export default function BlogDetailPage() {
                       d="M15 19l-7-7 7-7"
                     />
                   </svg>
-                  Quay lại danh sách
+                  {t('blog_detail_back_list')}
                 </Link>
 
                 <button
@@ -301,7 +289,7 @@ export default function BlogDetailPage() {
                   }
                   className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-medium transition-colors"
                 >
-                  Lên đầu trang
+                  {t('blog_detail_scroll_top')}
                   <svg
                     className="w-5 h-5"
                     fill="none"
