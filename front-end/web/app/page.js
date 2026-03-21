@@ -43,6 +43,7 @@ export default function Home() {
     if (isCheckingAuth) return;
     if (!authUser) return;
     const roleRoutes = {
+      admin: "/dashboard",
       farmer: "/profile/details",
       trader: "/profile/details",
       serviceProvider: "/profile/details",
@@ -101,7 +102,7 @@ export default function Home() {
   if (
     isCheckingAuth ||
     (authUser?.role &&
-      ["farmer", "trader", "serviceProvider", "contentExpert"].includes(authUser.role))
+      ["admin", "farmer", "trader", "serviceProvider", "contentExpert"].includes(authUser.role))
   ) {
     return <div className="min-h-screen bg-white"></div>;
   }

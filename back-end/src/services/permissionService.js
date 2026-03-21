@@ -38,8 +38,6 @@ const getPermissionRequestDetail = async (request_id) => {
         "full_name email phone avatar role is_verified verify_cccd is_banned created_at updated_at",
       )
       .lean();
-    console.log("Request detail:", request);
-    console.log("verify_cccd =", request?.verify_cccd);
     return request;
   } catch (error) {
     throw error;
