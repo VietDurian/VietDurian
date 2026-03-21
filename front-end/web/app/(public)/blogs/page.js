@@ -7,8 +7,10 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { blogAPI } from "@/lib/api";
 import { Search, X, Calendar, Book, ChevronRight, AlertCircle, Frown, ChevronDown, Tag, List } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function BlogPage() {
+    const { t } = useLanguage();
     const [blogs, setBlogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -29,11 +31,11 @@ export default function BlogPage() {
                     }));
                     setBlogs(blogsWithCount);
                 } else {
-                    setError('Không thể tải danh sách blog');
+                    setError(t('blog_login_required_title'));
                 }
             } catch (err) {
                 console.error('Error fetching blogs:', err);
-                setError('Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau.');
+                setError(t('blog_login_required_title'));
             } finally {
                 setLoading(false);
             }
@@ -66,13 +68,14 @@ export default function BlogPage() {
     const filteredBlogs = blogs.filter(blog =>
         normalize(blog.title).includes(normalize(searchTerm))
     );
+
     const sortOptions = [
-        { value: "newest", label: "Mới nhất" },
-        { value: "oldest", label: "Cũ nhất" },
+        { value: "newest", label: t('blog_sort_newest') },
+        { value: "oldest", label: t('blog_sort_oldest') },
     ];
 
     const getCurrentSortLabel = () => {
-        return sortOptions.find(opt => opt.value === sortOrder)?.label || "Sắp xếp";
+        return sortOptions.find(opt => opt.value === sortOrder)?.label || t('blog_sort_label');
     };
 
     return (
@@ -83,17 +86,16 @@ export default function BlogPage() {
             <section className="bg-emerald-500 pt-32 pb-16 px-4">
                 <div className="max-w-[1400px] mx-auto text-center">
                     <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                        Kiến Thức Sầu Riêng
+                        {t('blog_page_title')}
                     </h1>
                     <p className="text-emerald-100 text-lg max-w-2xl mx-auto mb-8">
-                        Khám phá các kỹ thuật trồng và chăm sóc sầu riêng hiện đại,
-                        cập nhật xu hướng thị trường và chia sẻ kinh nghiệm thực tế
+                        {t('blog_page_subtitle')}
                     </p>
                     <div className="max-w-2xl mx-auto">
                         <div className="relative group">
                             <input
                                 type="text"
-                                placeholder="Tìm kiếm bài viết..."
+                                placeholder={t('blog_search_placeholder')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full px-6 py-4 pl-14 rounded-2xl border-2 border-white/30 focus:border-white focus:outline-none text-gray-900 placeholder-gray-500 bg-white transition-all duration-300"
@@ -118,7 +120,7 @@ export default function BlogPage() {
                     {loading ? (
                         <div className="flex flex-col justify-center items-center py-20">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
-                            <p className="text-gray-600">Đang tải dữ liệu...</p>
+                            <p className="text-gray-600">{t('blog_loading')}</p>
                         </div>
                     ) : error ? (
                         <div className="flex flex-col justify-center items-center py-20">
@@ -129,14 +131,14 @@ export default function BlogPage() {
                                             d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">Đăng nhập để đọc bài viết</h3>
-                                <p className="text-gray-500 text-sm mb-6">Bạn cần đăng nhập để truy cập nội dung này.</p>
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">{t('blog_login_required_title')}</h3>
+                                <p className="text-gray-500 text-sm mb-6">{t('blog_login_required_desc')}</p>
                                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                                     <Link href="/login" className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">
-                                        Đăng nhập ngay
+                                        {t('blog_login_btn2')}
                                     </Link>
                                     <Link href="/register" className="px-6 py-2.5 border border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors text-sm">
-                                        Tạo tài khoản
+                                        {t('blog_register_btn2')}
                                     </Link>
                                 </div>
                             </div>
@@ -144,17 +146,17 @@ export default function BlogPage() {
                     ) : filteredBlogs.length === 0 ? (
                         <div className="text-center py-20">
                             <Frown className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-500 text-lg">Không tìm thấy bài viết nào</p>
+                            <p className="text-gray-500 text-lg">{t('blog_not_found')}</p>
                         </div>
                     ) : (
                         <>
                             {/* Sort bar */}
                             <div className="flex items-center justify-between mb-6">
                                 <p className="text-gray-600">
-                                    Tìm thấy <span className="font-semibold text-emerald-600">{filteredBlogs.length}</span> bài viết
+                                    {t('blog_found')} <span className="font-semibold text-emerald-600">{filteredBlogs.length}</span> {t('blog_found_items')}
                                 </p>
                                 <div className="flex flex-wrap gap-3 items-center">
-                                    <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Sắp xếp:</span>
+                                    <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">{t('blog_sort_label')}</span>
                                     <div className="relative sort-dropdown-container">
                                         <button
                                             onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
@@ -213,12 +215,12 @@ export default function BlogPage() {
                                                     {blog.knowledgeBlocksCount > 0 && (
                                                         <div className="flex items-center gap-1 text-sm text-emerald-600 font-medium">
                                                             <Book className="w-4 h-4" />
-                                                            <span>{blog.knowledgeBlocksCount} chương</span>
+                                                            <span>{blog.knowledgeBlocksCount} {t('blog_chapters')}</span>
                                                         </div>
                                                     )}
                                                 </div>
                                                 <div className="mt-4 flex items-center text-emerald-600 font-medium group-hover:text-emerald-700">
-                                                    <span>Đọc thêm</span>
+                                                    <span>{t('blog_read_more')}</span>
                                                     <ChevronRight className="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
                                                 </div>
                                             </div>
