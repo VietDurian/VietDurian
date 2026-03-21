@@ -20,24 +20,12 @@ import {
 } from "lucide-react";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useAuthStore } from "@/store/useAuthStore";
-
-// ── Status config ────────────────────────────────────────────────────────────
-const STATUS_CONFIG = {
-  "In progressing": {
-    label: "Đang canh tác",
-    className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-    icon: Clock,
-  },
-  Completed: {
-    label: "Đã hoàn thành",
-    className: "bg-gray-100 text-gray-600 border border-gray-200",
-    icon: CheckCircle2,
-  },
-};
+import { useLanguage } from "@/context/LanguageContext";
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function SeasonDiariesPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const { authUser } = useAuthStore();
   // TODO: thay bằng Zustand
   const { seasonDiaries, getSeasonDiaries, isSeasonDiariesLoading } =
@@ -48,6 +36,20 @@ export default function SeasonDiariesPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+
+  // STATUS_CONFIG dùng t() nên đặt trong component
+  const STATUS_CONFIG = {
+    "In progressing": {
+      label: t("season_status_inprogress"),
+      className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+      icon: Clock,
+    },
+    Completed: {
+      label: t("season_status_completed"),
+      className: "bg-gray-100 text-gray-600 border border-gray-200",
+      icon: CheckCircle2,
+    },
+  };
 
   const totalArea = useMemo(
     () => seasonDiaries.reduce((sum, d) => sum + (Number(d.area) || 0), 0),
@@ -90,11 +92,11 @@ export default function SeasonDiariesPage() {
   }, [seasonDiaries, searchQuery, activeFilter]);
 
   const FILTER_TABS = [
-    { key: "all", label: `Tất cả (${seasonDiaries.length})` },
-    { key: "in_progress", label: `Đang canh tác (${inProgressCount})` },
+    { key: "all", label: `${t("season_filter_all")} (${seasonDiaries.length})` },
+    { key: "in_progress", label: `${t("season_filter_inprogress")} (${inProgressCount})` },
     {
       key: "completed",
-      label: `Đã hoàn thành (${seasonDiaries.length - inProgressCount})`,
+      label: `${t("season_filter_completed")} (${seasonDiaries.length - inProgressCount})`,
     },
   ];
 
@@ -103,7 +105,7 @@ export default function SeasonDiariesPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3 text-gray-500">
           <span className="animate-spin w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full" />
-          Đang tải nhật ký...
+          {t("season_loading")}
         </div>
       </div>
     );
@@ -118,10 +120,10 @@ export default function SeasonDiariesPage() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Nhật ký mùa vụ
+                {t("season_title")}
               </h1>
               <p className="text-gray-500 text-sm mt-0.5">
-                Theo dõi toàn bộ nhật ký canh tác sầu riêng của bạn
+                {t("season_subtitle")}
               </p>
             </div>
             <button
@@ -129,7 +131,7 @@ export default function SeasonDiariesPage() {
               className="cursor-pointer flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors shadow-sm"
             >
               <Plus className="w-5 h-5" />
-              Tạo mùa vụ mới
+              {t("season_create_btn")}
             </button>
           </div>
 
@@ -139,7 +141,7 @@ export default function SeasonDiariesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-emerald-700 font-medium">
-                    Tổng nhật ký
+                    {t("season_stat_total")}
                   </p>
                   <p className="text-2xl font-bold text-emerald-900 mt-0.5">
                     {seasonDiaries.length}
@@ -155,10 +157,10 @@ export default function SeasonDiariesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-teal-700 font-medium">
-                    Tổng diện tích
+                    {t("season_stat_area")}
                   </p>
                   <p className="text-2xl font-bold text-teal-900 mt-0.5">
-                    {totalArea.toLocaleString("vi-VN")} m²
+                    {totalArea.toLocaleString("vi-VN")} {t("season_stat_area_unit")}
                   </p>
                 </div>
                 <div className="w-11 h-11 bg-teal-200 rounded-xl flex items-center justify-center">
@@ -171,7 +173,7 @@ export default function SeasonDiariesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-lime-700 font-medium">
-                    Đang canh tác
+                    {t("season_stat_inprogress")}
                   </p>
                   <p className="text-2xl font-bold text-lime-900 mt-0.5">
                     {inProgressCount}
@@ -191,7 +193,7 @@ export default function SeasonDiariesPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm theo tên vườn, địa điểm, giống cây, mã nhật ký..."
+              placeholder={t("season_search_placeholder")}
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors text-sm"
             />
           </div>
@@ -206,11 +208,10 @@ export default function SeasonDiariesPage() {
             <button
               key={tab.key}
               onClick={() => setActiveFilter(tab.key)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-                activeFilter === tab.key
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${activeFilter === tab.key
                   ? "bg-emerald-500 text-white border-emerald-500"
                   : "bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-600"
-              }`}
+                }`}
             >
               {tab.label}
             </button>
@@ -224,12 +225,12 @@ export default function SeasonDiariesPage() {
               <BookOpen className="w-14 h-14 text-emerald-500" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {searchQuery ? "Không tìm thấy nhật ký" : "Chưa có nhật ký nào"}
+              {searchQuery ? t("season_empty_notfound") : t("season_empty_title")}
             </h2>
             <p className="text-gray-500 text-center max-w-md mb-8">
               {searchQuery
-                ? "Thử thay đổi từ khóa tìm kiếm của bạn"
-                : "Tạo nhật ký đầu tiên để bắt đầu ghi lại hành trình canh tác"}
+                ? t("season_empty_search_desc")
+                : t("season_empty_desc")}
             </p>
             {!searchQuery && (
               <button
@@ -237,24 +238,24 @@ export default function SeasonDiariesPage() {
                 className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-medium transition-colors shadow-sm"
               >
                 <Plus className="w-5 h-5" />
-                Tạo nhật ký đầu tiên
+                {t("season_create_first_btn")}
               </button>
             )}
           </div>
         ) : (
           <>
             <p className="text-sm text-gray-500 mb-5">
-              Hiển thị{" "}
+              {t("season_showing")}{" "}
               <span className="font-semibold text-gray-700">
                 {filteredDiaries.length}
               </span>{" "}
-              nhật ký
-              {searchQuery && ` cho "${searchQuery}"`}
+              {t("season_showing_unit")}
+              {searchQuery && ` ${t("season_showing_for")} "${searchQuery}"`}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredDiaries.map((diary) => (
-                <SeasonDiaryCard key={diary._id} diary={diary} />
+                <SeasonDiaryCard key={diary._id} diary={diary} statusConfig={STATUS_CONFIG} t={t} />
               ))}
             </div>
           </>
@@ -265,11 +266,11 @@ export default function SeasonDiariesPage() {
 }
 
 // ── Card component ────────────────────────────────────────────────────────────
-function SeasonDiaryCard({ diary }) {
+function SeasonDiaryCard({ diary, statusConfig, t }) {
   const router = useRouter();
   const varieties = Array.isArray(diary.crop_variety) ? diary.crop_variety : [];
 
-  const status = STATUS_CONFIG[diary.status] || STATUS_CONFIG["In progressing"];
+  const status = statusConfig[diary.status] || statusConfig["In progressing"];
   const StatusIcon = status.icon;
 
   const memberList = diary.members
@@ -355,7 +356,7 @@ function SeasonDiaryCard({ diary }) {
             {diary.farmer_name}
             {memberList.length > 1 && (
               <span className="text-gray-400 ml-1">
-                +{memberList.length - 1} thành viên
+                +{memberList.length - 1} {t("season_card_members")}
               </span>
             )}
           </span>
@@ -363,20 +364,20 @@ function SeasonDiaryCard({ diary }) {
 
         {/* Land use history */}
         <p className="text-xs text-gray-500 line-clamp-2 mb-4 flex-1 leading-relaxed">
-          {diary.land_use_history || "Chưa có thông tin lịch sử đất."}
+          {diary.land_use_history || t("season_card_noland")}
         </p>
 
         {/* Stats row */}
         <div className="flex items-center gap-3 py-3 border-t border-b border-gray-100 mb-3">
           <div className="flex-1 text-center">
-            <p className="text-xs text-gray-400 mb-0.5">Diện tích</p>
+            <p className="text-xs text-gray-400 mb-0.5">{t("season_card_area")}</p>
             <p className="text-sm font-semibold text-gray-700">
-              {(Number(diary.area) || 0).toLocaleString("vi-VN")} m²
+              {(Number(diary.area) || 0).toLocaleString("vi-VN")} {t("season_stat_area_unit")}
             </p>
           </div>
           <div className="w-px h-8 bg-gray-200" />
           <div className="flex-1 text-center">
-            <p className="text-xs text-gray-400 mb-0.5">Hàng luống</p>
+            <p className="text-xs text-gray-400 mb-0.5">{t("season_card_rowbed")}</p>
             <p className="text-sm font-semibold text-gray-700">
               {diary.row_bed_count ?? "–"}
             </p>
@@ -390,19 +391,19 @@ function SeasonDiaryCard({ diary }) {
             className="flex-1 inline-flex items-center justify-center gap-1.5 border border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white px-3 py-2 rounded-lg font-medium transition-colors text-xs"
           >
             <ArrowRight className="w-3.5 h-3.5" />
-            Chi tiết
+            {t("season_card_detail")}
           </button>
           <button
             onClick={handlePages}
             className="flex-1 inline-flex items-center justify-center gap-1.5 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white px-3 py-2 rounded-lg font-medium transition-colors text-xs"
           >
             <Layers className="w-3.5 h-3.5" />
-            Nhật ký
+            {t("season_card_diary")}
           </button>
           <button
             onClick={handleStats}
             className="inline-flex items-center justify-center border border-blue-400 text-blue-500 hover:bg-blue-500 hover:text-white w-8 h-8 rounded-lg transition-colors"
-            title="Thống kê"
+            title={t("season_card_stats")}
           >
             <BarChart2 className="w-3.5 h-3.5" />
           </button>
