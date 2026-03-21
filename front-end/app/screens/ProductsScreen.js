@@ -1,6 +1,6 @@
 import {
   StyleSheet, Text, View, TextInput, TouchableOpacity,
-  FlatList, Image, ScrollView, ActivityIndicator, Dimensions,
+  FlatList, Image, ScrollView, ActivityIndicator, Dimensions, Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useEffect, useCallback } from "react";
@@ -255,8 +255,13 @@ export default function ProductsScreen() {
         </View>
       </View>
 
-      {/* ── Sort bottom sheet ── */}
-      {showSortSheet && (
+      {/* ── Sort bottom sheet dùng Modal ── */}
+      <Modal
+        visible={showSortSheet}
+        transparent
+        animationType="none"
+        onRequestClose={() => setShowSortSheet(false)}
+      >
         <TouchableOpacity
           style={styles.sheetOverlay}
           activeOpacity={1}
@@ -279,7 +284,7 @@ export default function ProductsScreen() {
             ))}
           </View>
         </TouchableOpacity>
-      )}
+      </Modal>
 
       {/* ── Products list ── */}
       <FlatList
@@ -389,8 +394,8 @@ const styles = StyleSheet.create({
 
   // Sort sheet
   sheetOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.35)", zIndex: 99, justifyContent: "flex-end",
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end",
   },
   sheetContainer: {
     backgroundColor: "#FFF", borderTopLeftRadius: 20, borderTopRightRadius: 20,
@@ -412,7 +417,7 @@ const styles = StyleSheet.create({
   listContent: { paddingBottom: 96, paddingHorizontal: 0 },
   resultCount: { fontSize: 12, color: "#6B7280", paddingHorizontal: 16, paddingVertical: 12 },
 
-  // Card — thon hơn, image nằm trong padding
+  // Card
   card: {
     width: CARD_W,
     backgroundColor: "#FFF",
@@ -427,9 +432,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#F3F4F6",
   },
-  // Toàn bộ nội dung nằm trong padding
   cardBody: { padding: 14 },
-  // Image wrapper: bo góc, overflow hidden, margin dưới
   cardImageWrapper: {
     borderRadius: 10,
     overflow: "hidden",

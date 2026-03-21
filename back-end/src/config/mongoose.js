@@ -5,23 +5,30 @@ dotenv.config();
 
 const connectDB = async () => {
   try {
-    const uri = process.env.MONGODB_URI;
-    // const uri = "mongodb+srv://ChanPotter:Password123!@cluster0.jdsmxen.mongodb.net/?appName=Cluster0";
-    const dbName = process.env.DATABASE_NAME;
+    if (mongoose.connection.readyState === 1) return;
+
+    const uri = process.env.MONGODB_URI_ATLAS || process.env.MONGODB_URI;
+    const dbName = process.env.DATABASE_NAME || "VietDurian_DB";
 
     if (!uri) {
-      throw new Error("MONGODB_URI_ATLAS is not defined in .env file");
+      throw new Error("MONGODB_URI_ATLAS or MONGODB_URI is not defined");
     }
 
     await mongoose.connect(uri, {
-      dbName: dbName,
+      dbName,
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
     });
 
-    console.log("MongoDB Connected Successfully");
+    console.log(`[MongoDB] Connected successfully (db: ${dbName})`);
   } catch (error) {
-    console.error("❌ MongoDB Connection Failed:", error.message || error);
-    process.exit(1);
+    console.error("[MongoDB] Connection failed", {
+      name: error?.name,
+      code: error?.code,
+      message: error?.message,
+    });
+    throw error;
   }
 };
 
-module.exports = connectDB;
+export default connectDB;

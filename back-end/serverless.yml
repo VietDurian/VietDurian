@@ -42,6 +42,12 @@ build:
 plugins:
   - serverless-esbuild
 
+package:
+  patterns:
+    - src/routes/**
+    - src/model/**
+    - src/config/swagger.js
+
 functions:
   app:
     handler: src/server.handler # The file (server.js) and the exported handler (handler)

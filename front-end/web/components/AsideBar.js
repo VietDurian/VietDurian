@@ -33,35 +33,32 @@ const SidebarItem = ({
   onClick,
   disabled,
 }) => {
-  const itemClass = `relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${
-    disabled
+  const itemClass = `relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${disabled
       ? "text-gray-400 bg-gray-100 cursor-not-allowed"
       : active
         ? "bg-emerald-500 text-white scale-105"
         : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
-  }`;
+    }`;
 
   const content = (
     <>
       {active && <div className="absolute inset-0 bg-white/10 rounded-2xl" />}
       <div
-        className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
-          disabled
+        className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${disabled
             ? "bg-gray-200"
             : active
               ? "bg-white/20 backdrop-blur-sm"
               : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
-        }`}
+          }`}
       >
         <Icon
           size={20}
-          className={`${
-            disabled
+          className={`${disabled
               ? "text-gray-400"
               : active
                 ? "text-white"
                 : "text-emerald-500 group-hover:text-emerald-600 group-hover:scale-110"
-          } transition-all duration-300`}
+            } transition-all duration-300`}
           strokeWidth={2.5}
         />
       </div>
