@@ -2,22 +2,16 @@
 import Navbar from "@/components/Navbar";
 import React, { useState } from "react";
 import {
-    Briefcase,
-    MapPin,
-    Phone,
-    FileText,
-    CheckCircle,
-    Award,
-    Building2,
-    Wrench,
-    Loader2,
-    XCircle,
+    Briefcase, MapPin, Phone, FileText, CheckCircle,
+    Award, Building2, Wrench, Loader2, XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { capabilityProfileAPI } from "@/lib/api";
-import { toast } from "sonner"
+import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function CreateResumePage() {
+    const { t } = useLanguage();
     const router = useRouter();
     const [isCreating, setIsCreating] = useState(false);
     const [error, setError] = useState(null);
@@ -44,9 +38,9 @@ export default function CreateResumePage() {
         if (name === 'contact_phone') {
             const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
             if (!value.trim()) {
-                setPhoneError("Vui lòng nhập số điện thoại");
+                setPhoneError(t('resume_phone_required'));
             } else if (!phoneRegex.test(value)) {
-                setPhoneError("Số điện thoại không hợp lệ (10 số, bắt đầu 03/05/07/08/09)");
+                setPhoneError(t('resume_phone_invalid'));
             } else {
                 setPhoneError("");
             }
@@ -70,14 +64,14 @@ export default function CreateResumePage() {
 
             const response = await capabilityProfileAPI.create(payload);
             if (response.code === 201) {
-                toast.success("Tạo hồ sơ thành công!");
+                toast.success(t('create_resume_success'));
                 router.push("/profile/resume");
             }
         } catch (error) {
             console.error("Error submitting profile:", error);
-            let errorMessage = "Có lỗi xảy ra!";
+            let errorMessage = t('create_resume_fail');
             if (error?.response?.status === 409) {
-                errorMessage = "Hồ sơ đã tồn tại! Mỗi tài khoản chỉ tạo được 1 lần.";
+                errorMessage = t('create_resume_duplicate');
             } else if (error?.response?.data?.message) {
                 errorMessage = error.response.data.message;
             }
@@ -94,55 +88,51 @@ export default function CreateResumePage() {
             <div className="py-8 px-6">
                 <div className="max-w-4xl mx-auto">
                     <div className="bg-white rounded-3xl overflow-hidden border border-gray-200">
-                        {/* Form Header — y chang goc */}
                         <div className="bg-emerald-500 text-white p-8">
                             <div className="flex items-center gap-3 mb-2">
                                 <Briefcase size={32} strokeWidth={2.5} />
-                                <h2 className="text-3xl font-bold">Tạo Hồ Sơ Năng Lực</h2>
+                                <h2 className="text-3xl font-bold">{t('create_resume_header_title')}</h2>
                             </div>
-                            <p className="text-emerald-100">
-                                Điền thông tin dịch vụ của bạn để khách hàng dễ dàng tìm thấy
-                            </p>
+                            <p className="text-emerald-100">{t('create_resume_header_subtitle')}</p>
                         </div>
 
-                        {/* Form Body — y chang goc */}
                         <form onSubmit={handleSubmit} className="p-8 space-y-6">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Tên Doanh Nghiệp <span className="text-red-500">*</span>
+                                    {t('resume_business_name_label')} <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                    <input type="text" name="business_name" value={formData.business_name} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder="Ví dụ: Dịch Vụ Nông Nghiệp Xanh" />
+                                    <input type="text" name="business_name" value={formData.business_name} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder={t('resume_business_name_placeholder')} />
                                 </div>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Dịch Vụ Cung Cấp <span className="text-red-500">*</span>
+                                    {t('resume_services_label')} <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <Wrench className="absolute left-4 top-4 text-gray-400" size={20} />
-                                    <textarea name="services" value={formData.services} onChange={handleInputChange} required rows={3} className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none" placeholder="Ví dụ: Phun thuốc, diệt côn trùng, thu hoạch sầu riêng" />
+                                    <textarea name="services" value={formData.services} onChange={handleInputChange} required rows={3} className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none" placeholder={t('resume_services_placeholder')} />
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">Liệt kê các dịch vụ, phân cách bằng dấu phẩy</p>
+                                <p className="text-xs text-gray-500 mt-1">{t('resume_services_hint')}</p>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Khu Vực Hoạt Động <span className="text-red-500">*</span>
+                                    {t('resume_areas_label')} <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                    <input type="text" name="service_areas" value={formData.service_areas} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder="Ví dụ: TP. Hồ Chí Minh, TP. Cần Thơ" />
+                                    <input type="text" name="service_areas" value={formData.service_areas} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder={t('resume_areas_placeholder')} />
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">Các tỉnh/thành phố bạn cung cấp dịch vụ</p>
+                                <p className="text-xs text-gray-500 mt-1">{t('resume_areas_hint')}</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Số Năm Kinh Nghiệm <span className="text-red-500">*</span>
+                                        {t('resume_exp_label')} <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <Award className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10" size={20} />
@@ -159,16 +149,15 @@ export default function CreateResumePage() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Số Điện Thoại Liên Hệ <span className="text-red-500">*</span>
+                                        {t('resume_phone_label')} <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                        <input type="tel" name="contact_phone" value={formData.contact_phone} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder="0909123456" />
+                                        <input type="tel" name="contact_phone" value={formData.contact_phone} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder={t('resume_phone_placeholder')} />
                                     </div>
                                     {phoneError && (
                                         <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                                            <XCircle size={14} strokeWidth={2.5} />
-                                            {phoneError}
+                                            <XCircle size={14} strokeWidth={2.5} />{phoneError}
                                         </p>
                                     )}
                                 </div>
@@ -176,25 +165,22 @@ export default function CreateResumePage() {
 
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Mô Tả Chi Tiết <span className="text-red-500">*</span>
+                                    {t('resume_desc_label')} <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
                                     <FileText className="absolute left-4 top-4 text-gray-400" size={20} />
-                                    <textarea name="description" value={formData.description} onChange={handleInputChange} required rows={4} className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none" placeholder="Giới thiệu về dịch vụ của bạn, điểm mạnh, cam kết chất lượng..." />
+                                    <textarea name="description" value={formData.description} onChange={handleInputChange} required rows={4} className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none" placeholder={t('resume_desc_placeholder')} />
                                 </div>
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <button type="button" onClick={() => router.back()} className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300">Hủy</button>
+                                <button type="button" onClick={() => router.back()} className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300">{t('create_resume_cancel_btn')}</button>
                                 <button type="submit" disabled={isCreating || !!phoneError ||
-                                    !formData.business_name.trim() ||
-                                    !formData.services.trim() ||
-                                    !formData.service_areas.trim() ||
-                                    !formData.experience_year ||
-                                    !formData.contact_phone.trim() ||
-                                    !formData.description.trim()
+                                    !formData.business_name.trim() || !formData.services.trim() ||
+                                    !formData.service_areas.trim() || !formData.experience_year ||
+                                    !formData.contact_phone.trim() || !formData.description.trim()
                                 } className="flex-1 px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                                    {isCreating ? (<><Loader2 size={20} className="animate-spin" />Đang Tạo...</>) : (<><CheckCircle size={20} />Tạo Hồ Sơ</>)}
+                                    {isCreating ? (<><Loader2 size={20} className="animate-spin" />{t('create_resume_creating')}</>) : (<><CheckCircle size={20} />{t('create_resume_submit_btn')}</>)}
                                 </button>
                             </div>
                         </form>
