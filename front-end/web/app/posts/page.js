@@ -1,20 +1,8 @@
 "use client";
 import {
-  Heart,
-  MessageCircle,
-  ImageIcon,
-  AlertCircle,
-  Loader2,
-  Search,
-  Filter,
-  X,
-  Wrench,
-  BookOpen,
-  Package,
-  HandCoins,
-  LayoutGrid,
-  ChevronDown,
-  Info,
+  Heart, MessageCircle, ImageIcon, AlertCircle, Loader2, Search,
+  Filter, X, Wrench, BookOpen, Package, HandCoins, LayoutGrid,
+  ChevronDown, Info,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -25,20 +13,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
 import Link from "next/link";
-
-const POST_CATEGORIES = ["Tất cả", "Dịch vụ", "Kinh nghiệm", "Sản phẩm", "Thuê dịch vụ", "Khác"];
-const SORT_OPTIONS = [
-  { value: "newest", label: "Mới nhất" },
-  { value: "oldest", label: "Cũ nhất" },
-];
-
-const CATEGORY_GUIDE = [
-  { key: "Dịch vụ", Icon: Wrench, gradient: "from-blue-500 to-cyan-500", bgLight: "bg-blue-50", borderColor: "border-blue-200", ringColor: "ring-blue-500", textColor: "text-blue-700", tagBg: "bg-blue-100 text-blue-700", who: "Dành cho: Nhân công", tagLine: "Tôi cung cấp dịch vụ", desc: "Nhân công đăng bài chào dịch vụ của mình: phun thuốc, diệt sâu, thu hoạch, chăm sóc vườn..." },
-  { key: "Kinh nghiệm", Icon: BookOpen, gradient: "from-amber-500 to-orange-500", bgLight: "bg-amber-50", borderColor: "border-amber-200", ringColor: "ring-amber-500", textColor: "text-amber-700", tagBg: "bg-amber-100 text-amber-700", who: "Dành cho: Tất cả mọi người", tagLine: "Chia sẻ kiến thức", desc: "Chia sẻ mẹo trồng trọt, cách xử lý sâu bệnh, kinh nghiệm canh tác thực tế." },
-  { key: "Sản phẩm", Icon: Package, gradient: "from-emerald-500 to-teal-500", bgLight: "bg-emerald-50", borderColor: "border-emerald-200", ringColor: "ring-emerald-500", textColor: "text-emerald-700", tagBg: "bg-emerald-100 text-emerald-700", who: "Dành cho: Người bán", tagLine: "Mua bán nông sản", desc: "Rao bán sầu riêng, phân bón, thuốc trừ sâu, cây giống và các nông sản khác." },
-  { key: "Thuê dịch vụ", Icon: HandCoins, gradient: "from-purple-500 to-violet-500", bgLight: "bg-purple-50", borderColor: "border-purple-200", ringColor: "ring-purple-500", textColor: "text-purple-700", tagBg: "bg-purple-100 text-purple-700", who: "Dành cho: Chủ vườn / Nông dân", tagLine: "Tôi cần thuê người", desc: "Chủ vườn đăng tin tìm nhân công: cần người phun thuốc, hái quả, chăm sóc vườn." },
-  { key: "Khác", Icon: LayoutGrid, gradient: "from-gray-500 to-slate-500", bgLight: "bg-gray-50", borderColor: "border-gray-200", ringColor: "ring-gray-400", textColor: "text-gray-600", tagBg: "bg-gray-100 text-gray-600", who: "Dành cho: Tất cả", tagLine: "Nội dung khác", desc: "Hỏi đáp, thông báo, tin tức nông nghiệp và các chủ đề chưa phân loại." },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 const categoryConfig = {
   "Dịch vụ": { icon: Wrench, bg: "from-blue-500 to-cyan-500" },
@@ -50,7 +25,17 @@ const categoryConfig = {
 
 // ─── Category Guide Section ───────────────────────────────────────────────────
 const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
+
+  const CATEGORY_GUIDE = [
+    { key: "Dịch vụ", Icon: Wrench, gradient: "from-blue-500 to-cyan-500", bgLight: "bg-blue-50", borderColor: "border-blue-200", ringColor: "ring-blue-500", textColor: "text-blue-700", tagBg: "bg-blue-100 text-blue-700", who: t('posts_cat_service_who'), tagLine: t('posts_cat_service_tagline'), desc: t('posts_cat_service_desc') },
+    { key: "Kinh nghiệm", Icon: BookOpen, gradient: "from-amber-500 to-orange-500", bgLight: "bg-amber-50", borderColor: "border-amber-200", ringColor: "ring-amber-500", textColor: "text-amber-700", tagBg: "bg-amber-100 text-amber-700", who: t('posts_cat_experience_who'), tagLine: t('posts_cat_experience_tagline'), desc: t('posts_cat_experience_desc') },
+    { key: "Sản phẩm", Icon: Package, gradient: "from-emerald-500 to-teal-500", bgLight: "bg-emerald-50", borderColor: "border-emerald-200", ringColor: "ring-emerald-500", textColor: "text-emerald-700", tagBg: "bg-emerald-100 text-emerald-700", who: t('posts_cat_product_who'), tagLine: t('posts_cat_product_tagline'), desc: t('posts_cat_product_desc') },
+    { key: "Thuê dịch vụ", Icon: HandCoins, gradient: "from-purple-500 to-violet-500", bgLight: "bg-purple-50", borderColor: "border-purple-200", ringColor: "ring-purple-500", textColor: "text-purple-700", tagBg: "bg-purple-100 text-purple-700", who: t('posts_cat_hire_who'), tagLine: t('posts_cat_hire_tagline'), desc: t('posts_cat_hire_desc') },
+    { key: "Khác", Icon: LayoutGrid, gradient: "from-gray-500 to-slate-500", bgLight: "bg-gray-50", borderColor: "border-gray-200", ringColor: "ring-gray-400", textColor: "text-gray-600", tagBg: "bg-gray-100 text-gray-600", who: t('posts_cat_other_who'), tagLine: t('posts_cat_other_tagline'), desc: t('posts_cat_other_desc') },
+  ];
+
   return (
     <div className="mb-6">
       <button onClick={() => setExpanded(!expanded)} className="w-full flex items-center justify-between px-6 py-5 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all group">
@@ -59,8 +44,8 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
             <Info size={18} className="text-white" />
           </div>
           <div className="text-left">
-            <p className="font-bold text-gray-900 text-base">Hướng dẫn danh mục bài viết</p>
-            <p className="text-gray-500 text-sm">Bấm để xem từng danh mục dùng để làm gì</p>
+            <p className="font-bold text-gray-900 text-base">{t('posts_category_guide_title')}</p>
+            <p className="text-gray-500 text-sm">{t('posts_category_guide_subtitle')}</p>
           </div>
         </div>
         <div className={`text-gray-400 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}><ChevronDown size={22} /></div>
@@ -82,7 +67,7 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
                 </div>
                 <p className="text-sm text-gray-600 leading-relaxed">{cat.desc}</p>
                 <div className={`flex items-center gap-1.5 text-xs font-semibold ${cat.textColor} mt-auto`}>
-                  <Filter size={13} />{isActive ? "Đang lọc danh mục này" : "Bấm để lọc danh mục"}
+                  <Filter size={13} />{isActive ? t('posts_filter_active') : t('posts_filter_click')}
                 </div>
                 {isActive && <div className={`absolute inset-0 rounded-2xl pointer-events-none bg-gradient-to-br ${cat.gradient} opacity-5`} />}
               </button>
@@ -96,10 +81,26 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
 
 // ─── Filter Bar ───────────────────────────────────────────────────────────────
 const FilterBar = ({ selectedCategory, onCategoryChange, selectedSort, onSortChange, searchQuery, onSearchChange, onClearFilters }) => {
+  const { t } = useLanguage();
   const [showFilters, setShowFilters] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+
+  const POST_CATEGORIES = [t('posts_cat_all'), t('posts_cat_service'), t('posts_cat_experience'), t('posts_cat_product'), t('posts_cat_hire'), t('posts_cat_other')];
+  const POST_CATEGORIES_MAP = [
+    { label: t('posts_cat_all'), value: "Tất cả" },
+    { label: t('posts_cat_service'), value: "Dịch vụ" },
+    { label: t('posts_cat_experience'), value: "Kinh nghiệm" },
+    { label: t('posts_cat_product'), value: "Sản phẩm" },
+    { label: t('posts_cat_hire'), value: "Thuê dịch vụ" },
+    { label: t('posts_cat_other'), value: "Khác" },
+  ];
+  const SORT_OPTIONS = [
+    { value: "newest", label: t('posts_sort_newest') },
+    { value: "oldest", label: t('posts_sort_oldest') },
+  ];
+
   const hasActiveFilters = selectedCategory !== "Tất cả" || selectedSort !== "newest" || searchQuery.trim() !== "";
-  const selectedSortLabel = SORT_OPTIONS.find((opt) => opt.value === selectedSort)?.label || "Mới nhất";
+  const selectedSortLabel = SORT_OPTIONS.find((opt) => opt.value === selectedSort)?.label || t('posts_sort_newest');
 
   useEffect(() => {
     const handleClickOutside = (e) => { if (showSortDropdown && !e.target.closest(".sort-dropdown")) setShowSortDropdown(false); };
@@ -112,7 +113,7 @@ const FilterBar = ({ selectedCategory, onCategoryChange, selectedSort, onSortCha
       <div className="flex gap-3 mb-0">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input type="text" value={searchQuery} onChange={(e) => onSearchChange(e.target.value)} placeholder="Tìm kiếm theo tiêu đề bài viết..." className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white" />
+          <input type="text" value={searchQuery} onChange={(e) => onSearchChange(e.target.value)} placeholder={t('posts_search_placeholder')} className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent bg-white" />
         </div>
         <div className="relative sort-dropdown">
           <button type="button" onClick={() => setShowSortDropdown(!showSortDropdown)} className="min-w-[140px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm">
@@ -128,21 +129,21 @@ const FilterBar = ({ selectedCategory, onCategoryChange, selectedSort, onSortCha
           )}
         </div>
         <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${showFilters ? "bg-emerald-600 text-white shadow-md" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
-          <Filter size={20} /><span className="hidden sm:inline">Lọc</span>
+          <Filter size={20} /><span className="hidden sm:inline">{t('posts_filter_btn')}</span>
         </button>
       </div>
       {showFilters && (
         <div className="pt-4 mt-4 border-t border-gray-200 space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Danh mục</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">{t('posts_filter_category_label')}</label>
             <div className="flex flex-wrap gap-2">
-              {POST_CATEGORIES.map((category) => (
-                <button key={category} onClick={() => onCategoryChange(category)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedCategory === category ? "bg-emerald-600 text-white shadow-md" : "bg-gray-100 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 border border-transparent"}`}>{category}</button>
+              {POST_CATEGORIES_MAP.map((category) => (
+                <button key={category.value} onClick={() => onCategoryChange(category.value)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedCategory === category.value ? "bg-emerald-600 text-white shadow-md" : "bg-gray-100 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 border border-transparent"}`}>{category.label}</button>
               ))}
             </div>
           </div>
           {hasActiveFilters && (
-            <button onClick={onClearFilters} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all"><X size={16} />Xóa bộ lọc</button>
+            <button onClick={onClearFilters} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-all"><X size={16} />{t('posts_filter_clear')}</button>
           )}
         </div>
       )}
@@ -152,6 +153,7 @@ const FilterBar = ({ selectedCategory, onCategoryChange, selectedSort, onSortCha
 
 // ─── Post Card ────────────────────────────────────────────────────────────────
 const Post = ({ post, onLikeUpdate, onContact }) => {
+  const { t } = useLanguage();
   const router = useRouter();
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments || 0);
@@ -183,7 +185,6 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
   return (
     <>
       <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-all w-full">
-        {/* Header: avatar + name + category badge (inside) */}
         <div className="flex justify-between items-start mb-4">
           <div className="flex gap-3 flex-1 min-w-0">
             <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100 cursor-pointer" onClick={() => router.push(`/profile/${post.authorId}`)}>
@@ -210,7 +211,6 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
           </div>
         </div>
 
-        {/* Title */}
         {post.title && <h3 className="font-bold text-gray-900 text-lg leading-snug mb-2">{post.title}</h3>}
 
         <div className="text-base text-gray-600 leading-relaxed mb-4">
@@ -219,7 +219,7 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
 
         {post.contact && (
           <div className="mb-4">
-            <span className="text-sm font-semibold text-gray-500">Liên hệ: </span>
+            <span className="text-sm font-semibold text-gray-500">{t('posts_contact_label')}</span>
             <span className="text-sm font-semibold text-emerald-700">{post.contact}</span>
           </div>
         )}
@@ -239,7 +239,7 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
             <MessageCircle size={20} />
             {commentCount > 0 && <span className="text-sm font-medium">{commentCount}</span>}
           </button>
-          <button onClick={() => onContact?.(post)} className="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">Liên Hệ</button>
+          <button onClick={() => onContact?.(post)} className="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">{t('posts_contact_btn')}</button>
         </div>
       </article>
       <CommentModal isOpen={isCommentModalOpen} onClose={() => setIsCommentModalOpen(false)} postId={post.id} onCommentCountChange={setCommentCount} />
@@ -249,6 +249,7 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function PostsContent() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const router = useRouter();
   const { authUser } = useAuthStore();
@@ -337,13 +338,13 @@ export default function PostsContent() {
         <div className="w-full max-w-4xl">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Bài viết cộng đồng</h1>
-              <p className="text-gray-600">Khám phá và chia sẻ kiến thức về nông nghiệp</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('posts_page_title')}</h1>
+              <p className="text-gray-600">{t('posts_page_subtitle')}</p>
             </div>
             {posts.length > 0 && (
               <div className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg border border-emerald-200">
                 <span className="text-2xl font-bold">{posts.length}</span>
-                <span className="text-sm ml-2">bài viết</span>
+                <span className="text-sm ml-2">{t('posts_count_label')}</span>
               </div>
             )}
           </div>
@@ -351,26 +352,26 @@ export default function PostsContent() {
           <CategoryGuideSection selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
           <FilterBar selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} selectedSort={selectedSort} onSortChange={setSelectedSort} searchQuery={searchQuery} onSearchChange={setSearchQuery} onClearFilters={handleClearFilters} />
 
-          {loadingPosts && <div className="flex flex-col items-center justify-center py-12"><div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div><p className="text-gray-500 font-medium">Đang tải bài viết...</p></div>}
+          {loadingPosts && <div className="flex flex-col items-center justify-center py-12"><div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div><p className="text-gray-500 font-medium">{t('posts_loading')}</p></div>}
           {postsError && (
             <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-emerald-100">
               <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Đăng nhập để xem bài viết</h3>
-              <p className="text-gray-500 text-sm mb-6">Bạn cần đăng nhập để truy cập nội dung này.</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">{t('posts_login_required_title')}</h3>
+              <p className="text-gray-500 text-sm mb-6">{t('posts_login_required_desc')}</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link href="/login" className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">Đăng nhập ngay</Link>
-                <Link href="/register" className="px-6 py-2.5 border border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors text-sm">Tạo tài khoản</Link>
+                <Link href="/login" className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">{t('posts_login_btn')}</Link>
+                <Link href="/register" className="px-6 py-2.5 border border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors text-sm">{t('posts_register_btn')}</Link>
               </div>
             </div>
           )}
           {!loadingPosts && !postsError && posts.length === 0 && (
             <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><ImageIcon className="text-gray-400" size={28} /></div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Không tìm thấy bài viết</h3>
-              <p className="text-gray-500 mb-4">Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác</p>
-              <button onClick={handleClearFilters} className="bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-800 transition">Xóa bộ lọc</button>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">{t('posts_not_found_title')}</h3>
+              <p className="text-gray-500 mb-4">{t('posts_not_found_desc')}</p>
+              <button onClick={handleClearFilters} className="bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-800 transition">{t('posts_not_found_clear')}</button>
             </div>
           )}
           {posts.map((post) => (

@@ -10,7 +10,8 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
 import { useDiaryStore } from "@/store/useDiaryStore";
-import { useProductStore } from "@/store/useProductStore"
+import { useProductStore } from "@/store/useProductStore";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   Search,
   X,
@@ -30,6 +31,7 @@ import {
 } from "lucide-react";
 
 export default function ProductsPage() {
+  const { t } = useLanguage();
   const [products, setProducts] = useState([]);
   const [productTypes, setProductTypes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -116,7 +118,7 @@ export default function ProductsPage() {
         setLoading(false);
       } catch (err) {
         console.error("Error fetching products:", err);
-        setError("Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại sau.");
+        setError(t('products_error'));
         setLoading(false);
       }
     };
@@ -144,34 +146,34 @@ export default function ProductsPage() {
   };
 
   const sortOptions = [
-    { value: "created_at", label: "Mới nhất" },
-    { value: "price", label: "Giá" },
-    { value: "name", label: "Tên A-Z" },
-    { value: "rating", label: "Đánh giá" },
-    { value: "view_count", label: "Lượt xem" },
+    { value: "created_at", label: t('products_sort_newest') },
+    { value: "price", label: t('products_sort_price') },
+    { value: "name", label: t('products_sort_name') },
+    { value: "rating", label: t('products_sort_rating') },
+    { value: "view_count", label: t('products_sort_views') },
   ];
 
-  const getCurrentSortLabel = () => sortOptions.find((opt) => opt.value === sortBy)?.label || "Sắp xếp";
+  const getCurrentSortLabel = () => sortOptions.find((opt) => opt.value === sortBy)?.label || t('products_sort_label');
   const handleSortChange = (value) => { setSortBy(value); setIsSortDropdownOpen(false); };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      {/* ── Hero Section: bg-emerald-500 ── */}
+      {/* ── Hero Section ── */}
       <section className="bg-emerald-500 pt-32 pb-16 px-4">
         <div className="max-w-[1400px] mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Sản Phẩm Sầu Riêng
+            {t('products_page_title')}
           </h1>
           <p className="text-emerald-50 text-lg max-w-2xl mx-auto mb-8">
-            Khám phá bộ sưu tập sầu riêng chất lượng cao từ các vùng trồng nổi tiếng
+            {t('products_page_subtitle')}
           </p>
           <div className="max-w-2xl mx-auto">
             <div className="relative group">
               <input
                 type="text"
-                placeholder="Tìm kiếm sản phẩm..."
+                placeholder={t('products_search_placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-6 py-4 pl-14 rounded-2xl border-2 border-white/30 focus:border-white focus:outline-none text-gray-900 placeholder-gray-500 bg-white transition-all duration-300"
@@ -196,25 +198,25 @@ export default function ProductsPage() {
           <div className="flex flex-col gap-3">
             <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
               <Tag className="w-5 h-5 text-emerald-500" />
-              Loại sản phẩm
+              {t('products_filter_type')}
             </h3>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedType("")}
                 className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === ""
-                    ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
               >
-                <span className="flex items-center gap-2"><List className="w-4 h-4" />Tất cả</span>
+                <span className="flex items-center gap-2"><List className="w-4 h-4" />{t('products_filter_all')}</span>
               </button>
               {productTypes.map((type) => (
                 <button
                   key={type._id}
                   onClick={() => setSelectedType(type._id)}
                   className={`px-6 py-2.5 rounded-full font-medium transition-all duration-200 ${selectedType === type._id
-                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                 >
                   {type.name}
@@ -231,7 +233,7 @@ export default function ProductsPage() {
           {loading ? (
             <div className="flex flex-col justify-center items-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
-              <p className="text-gray-600">Đang tải sản phẩm...</p>
+              <p className="text-gray-600">{t('products_loading')}</p>
             </div>
           ) : error ? (
             <div className="flex flex-col justify-center items-center py-20">
@@ -242,23 +244,23 @@ export default function ProductsPage() {
                 </div>
                 <p className="text-red-700 mb-4">{error}</p>
                 <button onClick={() => window.location.reload()} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                  Thử lại
+                  {t('products_retry')}
                 </button>
               </div>
             </div>
           ) : products.length === 0 ? (
             <div className="text-center py-20">
               <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">Không tìm thấy sản phẩm nào</p>
+              <p className="text-gray-500 text-lg">{t('products_not_found')}</p>
             </div>
           ) : (
             <>
               <div className="flex items-center justify-between mb-6">
                 <p className="text-gray-600">
-                  Tìm thấy <span className="font-semibold text-emerald-500">{pagination.totalItems}</span> sản phẩm
+                  {t('products_found')} <span className="font-semibold text-emerald-500">{pagination.totalItems}</span> {t('products_items')}
                 </p>
                 <div className="flex flex-wrap gap-3 items-center">
-                  <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Sắp xếp:</span>
+                  <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">{t('products_sort_label')}</span>
                   <div className="flex items-center gap-3 sort-dropdown-container">
                     <div className="relative">
                       <button
@@ -287,20 +289,20 @@ export default function ProductsPage() {
                       <button
                         onClick={() => setSortOrder("asc")}
                         className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "asc"
-                            ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/30"
-                            : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                          ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/30"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                           }`}
-                        title="Tăng dần"
+                        title={t('products_sort_asc')}
                       >
                         <ChevronUp className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => setSortOrder("desc")}
                         className={`p-2.5 rounded-lg border-2 transition-all duration-200 ${sortOrder === "desc"
-                            ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/30"
-                            : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                          ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/30"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                           }`}
-                        title="Giảm dần"
+                        title={t('products_sort_desc')}
                       >
                         <ChevronDown className="w-5 h-5" />
                       </button>
@@ -327,7 +329,7 @@ export default function ProductsPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                           </div>
-                          <span className="text-white text-sm font-semibold bg-black/30 px-4 py-1.5 rounded-full">Đăng nhập để xem</span>
+                          <span className="text-white text-sm font-semibold bg-black/30 px-4 py-1.5 rounded-full">{t('products_login_overlay')}</span>
                         </div>
                       )}
                       <Link href={authUser ? `/products/${product._id}` : "#"} onClick={(e) => { if (!authUser) e.preventDefault(); }} className={!authUser ? "pointer-events-none" : ""}>
@@ -353,8 +355,8 @@ export default function ProductsPage() {
                             </div>
                             <div className="mb-4">
                               <div className="flex items-center gap-2 mb-1">
-                                <p className="text-sm text-gray-500">Giá tham khảo</p>
-                                <span className="text-xs bg-emerald-50 text-emerald-500 border border-emerald-200 px-2 py-0.5 rounded-md font-medium">1 sản phẩm</span>
+                                <p className="text-sm text-gray-500">{t('products_ref_price')}</p>
+                                <span className="text-xs bg-emerald-50 text-emerald-500 border border-emerald-200 px-2 py-0.5 rounded-md font-medium">{t('products_per_unit')}</span>
                               </div>
                               <span className="text-2xl font-bold text-emerald-500">{formatPrice(product.price)}</span>
                             </div>
@@ -364,7 +366,7 @@ export default function ProductsPage() {
                                 <span className="font-medium">{rating.toFixed(1)}</span>
                               </div>
                               <button onClick={(e) => handleContact(e, product)} className="px-6 py-2.5 bg-emerald-500 text-white rounded-full font-medium hover:bg-emerald-600 transition-colors">
-                                Liên Hệ
+                                {t('products_contact')}
                               </button>
                             </div>
                           </div>
