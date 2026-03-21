@@ -2,9 +2,36 @@
 
 import { useState, useEffect } from "react";
 import { ratingAPI } from "@/lib/api";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
+
+// ─── Confirm Modal (giống CommentModal) ──────────────────────────────────────
+const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
+    const { t } = useLanguage();
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                <p className="text-gray-800 text-sm mb-6 text-center">{message}</p>
+                <div className="flex gap-3">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm"
+                    >
+                        {t('rating_confirm_cancel')}
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm"
+                    >
+                        {t('rating_confirm_delete_btn')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export default function ProductRating({ productId, userId }) {
     const { t } = useLanguage();
@@ -23,6 +50,10 @@ export default function ProductRating({ productId, userId }) {
     const [ratingContent, setRatingContent] = useState('');
     const [selectedReview, setSelectedReview] = useState(null);
 
+    // ── Confirm modal state (thêm mới) ──────────────────────────────────────
+    const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+    const [deletingRatingId, setDeletingRatingId] = useState(null);
+
     useEffect(() => {
         if (productId) {
             fetchRatings();
@@ -35,7 +66,6 @@ export default function ProductRating({ productId, userId }) {
         } else {
             document.body.style.overflow = 'unset';
         }
-
         return () => {
             document.body.style.overflow = 'unset';
         };
@@ -75,8 +105,8 @@ export default function ProductRating({ productId, userId }) {
 
                     return {
                         id: rating._id,
-                        userName: userName,
-                        avatar: avatar,
+                        userName,
+                        avatar,
                         rating: starsValue,
                         comment: rating.content,
                         date: formattedDate,
@@ -88,7 +118,6 @@ export default function ProductRating({ productId, userId }) {
                 if (userId) {
                     const ownRating = formattedReviews.find(r => r.userId === userId);
                     const others = formattedReviews.filter(r => r.userId !== userId);
-
                     setUserOwnRating(ownRating || null);
                     setOtherReviews(others);
                 } else {
@@ -99,6 +128,30 @@ export default function ProductRating({ productId, userId }) {
         } catch (error) {
             console.error('Error fetching ratings:', error);
             toast.error(t('rating_toast_load_fail'));
+        }
+    };
+
+    // ── Mở confirm modal thay vì gọi confirm() native ────────────────────────
+    const openDeleteConfirm = (ratingId) => {
+        setDeletingRatingId(ratingId);
+        setConfirmModalOpen(true);
+    };
+
+    // ── Thực sự xóa sau khi confirm ──────────────────────────────────────────
+    const handleDeleteRating = async () => {
+        if (!deletingRatingId) return;
+        try {
+            const response = await ratingAPI.deleteRating(deletingRatingId);
+            if (response.success) {
+                toast.success(t('rating_toast_delete_success'));
+                setIsReviewDetailModalVisible(false);
+                setConfirmModalOpen(false);
+                setDeletingRatingId(null);
+                await fetchRatings();
+            }
+        } catch (error) {
+            console.error('Failed to delete rating:', error);
+            toast.error(t('rating_toast_delete_fail'));
         }
     };
 
@@ -124,7 +177,6 @@ export default function ProductRating({ productId, userId }) {
 
         try {
             let response;
-
             if (isEditMode && editingRatingId) {
                 response = await ratingAPI.updateRating(editingRatingId, {
                     stars: userRating,
@@ -149,23 +201,6 @@ export default function ProductRating({ productId, userId }) {
             console.error('Failed to submit rating:', err);
             toast.error(isEditMode ? t('rating_toast_update_fail') : t('rating_toast_already_rated'));
             handleCloseRatingModal();
-        }
-    };
-
-    const handleDeleteRating = async (ratingId) => {
-        if (!confirm(t('rating_confirm_delete'))) return;
-
-        try {
-            const response = await ratingAPI.deleteRating(ratingId);
-
-            if (response.success) {
-                toast.success(t('rating_toast_delete_success'));
-                setIsReviewDetailModalVisible(false);
-                await fetchRatings();
-            }
-        } catch (error) {
-            console.error('Failed to delete rating:', error);
-            toast.error(t('rating_toast_delete_fail'));
         }
     };
 
@@ -230,14 +265,12 @@ export default function ProductRating({ productId, userId }) {
             <div className="mb-16">
                 <h2 className="text-4xl font-bold text-gray-900 mb-8">{t('rating_title')}</h2>
 
-                {/* Rating Overview */}
                 <div className="flex flex-col md:flex-row gap-6 items-center mb-8">
                     <div>
                         <div className="text-6xl font-bold text-gray-900 leading-none">
                             {averageRating > 0 ? averageRating.toFixed(1) : '0.0'}
                         </div>
                     </div>
-
                     <div className="flex flex-col gap-2">
                         <div className="flex gap-2">
                             {renderStars(averageRating)}
@@ -248,7 +281,6 @@ export default function ProductRating({ productId, userId }) {
                     </div>
                 </div>
 
-                {/* User Rating Input */}
                 <div className="flex gap-3">
                     {renderStars(userRating, true)}
                 </div>
@@ -293,7 +325,7 @@ export default function ProductRating({ productId, userId }) {
                                             className="p-1 border border-red-500 text-red-500 rounded hover:bg-red-50 transition-all"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleDeleteRating(userOwnRating.id);
+                                                openDeleteConfirm(userOwnRating.id); // ← đổi thành openDeleteConfirm
                                             }}
                                             title={t('rating_btn_delete_title')}
                                         >
@@ -327,11 +359,9 @@ export default function ProductRating({ productId, userId }) {
                                             {review.date}
                                         </div>
                                     </div>
-
                                     <div className="flex gap-0.5 mb-2">
                                         {renderStars(review.rating)}
                                     </div>
-
                                     <p className="text-gray-400 text-sm overflow-hidden break-all line-clamp-1">
                                         {review.comment}
                                     </p>
@@ -402,7 +432,7 @@ export default function ProductRating({ productId, userId }) {
                                         onClick={(e) => {
                                             e.preventDefault();
                                             handleCloseRatingModal();
-                                            handleDeleteRating(editingRatingId);
+                                            openDeleteConfirm(editingRatingId); // ← đổi thành openDeleteConfirm
                                         }}
                                         className="flex-1 max-w-[200px] px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-all"
                                     >
@@ -467,7 +497,10 @@ export default function ProductRating({ productId, userId }) {
                                         {t('rating_detail_edit')}
                                     </button>
                                     <button
-                                        onClick={() => handleDeleteRating(selectedReview.id)}
+                                        onClick={() => {
+                                            handleCloseReviewDetailModal();
+                                            openDeleteConfirm(selectedReview.id); // ← đổi thành openDeleteConfirm
+                                        }}
                                         className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-all"
                                     >
                                         {t('rating_detail_delete')}
@@ -478,6 +511,17 @@ export default function ProductRating({ productId, userId }) {
                     </div>
                 </div>
             )}
+
+            {/* Confirm Delete Modal — thêm mới, i chang CommentModal */}
+            <ConfirmModal
+                isOpen={confirmModalOpen}
+                onClose={() => {
+                    setConfirmModalOpen(false);
+                    setDeletingRatingId(null);
+                }}
+                onConfirm={handleDeleteRating}
+                message={t('rating_confirm_delete_modal_message')}
+            />
         </div>
     );
 }
