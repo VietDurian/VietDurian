@@ -3,19 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
+import { useLanguage } from "@/context/LanguageContext";
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 const fmt = (n) => new Intl.NumberFormat("vi-VN").format(Math.round(n));
 const fmtVND = (n) => fmt(n) + " ₫";
 const fmtDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString("vi-VN") : null;
-
-const COST_BREAKDOWN_META = {
-  seed: { label: "Giống", color: "#059669" },
-  fertilizer: { label: "Phân bón", color: "#34d399" },
-  labor: { label: "Nhân công", color: "#6ee7b7" },
-  irrigation: { label: "Tưới tiêu", color: "#a7f3d0" },
-};
 
 const EMPTY_OVERVIEW = {
   total_cost: 0,
@@ -122,11 +116,11 @@ function SectionHeader({ eyebrow, title }) {
 }
 
 // ── GARDEN DROPDOWN ───────────────────────────────────────────────────────────
-function GardenDropdown({ gardens, selectedId, onSelect }) {
+function GardenDropdown({ gardens, selectedId, onSelect, t }) {
   const [open, setOpen] = useState(false);
 
   const statusLabel = (s) =>
-    s === "In progressing" ? "Đang canh tác" : "Đã kết thúc";
+    s === "In progressing" ? t("stats_status_inprogress") : t("stats_status_ended");
   const statusStyle = (s) =>
     s === "In progressing"
       ? "bg-emerald-100 text-emerald-700"
@@ -141,7 +135,7 @@ function GardenDropdown({ gardens, selectedId, onSelect }) {
       >
         <h2 className="text-white text-xl font-bold leading-tight group-hover:text-emerald-100 transition-colors">
           {gardens.find((g) => g.diary.id === selectedId)?.diary.garden_name ||
-            "Chọn khu vườn"}
+            t("stats_dropdown_label")}
         </h2>
         <svg
           className={`w-5 h-5 text-emerald-200 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
@@ -162,7 +156,7 @@ function GardenDropdown({ gardens, selectedId, onSelect }) {
       {open && (
         <div className="absolute top-full left-0 mt-3 w-80 bg-white rounded-2xl border border-gray-100 shadow-2xl shadow-emerald-900/20 py-2 z-50">
           <p className="text-xs text-gray-400 font-semibold uppercase tracking-widest px-4 pt-1 pb-2">
-            Chọn khu vườn
+            {t("stats_dropdown_label")}
           </p>
 
           {gardens.map((g) => {
@@ -209,7 +203,7 @@ function GardenDropdown({ gardens, selectedId, onSelect }) {
                       {statusLabel(g.diary.status)}
                     </span>
                     <span className="text-xs text-gray-400">
-                      {fmt(g.diary.area)} m²
+                      {fmt(g.diary.area)} {t("stats_area_unit")}
                     </span>
                   </div>
                 </div>
@@ -241,6 +235,7 @@ function GardenDropdown({ gardens, selectedId, onSelect }) {
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function StatisticsPage() {
+  const { t } = useLanguage();
   const { authUser } = useAuthStore();
   const {
     seasonDiaries,
@@ -252,6 +247,14 @@ export default function StatisticsPage() {
   } = useSeasonDiaryStore();
 
   const [selectedId, setSelectedId] = useState(null);
+
+  // COST_BREAKDOWN_META dùng t() nên đặt trong component
+  const COST_BREAKDOWN_META = {
+    seed: { label: t("stats_cost_seed"), color: "#059669" },
+    fertilizer: { label: t("stats_cost_fertilizer"), color: "#34d399" },
+    labor: { label: t("stats_cost_labor"), color: "#6ee7b7" },
+    irrigation: { label: t("stats_cost_irrigation"), color: "#a7f3d0" },
+  };
 
   useEffect(() => {
     if (authUser?._id) {
@@ -297,7 +300,7 @@ export default function StatisticsPage() {
 
   const stats =
     seasonDiaryStatistics?.diary &&
-    String(seasonDiaryStatistics.diary.id) === String(selectedId)
+      String(seasonDiaryStatistics.diary.id) === String(selectedId)
       ? seasonDiaryStatistics
       : null;
 
@@ -318,7 +321,7 @@ export default function StatisticsPage() {
       <div className="min-h-[50vh] flex items-center justify-center">
         <div className="flex items-center gap-3 text-gray-500">
           <span className="animate-spin w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full" />
-          Đang tải danh sách mùa vụ...
+          {t("stats_loading")}
         </div>
       </div>
     );
@@ -327,7 +330,7 @@ export default function StatisticsPage() {
   if (!isSeasonDiariesLoading && !gardens.length) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
-        <p className="text-sm text-gray-500">Bạn chưa có nhật ký mùa vụ nào.</p>
+        <p className="text-sm text-gray-500">{t("stats_empty")}</p>
       </div>
     );
   }
@@ -335,36 +338,36 @@ export default function StatisticsPage() {
   // ── Derived data ────────────────────────────────────────────────────────────
   const kpiCards = [
     {
-      label: "Tổng chi phí",
+      label: t("stats_kpi_total_cost"),
       value: fmtVND(overview.total_cost),
-      sub: `Giá vốn/kg: ${fmt(overview.cost_per_kg)} ₫`,
+      sub: `${t("stats_kpi_cost_per_kg")} ${fmt(overview.cost_per_kg)} ₫`,
       icon: "M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z",
       bgClass: "bg-red-50",
       iconColorClass: "text-red-500",
       valueColorClass: "text-red-700",
     },
     {
-      label: "Tổng doanh thu",
+      label: t("stats_kpi_revenue"),
       value: fmtVND(overview.total_revenue),
-      sub: `Biên lợi nhuận ${overview.margin_percent}%`,
+      sub: `${t("stats_kpi_margin")} ${overview.margin_percent}%`,
       icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
       bgClass: "bg-emerald-50",
       iconColorClass: "text-emerald-600",
       valueColorClass: "text-emerald-700",
     },
     {
-      label: "Sản lượng thu hoạch",
+      label: t("stats_kpi_harvest"),
       value: `${fmt(harvest.total_harvest_kg)} kg`,
-      sub: `Năng suất ${overview.yield_per_area} kg/m²`,
+      sub: `${t("stats_kpi_yield")} ${overview.yield_per_area} kg/m²`,
       icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z",
       bgClass: "bg-yellow-50",
       iconColorClass: "text-yellow-600",
       valueColorClass: "text-yellow-700",
     },
     {
-      label: "Đã tiêu thụ",
+      label: t("stats_kpi_consumed"),
       value: `${fmt(harvest.total_consumed_kg)} kg`,
-      sub: `Tỷ lệ ${harvest.consumed_rate_percent}% · Tồn ${fmt(harvest.unsold_weight_kg)} kg`,
+      sub: `${t("stats_kpi_consumed_rate")} ${harvest.consumed_rate_percent}% · ${t("stats_kpi_stock")} ${fmt(harvest.unsold_weight_kg)} kg`,
       icon: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z",
       bgClass: "bg-blue-50",
       iconColorClass: "text-blue-500",
@@ -374,19 +377,19 @@ export default function StatisticsPage() {
 
   const barData = [
     {
-      label: "Chi phí",
+      label: t("stats_bar_cost"),
       value: overview.total_cost,
       colorClass: "bg-red-400",
       text: fmtVND(overview.total_cost),
     },
     {
-      label: "Doanh thu",
+      label: t("stats_bar_revenue"),
       value: overview.total_revenue,
       colorClass: "bg-emerald-500",
       text: fmtVND(overview.total_revenue),
     },
     {
-      label: "Lợi nhuận",
+      label: t("stats_bar_profit"),
       value: overview.profit,
       colorClass: "bg-teal-400",
       text: fmtVND(overview.profit),
@@ -395,19 +398,19 @@ export default function StatisticsPage() {
 
   const harvestBars = [
     {
-      label: "Tổng thu hoạch",
+      label: t("stats_bar_total_harvest"),
       value: `${fmt(harvest.total_harvest_kg)} kg`,
       pct: 100,
       colorClass: "bg-gray-300",
     },
     {
-      label: "Đã tiêu thụ",
+      label: t("stats_bar_consumed"),
       value: `${fmt(harvest.total_consumed_kg)} kg`,
       pct: harvest.consumed_rate_percent,
       colorClass: "bg-emerald-500",
     },
     {
-      label: "Còn tồn kho",
+      label: t("stats_bar_stock"),
       value: `${fmt(harvest.unsold_weight_kg)} kg`,
       pct: 100 - harvest.consumed_rate_percent,
       colorClass: "bg-amber-400",
@@ -423,8 +426,8 @@ export default function StatisticsPage() {
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">
               {diary.status === "In progressing"
-                ? "Đang canh tác"
-                : "Đã kết thúc"}
+                ? t("stats_status_inprogress")
+                : t("stats_status_ended")}
             </span>
           </div>
 
@@ -433,15 +436,16 @@ export default function StatisticsPage() {
             gardens={gardens}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            t={t}
           />
 
           {/* Meta */}
           <p className="text-emerald-100 text-sm mt-2">
-            Bắt đầu {fmtDate(diary.start_date)}
+            {t("stats_start")} {fmtDate(diary.start_date)}
             {fmtDate(diary.end_date)
-              ? ` · Kết thúc ${fmtDate(diary.end_date)}`
+              ? ` · ${t("stats_end")} ${fmtDate(diary.end_date)}`
               : ""}{" "}
-            · Diện tích {fmt(diary.area)} m²
+            · {fmt(diary.area)} {t("stats_area_unit")}
           </p>
         </div>
 
@@ -449,14 +453,14 @@ export default function StatisticsPage() {
         <div className="flex gap-3 flex-wrap">
           {[
             {
-              label: "Doanh thu",
+              label: t("stats_revenue_label"),
               value: fmtVND(overview.total_revenue),
-              sub: "tổng cộng",
+              sub: t("stats_revenue_sub"),
             },
             {
-              label: "Lợi nhuận",
+              label: t("stats_profit_label"),
               value: fmtVND(overview.profit),
-              sub: `biên ${overview.margin_percent}%`,
+              sub: `${t("stats_profit_sub")} ${overview.margin_percent}%`,
             },
           ].map((c) => (
             <div
@@ -483,14 +487,14 @@ export default function StatisticsPage() {
         {/* Donut — cost breakdown */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <SectionHeader
-            eyebrow="Phân tích chi phí"
-            title="Cơ cấu chi phí sản xuất"
+            eyebrow={t("stats_cost_breakdown_eyebrow")}
+            title={t("stats_cost_breakdown_title")}
           />
           <div className="flex items-center gap-6">
             <div className="relative flex-shrink-0">
               <DonutChart segments={breakdown} size={180} />
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <p className="text-xs text-gray-400">Tổng</p>
+                <p className="text-xs text-gray-400">{t("stats_cost_total")}</p>
                 <p className="text-sm font-bold text-gray-700">
                   {fmt(overview.total_cost / 1_000_000)}tr ₫
                 </p>
@@ -536,8 +540,8 @@ export default function StatisticsPage() {
         {/* Arc gauge — harvest rate */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <SectionHeader
-            eyebrow="Thu hoạch & tiêu thụ"
-            title="Tình hình sản lượng"
+            eyebrow={t("stats_harvest_eyebrow")}
+            title={t("stats_harvest_title")}
           />
           <div className="flex justify-center mb-5">
             <svg width="200" height="115" viewBox="0 0 200 115">
@@ -570,7 +574,7 @@ export default function StatisticsPage() {
                 textAnchor="middle"
                 style={{ fontSize: 10, fill: "#9ca3af" }}
               >
-                đã tiêu thụ
+                {t("stats_harvest_consumed_arc")}
               </text>
             </svg>
           </div>
@@ -597,8 +601,8 @@ export default function StatisticsPage() {
         {/* Bar chart — full width */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 lg:col-span-2">
           <SectionHeader
-            eyebrow="Tài chính tổng quan"
-            title="So sánh doanh thu — chi phí — lợi nhuận"
+            eyebrow={t("stats_finance_eyebrow")}
+            title={t("stats_finance_title")}
           />
           <div className="flex items-end gap-6" style={{ height: 176 }}>
             {barData.map((bar) => (
@@ -627,15 +631,15 @@ export default function StatisticsPage() {
             <div className="flex-1 flex flex-col justify-center gap-3 pl-5 border-l border-gray-100">
               {[
                 {
-                  label: "Giá vốn/kg",
+                  label: t("stats_metric_cost_per_kg"),
                   value: `${fmt(overview.cost_per_kg)} ₫/kg`,
                 },
                 {
-                  label: "Năng suất",
+                  label: t("stats_metric_yield"),
                   value: `${overview.yield_per_area} kg/m²`,
                 },
                 {
-                  label: "Biên lợi nhuận",
+                  label: t("stats_metric_margin"),
                   value: `${overview.margin_percent}%`,
                 },
               ].map((m) => (
@@ -653,7 +657,7 @@ export default function StatisticsPage() {
               ))}
               {isStatisticsLoading && (
                 <p className="text-xs text-gray-400">
-                  Đang cập nhật thống kê...
+                  {t("stats_updating")}
                 </p>
               )}
             </div>

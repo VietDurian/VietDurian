@@ -133,11 +133,10 @@ const ChatContainer = () => {
                   />
                 )}
                 <div
-                  className={`max-w-[80%] rounded-2xl px-3 py-2 shadow-sm ${
-                    isMine
+                  className={`max-w-[80%] rounded-2xl px-3 py-2 shadow-sm ${isMine
                       ? "bg-emerald-600 text-white rounded-br-sm"
                       : "bg-white text-gray-900 border border-gray-100 rounded-bl-sm"
-                  }`}
+                    }`}
                 >
                   {message.image && (
                     <img
