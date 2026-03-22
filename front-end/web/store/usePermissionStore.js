@@ -3,7 +3,10 @@ import { axiosInstance } from "../lib/axios";
 import { toast } from "sonner";
 import { io } from "socket.io-client";
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.API_URL ||
+  "http://localhost:8080/api/v1";
 
 export const usePermissionStore = create((set, get) => ({
   isSubmittingProof: false,

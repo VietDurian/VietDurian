@@ -29,7 +29,7 @@ if %errorlevel% neq 0 (
 	exit /b 1
 )
 
-if not exist "%PROJECT_ROOT%\.next\" (
+if not exist "%PROJECT_ROOT%\out\" (
 	echo [FAILED] .next folder not found after build
 	exit /b 1
 )
@@ -41,7 +41,7 @@ set "ZIP_PATH=%DEPLOY_DIR%\%current_date%.zip"
 if exist "%ZIP_PATH%" del /f /q "%ZIP_PATH%"
 
 REM 3. Create zip of .next output
-call "%ZIP_TOOL%" a -tzip "%ZIP_PATH%" "%PROJECT_ROOT%\.next\*"
+call "%ZIP_TOOL%" a -tzip "%ZIP_PATH%" "%PROJECT_ROOT%\out\*"
 if %errorlevel% neq 0 (
 	echo [FAILED] Zip creation
 	exit /b 1
