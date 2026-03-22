@@ -27,6 +27,7 @@ import { serviceProviderProfileRoute } from "@/routes/serviceProviderProfileRout
 import { reportCommentRoute } from "@/routes/reportCommentRoute";
 import { messageRoute } from "@/routes/messageRoute";
 import { aiRoute } from "@/routes/aiRoute";
+import { chatRoute } from "@/routes/chatRoute";
 
 const Router = express.Router();
 
@@ -57,6 +58,7 @@ Router.use("/permission", permissionRoute);
 Router.use("/capability-profile", serviceProviderProfileRoute);
 Router.use("/report-comment", reportCommentRoute);
 Router.use("/messages", messageRoute);
+Router.use("/chat", chatRoute);
 Router.use("/ai", aiRoute);
 
 export const API_v1 = Router;

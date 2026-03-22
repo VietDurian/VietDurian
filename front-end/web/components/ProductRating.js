@@ -2,10 +2,39 @@
 
 import { useState, useEffect } from "react";
 import { ratingAPI } from "@/lib/api";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
+
+// ─── Confirm Modal (giống CommentModal) ──────────────────────────────────────
+const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
+    const { t } = useLanguage();
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+                <p className="text-gray-800 text-sm mb-6 text-center">{message}</p>
+                <div className="flex gap-3">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm"
+                    >
+                        {t('rating_confirm_cancel')}
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm"
+                    >
+                        {t('rating_confirm_delete_btn')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export default function ProductRating({ productId, userId }) {
+    const { t } = useLanguage();
     const [userRating, setUserRating] = useState(0);
     const [hoveredStar, setHoveredStar] = useState(0);
     const [averageRating, setAverageRating] = useState(0);
@@ -21,20 +50,22 @@ export default function ProductRating({ productId, userId }) {
     const [ratingContent, setRatingContent] = useState('');
     const [selectedReview, setSelectedReview] = useState(null);
 
+    // ── Confirm modal state (thêm mới) ──────────────────────────────────────
+    const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+    const [deletingRatingId, setDeletingRatingId] = useState(null);
+
     useEffect(() => {
         if (productId) {
             fetchRatings();
         }
     }, [productId]);
 
-    // Prevent body scroll when modal is open
     useEffect(() => {
         if (isRatingModalVisible || isReviewDetailModalVisible) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
         }
-
         return () => {
             document.body.style.overflow = 'unset';
         };
@@ -48,7 +79,6 @@ export default function ProductRating({ productId, userId }) {
             });
 
             if (response.success) {
-                // Handle statistics
                 const avgRating = response.statistics?.averageRating;
                 const avgRatingValue = typeof avgRating === 'string'
                     ? parseFloat(avgRating)
@@ -57,21 +87,17 @@ export default function ProductRating({ productId, userId }) {
                 setAverageRating(avgRatingValue);
                 setTotalRatings(response.statistics?.totalRatings || 0);
 
-                // Transform ratings data
                 const ratingsData = response.data || [];
                 const formattedReviews = ratingsData.map(rating => {
-                    // FIX 1: Sử dụng đúng field name từ API
                     const userName = rating.user_id?.full_name || 'Anonymous';
                     const avatar = rating.user_id?.avatar || null;
                     const userIdValue = rating.user_id?._id || null;
 
-                    // FIX 2: Parse stars correctly
                     const stars = rating.stars;
                     const starsValue = typeof stars === 'object' && stars?.$numberDecimal
                         ? parseFloat(stars.$numberDecimal)
                         : parseFloat(stars || 0);
 
-                    // FIX 3: Format date correctly
                     const dateStr = rating.created_at || rating.createdAt;
                     const formattedDate = dateStr
                         ? new Date(dateStr).toLocaleDateString('vi-VN')
@@ -79,8 +105,8 @@ export default function ProductRating({ productId, userId }) {
 
                     return {
                         id: rating._id,
-                        userName: userName,
-                        avatar: avatar,
+                        userName,
+                        avatar,
                         rating: starsValue,
                         comment: rating.content,
                         date: formattedDate,
@@ -89,11 +115,9 @@ export default function ProductRating({ productId, userId }) {
                     };
                 });
 
-                // Separate user's own rating and others
                 if (userId) {
                     const ownRating = formattedReviews.find(r => r.userId === userId);
                     const others = formattedReviews.filter(r => r.userId !== userId);
-
                     setUserOwnRating(ownRating || null);
                     setOtherReviews(others);
                 } else {
@@ -103,7 +127,31 @@ export default function ProductRating({ productId, userId }) {
             }
         } catch (error) {
             console.error('Error fetching ratings:', error);
-            toast.error('Không thể tải đánh giá');
+            toast.error(t('rating_toast_load_fail'));
+        }
+    };
+
+    // ── Mở confirm modal thay vì gọi confirm() native ────────────────────────
+    const openDeleteConfirm = (ratingId) => {
+        setDeletingRatingId(ratingId);
+        setConfirmModalOpen(true);
+    };
+
+    // ── Thực sự xóa sau khi confirm ──────────────────────────────────────────
+    const handleDeleteRating = async () => {
+        if (!deletingRatingId) return;
+        try {
+            const response = await ratingAPI.deleteRating(deletingRatingId);
+            if (response.success) {
+                toast.success(t('rating_toast_delete_success'));
+                setIsReviewDetailModalVisible(false);
+                setConfirmModalOpen(false);
+                setDeletingRatingId(null);
+                await fetchRatings();
+            }
+        } catch (error) {
+            console.error('Failed to delete rating:', error);
+            toast.error(t('rating_toast_delete_fail'));
         }
     };
 
@@ -111,25 +159,24 @@ export default function ProductRating({ productId, userId }) {
         e.preventDefault();
 
         if (!ratingContent.trim() || ratingContent.trim().length < 10) {
-            toast.error('Vui lòng nhập nội dung đánh giá (tối thiểu 10 ký tự)');
+            toast.error(t('rating_toast_min_content'));
             handleCloseRatingModal();
             return;
         }
 
         if (!userId) {
-            toast.error('Vui lòng đăng nhập để đánh giá');
+            toast.error(t('rating_toast_login'));
             handleCloseRatingModal();
             return;
         }
 
         if (userRating === 0) {
-            toast.error('Vui lòng chọn số sao đánh giá');
+            toast.error(t('rating_toast_select_star'));
             return;
         }
 
         try {
             let response;
-
             if (isEditMode && editingRatingId) {
                 response = await ratingAPI.updateRating(editingRatingId, {
                     stars: userRating,
@@ -144,7 +191,7 @@ export default function ProductRating({ productId, userId }) {
             }
 
             if (response.success) {
-                toast.success(isEditMode ? 'Cập nhật đánh giá thành công!' : 'Gửi đánh giá thành công!');
+                toast.success(isEditMode ? t('rating_toast_update_success') : t('rating_toast_submit_success'));
                 handleCloseRatingModal();
                 await fetchRatings();
             } else {
@@ -152,25 +199,8 @@ export default function ProductRating({ productId, userId }) {
             }
         } catch (err) {
             console.error('Failed to submit rating:', err);
-            toast.error(isEditMode ? 'Không thể cập nhật đánh giá. Vui lòng thử lại.' : 'Bạn đã đánh giá sản phẩm này rồi!');
+            toast.error(isEditMode ? t('rating_toast_update_fail') : t('rating_toast_already_rated'));
             handleCloseRatingModal();
-        }
-    };
-
-    const handleDeleteRating = async (ratingId) => {
-        if (!confirm('Bạn có chắc muốn xóa đánh giá này?')) return;
-
-        try {
-            const response = await ratingAPI.deleteRating(ratingId);
-
-            if (response.success) {
-                toast.success('Xóa đánh giá thành công!');
-                setIsReviewDetailModalVisible(false);
-                await fetchRatings();
-            }
-        } catch (error) {
-            console.error('Failed to delete rating:', error);
-            toast.error('Không thể xóa đánh giá. Vui lòng thử lại.');
         }
     };
 
@@ -233,27 +263,24 @@ export default function ProductRating({ productId, userId }) {
         <div className="max-w-[1400px] mx-auto px-4 py-12">
             {/* Rating Section */}
             <div className="mb-16">
-                <h2 className="text-4xl font-bold text-gray-900 mb-8">Đánh giá</h2>
+                <h2 className="text-4xl font-bold text-gray-900 mb-8">{t('rating_title')}</h2>
 
-                {/* Rating Overview */}
                 <div className="flex flex-col md:flex-row gap-6 items-center mb-8">
                     <div>
                         <div className="text-6xl font-bold text-gray-900 leading-none">
                             {averageRating > 0 ? averageRating.toFixed(1) : '0.0'}
                         </div>
                     </div>
-
                     <div className="flex flex-col gap-2">
                         <div className="flex gap-2">
                             {renderStars(averageRating)}
                         </div>
                         <div className="text-xl text-gray-600">
-                            {totalRatings} {totalRatings === 1 ? 'Đánh giá' : 'Đánh giá'}
+                            {totalRatings} {t('rating_count')}
                         </div>
                     </div>
                 </div>
 
-                {/* User Rating Input */}
                 <div className="flex gap-3">
                     {renderStars(userRating, true)}
                 </div>
@@ -270,7 +297,6 @@ export default function ProductRating({ productId, userId }) {
                             onClick={() => handleReviewCardClick(userOwnRating, false)}
                         >
                             <div className="flex flex-col h-full">
-                                {/* Header with name and date */}
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="font-semibold text-base text-gray-900">
                                         {userOwnRating.userName}
@@ -280,7 +306,6 @@ export default function ProductRating({ productId, userId }) {
                                     </div>
                                 </div>
 
-                                {/* Stars and action buttons */}
                                 <div className="flex justify-between items-center mb-2">
                                     <div className="flex gap-0.5">
                                         {renderStars(userOwnRating.rating)}
@@ -292,7 +317,7 @@ export default function ProductRating({ productId, userId }) {
                                                 e.stopPropagation();
                                                 handleReviewCardClick(userOwnRating, true);
                                             }}
-                                            title="Chỉnh sửa"
+                                            title={t('rating_btn_edit_title')}
                                         >
                                             <Edit2 className="h-3.5 w-3.5" />
                                         </button>
@@ -300,16 +325,15 @@ export default function ProductRating({ productId, userId }) {
                                             className="p-1 border border-red-500 text-red-500 rounded hover:bg-red-50 transition-all"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleDeleteRating(userOwnRating.id);
+                                                openDeleteConfirm(userOwnRating.id); // ← đổi thành openDeleteConfirm
                                             }}
-                                            title="Xóa"
+                                            title={t('rating_btn_delete_title')}
                                         >
                                             <Trash2 className="h-3.5 w-3.5" />
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* Comment */}
                                 <p className="text-gray-400 text-sm overflow-hidden break-all line-clamp-1">
                                     {userOwnRating.comment}
                                 </p>
@@ -327,7 +351,6 @@ export default function ProductRating({ productId, userId }) {
                                 onClick={() => handleReviewCardClick(review)}
                             >
                                 <div className="flex flex-col h-full">
-                                    {/* Header with name and date */}
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="font-semibold text-base text-gray-900">
                                             {review.userName}
@@ -336,13 +359,9 @@ export default function ProductRating({ productId, userId }) {
                                             {review.date}
                                         </div>
                                     </div>
-
-                                    {/* Stars */}
                                     <div className="flex gap-0.5 mb-2">
                                         {renderStars(review.rating)}
                                     </div>
-
-                                    {/* Comment */}
                                     <p className="text-gray-400 text-sm overflow-hidden break-all line-clamp-1">
                                         {review.comment}
                                     </p>
@@ -351,7 +370,7 @@ export default function ProductRating({ productId, userId }) {
                         ))
                     ) : !userOwnRating ? (
                         <div className="w-full text-center py-12 text-gray-500 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-                            <p className="text-lg">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+                            <p className="text-lg">{t('rating_no_reviews')}</p>
                         </div>
                     ) : null}
                 </div>
@@ -369,7 +388,7 @@ export default function ProductRating({ productId, userId }) {
                     >
                         <div className="flex justify-between items-center p-8 border-b border-gray-200">
                             <h2 className="text-3xl font-bold text-gray-900">
-                                {isEditMode ? 'CHỈNH SỬA ĐÁNH GIÁ' : 'ĐÁNH GIÁ SẢN PHẨM'}
+                                {isEditMode ? t('rating_modal_title_edit') : t('rating_modal_title_new')}
                             </h2>
                             <button
                                 className="text-gray-400 hover:text-gray-600 text-4xl leading-none"
@@ -386,12 +405,12 @@ export default function ProductRating({ productId, userId }) {
 
                             <div className="mb-6">
                                 <label className="block text-lg font-medium text-gray-600 mb-6">
-                                    Chia sẻ trải nghiệm của bạn về sản phẩm này
+                                    {t('rating_modal_label')}
                                 </label>
                                 <textarea
                                     className="w-full border-2 border-gray-300 rounded-lg p-4 text-lg focus:outline-none focus:border-emerald-500 bg-gray-50 resize-none text-gray-900"
                                     rows="5"
-                                    placeholder="Hãy chia sẻ cảm nhận của bạn về chất lượng, hương vị, hoặc bất cứ điều gì khác..."
+                                    placeholder={t('rating_modal_placeholder')}
                                     value={ratingContent}
                                     onChange={(e) => setRatingContent(e.target.value)}
                                 />
@@ -405,7 +424,7 @@ export default function ProductRating({ productId, userId }) {
                                     }}
                                     className="flex-1 max-w-[200px] px-6 py-3 border-2 border-emerald-600 text-emerald-600 font-bold rounded-lg hover:bg-emerald-600 hover:text-white transition-all"
                                 >
-                                    {isEditMode ? 'Cập nhật' : 'Gửi đánh giá'}
+                                    {isEditMode ? t('rating_modal_update') : t('rating_modal_submit')}
                                 </button>
 
                                 {isEditMode && (
@@ -413,11 +432,11 @@ export default function ProductRating({ productId, userId }) {
                                         onClick={(e) => {
                                             e.preventDefault();
                                             handleCloseRatingModal();
-                                            handleDeleteRating(editingRatingId);
+                                            openDeleteConfirm(editingRatingId); // ← đổi thành openDeleteConfirm
                                         }}
                                         className="flex-1 max-w-[200px] px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-all"
                                     >
-                                        Xóa
+                                        {t('rating_modal_delete')}
                                     </button>
                                 )}
                             </div>
@@ -437,7 +456,7 @@ export default function ProductRating({ productId, userId }) {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex justify-between items-center p-8 border-b border-gray-200">
-                            <h2 className="text-3xl font-bold text-gray-900">CHI TIẾT ĐÁNH GIÁ</h2>
+                            <h2 className="text-3xl font-bold text-gray-900">{t('rating_detail_title')}</h2>
                             <button
                                 className="text-gray-400 hover:text-gray-600 text-4xl leading-none"
                                 onClick={handleCloseReviewDetailModal}
@@ -466,7 +485,6 @@ export default function ProductRating({ productId, userId }) {
                                 </p>
                             </div>
 
-                            {/* Edit and Delete buttons for user's own review */}
                             {selectedReview.userId === userId && (
                                 <div className="flex gap-3 pt-4 border-t border-gray-200">
                                     <button
@@ -476,13 +494,16 @@ export default function ProductRating({ productId, userId }) {
                                         }}
                                         className="flex-1 px-6 py-3 border-2 border-emerald-600 text-emerald-600 font-bold rounded-lg hover:bg-emerald-600 hover:text-white transition-all"
                                     >
-                                        Chỉnh sửa
+                                        {t('rating_detail_edit')}
                                     </button>
                                     <button
-                                        onClick={() => handleDeleteRating(selectedReview.id)}
+                                        onClick={() => {
+                                            handleCloseReviewDetailModal();
+                                            openDeleteConfirm(selectedReview.id); // ← đổi thành openDeleteConfirm
+                                        }}
                                         className="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-all"
                                     >
-                                        Xóa
+                                        {t('rating_detail_delete')}
                                     </button>
                                 </div>
                             )}
@@ -491,6 +512,16 @@ export default function ProductRating({ productId, userId }) {
                 </div>
             )}
 
+            {/* Confirm Delete Modal — thêm mới, i chang CommentModal */}
+            <ConfirmModal
+                isOpen={confirmModalOpen}
+                onClose={() => {
+                    setConfirmModalOpen(false);
+                    setDeletingRatingId(null);
+                }}
+                onConfirm={handleDeleteRating}
+                message={t('rating_confirm_delete_modal_message')}
+            />
         </div>
     );
 }

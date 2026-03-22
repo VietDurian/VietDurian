@@ -7,7 +7,7 @@ dotenv.config({
 });
 
 const nextConfig = {
-  output: process.env.NODE_ENV === "production" ? "export" : undefined,
+  output: "export",
   images: {
     domains: [
       "res.cloudinary.com",

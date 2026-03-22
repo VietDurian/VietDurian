@@ -1,27 +1,16 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import {
-  Briefcase,
-  MapPin,
-  Phone,
-  Calendar,
-  FileText,
-  Edit2,
-  CheckCircle,
-  XCircle,
-  Award,
-  Building2,
-  Wrench,
-  Loader2,
-  Plus,
-  Lock,
-  AlertCircle,
+  Briefcase, MapPin, Phone, Calendar, FileText, Edit2, CheckCircle,
+  XCircle, Award, Building2, Wrench, Loader2, Plus, Lock, AlertCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { capabilityProfileAPI } from "@/lib/api";
-import { toast } from "sonner"
+import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 
 const ServiceProviderResume = () => {
+  const { t } = useLanguage();
   const router = useRouter();
   const [hasProfile, setHasProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,16 +30,13 @@ const ServiceProviderResume = () => {
     description: "",
   });
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  useEffect(() => { fetchProfile(); }, []);
 
   const fetchProfile = async () => {
     try {
       setIsLoading(true);
       setError(null);
       const response = await capabilityProfileAPI.get();
-
       if (response.code === 200 && response.data) {
         setProfileData(response.data);
         setHasProfile(true);
@@ -71,7 +57,7 @@ const ServiceProviderResume = () => {
         setError(null);
       } else {
         console.error("Error fetching profile:", error);
-        setError("Không thể tải thông tin hồ sơ");
+        setError(t('resume_load_fail'));
         setHasProfile(false);
       }
     } finally {
@@ -91,9 +77,9 @@ const ServiceProviderResume = () => {
     if (name === 'contact_phone') {
       const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
       if (!value.trim()) {
-        setPhoneError("Vui lòng nhập số điện thoại");
+        setPhoneError(t('resume_phone_required'));
       } else if (!phoneRegex.test(value)) {
-        setPhoneError("Số điện thoại không hợp lệ (10 số, bắt đầu 03/05/07/08/09)");
+        setPhoneError(t('resume_phone_invalid'));
       } else {
         setPhoneError("");
       }
@@ -104,7 +90,6 @@ const ServiceProviderResume = () => {
     e.preventDefault();
     setIsCreating(true);
     setError(null);
-
     try {
       const payload = {
         business_name: formData.business_name,
@@ -114,21 +99,17 @@ const ServiceProviderResume = () => {
         contact_phone: formData.contact_phone,
         description: formData.description,
       };
-
-      // Only edit mode here (create is on separate page)
       const response = await capabilityProfileAPI.update(payload);
       if (response.code === 200) {
         await fetchProfile();
         setShowForm(false);
         setIsEditMode(false);
-        toast.success("Cập nhật hồ sơ thành công!");
+        toast.success(t('resume_update_success'));
       }
     } catch (error) {
       console.error("Error submitting profile:", error);
-      let errorMessage = "Có lỗi xảy ra!";
-      if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
+      let errorMessage = t('resume_update_fail');
+      if (error?.response?.data?.message) errorMessage = error.response.data.message;
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -136,10 +117,7 @@ const ServiceProviderResume = () => {
     }
   };
 
-  const handleEdit = () => {
-    setIsEditMode(true);
-    setShowForm(true);
-  };
+  const handleEdit = () => { setIsEditMode(true); setShowForm(true); };
 
   const handleCancelEdit = () => {
     setShowForm(false);
@@ -156,40 +134,30 @@ const ServiceProviderResume = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString("vi-VN", { year: "numeric", month: "long", day: "numeric" });
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8 px-6">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Đang tải thông tin...</p>
+          <p className="text-gray-600 font-medium">{t('resume_loading')}</p>
         </div>
       </div>
     );
   }
 
-  // Error state
   if (error && !showForm) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-red-50 border border-red-200 rounded-3xl p-8 text-center">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Có lỗi xảy ra</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{t('resume_error_title')}</h3>
             <p className="text-gray-600 mb-6">{error}</p>
-            <button
-              onClick={fetchProfile}
-              className="px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all"
-            >
-              Thử lại
+            <button onClick={fetchProfile} className="px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all">
+              {t('resume_retry')}
             </button>
           </div>
         </div>
@@ -197,7 +165,6 @@ const ServiceProviderResume = () => {
     );
   }
 
-  // If no profile exists — chỉ đổi onClick thành router.push
   if (!hasProfile && !showForm) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 px-6">
@@ -206,19 +173,14 @@ const ServiceProviderResume = () => {
             <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-emerald-50 mb-6">
               <Briefcase className="w-12 h-12 text-emerald-600" strokeWidth={2} />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Tạo Hồ Sơ Năng Lực
-            </h2>
-            <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-              Hồ sơ năng lực giúp khách hàng hiểu rõ hơn về dịch vụ của bạn.
-              Hãy tạo hồ sơ để tăng uy tín và thu hút thêm nhiều khách hàng!
-            </p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('resume_no_profile_title')}</h2>
+            <p className="text-gray-600 mb-8 max-w-2xl mx-auto">{t('resume_no_profile_desc')}</p>
             <button
               onClick={() => router.push("/profile/resume/create")}
               className="inline-flex items-center gap-3 px-8 py-4 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               <Plus size={20} strokeWidth={2.5} />
-              Tạo Hồ Sơ Ngay
+              {t('resume_no_profile_btn')}
             </button>
           </div>
         </div>
@@ -226,59 +188,56 @@ const ServiceProviderResume = () => {
     );
   }
 
-  // Show form (edit only — giữ nguyên 100% UI gốc)
   if (showForm) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-3xl overflow-hidden border border-gray-200">
-            {/* Form Header */}
             <div className="bg-emerald-500 text-white p-8">
               <div className="flex items-center gap-3 mb-2">
                 <Edit2 size={32} strokeWidth={2.5} />
-                <h2 className="text-3xl font-bold">Chỉnh Sửa Hồ Sơ Năng Lực</h2>
+                <h2 className="text-3xl font-bold">{t('resume_edit_header_title')}</h2>
               </div>
-              <p className="text-emerald-100">Cập nhật thông tin dịch vụ của bạn</p>
+              <p className="text-emerald-100">{t('resume_edit_header_subtitle')}</p>
             </div>
 
-            {/* Form Body */}
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Tên Doanh Nghiệp <span className="text-red-500">*</span>
+                  {t('resume_business_name_label')} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                  <input type="text" name="business_name" value={formData.business_name} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder="Ví dụ: Dịch Vụ Nông Nghiệp Xanh" />
+                  <input type="text" name="business_name" value={formData.business_name} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder={t('resume_business_name_placeholder')} />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Dịch Vụ Cung Cấp <span className="text-red-500">*</span>
+                  {t('resume_services_label')} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <Wrench className="absolute left-4 top-4 text-gray-400" size={20} />
-                  <textarea name="services" value={formData.services} onChange={handleInputChange} required rows={3} className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none" placeholder="Ví dụ: Phun thuốc, diệt côn trùng, thu hoạch sầu riêng" />
+                  <textarea name="services" value={formData.services} onChange={handleInputChange} required rows={3} className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none" placeholder={t('resume_services_placeholder')} />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Liệt kê các dịch vụ, phân cách bằng dấu phẩy</p>
+                <p className="text-xs text-gray-500 mt-1">{t('resume_services_hint')}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Khu Vực Hoạt Động <span className="text-red-500">*</span>
+                  {t('resume_areas_label')} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                  <input type="text" name="service_areas" value={formData.service_areas} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder="Ví dụ: TP. Hồ Chí Minh, TP. Cần Thơ" />
+                  <input type="text" name="service_areas" value={formData.service_areas} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder={t('resume_areas_placeholder')} />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Các tỉnh/thành phố bạn cung cấp dịch vụ</p>
+                <p className="text-xs text-gray-500 mt-1">{t('resume_areas_hint')}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Số Năm Kinh Nghiệm <span className="text-red-500">*</span>
+                    {t('resume_exp_label')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Award className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10" size={20} />
@@ -295,16 +254,15 @@ const ServiceProviderResume = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Số Điện Thoại Liên Hệ <span className="text-red-500">*</span>
+                    {t('resume_phone_label')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                    <input type="tel" name="contact_phone" value={formData.contact_phone} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder="0909123456" />
+                    <input type="tel" name="contact_phone" value={formData.contact_phone} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder={t('resume_phone_placeholder')} />
                   </div>
                   {phoneError && (
                     <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                      <XCircle size={14} strokeWidth={2.5} />
-                      {phoneError}
+                      <XCircle size={14} strokeWidth={2.5} />{phoneError}
                     </p>
                   )}
                 </div>
@@ -312,25 +270,22 @@ const ServiceProviderResume = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Mô Tả Chi Tiết <span className="text-red-500">*</span>
+                  {t('resume_desc_label')} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <FileText className="absolute left-4 top-4 text-gray-400" size={20} />
-                  <textarea name="description" value={formData.description} onChange={handleInputChange} required rows={4} className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none" placeholder="Giới thiệu về dịch vụ của bạn, điểm mạnh, cam kết chất lượng..." />
+                  <textarea name="description" value={formData.description} onChange={handleInputChange} required rows={4} className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none" placeholder={t('resume_desc_placeholder')} />
                 </div>
               </div>
 
               <div className="flex gap-4 pt-4">
-                <button type="button" onClick={handleCancelEdit} className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300">Hủy</button>
+                <button type="button" onClick={handleCancelEdit} className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300">{t('resume_cancel_btn')}</button>
                 <button type="submit" disabled={isCreating || !!phoneError ||
-                  !formData.business_name.trim() ||
-                  !formData.services.trim() ||
-                  !formData.service_areas.trim() ||
-                  !formData.experience_year ||
-                  !formData.contact_phone.trim() ||
-                  !formData.description.trim()
+                  !formData.business_name.trim() || !formData.services.trim() ||
+                  !formData.service_areas.trim() || !formData.experience_year ||
+                  !formData.contact_phone.trim() || !formData.description.trim()
                 } className="flex-1 px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                  {isCreating ? (<><Loader2 size={20} className="animate-spin" />Đang Cập Nhật...</>) : (<><CheckCircle size={20} />Cập Nhật Hồ Sơ</>)}
+                  {isCreating ? (<><Loader2 size={20} className="animate-spin" />{t('resume_updating')}</>) : (<><CheckCircle size={20} />{t('resume_update_btn')}</>)}
                 </button>
               </div>
             </form>
@@ -340,7 +295,6 @@ const ServiceProviderResume = () => {
     );
   }
 
-  // Display profile (giữ nguyên 100% UI gốc)
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-6">
       <div className="max-w-5xl mx-auto">
@@ -352,13 +306,13 @@ const ServiceProviderResume = () => {
                   <Briefcase size={32} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold mb-1">Hồ Sơ Năng Lực</h1>
-                  <p className="text-emerald-100">Thông tin dịch vụ của bạn</p>
+                  <h1 className="text-3xl font-bold mb-1">{t('resume_view_title')}</h1>
+                  <p className="text-emerald-100">{t('resume_view_subtitle')}</p>
                 </div>
               </div>
               <button onClick={handleEdit} className="group flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl font-semibold hover:bg-emerald-50 transition-all duration-300">
                 <Edit2 size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform duration-300" />
-                <span>Chỉnh sửa</span>
+                <span>{t('resume_edit_btn')}</span>
               </button>
             </div>
           </div>
@@ -370,7 +324,7 @@ const ServiceProviderResume = () => {
                   <Building2 size={24} className="text-white" strokeWidth={2.5} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-500 mb-1">Tên Doanh Nghiệp</p>
+                  <p className="text-sm font-medium text-gray-500 mb-1">{t('resume_section_business')}</p>
                   <h2 className="text-2xl font-bold text-gray-900">{profileData.business_name}</h2>
                 </div>
               </div>
@@ -382,7 +336,7 @@ const ServiceProviderResume = () => {
                   <Wrench size={22} className="text-emerald-600" strokeWidth={2.5} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-500 mb-2">Dịch Vụ Cung Cấp</p>
+                  <p className="text-sm font-semibold text-gray-500 mb-2">{t('resume_section_services')}</p>
                   <div className="flex flex-wrap gap-2">
                     {profileData.services.split(",").map((service, index) => (
                       <span key={index} className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium border border-emerald-200">{service.trim()}</span>
@@ -397,7 +351,7 @@ const ServiceProviderResume = () => {
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-emerald-50 rounded-xl"><MapPin size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 mb-2">Khu Vực Hoạt Động</p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">{t('resume_section_areas')}</p>
                     <p className="text-base font-semibold text-gray-900">{profileData.service_areas}</p>
                   </div>
                 </div>
@@ -406,8 +360,8 @@ const ServiceProviderResume = () => {
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-emerald-50 rounded-xl"><Award size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 mb-2">Kinh Nghiệm</p>
-                    <p className="text-base font-semibold text-gray-900">{profileData.experience_year} năm</p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">{t('resume_section_exp')}</p>
+                    <p className="text-base font-semibold text-gray-900">{profileData.experience_year} {t('resume_section_exp_unit')}</p>
                   </div>
                 </div>
               </div>
@@ -415,7 +369,7 @@ const ServiceProviderResume = () => {
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-emerald-50 rounded-xl"><Phone size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 mb-2">Số Điện Thoại</p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">{t('resume_section_phone')}</p>
                     <p className="text-base font-semibold text-gray-900">{profileData.contact_phone}</p>
                   </div>
                 </div>
@@ -424,7 +378,7 @@ const ServiceProviderResume = () => {
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-emerald-50 rounded-xl"><Calendar size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 mb-2">Ngày Tạo</p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">{t('resume_section_created')}</p>
                     <p className="text-base font-semibold text-gray-900">{formatDate(profileData.created_at)}</p>
                   </div>
                 </div>
@@ -435,7 +389,7 @@ const ServiceProviderResume = () => {
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-emerald-50 rounded-xl"><FileText size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-500 mb-3">Mô Tả Chi Tiết</p>
+                  <p className="text-sm font-semibold text-gray-500 mb-3">{t('resume_section_desc')}</p>
                   <p className="text-gray-700 leading-relaxed">{profileData.description}</p>
                 </div>
               </div>
@@ -447,8 +401,8 @@ const ServiceProviderResume = () => {
           <div className="flex items-start gap-3">
             <CheckCircle className="text-blue-600 flex-shrink-0 mt-1" size={20} strokeWidth={2.5} />
             <div>
-              <h4 className="font-bold text-gray-900 mb-1">Hồ Sơ Năng Lực</h4>
-              <p className="text-sm text-gray-700">Bạn có thể chỉnh sửa thông tin hồ sơ bất cứ lúc nào bằng cách nhấn nút "Chỉnh sửa" ở trên.</p>
+              <h4 className="font-bold text-gray-900 mb-1">{t('resume_tip_title')}</h4>
+              <p className="text-sm text-gray-700">{t('resume_tip_desc')}</p>
             </div>
           </div>
         </div>

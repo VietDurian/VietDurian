@@ -17,6 +17,7 @@ import { useProductStore } from "../../../../store/useProductStore";
 import { useProductStore as useTypeProductStore } from "@/store/useTypeProduct";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -82,7 +83,7 @@ function StarRating({ rating }) {
   );
 }
 
-function ProductCard({ product, onDelete }) {
+function ProductCard({ product, onDelete, t }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -131,14 +132,12 @@ function ProductCard({ product, onDelete }) {
         {/* Category badge */}
         <div className="flex items-center gap-1.5">
           <span
-            className={`w-3 h-3 rounded-full inline-block ${
-              product.status === "active" ? "bg-green-400" : "bg-red-400"
-            }`}
+            className={`w-3 h-3 rounded-full inline-block ${product.status === "active" ? "bg-green-400" : "bg-red-400"
+              }`}
           />
           <span
-            className={`text-xs font-medium ${
-              product.status === "active" ? "text-green-600" : "text-red-500"
-            }`}
+            className={`text-xs font-medium ${product.status === "active" ? "text-green-600" : "text-red-500"
+              }`}
           >
             {product.status || "Unknown"}
           </span>
@@ -183,7 +182,7 @@ function ProductCard({ product, onDelete }) {
 
         {/* Status */}
         <p className="text-xs text-gray-500 mb-1">
-          Status:{" "}
+          {t("my_products_card_status")}{" "}
           <span className="font-semibold text-gray-700">
             {product.status || "N/A"}
           </span>
@@ -193,7 +192,7 @@ function ProductCard({ product, onDelete }) {
         <div className="flex items-center gap-2 mt-auto pt-3 border-t border-gray-100">
           <button className="flex-1 inline-flex items-center justify-center gap-1.5 border border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white px-3 py-2 rounded-lg font-medium transition-colors text-xs">
             <SquarePen size={13} />
-            Xem chi tiết
+            {t("my_products_card_detail")}
           </button>
         </div>
       </div>
@@ -208,6 +207,7 @@ export default function MyProductsPage() {
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const router = useRouter();
+  const { t } = useLanguage();
 
   const {
     ownProducts,
@@ -219,11 +219,11 @@ export default function MyProductsPage() {
   const { types, fetchTypes } = useTypeProductStore();
 
   useEffect(() => {
-    fetchTypes().catch(() => {});
+    fetchTypes().catch(() => { });
   }, [fetchTypes]);
 
   useEffect(() => {
-    getOwnProducts().catch(() => {});
+    getOwnProducts().catch(() => { });
   }, [getOwnProducts]);
 
   const filteredProducts = useMemo(() => {
@@ -257,11 +257,11 @@ export default function MyProductsPage() {
       filteredProducts.length === 0
         ? "0.0"
         : (
-            filteredProducts.reduce(
-              (sum, p) => sum + (toNumber(p.rating) || 0),
-              0,
-            ) / filteredProducts.length
-          ).toFixed(1);
+          filteredProducts.reduce(
+            (sum, p) => sum + (toNumber(p.rating) || 0),
+            0,
+          ) / filteredProducts.length
+        ).toFixed(1);
     const totalStock = filteredProducts.reduce(
       (sum, p) => sum + (toNumber(p.stock) || 0),
       0,
@@ -269,7 +269,7 @@ export default function MyProductsPage() {
 
     return [
       {
-        label: "Tổng sản phẩm",
+        label: t("my_products_stat_total"),
         value: total.toString(),
         icon: Package,
         bg: "bg-emerald-50",
@@ -279,7 +279,7 @@ export default function MyProductsPage() {
         valueColor: "text-green-700",
       },
       {
-        label: "Tổng lượt xem",
+        label: t("my_products_stat_views"),
         value: views.toString(),
         icon: Eye,
         bg: "bg-sky-50",
@@ -289,7 +289,7 @@ export default function MyProductsPage() {
         valueColor: "text-sky-700",
       },
       {
-        label: "Điểm đánh giá trung bình",
+        label: t("my_products_stat_rating"),
         value: ratingAvg,
         icon: Star,
         bg: "bg-yellow-50",
@@ -299,7 +299,7 @@ export default function MyProductsPage() {
         valueColor: "text-yellow-700",
       },
       {
-        label: "Trong mùa",
+        label: t("my_products_stat_season"),
         value: totalStock,
         icon: Calendar,
         bg: "bg-purple-50",
@@ -309,7 +309,7 @@ export default function MyProductsPage() {
         valueColor: "text-purple-700",
       },
     ];
-  }, [filteredProducts]);
+  }, [filteredProducts, t]);
 
   const handleDelete = async (productId) => {
     if (!productId) return;
@@ -326,7 +326,7 @@ export default function MyProductsPage() {
             <div className="bg-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
               <span className="animate-spin w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full"></span>
               <span className="text-gray-700 font-medium">
-                Đang cập nhật sản phẩm...
+                {t("my_products_updating")}
               </span>
             </div>
           </div>
@@ -337,10 +337,10 @@ export default function MyProductsPage() {
             <div className="flex items-start justify-between mb-5">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Sản phẩm của tôi
+                  {t("my_products_title")}
                 </h1>
                 <p className="text-gray-500 text-sm mt-0.5">
-                  Quản lý và theo dõi tất cả sản phẩm của bạn
+                  {t("my_products_subtitle")}
                 </p>
               </div>
               <button
@@ -350,7 +350,7 @@ export default function MyProductsPage() {
                 className="cursor-pointer flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors shadow-sm"
               >
                 <Plus size={16} />
-                Thêm sản phẩm
+                {t("my_products_add_btn")}
               </button>
             </div>
 
@@ -368,7 +368,7 @@ export default function MyProductsPage() {
                 />
                 <input
                   type="text"
-                  placeholder="Tìm theo tên sản phẩm..."
+                  placeholder={t("my_products_search_placeholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors text-sm"
@@ -382,7 +382,7 @@ export default function MyProductsPage() {
                   onChange={(e) => setTypeFilter(e.target.value)}
                   className="bg-transparent outline-none text-sm text-gray-700 w-full"
                 >
-                  <option value="">Tất cả loại</option>
+                  <option value="">{t("my_products_filter_all_type")}</option>
                   {types?.map((type) => (
                     <option key={type?._id} value={type?._id}>
                       {type?.name}
@@ -396,7 +396,7 @@ export default function MyProductsPage() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="md:col-span-3 px-3 py-2.5 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 outline-none"
               >
-                <option value="">Tất cả trạng thái</option>
+                <option value="">{t("my_products_filter_all_status")}</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
@@ -411,16 +411,17 @@ export default function MyProductsPage() {
                 key={product._id || product.id}
                 product={product}
                 onDelete={handleDelete}
+                t={t}
               />
             ))}
             {isOwnProductLoading && (
               <div className="col-span-4 text-center py-16 text-gray-400 text-sm">
-                Loading products...
+                {t("my_products_loading")}
               </div>
             )}
             {!isOwnProductLoading && filteredProducts.length === 0 && (
               <div className="col-span-4 text-center py-16 text-gray-400 text-sm">
-                No products found.
+                {t("my_products_empty")}
               </div>
             )}
           </div>

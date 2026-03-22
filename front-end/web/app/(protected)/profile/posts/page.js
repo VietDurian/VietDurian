@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useChatStore } from "@/store/useChatStore";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 
 const getCategoriesByRole = (role) => {
   switch (role) {
@@ -24,13 +25,6 @@ const getCategoriesByRole = (role) => {
     default: return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
   }
 };
-
-const STATUS_OPTIONS = [
-  { value: "all", label: "Tất cả" },
-  { value: "active", label: "Đã duyệt" },
-  { value: "progressing", label: "Đang chờ duyệt" },
-  { value: "inactive", label: "Ngưng hoạt động" },
-];
 
 const TITLE_PLACEHOLDERS = {
   "Dịch vụ": "VD: Dọn cỏ, làm vườn, phun thuốc, cắt tỉa cành...",
@@ -51,18 +45,6 @@ const categoryConfig = {
 const PHONE_REGEX = /^(0[3|5|7|8|9])+([0-9]{8})$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const validateContact = (type, value) => {
-  if (!value.trim()) return "Vui lòng nhập thông tin liên hệ";
-  if (type === "phone") {
-    if (!PHONE_REGEX.test(value))
-      return "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 03, 05, 07, 08, 09)";
-  } else {
-    if (!EMAIL_REGEX.test(value))
-      return "Email không hợp lệ (VD: example@gmail.com)";
-  }
-  return "";
-};
-
 const detectContactType = (val) => {
   if (!val) return "phone";
   return EMAIL_REGEX.test(val) ? "email" : "phone";
@@ -70,14 +52,15 @@ const detectContactType = (val) => {
 
 // ── Confirm Modal ─────────────────────────────────────────
 const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
+  const { t } = useLanguage();
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
         <p className="text-gray-800 text-sm mb-6 text-center">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm">Hủy</button>
-          <button onClick={onConfirm} className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm">Xóa</button>
+          <button onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm">{t('profile_posts_delete_cancel')}</button>
+          <button onClick={onConfirm} className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm">{t('profile_posts_delete_btn')}</button>
         </div>
       </div>
     </div>
@@ -86,11 +69,12 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
 
 // ── Status Badge ─────────────────────────────────────────
 const StatusBadge = ({ status }) => {
+  const { t } = useLanguage();
   const map = {
-    progressing: { icon: Clock, text: "Đang chờ duyệt", bg: "bg-amber-50", text_c: "text-amber-700", icon_c: "text-amber-500", border: "border-amber-200" },
-    active: { icon: CheckCircle, text: "Đã duyệt", bg: "bg-emerald-50", text_c: "text-emerald-700", icon_c: "text-emerald-500", border: "border-emerald-200" },
-    rejected: { icon: XCircle, text: "Bị từ chối", bg: "bg-red-50", text_c: "text-red-700", icon_c: "text-red-500", border: "border-red-200" },
-    inactive: { icon: AlertCircle, text: "Ngưng hoạt động", bg: "bg-gray-50", text_c: "text-red-700", icon_c: "text-red-500", border: "border-red-200" },
+    progressing: { icon: Clock, text: t('status_progressing'), bg: "bg-amber-50", text_c: "text-amber-700", icon_c: "text-amber-500", border: "border-amber-200" },
+    active: { icon: CheckCircle, text: t('status_active'), bg: "bg-emerald-50", text_c: "text-emerald-700", icon_c: "text-emerald-500", border: "border-emerald-200" },
+    rejected: { icon: XCircle, text: t('status_rejected'), bg: "bg-red-50", text_c: "text-red-700", icon_c: "text-red-500", border: "border-red-200" },
+    inactive: { icon: AlertCircle, text: t('status_inactive'), bg: "bg-gray-50", text_c: "text-red-700", icon_c: "text-red-500", border: "border-red-200" },
   };
   const cfg = map[status] || map.progressing;
   const Icon = cfg.icon;
@@ -103,6 +87,7 @@ const StatusBadge = ({ status }) => {
 
 // ── Edit Post Modal ───────────────────────────────────────
 const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
+  const { t } = useLanguage();
   const fileInputRef = useRef(null);
   const categories = getCategoriesByRole(user?.role);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -116,6 +101,16 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const [imageData, setImageData] = useState(post?.image || "");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateContact = (type, value) => {
+    if (!value.trim()) return t('edit_post_contact_required');
+    if (type === "phone") {
+      if (!PHONE_REGEX.test(value)) return t('edit_post_phone_invalid');
+    } else {
+      if (!EMAIL_REGEX.test(value)) return t('edit_post_email_invalid');
+    }
+    return "";
+  };
 
   const canSubmit = Boolean(category) && Boolean(title.trim()) && Boolean(content.trim()) && Boolean(imageData) && Boolean(contact.trim()) && !contactError;
 
@@ -156,7 +151,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setError("Ảnh quá lớn. Tối đa 5MB"); return; }
+    if (file.size > 5 * 1024 * 1024) { setError(t('edit_post_image_too_large')); return; }
     const reader = new FileReader();
     reader.onload = () => { const r = reader.result?.toString() || ""; setImageData(r); setImagePreview(r); };
     reader.readAsDataURL(file);
@@ -167,14 +162,14 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
     setError("");
     const cErr = validateContact(contactType, contact);
     if (cErr) { setContactError(cErr); return; }
-    if (!canSubmit) { setError("Vui lòng điền đủ thông tin."); return; }
+    if (!canSubmit) { setError(t('edit_post_required')); return; }
     setIsSubmitting(true);
     try {
       const updated = await updatePost(post.id, { category, title: title.trim(), content: content.trim(), image: imageData, contact: contact.trim() });
       onPostUpdated?.({ ...post, title: updated?.title || title.trim(), content: updated?.content || content.trim(), link: updated?.contact || contact.trim(), image: updated?.image || imagePreview, category: updated?.category || category, status: updated?.status || post.status });
       onClose();
     } catch (err) {
-      setError(err?.message || "Không thể cập nhật bài viết");
+      setError(err?.message || t('edit_post_fail'));
     } finally {
       setIsSubmitting(false);
     }
@@ -186,7 +181,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white text-black w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
         <div className="relative flex items-center justify-center p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold">Chỉnh sửa bài viết</h2>
+          <h2 className="text-xl font-bold">{t('edit_post_title')}</h2>
           <button onClick={onClose} className="absolute right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition"><X size={20} className="text-gray-600" /></button>
         </div>
 
@@ -195,12 +190,12 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
             <img src={user?.avatar || "/images/avatar.jpg"} className="w-11 h-11 rounded-full border border-gray-200" alt="Avatar" />
             <div>
               <p className="font-semibold text-gray-800">{user?.full_name || user?.name || user?.username || "Bạn"}</p>
-              <div className="text-xs text-gray-500">Công khai</div>
+              <div className="text-xs text-gray-500">{t('edit_post_public')}</div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Danh mục</label>
+            <label className="text-sm font-semibold text-gray-700">{t('edit_post_category_label')}</label>
             <div className="relative">
               <button type="button" onClick={() => setDropdownOpen((o) => !o)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white transition-all cursor-pointer text-left flex justify-between items-center">
                 <span>{category}</span>
@@ -217,38 +212,38 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Nội dung</label>
+            <label className="text-sm font-semibold text-gray-700">{t('edit_post_content_label')}</label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={TITLE_PLACEHOLDERS[category] || TITLE_PLACEHOLDERS["Khác"]} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium" maxLength={100} />
             <div className="text-xs text-gray-500 text-right">{title.length}/100</div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Mô tả chi tiết</label>
-            <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Mô tả chi tiết về bài viết của bạn..." className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500" maxLength={1000} />
+            <label className="text-sm font-semibold text-gray-700">{t('edit_post_desc_label')}</label>
+            <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder={t('edit_post_desc_placeholder')} className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500" maxLength={1000} />
             <div className="text-xs text-gray-500 text-right">{content.length}/1000</div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Thông tin liên hệ</label>
+            <label className="text-sm font-semibold text-gray-700">{t('edit_post_contact_label')}</label>
             <div className="flex gap-2">
               <button type="button" onClick={() => handleContactTypeChange("phone")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "phone" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
-                <Phone size={15} />Số điện thoại
+                <Phone size={15} />{t('edit_post_contact_phone')}
               </button>
               <button type="button" onClick={() => handleContactTypeChange("email")} className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${contactType === "email" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
-                <Mail size={15} />Email
+                <Mail size={15} />{t('edit_post_contact_email')}
               </button>
             </div>
-            <input type={contactType === "phone" ? "tel" : "email"} value={contact} onChange={handleContactChange} placeholder={contactType === "phone" ? "VD: 0901234567" : "VD: example@gmail.com"} className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white ${contactError ? "border-red-400" : "border-gray-200"}`} />
+            <input type={contactType === "phone" ? "tel" : "email"} value={contact} onChange={handleContactChange} placeholder={contactType === "phone" ? t('edit_post_contact_phone_placeholder') : t('edit_post_contact_email_placeholder')} className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white ${contactError ? "border-red-400" : "border-gray-200"}`} />
             {contactError && <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1"><XCircle size={14} strokeWidth={2.5} />{contactError}</p>}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">Ảnh</label>
+            <label className="text-sm font-semibold text-gray-700">{t('edit_post_image_label')}</label>
             {!imagePreview ? (
               <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-all">
                 <ImageIcon className="mx-auto text-gray-400 mb-2" size={32} />
-                <p className="text-sm font-medium text-gray-600">Nhấp để chọn ảnh</p>
-                <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF tối đa 5MB</p>
+                <p className="text-sm font-medium text-gray-600">{t('edit_post_image_click')}</p>
+                <p className="text-xs text-gray-400 mt-1">{t('edit_post_image_hint')}</p>
               </div>
             ) : (
               <div className="relative rounded-lg overflow-hidden border border-gray-200">
@@ -262,7 +257,9 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
           {error && <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2"><AlertCircle size={18} /><span>{error}</span></div>}
 
           <button type="submit" disabled={!canSubmit || isSubmitting} className="w-full bg-emerald-500 text-white font-bold py-3 rounded-lg hover:bg-emerald-600 transition disabled:opacity-60 disabled:cursor-not-allowed">
-            {isSubmitting ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Đang cập nhật...</span> : "Cập nhật bài viết"}
+            {isSubmitting
+              ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>{t('edit_post_submitting')}</span>
+              : t('edit_post_submit')}
           </button>
         </form>
       </div>
@@ -272,6 +269,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
 
 // ── Post Card ─────────────────────────────────────────────
 const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm }) => {
+  const { t } = useLanguage();
   const router = useRouter();
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(post.comments || 0);
@@ -294,7 +292,7 @@ const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm
       onLikeUpdate?.(post.id, newState);
     } catch (err) {
       setIsLiked(!newState);
-      toast.error(err?.response?.data?.message || err?.message || "Không thể cập nhật yêu thích");
+      toast.error(err?.response?.data?.message || err?.message || t('profile_posts_like_fail'));
     } finally {
       setIsTogglingFavorite(false);
     }
@@ -336,10 +334,12 @@ const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm
             {showMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
                 <button onClick={(e) => { e.stopPropagation(); setShowMenu(false); onEdit?.(post); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>Chỉnh sửa
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                  {t('edit_post_menu_edit')}
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); setShowMenu(false); onDeleteConfirm?.(post.id); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>Xóa
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  {t('edit_post_menu_delete')}
                 </button>
               </div>
             )}
@@ -351,7 +351,7 @@ const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm
 
         {post.link && (
           <div className="mb-4">
-            <span className="text-sm font-semibold text-gray-500">Liên hệ: </span>
+            <span className="text-sm font-semibold text-gray-500">{t('profile_posts_contact_label')}</span>
             <span className="text-sm font-semibold text-emerald-700">{post.link}</span>
           </div>
         )}
@@ -371,7 +371,7 @@ const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm
             <MessageCircle size={20} />
             {commentCount > 0 && <span className="text-sm font-medium">{commentCount}</span>}
           </button>
-          <button onClick={() => onContact?.(post)} className="px-4 py-2 bg-emerald-500 text-white rounded-full font-medium hover:bg-emerald-600 transition-colors text-sm">Liên Hệ</button>
+          <button onClick={() => onContact?.(post)} className="px-4 py-2 bg-emerald-500 text-white rounded-full font-medium hover:bg-emerald-600 transition-colors text-sm">{t('profile_posts_contact_btn')}</button>
         </div>
       </article>
       <CommentModal isOpen={isCommentModalOpen} onClose={() => setIsCommentModalOpen(false)} postId={post.id} onCommentCountChange={setCommentCount} />
@@ -381,6 +381,7 @@ const Post = ({ post, onLikeUpdate, onContact, onDelete, onEdit, onDeleteConfirm
 
 // ── Main ──────────────────────────────────────────────────
 export default function PostsPage() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const router = useRouter();
   const { setSelectedUser, addContact } = useChatStore();
@@ -393,6 +394,13 @@ export default function PostsPage() {
   const [deletingPostId, setDeletingPostId] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+
+  const STATUS_OPTIONS = [
+    { value: "all", label: t('profile_posts_status_all') },
+    { value: "active", label: t('profile_posts_status_active') },
+    { value: "progressing", label: t('profile_posts_status_progressing') },
+    { value: "inactive", label: t('profile_posts_status_inactive') },
+  ];
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -436,7 +444,7 @@ export default function PostsPage() {
         }));
         if (!cancelled) setPosts(withComments);
       } catch (err) {
-        if (!cancelled) setPostsError(err?.message || "Không thể tải bài viết");
+        if (!cancelled) setPostsError(err?.message || t('profile_posts_delete_fail'));
       } finally {
         if (!cancelled) setLoadingPosts(false);
       }
@@ -460,24 +468,23 @@ export default function PostsPage() {
       await deletePost(deletingPostId);
       setPosts((prev) => prev.filter((p) => p.id !== deletingPostId));
       setConfirmModalOpen(false); setDeletingPostId(null);
-    } catch (err) { toast.error(err?.message || "Không thể xóa bài viết"); }
+    } catch (err) { toast.error(err?.message || t('profile_posts_delete_fail')); }
   };
 
-  const currentStatusLabel = STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label || "Tất cả";
+  const currentStatusLabel = STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label || t('profile_posts_status_all');
 
   return (
     <div className="min-h-screen bg-white">
       <main className="pt-7 px-4 flex flex-col justify-center items-center">
         <div className="w-full mt-5">
-          {/* ── Hero banner: bg-emerald-500 (khớp ProfileDetails) ── */}
           <div className="bg-emerald-500 rounded-3xl shadow-xl p-8 md:p-12 w-full">
             <div className="flex items-center justify-between flex-wrap gap-6">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Bài viết của tôi</h1>
-                <p className="text-emerald-50 text-lg">Chia sẻ kinh nghiệm, đăng dịch vụ cho thuê, tìm người thuê và rao bán sản phẩm nông nghiệp</p>
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{t('profile_posts_title')}</h1>
+                <p className="text-emerald-50 text-lg">{t('profile_posts_subtitle')}</p>
               </div>
               <Link href="/profile/posts/create" className="bg-white hover:bg-emerald-50 text-emerald-500 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg">
-                <Plus size={20} />Đăng bài
+                <Plus size={20} />{t('profile_posts_create_btn')}
               </Link>
             </div>
           </div>
@@ -487,9 +494,9 @@ export default function PostsPage() {
 
         <div className="w-full max-w-4xl mt-8">
           <div className="flex items-center justify-between mb-6">
-            <p className="text-gray-600">Tìm thấy <span className="font-semibold text-emerald-500">{posts.length}</span> bài viết</p>
+            <p className="text-gray-600">{t('profile_posts_found')} <span className="font-semibold text-emerald-500">{posts.length}</span> {t('profile_posts_found_label')}</p>
             <div className="flex items-center gap-3">
-              <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">Trạng thái:</span>
+              <span className="text-sm font-bold text-gray-700 uppercase tracking-wide">{t('profile_posts_status_label')}</span>
               <div className="relative status-dropdown">
                 <button onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)} className="min-w-[170px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm">
                   <span>{currentStatusLabel}</span>
@@ -508,14 +515,14 @@ export default function PostsPage() {
             </div>
           </div>
 
-          {loadingPosts && <div className="flex flex-col items-center justify-center py-12"><div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mb-3"></div><p className="text-gray-500 font-medium">Đang tải bài viết...</p></div>}
+          {loadingPosts && <div className="flex flex-col items-center justify-center py-12"><div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mb-3"></div><p className="text-gray-500 font-medium">{t('profile_posts_loading')}</p></div>}
           {postsError && <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center"><AlertCircle className="mx-auto text-red-500 mb-3" size={32} /><p className="text-red-600 font-medium">{postsError}</p></div>}
           {!loadingPosts && !postsError && posts.length === 0 && (
             <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><ImageIcon className="text-gray-400" size={28} /></div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Chưa có bài viết nào</h3>
-              <p className="text-gray-500 mb-4">Hãy chia sẻ khoảnh khắc đầu tiên của bạn!</p>
-              <Link href="/profile/posts/create" className="inline-block bg-emerald-500 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-600 transition">Tạo bài viết</Link>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">{t('profile_posts_empty_title')}</h3>
+              <p className="text-gray-500 mb-4">{t('profile_posts_empty_desc')}</p>
+              <Link href="/profile/posts/create" className="inline-block bg-emerald-500 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-600 transition">{t('profile_posts_empty_btn')}</Link>
             </div>
           )}
           {posts.map((post) => (
@@ -524,7 +531,7 @@ export default function PostsPage() {
         </div>
       </main>
 
-      <ConfirmModal isOpen={confirmModalOpen} onClose={() => { setConfirmModalOpen(false); setDeletingPostId(null); }} onConfirm={handleDelete} message="Bạn có chắc chắn muốn xóa bài viết này?" />
+      <ConfirmModal isOpen={confirmModalOpen} onClose={() => { setConfirmModalOpen(false); setDeletingPostId(null); }} onConfirm={handleDelete} message={t('profile_posts_delete_confirm')} />
     </div>
   );
 }
