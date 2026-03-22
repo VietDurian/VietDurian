@@ -1,0 +1,367 @@
+@startuml
+' VietDurian — Social + E-commerce + Chat + Smart Farming Diary ERD
+
+hide methods
+hide stereotypes
+skinparam shadowing false
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classAttributeFontSize 11
+skinparam nodesep 25
+skinparam ranksep 35
+skinparam dpi 160
+skinparam ArrowColor #333333
+skinparam ClassBorderColor #333333
+skinparam ClassBackgroundColor #FFFFFF
+
+top to bottom direction
+
+' Green entity marker like the screenshot
+!define ENTITY(x) class x << (C,#8FE3A3) >>
+
+' =====================
+' Entities
+' =====================
+
+ENTITY(Users) {
+	_id (PK)
+	full_name
+	email (unique)
+	password
+	avatar
+	phone (unique)
+	role
+	is_banned
+	is_verified
+	created_at
+	updated_at
+}
+
+ENTITY(Type_products) {
+	_id (PK)
+	name (unique)
+	description
+	created_at
+	updated_at
+}
+
+ENTITY(Season_diary) {
+	_id (PK)
+	user_id (FK → Users)
+	garden_name
+	farmer_name
+	location
+	longitude
+	latitude
+	crop_variety
+	area
+	status
+	end_date
+	created_at
+	updated_at
+}
+
+ENTITY(Products) {
+	_id (PK)
+	user_id (FK → Users)
+	type_id (FK → Type_products)
+	diary_id (FK → Season_diary)
+	name
+	description
+	price
+	origin
+	weight
+	view_count
+	rating
+	harvest_start_date
+	harvest_end_date
+	status
+	created_at
+	updated_at
+}
+
+ENTITY(Product_images) {
+	_id (PK)
+	product_id (FK → Products)
+	url
+	created_at
+	updated_at
+}
+
+ENTITY(General_posts) {
+	_id (PK)
+	author_id (FK → Users)
+	category
+	title
+	content
+	image
+	contact
+	status
+	created_at
+	updated_at
+}
+
+ENTITY(Knowledge_blogs) {
+	_id (PK)
+	author_id (FK → Users)
+	title
+	content
+	image
+	status
+	created_at
+	updated_at
+}
+
+ENTITY(Knowledge_blocks) {
+	_id (PK)
+	blog_id (FK → Knowledge_blogs)
+	title
+	content
+	image
+	created_at
+	updated_at
+}
+
+ENTITY(Comment_posts) {
+	_id (PK)
+	author_id (FK → Users)
+	post_id (FK → General_posts)
+	parent_id (FK → Comment_posts)
+	content
+	is_active
+	created_at
+	updated_at
+}
+
+ENTITY(Reaction_comments) {
+	_id (PK)
+	comment_id (FK → Comment_posts)
+	user_id (FK → Users)
+	type
+	created_at
+	updated_at
+}
+
+ENTITY(Favorites) {
+	_id (PK)
+	user_id (FK → Users)
+	post_id (FK → General_posts)
+	created_at
+	updated_at
+}
+
+ENTITY(Ratings) {
+	_id (PK)
+	user_id (FK → Users)
+	product_id (FK → Products)
+	star
+	content
+	created_at
+	updated_at
+}
+
+ENTITY(Report_posts) {
+	_id (PK)
+	user_id (FK → Users)
+	post_id (FK → General_posts)
+	reason
+	image
+	status
+	created_at
+	updated_at
+}
+
+ENTITY(Report_comments) {
+	_id (PK)
+	user_id (FK → Users)
+	comment_id (FK → Comment_posts)
+	reason
+	created_at
+	updated_at
+}
+
+ENTITY(Conversations) {
+	_id (PK)
+	admin_id (FK → Users)
+	parent_id (FK → Conversations)
+}
+
+ENTITY(Messages) {
+	_id (PK)
+	sender_id (FK → Users)
+	receiver_id (FK → Users)
+	text
+	image
+	created_at
+	updated_at
+}
+
+ENTITY(Notifications) {
+	_id (PK)
+	receiver_id (FK → Users)
+	sender_id (FK → Users)
+	entity_type
+	post_id (FK → General_posts)
+	message
+	is_read
+	created_at
+	updated_at
+}
+
+ENTITY(Buying_seed) {
+	_id (PK)
+	season_diary_id (FK → Season_diary)
+	purchase_date
+	seed_name
+	quantity
+	total_price
+	supplier_name
+	supplier_address
+	created_at
+	updated_at
+}
+
+ENTITY(Buying_fertilizers) {
+	_id (PK)
+	season_diary_id (FK → Season_diary)
+	purchase_date
+	material_name
+	quantity
+	total_price
+	supplier_name
+	supplier_address
+	created_at
+	updated_at
+}
+
+ENTITY(Use_fertilizers) {
+	_id (PK)
+	season_diary_id (FK → Season_diary)
+	usage_date
+	fertilizer_name
+	fertilizer_amount
+	pesticide_name
+	pesticide_concentration_amount
+	created_at
+	updated_at
+}
+
+ENTITY(Irrigation_costs) {
+	_id (PK)
+	season_diary_id (FK → Season_diary)
+	execution_date
+	irrigation_method
+	irrigation_duration_hours
+	irrigation_duration_minutes
+	irrigation_area
+	electricity_fuel_cost
+	created_at
+	updated_at
+}
+
+ENTITY(Labor_costs) {
+	_id (PK)
+	season_diary_id (FK → Season_diary)
+	labor_hire_date
+	worker_quantity
+	working_time_hours
+	working_time_minutes
+	total_price_vnd
+	worker_or_team_name
+	created_at
+	updated_at
+}
+
+ENTITY(Packaging_handling) {
+	_id (PK)
+	season_diary_id (FK → Season_diary)
+	handling_date
+	packaging_type
+	storage_location
+	treatment_method
+}
+
+ENTITY(Harvest_consumption) {
+	_id (PK)
+	season_diary_id (FK → Season_diary)
+	harvest_date
+	harvest_quantity_kg
+	sale_date
+	consumed_weight_kg
+	sale_unit_price_vnd
+	created_at
+	updated_at
+}
+
+ENTITY(Diary_steps) {
+	_id (PK)
+	diary_id (FK → Season_diary)
+	step_name
+	description
+	cost
+	action_date
+	created_at
+	updated_at
+}
+
+' =====================
+' Relationships (picture-like 1/M labels)
+' =====================
+
+' Note: Some PlantUML renderers don't support `together { ... }` in class diagrams.
+' We rely on directional relationship hints below for layout.
+
+' User ↔ E-commerce
+Users "1" -right- "M" Products : has
+Type_products "1" -right- "M" Products : types
+Season_diary "1" -up- "M" Products : links
+Products "1" -right- "M" Product_images : has
+Products "1" -right- "M" Ratings : receives
+Users "1" -down- "M" Ratings : writes
+
+' User ↔ Social content
+Users "1" -- "M" General_posts : authors
+General_posts "1" -- "M" Comment_posts : has
+Users "1" -- "M" Comment_posts : writes
+Comment_posts "1" <-- "M" Comment_posts : parent
+Comment_posts "1" -- "M" Reaction_comments : has
+Users "1" -- "M" Reaction_comments : reacts
+Users "1" -- "M" Favorites : favorites
+General_posts "1" -- "M" Favorites : favorited_by
+Users "1" -- "M" Report_posts : reports
+General_posts "1" -- "M" Report_posts : reported_by
+Users "1" -- "M" Report_comments : reports
+Comment_posts "1" -- "M" Report_comments : reported_by
+
+' Knowledge base
+Users "1" -down- "M" Knowledge_blogs : authors
+Knowledge_blogs "1" -right- "M" Knowledge_blocks : contains
+
+
+' Chat
+Users "1" -- "M" Conversations : admin_of
+Conversations "1" <-- "M" Conversations : parent
+Users "M" -- "M" Conversations : participates
+Conversations "1" -- "M" Messages : contains
+Users "1" <-- "M" Messages : sender
+Users "1" <-- "M" Messages : receiver
+
+
+' Notifications
+Users "1" <-- "M" Notifications : receiver
+Users "1" <-- "M" Notifications : sender
+General_posts "1" <-- "M" Notifications : about
+
+' Smart farming diary (central)
+Users "1" -down- "M" Season_diary : owns
+Season_diary "1" -right- "M" Buying_seed : has
+Season_diary "1" -right- "M" Buying_fertilizers : has
+Season_diary "1" -right- "M" Use_fertilizers : has
+Season_diary "1" -right- "M" Irrigation_costs : has
+Season_diary "1" -right- "M" Labor_costs : has
+Season_diary "1" -right- "M" Packaging_handling : has
+Season_diary "1" -right- "M" Harvest_consumption : has
+Season_diary "1" -right- "M" Diary_steps : has
+
+@enduml
