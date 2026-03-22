@@ -1,6 +1,6 @@
 import {
   StyleSheet, Text, View, TextInput, TouchableOpacity,
-  FlatList, Image, Dimensions, ActivityIndicator,
+  FlatList, Image, Dimensions, ActivityIndicator, Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useEffect, useCallback } from "react";
@@ -148,8 +148,13 @@ export default function BlogsScreen() {
         </View>
       </View>
 
-      {/* Sort Bottom Sheet */}
-      {showSortSheet && (
+      {/* ── Sort Bottom Sheet dùng Modal ── */}
+      <Modal
+        visible={showSortSheet}
+        transparent
+        animationType="none"
+        onRequestClose={() => setShowSortSheet(false)}
+      >
         <TouchableOpacity
           style={styles.sheetOverlay}
           activeOpacity={1}
@@ -172,7 +177,7 @@ export default function BlogsScreen() {
             ))}
           </View>
         </TouchableOpacity>
-      )}
+      </Modal>
 
       {/* Loading / Error / List */}
       {blogsLoading && blogs.length === 0 ? (
@@ -279,8 +284,8 @@ const styles = StyleSheet.create({
 
   // Sort sheet
   sheetOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.35)", zIndex: 99, justifyContent: "flex-end",
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end",
   },
   sheetContainer: {
     backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20,

@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { productAPI, ratingAPI } from "@/lib/api";
 import ProductRating from "@/components/ProductRating";
@@ -78,6 +78,7 @@ export default function ProductDetailPage() {
   const { authUser } = useAuthStore();
   const { setSelectedUser, addContact } = useChatStore();
   const router = useRouter();
+  const hasFetched = useRef(false);
 
   const handleImageError = () => {
     setImageError(true);
@@ -110,48 +111,37 @@ export default function ProductDetailPage() {
   };
 
   useEffect(() => {
-    const fetchLiveRating = async () => {
-      if (!productId) return;
-      try {
-        const response = await ratingAPI.getRatingsByProductId(productId, {
-          limit: 1,
-        });
-        if (response.success && response.statistics) {
-          const avg = parseFloat(response.statistics.averageRating || 0);
-          setLiveRating(avg);
-        }
-      } catch (err) {
-        console.error("Error fetching live rating:", err);
-      }
-    };
-    fetchLiveRating();
-  }, [productId]);
+    if (!productId) return;
+    if (hasFetched.current) return; // ← chặn lần gọi thứ 2
+    hasFetched.current = true;
 
-  useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchAll = async () => {
       try {
         setLoading(true);
         setError(null);
-
         const response = await productAPI.getProductById(productId);
-
         if (response.success) {
           setProduct(response.data);
         } else {
           setError(t('product_detail_not_found'));
         }
-
-        setLoading(false);
       } catch (err) {
-        console.error("Error fetching product:", err);
         setError(t('product_detail_error_load'));
+      } finally {
         setLoading(false);
+      }
+
+      try {
+        const ratingRes = await ratingAPI.getRatingsByProductId(productId, { limit: 1 });
+        if (ratingRes.success && ratingRes.statistics) {
+          setLiveRating(parseFloat(ratingRes.statistics.averageRating || 0));
+        }
+      } catch (err) {
+        console.error("Error fetching live rating:", err);
       }
     };
 
-    if (productId) {
-      fetchProduct();
-    }
+    fetchAll();
   }, [productId]);
 
   const formatPrice = (price) => {
@@ -295,8 +285,8 @@ export default function ProductDetailPage() {
                           <Star
                             key={star}
                             className={`w-5 h-5 ${star <= Math.floor(rating)
-                                ? "text-yellow-400 fill-yellow-400"
-                                : "text-gray-300"
+                              ? "text-yellow-400 fill-yellow-400"
+                              : "text-gray-300"
                               }`}
                           />
                         ))}
@@ -444,8 +434,8 @@ export default function ProductDetailPage() {
                 <button
                   onClick={() => setActiveTab("description")}
                   className={`px-8 py-4 font-semibold transition-colors ${activeTab === "description"
-                      ? "text-emerald-600 border-b-2 border-emerald-600"
-                      : "text-gray-600 hover:text-gray-900"
+                    ? "text-emerald-600 border-b-2 border-emerald-600"
+                    : "text-gray-600 hover:text-gray-900"
                     }`}
                 >
                   {t('product_detail_tab_description')}
@@ -453,8 +443,8 @@ export default function ProductDetailPage() {
                 <button
                   onClick={() => setActiveTab("specifications")}
                   className={`px-8 py-4 font-semibold transition-colors ${activeTab === "specifications"
-                      ? "text-emerald-600 border-b-2 border-emerald-600"
-                      : "text-gray-600 hover:text-gray-900"
+                    ? "text-emerald-600 border-b-2 border-emerald-600"
+                    : "text-gray-600 hover:text-gray-900"
                     }`}
                 >
                   {t('product_detail_tab_specs')}
@@ -462,8 +452,8 @@ export default function ProductDetailPage() {
                 <button
                   onClick={() => setActiveTab("diary")}
                   className={`px-8 py-4 font-semibold transition-colors ${activeTab === "diary"
-                      ? "text-emerald-600 border-b-2 border-emerald-600"
-                      : "text-gray-600 hover:text-gray-900"
+                    ? "text-emerald-600 border-b-2 border-emerald-600"
+                    : "text-gray-600 hover:text-gray-900"
                     }`}
                 >
                   {t('product_detail_tab_diary')}

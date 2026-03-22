@@ -711,6 +711,9 @@ const translations = {
         rating_toast_delete_fail: 'Không thể xóa đánh giá. Vui lòng thử lại.',
         rating_toast_load_fail: 'Không thể tải đánh giá',
         rating_confirm_delete: 'Bạn có chắc muốn xóa đánh giá này?',
+        rating_confirm_delete_modal_message: 'Bạn có chắc muốn xóa đánh giá này? Hành động không thể hoàn tác.',
+        rating_confirm_cancel: 'Hủy',
+        rating_confirm_delete_btn: 'Xóa',
 
         // Blog Page
         blog_page_title: 'Kiến Thức Sầu Riêng',
@@ -2372,6 +2375,9 @@ const translations = {
         rating_toast_delete_fail: 'Could not delete review. Please try again.',
         rating_toast_load_fail: 'Could not load reviews',
         rating_confirm_delete: 'Are you sure you want to delete this review?',
+        rating_confirm_delete_modal_message: 'Are you sure you want to delete this review? This action cannot be undone.',
+        rating_confirm_cancel: 'Cancel',
+        rating_confirm_delete_btn: 'Delete',
 
         blog_page_title: 'Durian Knowledge',
         blog_page_subtitle: 'Explore modern durian cultivation and care techniques, market trends and practical experience sharing',
