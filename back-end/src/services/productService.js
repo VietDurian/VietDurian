@@ -41,7 +41,10 @@ const createProduct = async ({
       throw createError(400, "Invalid harvest dates");
     }
     if (startDate > endDate) {
-      throw createError(400, "harvestStartDate must be before or equal to harvestEndDate");
+      throw createError(
+        400,
+        "harvestStartDate must be before or equal to harvestEndDate",
+      );
     }
 
     const newProduct = new Product({
@@ -67,8 +70,8 @@ const createProduct = async ({
           new ProductImage({
             product_id: savedProduct._id,
             url: imageUrl,
-          }).save()
-        )
+          }).save(),
+        ),
       );
 
       savedProduct.images = productImages.map((img) => img._id);
@@ -142,9 +145,9 @@ const getAllProducts = async ({
     const productIds = products.map((p) => p._id);
 
     // lấy toàn bộ images của các product trong page hiện tại
-    const images = await ProductImage.find({ product_id: { $in: productIds } })
-      .lean();
-    console.log('images', images);
+    const images = await ProductImage.find({
+      product_id: { $in: productIds },
+    }).lean();
     // group images theo product_id
     const imagesByProductId = images.reduce((acc, img) => {
       const key = String(img.product_id);
@@ -158,9 +161,6 @@ const getAllProducts = async ({
       ...p,
       images: imagesByProductId[String(p._id)] || [],
     }));
-    console.log('productsWithImages', productsWithImages);
-
-
 
     return {
       data: productsWithImages,
@@ -193,8 +193,9 @@ const getOwnProducts = async (userId) => {
     }
 
     const productIds = products.map((p) => p._id);
-    const images = await ProductImage.find({ product_id: { $in: productIds } })
-      .lean();
+    const images = await ProductImage.find({
+      product_id: { $in: productIds },
+    }).lean();
 
     const imagesByProductId = images.reduce((acc, img) => {
       const key = String(img.product_id);
@@ -218,10 +219,10 @@ const getProductById = async (productId) => {
     const product = await Product.findByIdAndUpdate(
       productId,
       { $inc: { view_count: 1 } },
-      { new: true }
+      { new: true },
     )
       .populate("user_id", "full_name avatar email phone")
-      .populate("type_id", "name")
+      .populate("type_id", "name");
 
     const listImage = await ProductImage.find({ product_id: productId });
     product.images = listImage;
@@ -300,14 +301,14 @@ const updateProduct = async (productId, updateData) => {
     if (startToCheck && endToCheck && startToCheck > endToCheck) {
       throw createError(
         400,
-        "harvestStartDate must be before or equal to harvestEndDate"
+        "harvestStartDate must be before or equal to harvestEndDate",
       );
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
       normalizedData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     )
       .populate("user_id", "full_name avatar")
       .populate("type_id", "name")
@@ -328,8 +329,8 @@ const updateProduct = async (productId, updateData) => {
           new ProductImage({
             product_id: productId,
             url: imageUrl,
-          }).save()
-        )
+          }).save(),
+        ),
       );
 
       updatedProduct.images = newImages.map((img) => img._id);

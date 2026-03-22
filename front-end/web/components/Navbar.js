@@ -84,7 +84,7 @@ export default function Navbar() {
       addContact(chatAdmin);
       setSelectedUser(chatAdmin);
       setProfileOpen(false);
-      router.push(`/chat/${adminUser._id}`);
+      router.push(`/chat?chatId=${adminUser._id}`);
     } catch (error) {
       router.push("/chat");
     }
@@ -121,10 +121,11 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition ${pathname === link.href
+                className={`text-sm font-medium transition ${
+                  pathname === link.href
                     ? "text-emerald-700"
                     : "text-gray-600 hover:text-emerald-600"
-                  }`}
+                }`}
               >
                 {t(link.labelKey)}
               </Link>
@@ -180,8 +181,9 @@ export default function Navbar() {
                     />
                   </div>
                   <ChevronDown
-                    className={`w-4 h-4 text-black transition ${profileOpen ? "rotate-180" : ""
-                      }`}
+                    className={`w-4 h-4 text-black transition ${
+                      profileOpen ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
