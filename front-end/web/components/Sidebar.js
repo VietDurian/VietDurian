@@ -133,7 +133,7 @@ const Sidebar = () => {
               }`}
               onClick={() => {
                 setSelectedUser(user);
-                router.push(`/chat/${user._id}`);
+                router.push(`/chat?chatId=${user._id}`);
               }}
             >
               <div className="relative shrink-0">

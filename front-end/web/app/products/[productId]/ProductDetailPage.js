@@ -107,7 +107,7 @@ export default function ProductDetailPage() {
     addContact(chatUser);
     setSelectedUser(chatUser);
 
-    router.push(`/chat/${receiverId}`);
+    router.push(`/chat?chatId=${receiverId}`);
   };
 
   useEffect(() => {
@@ -123,16 +123,18 @@ export default function ProductDetailPage() {
         if (response.success) {
           setProduct(response.data);
         } else {
-          setError(t('product_detail_not_found'));
+          setError(t("product_detail_not_found"));
         }
       } catch (err) {
-        setError(t('product_detail_error_load'));
+        setError(t("product_detail_error_load"));
       } finally {
         setLoading(false);
       }
 
       try {
-        const ratingRes = await ratingAPI.getRatingsByProductId(productId, { limit: 1 });
+        const ratingRes = await ratingAPI.getRatingsByProductId(productId, {
+          limit: 1,
+        });
         if (ratingRes.success && ratingRes.statistics) {
           setLiveRating(parseFloat(ratingRes.statistics.averageRating || 0));
         }
@@ -179,7 +181,7 @@ export default function ProductDetailPage() {
         <Navbar />
         <div className="flex flex-col justify-center items-center py-32">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
-          <p className="text-gray-600">{t('product_detail_loading')}</p>
+          <p className="text-gray-600">{t("product_detail_loading")}</p>
         </div>
         <Footer />
       </div>
@@ -194,16 +196,18 @@ export default function ProductDetailPage() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
             <div className="flex items-center gap-3 mb-3">
               <AlertCircle className="w-6 h-6 text-red-600" />
-              <h3 className="text-lg font-semibold text-red-900">{t('product_detail_error_title')}</h3>
+              <h3 className="text-lg font-semibold text-red-900">
+                {t("product_detail_error_title")}
+              </h3>
             </div>
             <p className="text-red-700 mb-4">
-              {error || t('product_detail_not_found')}
+              {error || t("product_detail_not_found")}
             </p>
             <Link
               href="/products"
               className="inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
-              {t('product_detail_back_to_list')}
+              {t("product_detail_back_to_list")}
             </Link>
           </div>
         </div>
@@ -227,14 +231,14 @@ export default function ProductDetailPage() {
         <div className="max-w-[1400px] mx-auto">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Link href="/" className="hover:text-emerald-600 transition-colors">
-              {t('product_detail_breadcrumb_home')}
+              {t("product_detail_breadcrumb_home")}
             </Link>
             <ChevronRight className="w-4 h-4" />
             <Link
               href="/products"
               className="hover:text-emerald-600 transition-colors"
             >
-              {t('product_detail_breadcrumb_products')}
+              {t("product_detail_breadcrumb_products")}
             </Link>
             <ChevronRight className="w-4 h-4" />
             <span className="text-gray-900 font-medium">{product.name}</span>
@@ -284,10 +288,11 @@ export default function ProductDetailPage() {
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star
                             key={star}
-                            className={`w-5 h-5 ${star <= Math.floor(rating)
-                              ? "text-yellow-400 fill-yellow-400"
-                              : "text-gray-300"
-                              }`}
+                            className={`w-5 h-5 ${
+                              star <= Math.floor(rating)
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-gray-300"
+                            }`}
                           />
                         ))}
                       </div>
@@ -297,13 +302,17 @@ export default function ProductDetailPage() {
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <Eye className="w-5 h-5" />
-                      <span>{product.view_count} {t('product_detail_views')}</span>
+                      <span>
+                        {product.view_count} {t("product_detail_views")}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-emerald-50 rounded-xl p-6">
-                  <p className="text-sm text-gray-600 mb-2">{t('product_detail_ref_price')}</p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {t("product_detail_ref_price")}
+                  </p>
                   <span className="text-4xl font-bold text-emerald-600">
                     {formatPrice(product.price)}
                   </span>
@@ -313,7 +322,9 @@ export default function ProductDetailPage() {
                   <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                     <MapPin className="w-6 h-6 text-emerald-600" />
                     <div>
-                      <span className="text-sm text-gray-600">{t('product_detail_origin')}</span>
+                      <span className="text-sm text-gray-600">
+                        {t("product_detail_origin")}
+                      </span>
                       <span className="ml-2 font-semibold text-gray-900">
                         {product.origin}
                       </span>
@@ -323,9 +334,12 @@ export default function ProductDetailPage() {
                   <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                     <Weight className="w-6 h-6 text-emerald-600" />
                     <div>
-                      <span className="text-sm text-gray-600">{t('product_detail_weight')}</span>
+                      <span className="text-sm text-gray-600">
+                        {t("product_detail_weight")}
+                      </span>
                       <span className="ml-2 font-semibold text-gray-900">
-                        {product.weight}{t('product_detail_weight_unit')}
+                        {product.weight}
+                        {t("product_detail_weight_unit")}
                       </span>
                     </div>
                   </div>
@@ -333,9 +347,13 @@ export default function ProductDetailPage() {
                   <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                     <Package className="w-6 h-6 text-emerald-600" />
                     <div>
-                      <span className="text-sm text-gray-600">{t('product_detail_status')}</span>
+                      <span className="text-sm text-gray-600">
+                        {t("product_detail_status")}
+                      </span>
                       <span className="ml-2 font-semibold text-green-600">
-                        {product.status === "active" ? t('product_detail_status_active') : t('product_detail_status_inactive')}
+                        {product.status === "active"
+                          ? t("product_detail_status_active")
+                          : t("product_detail_status_inactive")}
                       </span>
                     </div>
                   </div>
@@ -344,7 +362,9 @@ export default function ProductDetailPage() {
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                       <Tag className="w-6 h-6 text-emerald-600" />
                       <div>
-                        <span className="text-sm text-gray-600">{t('product_detail_type')}</span>
+                        <span className="text-sm text-gray-600">
+                          {t("product_detail_type")}
+                        </span>
                         <span className="ml-2 font-semibold text-gray-900">
                           {product.type_id.name}
                         </span>
@@ -356,7 +376,9 @@ export default function ProductDetailPage() {
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                       <Calendar className="w-6 h-6 text-emerald-600" />
                       <div>
-                        <span className="text-sm text-gray-600">{t('product_detail_season')}</span>
+                        <span className="text-sm text-gray-600">
+                          {t("product_detail_season")}
+                        </span>
                         <span className="ml-2 font-semibold text-gray-900">
                           {formatDate(product.harvest_start_date)} -{" "}
                           {formatDate(product.harvest_end_date)}
@@ -377,12 +399,12 @@ export default function ProductDetailPage() {
                     className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
                     <MessageCircleMore className="w-6 h-6" />
-                    {t('product_detail_contact_zalo')}
+                    {t("product_detail_contact_zalo")}
                   </button>
                   <button
                     onClick={(e) => handleContact(e, product)}
                     className="px-6 py-4 border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
-                    title={t('product_detail_contact_zalo')}
+                    title={t("product_detail_contact_zalo")}
                   >
                     <MessageCircle className="w-6 h-6" />
                   </button>
@@ -391,7 +413,7 @@ export default function ProductDetailPage() {
                 {product.user_id && (
                   <div className="border-t border-gray-200 pt-6">
                     <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                      {t('product_detail_seller_info')}
+                      {t("product_detail_seller_info")}
                     </h3>
                     <div className="flex items-center gap-4">
                       <div
@@ -415,7 +437,8 @@ export default function ProductDetailPage() {
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">
-                          {product.user_id.full_name || t('product_detail_seller_default')}
+                          {product.user_id.full_name ||
+                            t("product_detail_seller_default")}
                         </p>
                         {product.user_id.email && (
                           <p className="text-sm text-gray-600">
@@ -433,30 +456,33 @@ export default function ProductDetailPage() {
               <div className="flex border-b border-gray-200">
                 <button
                   onClick={() => setActiveTab("description")}
-                  className={`px-8 py-4 font-semibold transition-colors ${activeTab === "description"
-                    ? "text-emerald-600 border-b-2 border-emerald-600"
-                    : "text-gray-600 hover:text-gray-900"
-                    }`}
+                  className={`px-8 py-4 font-semibold transition-colors ${
+                    activeTab === "description"
+                      ? "text-emerald-600 border-b-2 border-emerald-600"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
                 >
-                  {t('product_detail_tab_description')}
+                  {t("product_detail_tab_description")}
                 </button>
                 <button
                   onClick={() => setActiveTab("specifications")}
-                  className={`px-8 py-4 font-semibold transition-colors ${activeTab === "specifications"
-                    ? "text-emerald-600 border-b-2 border-emerald-600"
-                    : "text-gray-600 hover:text-gray-900"
-                    }`}
+                  className={`px-8 py-4 font-semibold transition-colors ${
+                    activeTab === "specifications"
+                      ? "text-emerald-600 border-b-2 border-emerald-600"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
                 >
-                  {t('product_detail_tab_specs')}
+                  {t("product_detail_tab_specs")}
                 </button>
                 <button
                   onClick={() => setActiveTab("diary")}
-                  className={`px-8 py-4 font-semibold transition-colors ${activeTab === "diary"
-                    ? "text-emerald-600 border-b-2 border-emerald-600"
-                    : "text-gray-600 hover:text-gray-900"
-                    }`}
+                  className={`px-8 py-4 font-semibold transition-colors ${
+                    activeTab === "diary"
+                      ? "text-emerald-600 border-b-2 border-emerald-600"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
                 >
-                  {t('product_detail_tab_diary')}
+                  {t("product_detail_tab_diary")}
                 </button>
               </div>
 
@@ -473,22 +499,31 @@ export default function ProductDetailPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div className="flex justify-between py-3 border-b border-gray-200">
-                        <span className="font-semibold text-gray-700">{t('product_detail_spec_name')}</span>
+                        <span className="font-semibold text-gray-700">
+                          {t("product_detail_spec_name")}
+                        </span>
                         <span className="text-gray-900">{product.name}</span>
                       </div>
                       <div className="flex justify-between py-3 border-b border-gray-200">
-                        <span className="font-semibold text-gray-700">{t('product_detail_spec_origin')}</span>
+                        <span className="font-semibold text-gray-700">
+                          {t("product_detail_spec_origin")}
+                        </span>
                         <span className="text-gray-900">{product.origin}</span>
                       </div>
                       <div className="flex justify-between py-3 border-b border-gray-200">
-                        <span className="font-semibold text-gray-700">{t('product_detail_spec_weight')}</span>
+                        <span className="font-semibold text-gray-700">
+                          {t("product_detail_spec_weight")}
+                        </span>
                         <span className="text-gray-900">
-                          {product.weight}{t('product_detail_weight_unit')}
+                          {product.weight}
+                          {t("product_detail_weight_unit")}
                         </span>
                       </div>
                       {product.harvest_start_date && (
                         <div className="flex justify-between py-3 border-b border-gray-200">
-                          <span className="font-semibold text-gray-700">{t('product_detail_spec_season_start')}</span>
+                          <span className="font-semibold text-gray-700">
+                            {t("product_detail_spec_season_start")}
+                          </span>
                           <span className="text-gray-900">
                             {formatDate(product.harvest_start_date)}
                           </span>
@@ -497,28 +532,36 @@ export default function ProductDetailPage() {
                     </div>
                     <div className="space-y-4">
                       <div className="flex justify-between py-3 border-b border-gray-200">
-                        <span className="font-semibold text-gray-700">{t('product_detail_spec_status')}</span>
+                        <span className="font-semibold text-gray-700">
+                          {t("product_detail_spec_status")}
+                        </span>
                         <span className="text-green-600 font-semibold">
                           {product.status === "active"
-                            ? t('product_detail_status_active')
-                            : t('product_detail_status_inactive')}
+                            ? t("product_detail_status_active")
+                            : t("product_detail_status_inactive")}
                         </span>
                       </div>
                       <div className="flex justify-between py-3 border-b border-gray-200">
-                        <span className="font-semibold text-gray-700">{t('product_detail_spec_views')}</span>
+                        <span className="font-semibold text-gray-700">
+                          {t("product_detail_spec_views")}
+                        </span>
                         <span className="text-gray-900">
                           {product.view_count}
                         </span>
                       </div>
                       <div className="flex justify-between py-3 border-b border-gray-200">
-                        <span className="font-semibold text-gray-700">{t('product_detail_spec_rating')}</span>
+                        <span className="font-semibold text-gray-700">
+                          {t("product_detail_spec_rating")}
+                        </span>
                         <span className="text-gray-900">
                           {rating.toFixed(1)} / 5.0
                         </span>
                       </div>
                       {product.harvest_end_date && (
                         <div className="flex justify-between py-3 border-b border-gray-200">
-                          <span className="font-semibold text-gray-700">{t('product_detail_spec_season_end')}</span>
+                          <span className="font-semibold text-gray-700">
+                            {t("product_detail_spec_season_end")}
+                          </span>
                           <span className="text-gray-900">
                             {formatDate(product.harvest_end_date)}
                           </span>
