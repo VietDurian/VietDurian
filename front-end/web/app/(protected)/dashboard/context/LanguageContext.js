@@ -300,6 +300,28 @@ const translations = {
 		page: 'Trang',
 		previous: 'Trước',
 		next: 'Sau',
+
+		// Phone validation
+		phone_error_required: 'Vui lòng nhập số điện thoại',
+		phone_error_invalid: 'Số điện thoại không hợp lệ (phải có 10 số, bắt đầu bằng 03, 05, 07, 08, 09)',
+
+		// Password rules display
+		profile_pw_rules_title: 'Yêu cầu mật khẩu:',
+		profile_pw_rule1: 'Ít nhất 12 ký tự',
+		profile_pw_rule2: 'Có chữ in hoa',
+		profile_pw_rule3: 'Có chữ thường',
+		profile_pw_rule4: 'Có ít nhất một số',
+		profile_pw_rule5: 'Có ký tự đặc biệt (ví dụ: @, #, $)',
+
+		// Password feedback
+		profile_pw_match: 'Mật khẩu khớp',
+		profile_pw_not_match: 'Mật khẩu không khớp',
+		profile_pw_same_as_current: 'Mật khẩu mới không được trùng mật khẩu hiện tại',
+
+		// Password error messages from server
+		profile_pw_wrong_current: 'Mật khẩu hiện tại không đúng!',
+		profile_pw_invalid_new: 'Mật khẩu mới không hợp lệ!',
+		profile_pw_server_error: 'Lỗi server! Vui lòng thử lại sau.',
 	},
 	en: {
 		// Profile Page
@@ -598,6 +620,28 @@ const translations = {
 		page: 'Page',
 		previous: 'Previous',
 		next: 'Next',
+
+		// Phone validation
+		phone_error_required: 'Phone number is required',
+		phone_error_invalid: 'Invalid phone number (must be 10 digits, starting with 03, 05, 07, 08, 09)',
+
+		// Password rules display
+		profile_pw_rules_title: 'Password requirements:',
+		profile_pw_rule1: 'At least 12 characters',
+		profile_pw_rule2: 'At least one uppercase letter',
+		profile_pw_rule3: 'At least one lowercase letter',
+		profile_pw_rule4: 'At least one number',
+		profile_pw_rule5: 'At least one special character (e.g. @, #, $)',
+
+		// Password feedback
+		profile_pw_match: 'Passwords match',
+		profile_pw_not_match: 'Passwords do not match',
+		profile_pw_same_as_current: 'New password must differ from current password',
+
+		// Password error messages from server
+		profile_pw_wrong_current: 'Current password is incorrect!',
+		profile_pw_invalid_new: 'New password is invalid!',
+		profile_pw_server_error: 'Server error! Please try again later.',
 	},
 };
 

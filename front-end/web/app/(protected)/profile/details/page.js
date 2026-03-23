@@ -136,10 +136,10 @@ export default function ProfileDetails() {
       if (response.success) {
         await fetchProfile();
         setIsEditModalOpen(false);
-        toast.success("Cập nhật thông tin thành công!");
+        toast.success(t('profile_update_success'));
       }
     } catch (error) {
-      toast.error("Có lỗi xảy ra khi cập nhật thông tin!");
+      toast.error(t('profile_update_error'));
     } finally {
       setIsSaving(false);
     }
@@ -150,7 +150,8 @@ export default function ProfileDetails() {
 
   const allRulesPassed = passwordRules.every((rule) => rule.test(passwordForm.newPassword));
   const passwordsMatch = passwordForm.newPassword === passwordForm.confirmPassword && passwordForm.confirmPassword !== "";
-  const canChangePassword = allRulesPassed && passwordsMatch && passwordForm.currentPassword !== "";
+  const passwordsDifferent = passwordForm.newPassword !== passwordForm.currentPassword;
+  const canChangePassword = allRulesPassed && passwordsMatch && passwordForm.currentPassword !== "" && passwordsDifferent;
 
   const handleChangePassword = async () => {
     if (!canChangePassword) return;
@@ -158,19 +159,19 @@ export default function ProfileDetails() {
       setIsChangingPassword(true);
       const response = await authAPI.changePassword({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword });
       if (response.success) {
-        toast.success("Đổi mật khẩu thành công!");
+        toast.success(t('profile_pw_change_success'));
         setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       }
     } catch (error) {
       let errorMessage = "Có lỗi xảy ra khi đổi mật khẩu!";
       if (error?.response) {
         const { status, data } = error.response;
-        if (status === 401) errorMessage = "Mật khẩu hiện tại không đúng!";
-        else if (status === 400) errorMessage = data?.message || "Mật khẩu mới không hợp lệ!";
-        else if (status === 500) errorMessage = "Lỗi server! Vui lòng thử lại sau.";
-        else errorMessage = data?.message || errorMessage;
+        if (status === 400) errorMessage = t('profile_pw_wrong_current');
+        else if (status === 422) errorMessage = t('profile_pw_invalid_new');
+        else if (status === 500) errorMessage = t('profile_pw_server_error');
+        else errorMessage = data?.message || t('profile_pw_error_generic');
       }
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsChangingPassword(false);
     }
@@ -301,7 +302,7 @@ export default function ProfileDetails() {
                       <input type={showPasswords.current ? "text" : "password"} value={passwordForm.currentPassword} onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
                         className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
                         placeholder={t('profile_pw_placeholder_current')} />
-                      <button type="button" onClick={() => togglePasswordVisibility("current")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                      <button type="button" onClick={() => togglePasswordVisibility("current")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 outline-none focus:ring-0">
                         {showPasswords.current ? <EyeOff size={20} strokeWidth={2} /> : <Eye size={20} strokeWidth={2} />}
                       </button>
                     </div>
@@ -313,10 +314,16 @@ export default function ProfileDetails() {
                       <input type={showPasswords.new ? "text" : "password"} value={passwordForm.newPassword} onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
                         className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
                         placeholder={t('profile_pw_placeholder_new')} />
-                      <button type="button" onClick={() => togglePasswordVisibility("new")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                      <button type="button" onClick={() => togglePasswordVisibility("new")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 outline-none focus:ring-0">
                         {showPasswords.new ? <EyeOff size={20} strokeWidth={2} /> : <Eye size={20} strokeWidth={2} />}
                       </button>
                     </div>
+                    {passwordForm.newPassword && passwordForm.currentPassword && !passwordsDifferent && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <XCircle size={16} className="text-red-500" strokeWidth={2.5} />
+                        <span className="text-sm text-red-600">{t('profile_pw_same_as_current')}</span>
+                      </div>
+                    )}
                   </div>
                   {/* Confirm Password */}
                   <div>
@@ -325,7 +332,7 @@ export default function ProfileDetails() {
                       <input type={showPasswords.confirm ? "text" : "password"} value={passwordForm.confirmPassword} onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
                         className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
                         placeholder={t('profile_pw_placeholder_confirm')} />
-                      <button type="button" onClick={() => togglePasswordVisibility("confirm")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                      <button type="button" onClick={() => togglePasswordVisibility("confirm")} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 outline-none focus:ring-0">
                         {showPasswords.confirm ? <EyeOff size={20} strokeWidth={2} /> : <Eye size={20} strokeWidth={2} />}
                       </button>
                     </div>
@@ -372,7 +379,7 @@ export default function ProfileDetails() {
 
       {/* Edit Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 mt-10">
           <div className="bg-white rounded-2xl max-w-2xl w-full">
             <div className="bg-emerald-500 text-white p-6 flex items-center justify-between rounded-t-2xl">
               <div className="flex items-center gap-3">
