@@ -3,12 +3,11 @@ service: vietdurian-websocket
 
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs24.x
   region: ap-southeast-1
   environment:
     CONNECTIONS_TABLE: ${self:service}-connections-${sls:stage}
     STAGE: ${sls:stage}
-    DOMAIN: !Sub "${WebsocketApi}.execute-api.${AWS::Region}.amazonaws.com/${sls:stage}"
   iam:
     role:
       statements:
@@ -93,9 +92,6 @@ resources:
           AttributeName: ttl
           Enabled: true
 
-  Outputs:
-    WebSocketURL:
-      Value: !Sub "wss://${WebsocketApi}.execute-api.${AWS::Region}.amazonaws.com/${sls:stage}"
 
 plugins:
   - serverless-offline
