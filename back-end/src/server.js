@@ -13,18 +13,18 @@ require("dotenv").config();
 
 let dbInitPromise = null;
 
-// connectDB()
+connectDB()
 
-const ensureDbConnected = async () => {
-  if (!dbInitPromise) {
-    dbInitPromise = connectDB().catch((error) => {
-      dbInitPromise = null;
-      throw error;
-    });
-  }
+// const ensureDbConnected = async () => {
+//   if (!dbInitPromise) {
+//     dbInitPromise = connectDB().catch((error) => {
+//       dbInitPromise = null;
+//       throw error;
+//     });
+//   }
 
-  await dbInitPromise;
-};
+//   await dbInitPromise;
+// };
 
 // Cors
 app.use(
