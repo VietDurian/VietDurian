@@ -307,7 +307,7 @@ export default function AsideBar({ role }) {
             </div>
             <div className="flex flex-col">
               <span className="text-white font-bold text-sm tracking-wide">
-                Version: 1.0
+                Version: 1.0.2
               </span>
               <span className="text-white/80 text-xs font-medium">
                 {t("aside_brand_sub")}
