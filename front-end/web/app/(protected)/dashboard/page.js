@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { AdminSidebar } from "./component/AdminSidebar";
 import { DashboardPage } from "./component/DashboardPage";
-import { UsersPage } from "./component/UsersPage";
+import { UsersPage } from "./component/UserManagement/UsersPage";
 import { PostsPage } from "./component/PostsPage";
 import { PostRequestPage } from "./component/PostRequestPage";
 import { ReportPage } from "./component/ReportPage";
