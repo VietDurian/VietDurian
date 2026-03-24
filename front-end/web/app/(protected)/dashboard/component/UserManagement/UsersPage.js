@@ -49,6 +49,7 @@ export function UsersPage() {
 		id: u._id || u.id,
 		name: u.full_name || 'No Name',
 		email: u.email || 'N/A',
+		avatar: u.avatar || null,
 		phone: u.phone || 'N/A',
 		role: u.role || 'user',
 		status: u.is_banned ? 'blocked' : 'active',
@@ -56,7 +57,6 @@ export function UsersPage() {
 			u.created_at || u.createdAt
 				? new Date(u.created_at || u.createdAt).toLocaleDateString('vi-VN')
 				: 'N/A',
-		location: u.location || 'Unknown',
 	});
 
 	const fetchUsers = async (params = {}) => {
@@ -281,8 +281,21 @@ export function UsersPage() {
 								>
 									<td className="px-6 py-4 whitespace-nowrap">
 										<div className="flex items-center">
+											{user.avatar ? (
+												<img
+													src={user.avatar}
+													alt={user.name}
+													className="w-10 h-10 rounded-full object-cover"
+													onError={(e) => {
+														e.currentTarget.style.display = 'none';
+														e.currentTarget.nextSibling.style.display = 'flex';
+													}}
+												/>
+											) : null}
+
 											<div
-												className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${user.status === 'blocked'
+												style={{ display: user.avatar ? 'none' : 'flex' }}
+												className={`w-10 h-10 rounded-full items-center justify-center text-white font-bold ${user.status === 'blocked'
 													? 'bg-gradient-to-br from-red-500 to-red-700'
 													: 'bg-gradient-to-br from-[#1a4d2e] to-[#2d7a4f]'
 													}`}
@@ -393,7 +406,6 @@ export function UsersPage() {
 								>
 									{user.name}
 								</h3>
-								<p className="text-sm text-gray-500">{user.location}</p>
 							</div>
 						</div>
 
@@ -517,68 +529,69 @@ export function UsersPage() {
 			/>
 
 			{blockModalOpen && selectedUser && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
-					<div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 relative">
-						<button
-							className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl"
-							onClick={() => {
-								setBlockModalOpen(false);
-								setSelectedUser(null);
-							}}
-						>
-							&times;
-						</button>
-
-						<h2 className="text-xl font-bold mb-4 text-[#1a4d2e]">
-							{selectedUser.status === 'blocked'
-								? t('unblock_user') || 'Unblock User'
-								: t('block_user') || 'Block User'}
-						</h2>
-
-						<div className="space-y-3 text-sm text-gray-700">
-							<p>
-								<span className="font-medium">{t('name') || 'Name'}: </span>
-								{selectedUser.name}
-							</p>
-							<p>
-								<span className="font-medium">{t('email') || 'Email'}: </span>
-								{selectedUser.email}
-							</p>
-							<p>
-								<span className="font-medium">{t('role') || 'Role'}: </span>
-								{t(selectedUser.role) || selectedUser.role}
-							</p>
-							<p className="text-gray-600">
-								{selectedUser.status === 'blocked'
-									? t('confirm_unblock_user') || 'Are you sure you want to unblock this user?'
-									: t('confirm_block_user') || 'Are you sure you want to block this user?'}
-							</p>
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[1px] px-4">
+					<div className="w-full max-w-sm rounded-[28px] bg-white px-6 py-7 shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
+						<div className="flex justify-center">
+							<div
+								className={`flex h-14 w-14 items-center justify-center rounded-full ${selectedUser.status === 'blocked' ? 'bg-green-50' : 'bg-red-50'
+									}`}
+							>
+								<div
+									className={`flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold ${selectedUser.status === 'blocked'
+										? 'bg-green-100 text-green-600'
+										: 'bg-red-100 text-red-500'
+										}`}
+								>
+									!
+								</div>
+							</div>
 						</div>
 
-						<div className="mt-6 flex justify-end gap-3">
+
+
+						<h2 className="mt-2 text-center text-[26px] font-semibold leading-tight text-gray-900">
+							{selectedUser.is_banned === true
+								? t('Bạn có chắc muốn mở chặn người dùng ' + selectedUser.name) || ''
+								: t('Bạn có chắc muốn chặn người dùng ' + selectedUser.name) || 'b'}
+						</h2>
+
+						<p className="mt-4 text-center text-sm leading-6 text-gray-500">
+							{selectedUser.is_banned === false
+								? t('Người dùng sẽ có thể truy cập lại hệ thống sau khi được mở chặn .') ||
+								''
+								: t('Người dùng sẽ không thể tiếp tục truy cập hệ thống cho đến khi được mở chặn.') ||
+								''}
+							<div className="text-sm font-semibold text-gray-800">
+
+							</div>
+						</p>
+
+
+
+						<div className="mt-6 grid grid-cols-2 gap-3">
 							<button
 								onClick={() => {
 									setBlockModalOpen(false);
 									setSelectedUser(null);
 								}}
-								className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+								className="h-11 rounded-xl bg-gray-100 text-sm font-medium text-gray-700 transition hover:bg-gray-200"
 							>
-								{t('cancel') || 'Cancel'}
+								{t('Hủy') || 'Cancel'}
 							</button>
 
 							<button
 								onClick={confirmBlockUnblock}
 								disabled={loading}
-								className={`px-4 py-2 rounded-lg text-white ${selectedUser.status === 'blocked'
-									? 'bg-green-600 hover:bg-green-700'
-									: 'bg-red-600 hover:bg-red-700'
-									} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+								className={`h-11 rounded-xl text-sm font-medium text-white transition ${selectedUser.status === 'blocked'
+									? 'bg-green-500 hover:bg-green-600'
+									: 'bg-red-500 hover:bg-red-600'
+									} ${loading ? 'cursor-not-allowed opacity-50' : ''}`}
 							>
 								{loading
-									? t('loading') || 'Loading...'
+									? t('loading') || 'Đang xử lý...'
 									: selectedUser.status === 'blocked'
-										? t('unblock') || 'Unblock'
-										: t('block') || 'Block'}
+										? t('unblock') || 'Mở chặn'
+										: t('block') || 'Chặn'}
 							</button>
 						</div>
 					</div>
