@@ -45,15 +45,7 @@ end
 UserService-->ProfileService: 10. Return user entity
 deactivate UserService
 
-ProfileService->ProfileService: 11. filterPublicData()
-activate ProfileService
-space
-deactivate ProfileService
 
-ProfileService->ProfileService: 12. mapToPublicDTO()
-activate ProfileService
-space
-deactivate ProfileService
 
 ProfileService-->profileController: 13. Return success + public data
 deactivate ProfileService
@@ -65,4 +57,4 @@ deactivate profileController
 
 profileViewPage-->User: 15. Display public profile
 deactivate profileViewPage
-deactivate User
+deactivate User 
