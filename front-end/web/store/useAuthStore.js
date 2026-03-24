@@ -1,12 +1,6 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import { toast } from "sonner";
-import { io } from "socket.io-client";
-
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.API_URL ||
-  "http://localhost:8080/api/v1";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -21,7 +15,6 @@ export const useAuthStore = create((set, get) => ({
   isUpdatingProfile: false,
   isCheckingAuth: true, // FIX: default true để tránh flash redirect trước khi check xong
   onlineUsers: [],
-  socket: null,
 
   checkAuth: async () => {
     set({ isCheckingAuth: true }); // FIX: set true trước khi check
@@ -31,14 +24,12 @@ export const useAuthStore = create((set, get) => ({
       if (user) {
         localStorage.setItem("auth_user", JSON.stringify(user));
         set({ authUser: user });
-        get().connectSocket();
       }
     } catch (error) {
       console.log("Error in checkAuth: ", error);
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
       set({ authUser: null });
-      get().disconnectSocket();
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -171,7 +162,6 @@ export const useAuthStore = create((set, get) => ({
 
       set({ authUser: user });
       toast.success(res?.data?.message || "Đăng nhập thành công");
-      get().connectSocket();
 
       return { user, token };
     } catch (error) {
@@ -192,7 +182,6 @@ export const useAuthStore = create((set, get) => ({
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
       set({ authUser: null });
-      get().disconnectSocket();
     }
   },
 
@@ -208,24 +197,5 @@ export const useAuthStore = create((set, get) => ({
     } finally {
       set({ isUpdatingProfile: false });
     }
-  },
-
-  connectSocket: () => {
-    const { authUser } = get();
-    if (!authUser || get().socket?.connected) return;
-
-    const socket = io(BASE_URL, {
-      query: { userId: authUser._id },
-    });
-    socket.connect();
-    set({ socket });
-
-    socket.on("getOnlineUsers", (userIds) => {
-      set({ onlineUsers: userIds });
-    });
-  },
-
-  disconnectSocket: () => {
-    if (get().socket?.connected) get().socket.disconnect();
   },
 }));

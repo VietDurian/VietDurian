@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "baseline-browser-mapping": "^2.10.8",
+    "baseline-browser-mapping": "^2.10.10",
     "daisyui": "^5.5.17",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
