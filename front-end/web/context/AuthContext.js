@@ -35,7 +35,6 @@ export function AuthProvider({ children }) {
     setUser(null);
     setToken(null);
     useAuthStore.setState({ authUser: null });
-    useAuthStore.getState().disconnectSocket();
   }, []);
 
   const setUserUnsafe = useCallback((nextUser) => {
@@ -124,7 +123,6 @@ export function AuthProvider({ children }) {
         setUser(user);
         setToken(token);
         useAuthStore.setState({ authUser: user });
-        useAuthStore.getState().connectSocket?.();
 
         const roleRoutes = {
           admin: "/dashboard",

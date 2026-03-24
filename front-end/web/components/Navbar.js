@@ -257,6 +257,27 @@ export default function Navbar() {
               {t(link.labelKey)}
             </Link>
           ))}
+
+          {/* Thêm phần này */}
+          {!user && (
+            <>
+              <div className="border-t border-gray-200 pt-3 flex flex-col gap-2">
+                <LangToggle />
+                <Link
+                  href="/login"
+                  className="block text-center px-4 py-2 text-sm font-semibold text-emerald-700 border border-emerald-700 rounded-full hover:bg-emerald-50"
+                >
+                  {t("nav_login")}
+                </Link>
+                <Link
+                  href="/register"
+                  className="block text-center px-4 py-2 text-sm font-semibold text-white bg-emerald-700 rounded-full hover:bg-emerald-800"
+                >
+                  {t("nav_register")}
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       )}
     </nav>

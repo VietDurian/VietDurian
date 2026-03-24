@@ -4,27 +4,28 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "@/config/swagger";
 import { API_v1 } from "@/routes/index";
 import connectDB from "@/config/mongoose";
-import { app, server } from "@/lib/socket";
 import cookieParser from "cookie-parser";
 import serverless from "serverless-http";
 import { postService } from "@/services/postService";
 
 require("dotenv").config();
 
+const app = express();
+
 let dbInitPromise = null;
 
-connectDB()
+connectDB();
 
-// const ensureDbConnected = async () => {
-//   if (!dbInitPromise) {
-//     dbInitPromise = connectDB().catch((error) => {
-//       dbInitPromise = null;
-//       throw error;
-//     });
-//   }
+const ensureDbConnected = async () => {
+  if (!dbInitPromise) {
+    dbInitPromise = connectDB().catch((error) => {
+      dbInitPromise = null;
+      throw error;
+    });
+  }
 
-//   await dbInitPromise;
-// };
+  await dbInitPromise;
+};
 
 // Cors
 app.use(
@@ -107,7 +108,7 @@ app.use((err, req, res, next) => {
 
 // (server started in start())
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Swagger UI is available at http://localhost:${PORT}/api-docs`);
 });
