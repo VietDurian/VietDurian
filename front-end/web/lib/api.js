@@ -89,6 +89,8 @@ export const usersAPI = {
   },
   async getUserById(id) {
     const response = await apiClient.get(`/user/${id}`);
+    console.log("aaaaaaaaaaaaaaaaaResponse from getUserById:", response.data);
+
     return response.data;
   },
   async toggleBanUser(id, is_banned) {
