@@ -1,6 +1,8 @@
 import SeasonDiaryDetailPage from "./SeasonDiaryDetailPage";
 
-z;
+export function generateStaticParams() {
+  return [{ seasonDiaryId: "_" }];
+}
 
 export default function Page() {
   return <SeasonDiaryDetailPage />;
