@@ -65,13 +65,26 @@ const searchUser = async (req, res, next) => {
 
 const filterUsers = async (req, res, next) => {
   try {
-    const { role, is_banned } = req.query;
+    const { role, is_banned, keyword, page, limit, excludeUserId } = req.query;
     const result = await userService.filterUsers({
       role,
+      keyword,
+      excludeUserId,
       is_banned:
         is_banned === "true" ? true : is_banned === "false" ? false : undefined,
+      page,
+      limit,
     });
-    res.status(200).json({ success: true, data: result });
+
+    if (Array.isArray(result)) {
+      return res.status(200).json({ success: true, data: result });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: result.data || [],
+      pagination: result.pagination || null,
+    });
   } catch (error) {
     next(error);
   }
