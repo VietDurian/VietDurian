@@ -28,6 +28,18 @@ const NAV_LINKS = [
   { labelKey: "nav_about", href: "/about-us" },
 ];
 
+// Đặt bên ngoài Navbar, trước export default
+function LangToggle({ language, setLanguage }) {
+  return (
+    <button
+      onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
+      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gray-200 hover:border-emerald-500 hover:text-emerald-600 text-gray-600 text-sm font-semibold transition"
+    >
+      {language === "vi" ? "EN" : "VI"}
+    </button>
+  );
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -40,8 +52,11 @@ export default function Navbar() {
   const router = useRouter();
 
   useEffect(() => {
-    setMobileOpen(false);
-    setProfileOpen(false);
+    const reset = async () => {
+      setMobileOpen(false);
+      setProfileOpen(false);
+    };
+    reset();
   }, [pathname]);
 
   useEffect(() => {
@@ -84,21 +99,11 @@ export default function Navbar() {
       addContact(chatAdmin);
       setSelectedUser(chatAdmin);
       setProfileOpen(false);
-      router.push(`/chat/${adminUser._id}`);
+      router.push(`/chat?chatId=${adminUser._id}`);
     } catch (error) {
       router.push("/chat");
     }
   };
-
-  // Nút chuyển ngôn ngữ
-  const LangToggle = () => (
-    <button
-      onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
-      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gray-200 hover:border-emerald-500 hover:text-emerald-600 text-gray-600 text-sm font-semibold transition"
-    >
-      {language === "vi" ? "EN" : "VI"}
-    </button>
-  );
 
   return (
     <nav className="fixed top-0 inset-x-0 z-1001 bg-white backdrop-blur-md border-b border-gray-200">
@@ -121,10 +126,11 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition ${pathname === link.href
+                className={`text-sm font-medium transition ${
+                  pathname === link.href
                     ? "text-emerald-700"
                     : "text-gray-600 hover:text-emerald-600"
-                  }`}
+                }`}
               >
                 {t(link.labelKey)}
               </Link>
@@ -136,7 +142,7 @@ export default function Navbar() {
             {user ? (
               // ĐÃ ĐĂNG NHẬP: LangToggle trước chuông
               <div className="flex items-center gap-5">
-                <LangToggle />
+                <LangToggle language={language} setLanguage={setLanguage} />
                 <NotificationPost user={user} />
                 <button
                   onClick={() => router.push("/chat")}
@@ -148,7 +154,7 @@ export default function Navbar() {
             ) : (
               // CHƯA ĐĂNG NHẬP: LangToggle trước nút đăng nhập
               <div className="hidden md:flex items-center gap-3">
-                <LangToggle />
+                <LangToggle language={language} setLanguage={setLanguage} />
                 <Link
                   href="/login"
                   className="px-4 py-2 text-sm font-semibold text-emerald-700 border border-emerald-700 rounded-full hover:bg-emerald-50"
@@ -180,8 +186,9 @@ export default function Navbar() {
                     />
                   </div>
                   <ChevronDown
-                    className={`w-4 h-4 text-black transition ${profileOpen ? "rotate-180" : ""
-                      }`}
+                    className={`w-4 h-4 text-black transition ${
+                      profileOpen ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
@@ -255,6 +262,27 @@ export default function Navbar() {
               {t(link.labelKey)}
             </Link>
           ))}
+
+          {/* Thêm phần này */}
+          {!user && (
+            <>
+              <div className="border-t border-gray-200 pt-3 flex flex-col gap-2">
+                <LangToggle language={language} setLanguage={setLanguage} />
+                <Link
+                  href="/login"
+                  className="block text-center px-4 py-2 text-sm font-semibold text-emerald-700 border border-emerald-700 rounded-full hover:bg-emerald-50"
+                >
+                  {t("nav_login")}
+                </Link>
+                <Link
+                  href="/register"
+                  className="block text-center px-4 py-2 text-sm font-semibold text-white bg-emerald-700 rounded-full hover:bg-emerald-800"
+                >
+                  {t("nav_register")}
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       )}
     </nav>

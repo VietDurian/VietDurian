@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
+import dotenv from "dotenv";
+import path from "path";
+
+dotenv.config({
+  path: path.resolve(process.cwd(), "../../back-end/.env"),
+});
+
 const nextConfig = {
-  output: "export",
   images: {
     domains: [
       "res.cloudinary.com",
@@ -15,11 +21,16 @@ const nextConfig = {
       "images.unsplash.com",
       "images.pexels.com",
     ],
-    unoptimized: true, // Allow all external images without optimization
+    unoptimized: true,
   },
   typescript: {
-    // Allow JS-only projects to build even if TS errors exist
     ignoreBuildErrors: true,
+  },
+
+  // Expose variables to Next.js app
+  env: {
+    API_URL: process.env.API_URL,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || process.env.API_URL,
   },
 };
 

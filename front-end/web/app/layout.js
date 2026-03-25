@@ -21,14 +21,6 @@ const geistMono = Geist_Mono({
 });
 
 export default function RootLayout({ children }) {
-  const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
-
   return (
     <html lang="en">
       <body
@@ -50,9 +42,7 @@ export default function RootLayout({ children }) {
             invert
           />
           <AuthProvider>
-            <LanguageProvider>
-              {children}
-            </LanguageProvider>
+            <LanguageProvider>{children}</LanguageProvider>
           </AuthProvider>
         </GoogleOAuthProvider>
       </body>

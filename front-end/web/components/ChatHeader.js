@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const ChatHeader = () => {
   const { selectedUser, setSelectedUser } = useChatStore();
@@ -14,9 +15,11 @@ const ChatHeader = () => {
         <div className="flex items-center gap-3">
           {/* Avatar */}
           <div className="avatar">
-            <img
+            <Image
               src={selectedUser?.avatar || "/images/avatar.jpg"}
               alt={selectedUser?.full_name}
+              width={96}
+              height={96}
               className="size-10 object-cover rounded-full"
             />
             {onlineUsers.includes(selectedUser?._id) && (

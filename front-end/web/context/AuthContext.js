@@ -17,8 +17,8 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null); // new
-  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true); // true = chưa đọc xong localStorage
   const router = useRouter();
   const isHandling401 = useRef(false);
 
@@ -32,8 +32,9 @@ export function AuthProvider({ children }) {
       document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
     });
 
+    setUser(null);
+    setToken(null);
     useAuthStore.setState({ authUser: null });
-    useAuthStore.getState().disconnectSocket();
   }, []);
 
   const setUserUnsafe = useCallback((nextUser) => {
@@ -59,41 +60,40 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // FIX: Đọc localStorage và gọi checkAuth đúng thứ tự
   useEffect(() => {
     const storedUser = localStorage.getItem("auth_user");
-    const storedToken = localStorage.getItem("auth_token"); // load token
+    const storedToken = localStorage.getItem("auth_token");
 
-    if (storedUser) {
+    if (storedToken && storedUser) {
+      // FIX: Chỉ restore session khi CẢ HAI đều có
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
+        setToken(storedToken);
         useAuthStore.setState({ authUser: parsedUser });
       } catch (error) {
         console.error("Failed to parse auth_user", error);
-        localStorage.removeItem("auth_user");
-        useAuthStore.setState({ authUser: null });
+        clearClientAuthState();
       }
-    }
-
-    if (storedToken) {
-      setToken(storedToken);
     } else {
-      // No token: ensure we drop any stale user session
-      setUser(null);
-      setToken(null);
+      // FIX: Thiếu 1 trong 2 → clear hết, không để trạng thái nửa vời
       clearClientAuthState();
     }
 
     setLoading(false);
+
+    // FIX: Gọi checkAuth để verify token với server (background)
+    // Nếu token expired server sẽ trả 401, interceptor sẽ handle logout
+    useAuthStore.getState().checkAuth();
   }, [clearClientAuthState]);
 
   const login = useCallback((userData, authToken) => {
-    // Save to localStorage
     localStorage.setItem("auth_user", JSON.stringify(userData));
-    localStorage.setItem("auth_token", authToken); // save token
+    localStorage.setItem("auth_token", authToken);
 
     setUser(userData);
-    setToken(authToken); // update state
+    setToken(authToken);
     useAuthStore.setState({ authUser: userData });
   }, []);
 
@@ -115,18 +115,14 @@ export function AuthProvider({ children }) {
         localStorage.setItem("auth_user", JSON.stringify(user));
         localStorage.setItem("auth_token", token);
 
-        // If role is missing in login payload, fetch the latest profile.
         if (!user?.role) {
           const latestUser = await refreshProfile();
-          if (latestUser) {
-            user = latestUser;
-          }
+          if (latestUser) user = latestUser;
         }
 
         setUser(user);
         setToken(token);
         useAuthStore.setState({ authUser: user });
-        useAuthStore.getState().connectSocket?.();
 
         const roleRoutes = {
           admin: "/dashboard",
@@ -137,7 +133,6 @@ export function AuthProvider({ children }) {
         };
 
         router.replace(roleRoutes[user?.role] || "/");
-
         return res.data;
       } catch (error) {
         console.error("Google login error:", error);
@@ -166,7 +161,7 @@ export function AuthProvider({ children }) {
     [clearClientAuthState, router],
   );
 
-  // Bắt 401 toàn cục cho dashboard
+  // Bắt 401 toàn cục
   useEffect(() => {
     const interceptorId = apiClient.interceptors.response.use(
       (response) => response,

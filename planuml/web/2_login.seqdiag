@@ -36,6 +36,7 @@ deactivate userModel
 
 authService->authService: 10. verifyPassword()
 activate authService
+space
 deactivate authService
 
 alt Invalid credentials or user not found
@@ -46,6 +47,7 @@ LoginPage-->User: 10.1.2 Display error: invalid credentials
 else Credentials valid
 authService->authService: 10.2 generateTokens()
 activate authService
+space
 deactivate authService
 
 authService->userModel: 10.2.1 saveRefreshToken()

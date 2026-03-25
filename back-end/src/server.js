@@ -4,16 +4,17 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "@/config/swagger";
 import { API_v1 } from "@/routes/index";
 import connectDB from "@/config/mongoose";
-import { app, server } from "@/lib/socket";
 import cookieParser from "cookie-parser";
-import serverless from 'serverless-http';
+import serverless from "serverless-http";
 import { postService } from "@/services/postService";
 
 require("dotenv").config();
 
+const app = express();
+
 let dbInitPromise = null;
 
-// connectDB()
+connectDB();
 
 const ensureDbConnected = async () => {
   if (!dbInitPromise) {
@@ -29,7 +30,7 @@ const ensureDbConnected = async () => {
 // Cors
 app.use(
   cors({
-    origin:  [
+    origin: [
       "http://localhost:3000",
       "https://dev.d2k0kt672erqlu.amplifyapp.com",
     ],
@@ -50,7 +51,7 @@ app.get("/api-docs/", swaggerUi.setup(swaggerSpec));
 
 // Provide raw swagger JSON for UI (relative path will resolve with stage)
 app.get(["/swagger/swagger.json", "/swagger.json"], (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
+  res.setHeader("Content-Type", "application/json");
   res.send(swaggerSpec);
 });
 
@@ -80,7 +81,7 @@ app.get(["/swagger/ui", "/swagger/ui/", "/swagger"], (req, res) => {
   </body>
   </html>`;
 
-  res.setHeader('Content-Type', 'text/html');
+  res.setHeader("Content-Type", "text/html");
   res.send(html);
 });
 
@@ -88,7 +89,7 @@ app.get(["/swagger/ui", "/swagger/ui/", "/swagger"], (req, res) => {
 app.use("/api/v1", API_v1);
 
 // Background jobs
-  postService.startPostExpiryJob();
+postService.startPostExpiryJob();
 
 app.get("/", (req, res) => {
   res.send("Welcome to VietDurian API!");
@@ -106,11 +107,11 @@ app.use((err, req, res, next) => {
 });
 
 // (server started in start())
-// const PORT = process.env.PORT || 8080;
-// server.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-//   console.log(`Swagger UI is available at http://localhost:${PORT}/api-docs`);
-// });
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Swagger UI is available at http://localhost:${PORT}/api-docs`);
+});
 const baseHandler = serverless(app);
 
 module.exports.handler = async (event, context) => {

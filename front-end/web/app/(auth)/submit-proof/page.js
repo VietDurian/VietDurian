@@ -20,6 +20,7 @@ import { cloudinaryService } from "@/lib/cloudinaryService";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Image from "next/image";
 
 // ─── Upload Zone Component ────────────────────────────────────────────────────
 
@@ -94,9 +95,11 @@ function UploadZone({
           /* File preview */
           <div className="flex items-center gap-3 p-4">
             {previewUrl ? (
-              <img
+              <Image
                 src={previewUrl}
                 alt={`${hint} preview`}
+                width={96}
+                height={96}
                 className="w-50 h-full max-h-33 object-cover rounded-lg border border-emerald-100 shrink-0"
               />
             ) : (

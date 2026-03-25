@@ -454,7 +454,7 @@ const changePassword = async (userId, currentPassword, newPassword) => {
   if (!user) throw createError(404, "User not found");
 
   const isMatch = await user.comparePassword(currentPassword);
-  if (!isMatch) throw createError(401, "Invalid current password");
+  if (!isMatch) throw createError(400, "Invalid current password");
 
   user.password = newPassword;
   await user.save();
