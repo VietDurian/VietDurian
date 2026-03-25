@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { Search, Filter, Ban, ShieldOff, Eye } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, Ban, ShieldOff, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { usersAPI } from "../../../../../lib/api";
 import { useLanguage } from "../../context/LanguageContext";
@@ -10,7 +10,7 @@ import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 
 export function UsersPage() {
-	const { t } = useLanguage();
+	const { t, language } = useLanguage();
 	const { user } = useAuth();
 
 	const [users, setUsers] = useState([]);
@@ -42,19 +42,21 @@ export function UsersPage() {
 		return undefined;
 	};
 
-	const mapUser = (u) => ({
+	const mapUser = useCallback((u) => ({
 		id: u._id || u.id,
-		name: u.full_name || "No Name",
-		email: u.email || "N/A",
+		name: u.full_name || t("user_detail_no_name") || "No Name",
+		email: u.email || t("user_detail_no_data") || "N/A",
 		avatar: u.avatar || null,
-		phone: u.phone || "N/A",
+		phone: u.phone || t("user_detail_no_data") || "N/A",
 		role: u.role || "user",
 		status: u.is_banned ? "blocked" : "active",
 		joinDate:
 			u.created_at || u.createdAt
-				? new Date(u.created_at || u.createdAt).toLocaleDateString("vi-VN")
-				: "N/A",
-	});
+				? new Date(u.created_at || u.createdAt).toLocaleDateString(
+					language === "en" ? "en-US" : "vi-VN",
+				)
+				: t("user_detail_no_data") || "N/A",
+	}), [language, t]);
 
 	const fetchUsers = useCallback(
 		async (params = {}) => {
@@ -103,7 +105,7 @@ export function UsersPage() {
 				setLoading(false);
 			}
 		},
-		[page, t],
+		[mapUser, page, t],
 	);
 
 	useEffect(() => {
@@ -244,7 +246,6 @@ export function UsersPage() {
 						className="px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e]"
 					>
 						<option value="all">{t("all_roles") || "All roles"}</option>
-						<option value="admin">{t("admin") || "Admin"}</option>
 						<option value="farmer">{t("farmer") || "Farmer"}</option>
 						<option value="trader">{t("trader") || "Trader"}</option>
 						<option value="serviceProvider">
@@ -276,22 +277,22 @@ export function UsersPage() {
 						<thead className="bg-gray-50">
 							<tr>
 								<th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-									Name
+									{t("name") || "Name"}
 								</th>
 								<th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-									Email
+									{t("email") || "Email"}
 								</th>
 								<th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-									Phone
+									{t("phone") || "Phone"}
 								</th>
 								<th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-									Role
+									{t("role") || "Role"}
 								</th>
 								<th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-									Status
+									{t("status") || "Status"}
 								</th>
 								<th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-									Actions
+									{t("actions") || "Actions"}
 								</th>
 							</tr>
 						</thead>
@@ -488,7 +489,7 @@ export function UsersPage() {
 						const start = total === 0 ? 0 : (cur - 1) * perPage + 1;
 						const end = Math.min(cur * perPage, total);
 
-						return `${t("Showing") || "Showing"} ${start}–${end} ${t("of") || "of"} ${total} ${(t("users") || "users").toLowerCase()}`;
+						return `${t("showing_range") || "Showing"} ${start}–${end} ${t("of") || "of"} ${total} ${t("users") || "users"}`;
 					})()}
 				</div>
 
@@ -501,7 +502,7 @@ export function UsersPage() {
 								: "text-[#1a4d2e] border-gray-300 hover:bg-gray-50"
 							}`}
 					>
-						{t("Previous") || "Previous"}
+						{t("previous") || "Previous"}
 					</button>
 
 					{Array.from(
@@ -556,7 +557,7 @@ export function UsersPage() {
 								: "text-[#1a4d2e] border-gray-300 hover:bg-gray-50"
 							}`}
 					>
-						{t("Next") || "Next"}
+						{t("next") || "Next"}
 					</button>
 				</div>
 			</div>
@@ -592,22 +593,17 @@ export function UsersPage() {
 						</div>
 
 						<h2 className="mt-2 text-center text-[26px] font-semibold leading-tight text-gray-900">
-							{selectedUser.is_banned === true
-								? t(
-									"Bạn có chắc muốn mở chặn người dùng " + selectedUser.name,
-								) || ""
-								: t("Bạn có chắc muốn chặn người dùng " + selectedUser.name) ||
-								"b"}
+							{selectedUser.status === "blocked"
+								? `${t("unblock_user") || "Unblock User"}: ${selectedUser.name}?`
+								: `${t("block_user") || "Block User"}: ${selectedUser.name}?`}
 						</h2>
 
 						<p className="mt-4 text-center text-sm leading-6 text-gray-500">
-							{selectedUser.is_banned === false
-								? t(
-									"Người dùng sẽ có thể truy cập lại hệ thống sau khi được mở chặn .",
-								) || ""
-								: t(
-									"Người dùng sẽ không thể tiếp tục truy cập hệ thống cho đến khi được mở chặn.",
-								) || ""}
+							{selectedUser.status === "blocked"
+								? t("unblock_description") ||
+								  "User will be able to login and use the system again."
+								: t("block_description") ||
+								  "User will not be able to login and use the system."}
 						</p>
 
 						<div className="mt-6 grid grid-cols-2 gap-3">
@@ -618,7 +614,7 @@ export function UsersPage() {
 								}}
 								className="h-11 rounded-xl bg-gray-100 text-sm font-medium text-gray-700 transition hover:bg-gray-200"
 							>
-								{t("Hủy") || "Cancel"}
+								{t("cancel") || "Cancel"}
 							</button>
 
 							<button
@@ -630,10 +626,10 @@ export function UsersPage() {
 									} ${loading ? "cursor-not-allowed opacity-50" : ""}`}
 							>
 								{loading
-									? t("loading") || "Đang xử lý..."
+									? t("progressing") || "Processing..."
 									: selectedUser.status === "blocked"
-										? t("unblock") || "Mở chặn"
-										: t("block") || "Chặn"}
+										? t("unblock") || "Unblock"
+										: t("block") || "Block"}
 							</button>
 						</div>
 					</div>

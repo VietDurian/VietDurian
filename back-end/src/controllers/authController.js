@@ -22,7 +22,7 @@ const register = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: "User registered successfully. Please verify your email.",
+      message: "Người dùng đã được tạo thành công. Vui lòng kiểm tra email để xác minh tài khoản.",
       data: {
         user: result.user,
       },
@@ -104,7 +104,7 @@ const resendVerificationOtp = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "OTP resent successfully",
+      message: "OTP đã được gửi lại thành công",
     });
   } catch (error) {
     next(error);
