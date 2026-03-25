@@ -110,6 +110,7 @@ const translations = {
 		content_moderation: 'Kiểm duyệt nội dung bài viết',
 		view_all: 'Xem tất cả',
 		view_details: 'Xem chi tiết',
+		view_detail: 'Xem chi tiết',
 
 		// Product rating page
 		product_ratings: 'Đánh giá sản phẩm',
@@ -161,6 +162,22 @@ const translations = {
 		success: 'Thành công',
 		user_blocked: 'Đã chặn người dùng thành công',
 		user_unblocked: 'Đã bỏ chặn người dùng thành công',
+		error_fetching_users: 'Không thể tải danh sách người dùng',
+		error_updating_user_status: 'Không thể cập nhật trạng thái người dùng',
+		no_users_found: 'Không tìm thấy người dùng',
+		error_fetching_user_detail: 'Không thể tải thông tin người dùng',
+		location: 'Địa chỉ',
+		join_date: 'Ngày tham gia',
+		user_detail_no_name: 'Chưa có tên',
+		user_detail_account_overview: 'Tổng quan tài khoản',
+		user_detail_account_overview_desc:
+			'Bảng này cung cấp thông tin tổng quan nhanh về tài khoản người dùng đã chọn, bao gồm trạng thái hồ sơ và thông tin quan trọng.',
+		user_detail_member_since: 'Thành viên từ',
+		user_detail_updating: 'Đang cập nhật...',
+		user_detail_no_data: 'Không có dữ liệu',
+		user_detail_personal_information: 'Thông tin cá nhân',
+		user_detail_review_description: 'Xem chi tiết thông tin tài khoản của người dùng đã chọn.',
+		user_detail_no_user_data: 'Không có dữ liệu người dùng.',
 
 		// Status labels
 		Pending: 'Chờ duyệt',
@@ -421,6 +438,7 @@ const translations = {
 		content_moderation: 'Content moderation',
 		view_all: 'View all',
 		view_details: 'View details',
+		view_detail: 'View detail',
 
 		// Product rating widget
 		product_ratings: 'Product ratings',
@@ -480,6 +498,22 @@ const translations = {
 		success: 'Success',
 		user_blocked: 'User blocked successfully',
 		user_unblocked: 'User unblocked successfully',
+		error_fetching_users: 'Failed to load users',
+		error_updating_user_status: 'Failed to update user status',
+		no_users_found: 'No users found',
+		error_fetching_user_detail: 'Unable to load user details',
+		location: 'Location',
+		join_date: 'Join Date',
+		user_detail_no_name: 'No Name',
+		user_detail_account_overview: 'Account Overview',
+		user_detail_account_overview_desc:
+			'This panel provides a quick overview of the selected user account, including profile status and essential information.',
+		user_detail_member_since: 'Member Since',
+		user_detail_updating: 'Updating...',
+		user_detail_no_data: 'No data',
+		user_detail_personal_information: 'Personal Information',
+		user_detail_review_description: 'Review detailed account information of the selected user.',
+		user_detail_no_user_data: 'No user data.',
 
 		// Priority
 		// Status labels

@@ -3,7 +3,7 @@ import { usersAPI } from '../../../../../lib/api';
 import { useLanguage } from '../../context/LanguageContext';
 
 export function UserDetail({ userId, isOpen, onClose }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -11,32 +11,51 @@ export function UserDetail({ userId, isOpen, onClose }) {
   useEffect(() => {
     if (!userId || !isOpen) return;
 
-    setLoading(true);
-    setError(null);
-    setUser(null);
+    let cancelled = false;
 
-    usersAPI
-      .getUserById(userId)
-      .then((data) => {
+    const loadUserDetail = async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+
+      setLoading(true);
+      setError(null);
+      setUser(null);
+
+      try {
+        const data = await usersAPI.getUserById(userId);
         const detail = data?.data || data;
-        setUser(detail);
-      })
-      .catch((err) => {
+        if (!cancelled) {
+          setUser(detail);
+        }
+      } catch (err) {
         console.error('Error fetching user detail:', err);
-        setError(t('error_fetching_user_detail') || 'Error fetching user detail');
-      })
-      .finally(() => setLoading(false));
+        if (!cancelled) {
+          setError(t('error_fetching_user_detail') || 'Error fetching user detail');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadUserDetail();
+
+    return () => {
+      cancelled = true;
+    };
   }, [userId, isOpen, t]);
 
-  const fullName = user?.full_name || user?.name || 'No Name';
+  const fullName = user?.full_name || user?.name || t('user_detail_no_name') || 'No Name';
   const role = user?.role ? t(user.role) || user.role : '';
   const email = user?.email || '';
   const phone = user?.phone || '';
   const location = user?.location || user?.address || '';
   const avatar = user?.avatar || '';
+  const locale = language === 'en' ? 'en-US' : 'vi-VN';
   const createdDate =
     user?.created_at || user?.createdAt
-      ? new Date(user.created_at || user.createdAt).toLocaleDateString('vi-VN')
+      ? new Date(user.created_at || user.createdAt).toLocaleDateString(locale)
       : '';
 
   const statusText = user?.is_banned
@@ -174,30 +193,30 @@ export function UserDetail({ userId, isOpen, onClose }) {
                 <div className="mt-8 w-full space-y-4">
                   <div className="rounded-2xl border border-[#dcebdd] bg-white/80 p-4 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6a8d75]">
-                      Account Overview
+                      {t('user_detail_account_overview') || 'Account Overview'}
                     </p>
                     <p className="mt-2 text-sm leading-6 text-gray-600">
-                      This panel provides a quick overview of the selected user's account,
-                      including profile status and essential information.
+                      {t('user_detail_account_overview_desc') ||
+                        'This panel provides a quick overview of the selected user account, including profile status and essential information.'}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-2xl border border-[#dcebdd] bg-white/80 p-4 shadow-sm">
                       <p className="text-xs font-semibold uppercase tracking-wide text-[#6a8d75]">
-                        Member Since
+                        {t('user_detail_member_since') || 'Member Since'}
                       </p>
                       <p className="mt-2 text-sm font-semibold text-gray-800 break-words">
-                        {createdDate || 'Updating...'}
+                        {createdDate || t('user_detail_updating') || 'Updating...'}
                       </p>
                     </div>
 
                     <div className="rounded-2xl border border-[#dcebdd] bg-white/80 p-4 shadow-sm">
                       <p className="text-xs font-semibold uppercase tracking-wide text-[#6a8d75]">
-                        Contact
+                        {t('contact') || 'Contact'}
                       </p>
                       <p className="mt-2 text-sm font-semibold text-gray-800 break-words">
-                        {phone || email || 'No data'}
+                        {phone || email || t('user_detail_no_data') || 'No data'}
                       </p>
                     </div>
                   </div>
@@ -209,10 +228,10 @@ export function UserDetail({ userId, isOpen, onClose }) {
             <div className="bg-[#fcfcfd] px-6 py-8 lg:px-8">
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">
-                  {t('Personal Information') || 'Personal Information'}
+                  {t('user_detail_personal_information') || 'Personal Information'}
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  {t('Review detailed account information of the selected user.') ||
+                  {t('user_detail_review_description') ||
                     'Review detailed account information of the selected user.'}
                 </p>
               </div>
@@ -246,7 +265,7 @@ export function UserDetail({ userId, isOpen, onClose }) {
                 </div>
               ) : (
                 <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-gray-500">
-                  {t('No user data.') || 'No user data.'}
+                  {t('user_detail_no_user_data') || 'No user data.'}
                 </div>
               )}
 
@@ -258,7 +277,7 @@ export function UserDetail({ userId, isOpen, onClose }) {
         ) : (
           <div className="p-6">
             <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-gray-500">
-              {t('No user data.') || 'No user data.'}
+              {t('user_detail_no_user_data') || 'No user data.'}
             </div>
           </div>
         )}
