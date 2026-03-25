@@ -297,9 +297,11 @@ export default function Home() {
               <div
                 className={`w-32 h-32 rounded-full overflow-hidden border-4 ${node.border} shadow-2xl`}
               >
-                <img
+                <Image
                   src={node.img}
                   alt={t(node.key)}
+                  width={96}
+                  height={96}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -376,9 +378,11 @@ export default function Home() {
                 <div
                   className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 ${node.border} shadow-xl`}
                 >
-                  <img
+                  <Image
                     src={node.img}
                     alt={t(node.key)}
+                    width={96}
+                    height={96}
                     className="w-full h-full object-cover"
                   />
                 </div>
