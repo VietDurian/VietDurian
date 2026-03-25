@@ -608,7 +608,6 @@ export function UsersPage() {
 								: t(
 									"Người dùng sẽ không thể tiếp tục truy cập hệ thống cho đến khi được mở chặn.",
 								) || ""}
-							<div className="text-sm font-semibold text-gray-800"></div>
 						</p>
 
 						<div className="mt-6 grid grid-cols-2 gap-3">
