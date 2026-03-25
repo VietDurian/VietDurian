@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import {
   Search,
   Filter,
@@ -129,38 +129,41 @@ export function ProductsPage() {
     );
   };
 
-  const mapProduct = (p) => ({
-    id: p._id,
-    name: p.name,
-    userId: p.user_id?._id || p.user_id || "",
-    user_name: p.user_id?.full_name || p.userName || "undefined",
-    typeId: p.type_id?._id || p.typeId || "",
-    typeName: p.type_id?.name || p.typeName || "undefined",
-    description: p.description || "",
-    price: decimalToNumber(p.price),
-    origin: p.origin || "",
-    weight: Number(p.weight ?? 0),
-    viewCount: Number(p.view_count ?? 0),
-    rating: decimalToNumber(p.rating),
-    harvestStartDate: p.harvest_start_date || null,
-    harvestEndDate: p.harvest_end_date || null,
-    status: p.status || "",
-    createdAt: p.created_at || null,
-    updatedAt: p.updated_at || null,
-    imageUrl: (() => {
-      const images = p.images ?? p.image ?? p.thumbnail ?? p.cover;
-      if (Array.isArray(images)) {
-        const first = images[0];
-        if (!first) return "";
-        if (typeof first === "string") return first;
-        return first.url || first.secure_url || first.path || "";
-      }
-      if (typeof images === "string") return images;
-      if (images && typeof images === "object")
-        return images.url || images.secure_url || images.path || "";
-      return p.image_url || p.thumbnail_url || "";
-    })(),
-  });
+  const mapProduct = useCallback(
+    (p) => ({
+      id: p._id,
+      name: p.name,
+      userId: p.user_id?._id || p.user_id || "",
+      user_name: p.user_id?.full_name || p.userName || "undefined",
+      typeId: p.type_id?._id || p.typeId || "",
+      typeName: p.type_id?.name || p.typeName || "undefined",
+      description: p.description || "",
+      price: decimalToNumber(p.price),
+      origin: p.origin || "",
+      weight: Number(p.weight ?? 0),
+      viewCount: Number(p.view_count ?? 0),
+      rating: decimalToNumber(p.rating),
+      harvestStartDate: p.harvest_start_date || null,
+      harvestEndDate: p.harvest_end_date || null,
+      status: p.status || "",
+      createdAt: p.created_at || null,
+      updatedAt: p.updated_at || null,
+      imageUrl: (() => {
+        const images = p.images ?? p.image ?? p.thumbnail ?? p.cover;
+        if (Array.isArray(images)) {
+          const first = images[0];
+          if (!first) return "";
+          if (typeof first === "string") return first;
+          return first.url || first.secure_url || first.path || "";
+        }
+        if (typeof images === "string") return images;
+        if (images && typeof images === "object")
+          return images.url || images.secure_url || images.path || "";
+        return p.image_url || p.thumbnail_url || "";
+      })(),
+    }),
+    [],
+  );
 
   const fetchProductTypes = async () => {
     try {
@@ -272,7 +275,7 @@ export function ProductsPage() {
       isCancelled = true;
       clearTimeout(handler);
     };
-  }, [searchTerm, typeFilter]);
+  }, [searchTerm, typeFilter, mapProduct]);
 
   // Reset to first page when filters/search change
   useEffect(() => {

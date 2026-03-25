@@ -57,9 +57,11 @@ const MessageInput = () => {
       {imagePreview && (
         <div className="mb-3 flex items-center gap-2">
           <div className="relative">
-            <img
+            <Image
               src={imagePreview}
               alt="Preview"
+              width={96}
+              height={96}
               className="w-20 h-20 object-cover rounded-lg border border-zinc-700"
             />
             <button
@@ -97,7 +99,7 @@ const MessageInput = () => {
                      ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
             onClick={() => fileInputRef.current?.click()}
           >
-            <Image size={20} />
+            <Image width={20} alt="Image Preview Button" height={20} />
           </button>
         </div>
         <button

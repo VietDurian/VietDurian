@@ -55,7 +55,7 @@ export default function Home() {
     if (roleRoutes[authUser.role]) {
       router.replace(roleRoutes[authUser.role]);
     }
-  }, [authUser, isCheckingAuth, pathname]);
+  }, [authUser, isCheckingAuth, pathname, router]);
 
   useEffect(() => {
     const fetchTopProducts = async () => {
@@ -140,7 +140,7 @@ export default function Home() {
       {/* Hero Banner */}
       <div className="relative bg-linear-to-br from-emerald-700 via-emerald-600 to-teal-500 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-24 -right-24 w-[28rem] h-[28rem] bg-white/10 rounded-3xl rotate-12"></div>
+          <div className="absolute -top-24 -right-24 w-md h-112 bg-white/10 rounded-3xl rotate-12"></div>
           <div className="absolute top-16 -right-6 w-56 h-56 bg-white/5 rounded-2xl rotate-6"></div>
           <div className="absolute -bottom-28 -left-20 w-96 h-96 bg-white/10 rounded-3xl -rotate-12"></div>
           <div className="absolute bottom-10 left-1/3 w-36 h-36 bg-white/5 rounded-xl rotate-45"></div>
@@ -167,7 +167,7 @@ export default function Home() {
                   key={key}
                   className="inline-flex items-center gap-2 bg-white/15 text-white px-3 sm:px-4 py-2 rounded-lg border border-white/20 text-xs sm:text-sm"
                 >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-300 flex-shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
                   {t(key)}
                 </span>
               ),
@@ -318,7 +318,7 @@ export default function Home() {
         <div className="lg:hidden w-full max-w-lg mx-auto">
           {/* Center icon */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center shadow-2xl">
+            <div className="w-24 h-24 bg-linear-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center shadow-2xl">
               <HeartHandshake
                 className="w-14 h-14 text-white"
                 strokeWidth={1.5}
@@ -407,7 +407,7 @@ export default function Home() {
             }}
           ></div>
         </div>
-        <div className="max-w-[1400px] mx-auto relative z-10">
+        <div className="max-w-350 mx-auto relative z-10">
           <div className="text-center mb-10 sm:mb-16">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
               {t("journey_title")}
@@ -418,7 +418,7 @@ export default function Home() {
           </div>
           <div className="relative">
             {/* Timeline line chỉ hiện ở lg trở lên */}
-            <div className="hidden lg:block absolute top-[90px] left-[10%] right-[10%] h-1 bg-gradient-to-r from-lime-400 via-yellow-400 to-orange-400"></div>
+            <div className="hidden lg:block absolute top-22.5 left-[10%] right-[10%] h-1 bg-linear-to-r from-lime-400 via-yellow-400 to-orange-400"></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 {
@@ -452,11 +452,11 @@ export default function Home() {
               ].map((step) => (
                 <div key={step.titleKey} className="relative">
                   <div
-                    className={`bg-white rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2 border-t-4 ${step.border} min-h-[240px] sm:min-h-[280px] flex flex-col`}
+                    className={`bg-white rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2 border-t-4 ${step.border} min-h-60 sm:min-h-70 flex flex-col`}
                   >
                     <div className="flex justify-center mb-4">
                       <div
-                        className={`w-20 h-20 bg-gradient-to-br ${step.grad} rounded-full flex items-center justify-center shadow-lg relative z-10`}
+                        className={`w-20 h-20 bg-linear-to-br ${step.grad} rounded-full flex items-center justify-center shadow-lg relative z-10`}
                       >
                         {step.icon}
                       </div>
@@ -485,7 +485,7 @@ export default function Home() {
           <div className="absolute top-20 left-10 w-64 h-64 bg-lime-100 rounded-full opacity-20 blur-3xl"></div>
           <div className="absolute bottom-20 right-10 w-64 h-64 bg-emerald-100 rounded-full opacity-20 blur-3xl"></div>
         </div>
-        <div className="max-w-[1400px] mx-auto relative z-10">
+        <div className="max-w-350 mx-auto relative z-10">
           <div className="text-center mb-10 sm:mb-16">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               {t("connection_title")}
@@ -498,9 +498,9 @@ export default function Home() {
           <div className="space-y-8 sm:space-y-12">
             {/* Scenario 1 */}
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-8 items-center">
-              <div className="group relative bg-gradient-to-br from-lime-50 to-lime-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-lime-500">
+              <div className="group relative bg-linear-to-br from-lime-50 to-lime-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-lime-500">
                 <div className="relative flex items-start gap-4 sm:gap-5">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-lime-400 to-lime-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-lime-400 to-lime-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
                     <User
                       className="w-8 h-8 sm:w-10 sm:h-10 text-white"
                       strokeWidth={2.5}
@@ -534,7 +534,7 @@ export default function Home() {
               {/* Mobile connector arrow */}
               <div className="flex lg:hidden items-center justify-center py-2">
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                  <div className="w-16 h-16 bg-linear-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
                     <svg
                       className="w-8 h-8 text-white"
                       fill="none"
@@ -549,13 +549,13 @@ export default function Home() {
                       />
                     </svg>
                   </div>
-                  <div className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-xs shadow-md">
+                  <div className="px-4 py-1.5 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-xs shadow-md">
                     {t("s1_connector")}
                   </div>
                 </div>
               </div>
               <div className="hidden lg:flex flex-col items-center justify-center">
-                <div className="w-28 h-28 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                <div className="w-28 h-28 bg-linear-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
                   <svg
                     className="w-14 h-14 text-white"
                     fill="none"
@@ -570,13 +570,13 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="mt-4 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-sm shadow-md">
+                <div className="mt-4 px-4 py-2 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-sm shadow-md">
                   {t("s1_connector")}
                 </div>
               </div>
-              <div className="group relative bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-r-4 border-cyan-500">
+              <div className="group relative bg-linear-to-br from-cyan-50 to-cyan-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-r-4 border-cyan-500">
                 <div className="relative flex items-start gap-4 sm:gap-5">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-cyan-400 to-cyan-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
                     <Lightbulb
                       className="w-8 h-8 sm:w-10 sm:h-10 text-white"
                       strokeWidth={2.5}
@@ -611,17 +611,17 @@ export default function Home() {
 
             <div className="flex items-center justify-center py-2 sm:py-4">
               <div className="flex items-center gap-2">
-                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-emerald-300 to-emerald-400 rounded"></div>
+                <div className="h-1 w-16 bg-linear-to-r from-transparent via-emerald-300 to-emerald-400 rounded"></div>
                 <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
-                <div className="h-1 w-16 bg-gradient-to-r from-emerald-400 via-emerald-300 to-transparent rounded"></div>
+                <div className="h-1 w-16 bg-linear-to-r from-emerald-400 via-emerald-300 to-transparent rounded"></div>
               </div>
             </div>
 
             {/* Scenario 2 */}
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-8 items-center">
-              <div className="group relative bg-gradient-to-br from-lime-50 to-lime-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-lime-500">
+              <div className="group relative bg-linear-to-br from-lime-50 to-lime-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-lime-500">
                 <div className="relative flex items-start gap-4 sm:gap-5">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-lime-400 to-lime-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-lime-400 to-lime-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
                     <User
                       className="w-8 h-8 sm:w-10 sm:h-10 text-white"
                       strokeWidth={2.5}
@@ -654,7 +654,7 @@ export default function Home() {
               </div>
               <div className="flex lg:hidden items-center justify-center py-2">
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                  <div className="w-16 h-16 bg-linear-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
                     <svg
                       className="w-8 h-8 text-white"
                       fill="none"
@@ -669,13 +669,13 @@ export default function Home() {
                       />
                     </svg>
                   </div>
-                  <div className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-xs shadow-md">
+                  <div className="px-4 py-1.5 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-xs shadow-md">
                     {t("s2_connector")}
                   </div>
                 </div>
               </div>
               <div className="hidden lg:flex flex-col items-center justify-center">
-                <div className="w-28 h-28 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                <div className="w-28 h-28 bg-linear-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
                   <svg
                     className="w-14 h-14 text-white"
                     fill="none"
@@ -690,13 +690,13 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="mt-4 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-sm shadow-md">
+                <div className="mt-4 px-4 py-2 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-sm shadow-md">
                   {t("s2_connector")}
                 </div>
               </div>
-              <div className="group relative bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-r-4 border-indigo-500">
+              <div className="group relative bg-linear-to-br from-indigo-50 to-indigo-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-r-4 border-indigo-500">
                 <div className="relative flex items-start gap-4 sm:gap-5">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-indigo-400 to-indigo-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
                     <Briefcase
                       className="w-8 h-8 sm:w-10 sm:h-10 text-white"
                       strokeWidth={2.5}
@@ -731,17 +731,17 @@ export default function Home() {
 
             <div className="flex items-center justify-center py-2 sm:py-4">
               <div className="flex items-center gap-2">
-                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-emerald-300 to-emerald-400 rounded"></div>
+                <div className="h-1 w-16 bg-linear-to-r from-transparent via-emerald-300 to-emerald-400 rounded"></div>
                 <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
-                <div className="h-1 w-16 bg-gradient-to-r from-emerald-400 via-emerald-300 to-transparent rounded"></div>
+                <div className="h-1 w-16 bg-linear-to-r from-emerald-400 via-emerald-300 to-transparent rounded"></div>
               </div>
             </div>
 
             {/* Scenario 3 */}
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-8 items-center">
-              <div className="group relative bg-gradient-to-br from-lime-50 to-lime-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-lime-500">
+              <div className="group relative bg-linear-to-br from-lime-50 to-lime-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-lime-500">
                 <div className="relative flex items-start gap-4 sm:gap-5">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-lime-400 to-lime-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-lime-400 to-lime-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
                     <User
                       className="w-8 h-8 sm:w-10 sm:h-10 text-white"
                       strokeWidth={2.5}
@@ -774,7 +774,7 @@ export default function Home() {
               </div>
               <div className="flex lg:hidden items-center justify-center py-2">
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                  <div className="w-16 h-16 bg-linear-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
                     <svg
                       className="w-8 h-8 text-white"
                       fill="none"
@@ -789,13 +789,13 @@ export default function Home() {
                       />
                     </svg>
                   </div>
-                  <div className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-xs shadow-md">
+                  <div className="px-4 py-1.5 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-xs shadow-md">
                     {t("s3_connector")}
                   </div>
                 </div>
               </div>
               <div className="hidden lg:flex flex-col items-center justify-center">
-                <div className="w-28 h-28 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                <div className="w-28 h-28 bg-linear-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
                   <svg
                     className="w-14 h-14 text-white"
                     fill="none"
@@ -810,13 +810,13 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="mt-4 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-sm shadow-md">
+                <div className="mt-4 px-4 py-2 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-sm shadow-md">
                   {t("s3_connector")}
                 </div>
               </div>
-              <div className="group relative bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-r-4 border-orange-500">
+              <div className="group relative bg-linear-to-br from-orange-50 to-orange-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-r-4 border-orange-500">
                 <div className="relative flex items-start gap-4 sm:gap-5">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
                     <Package
                       className="w-8 h-8 sm:w-10 sm:h-10 text-white"
                       strokeWidth={2.5}
@@ -851,17 +851,17 @@ export default function Home() {
 
             <div className="flex items-center justify-center py-2 sm:py-4">
               <div className="flex items-center gap-2">
-                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-emerald-300 to-emerald-400 rounded"></div>
+                <div className="h-1 w-16 bg-linear-to-r from-transparent via-emerald-300 to-emerald-400 rounded"></div>
                 <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
-                <div className="h-1 w-16 bg-gradient-to-r from-emerald-400 via-emerald-300 to-transparent rounded"></div>
+                <div className="h-1 w-16 bg-linear-to-r from-emerald-400 via-emerald-300 to-transparent rounded"></div>
               </div>
             </div>
 
             {/* Scenario 4 */}
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-8 items-center">
-              <div className="group relative bg-gradient-to-br from-lime-50 to-lime-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-lime-500">
+              <div className="group relative bg-linear-to-br from-lime-50 to-lime-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-l-4 border-lime-500">
                 <div className="relative flex items-start gap-4 sm:gap-5">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-lime-400 to-lime-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-lime-400 to-lime-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
                     <User
                       className="w-8 h-8 sm:w-10 sm:h-10 text-white"
                       strokeWidth={2.5}
@@ -894,7 +894,7 @@ export default function Home() {
               </div>
               <div className="flex lg:hidden items-center justify-center py-2">
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                  <div className="w-16 h-16 bg-linear-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
                     <svg
                       className="w-8 h-8 text-white"
                       fill="none"
@@ -909,13 +909,13 @@ export default function Home() {
                       />
                     </svg>
                   </div>
-                  <div className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-xs shadow-md">
+                  <div className="px-4 py-1.5 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-xs shadow-md">
                     {t("s4_connector")}
                   </div>
                 </div>
               </div>
               <div className="hidden lg:flex flex-col items-center justify-center">
-                <div className="w-28 h-28 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
+                <div className="w-28 h-28 bg-linear-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
                   <svg
                     className="w-14 h-14 text-white"
                     fill="none"
@@ -930,13 +930,13 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="mt-4 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-sm shadow-md">
+                <div className="mt-4 px-4 py-2 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-full font-bold text-sm shadow-md">
                   {t("s4_connector")}
                 </div>
               </div>
-              <div className="group relative bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-r-4 border-purple-500">
+              <div className="group relative bg-linear-to-br from-purple-50 to-purple-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border-r-4 border-purple-500">
                 <div className="relative flex items-start gap-4 sm:gap-5">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-linear-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transform group-hover:scale-105 transition-transform">
                     <ShoppingCart
                       className="w-8 h-8 sm:w-10 sm:h-10 text-white"
                       strokeWidth={2.5}
@@ -982,7 +982,7 @@ export default function Home() {
             }}
           ></div>
         </div>
-        <div className="max-w-[1400px] mx-auto relative z-10">
+        <div className="max-w-350 mx-auto relative z-10">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center mb-8 sm:mb-12">
             {t("products_title")}
           </h2>
@@ -1023,7 +1023,7 @@ export default function Home() {
                     return (
                       <div
                         key={product._id}
-                        className={`${widthClass} flex-shrink-0 px-2 sm:px-3`}
+                        className={`${widthClass} shrink-0 px-2 sm:px-3`}
                       >
                         <div className="relative group/card cursor-not-allowed">
                           <div className="absolute inset-0 z-10 rounded-lg bg-black/40 backdrop-blur-[2px] opacity-0 group-hover/card:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3 pointer-events-none">
@@ -1089,7 +1089,7 @@ export default function Home() {
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                   <MapPin className="w-4 h-4 text-emerald-600" />
-                                  <span className="truncate max-w-[80px]">
+                                  <span className="truncate max-w-20">
                                     {product.origin}
                                   </span>
                                 </div>
@@ -1146,7 +1146,7 @@ export default function Home() {
 
       {/* Blog Section */}
       <section className="py-12 sm:py-16 px-4 lg:px-6 bg-gray-50">
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-350 mx-auto">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 text-center mb-4">
             {t("blog_title")}
           </h2>
@@ -1160,7 +1160,7 @@ export default function Home() {
             >
               <div className="bg-white rounded-lg overflow-hidden border border-gray-200 h-full flex flex-col">
                 <div
-                  className="relative w-full bg-gradient-to-br from-emerald-100 to-emerald-200"
+                  className="relative w-full bg-linear-to-br from-emerald-100 to-emerald-200"
                   style={{ aspectRatio: "16/9" }}
                 >
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -1183,7 +1183,7 @@ export default function Home() {
                     key={i}
                     className="bg-white rounded-lg overflow-hidden border border-gray-200 flex flex-1"
                   >
-                    <div className="w-24 sm:w-32 flex-shrink-0 bg-gradient-to-br from-lime-100 to-emerald-100 flex items-center justify-center">
+                    <div className="w-24 sm:w-32 shrink-0 bg-linear-to-br from-lime-100 to-emerald-100 flex items-center justify-center">
                       <BookOpen className="w-8 h-8 text-emerald-300" />
                     </div>
                     <div className="p-4 flex-1 flex flex-col justify-between">

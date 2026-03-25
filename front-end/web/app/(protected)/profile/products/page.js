@@ -18,6 +18,7 @@ import { useProductStore as useTypeProductStore } from "@/store/useTypeProduct";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -100,13 +101,15 @@ function ProductCard({ product, onDelete, t }) {
         )}
 
         <div className="w-full h-44 bg-gray-100 flex items-center justify-center overflow-hidden">
-          <img
+          <Image
             src={
               product.images?.[0]?.url ||
               product.images?.[0] ||
               "/images/product-placeholder.jpg"
             }
             alt={product.name}
+            width={96}
+            height={96}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             onError={(e) => {
               e.currentTarget.style.display = "none";
@@ -118,7 +121,7 @@ function ProductCard({ product, onDelete, t }) {
             <Package size={48} className="text-gray-300" />
           </div>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent" />
 
         <div className="absolute bottom-3 left-3 right-3">
           <h3 className="text-white font-bold leading-tight drop-shadow-lg line-clamp-2 text-sm">
@@ -132,12 +135,14 @@ function ProductCard({ product, onDelete, t }) {
         {/* Category badge */}
         <div className="flex items-center gap-1.5">
           <span
-            className={`w-3 h-3 rounded-full inline-block ${product.status === "active" ? "bg-green-400" : "bg-red-400"
-              }`}
+            className={`w-3 h-3 rounded-full inline-block ${
+              product.status === "active" ? "bg-green-400" : "bg-red-400"
+            }`}
           />
           <span
-            className={`text-xs font-medium ${product.status === "active" ? "text-green-600" : "text-red-500"
-              }`}
+            className={`text-xs font-medium ${
+              product.status === "active" ? "text-green-600" : "text-red-500"
+            }`}
           >
             {product.status || "Unknown"}
           </span>
@@ -219,11 +224,11 @@ export default function MyProductsPage() {
   const { types, fetchTypes } = useTypeProductStore();
 
   useEffect(() => {
-    fetchTypes().catch(() => { });
+    fetchTypes().catch(() => {});
   }, [fetchTypes]);
 
   useEffect(() => {
-    getOwnProducts().catch(() => { });
+    getOwnProducts().catch(() => {});
   }, [getOwnProducts]);
 
   const filteredProducts = useMemo(() => {
@@ -257,11 +262,11 @@ export default function MyProductsPage() {
       filteredProducts.length === 0
         ? "0.0"
         : (
-          filteredProducts.reduce(
-            (sum, p) => sum + (toNumber(p.rating) || 0),
-            0,
-          ) / filteredProducts.length
-        ).toFixed(1);
+            filteredProducts.reduce(
+              (sum, p) => sum + (toNumber(p.rating) || 0),
+              0,
+            ) / filteredProducts.length
+          ).toFixed(1);
     const totalStock = filteredProducts.reduce(
       (sum, p) => sum + (toNumber(p.stock) || 0),
       0,

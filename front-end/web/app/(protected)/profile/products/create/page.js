@@ -7,6 +7,7 @@ import { useProductStore as useTypeProductStore } from "@/store/useTypeProduct";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
 
 export default function CreateProduct() {
   const router = useRouter();
@@ -202,7 +203,8 @@ export default function CreateProduct() {
                   htmlFor="seasonDiaryId"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  {t("edit_product_season")} <span className="text-red-500">*</span>
+                  {t("edit_product_season")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="seasonDiaryId"
@@ -212,7 +214,9 @@ export default function CreateProduct() {
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors bg-white"
                 >
-                  <option value="">{t("edit_product_season_placeholder")}</option>
+                  <option value="">
+                    {t("edit_product_season_placeholder")}
+                  </option>
                   {seasonDiaries?.map((season, index) => (
                     <option key={season?._id} value={season?._id}>
                       {season?.garden_name ||
@@ -235,7 +239,8 @@ export default function CreateProduct() {
                   htmlFor="name"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  {t("edit_product_name")} <span className="text-red-500">*</span>
+                  {t("edit_product_name")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -278,7 +283,8 @@ export default function CreateProduct() {
                   htmlFor="price"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  {t("edit_product_price")} <span className="text-red-500">*</span>
+                  {t("edit_product_price")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -299,7 +305,8 @@ export default function CreateProduct() {
                   htmlFor="weight"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  {t("edit_product_weight")} <span className="text-red-500">*</span>
+                  {t("edit_product_weight")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -320,7 +327,8 @@ export default function CreateProduct() {
                   htmlFor="origin"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  {t("edit_product_origin")} <span className="text-red-500">*</span>
+                  {t("edit_product_origin")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -340,7 +348,8 @@ export default function CreateProduct() {
                   htmlFor="typeId"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  {t("edit_product_type")} <span className="text-red-500">*</span>
+                  {t("edit_product_type")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="typeId"
@@ -377,7 +386,8 @@ export default function CreateProduct() {
                   htmlFor="harvestStartDate"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  {t("edit_product_start_date")} <span className="text-red-500">*</span>
+                  {t("edit_product_start_date")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -396,7 +406,8 @@ export default function CreateProduct() {
                   htmlFor="harvestEndDate"
                   className="block text-sm font-medium text-gray-900 mb-2"
                 >
-                  {t("edit_product_end_date")} <span className="text-red-500">*</span>
+                  {t("edit_product_end_date")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -433,9 +444,11 @@ export default function CreateProduct() {
               </div>
             ) : (
               <div className="relative rounded-lg overflow-hidden border border-gray-200">
-                <img
+                <Image
                   src={imagePreview}
                   alt="Preview"
+                  width={96}
+                  height={96}
                   className="w-full h-auto object-contain bg-gray-50 max-h-80"
                 />
                 <button
@@ -468,7 +481,9 @@ export default function CreateProduct() {
               className="cursor-pointer inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-sm"
             >
               <Check className="w-4 h-4" />
-              {isProductCreating ? t("create_product_creating") : t("create_product_submit")}
+              {isProductCreating
+                ? t("create_product_creating")
+                : t("create_product_submit")}
             </button>
             <button
               type="button"

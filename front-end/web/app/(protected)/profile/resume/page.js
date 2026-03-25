@@ -1,8 +1,21 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  Briefcase, MapPin, Phone, Calendar, FileText, Edit2, CheckCircle,
-  XCircle, Award, Building2, Wrench, Loader2, Plus, Lock, AlertCircle,
+  Briefcase,
+  MapPin,
+  Phone,
+  Calendar,
+  FileText,
+  Edit2,
+  CheckCircle,
+  XCircle,
+  Award,
+  Building2,
+  Wrench,
+  Loader2,
+  Plus,
+  Lock,
+  AlertCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { capabilityProfileAPI } from "@/lib/api";
@@ -30,9 +43,7 @@ const ServiceProviderResume = () => {
     description: "",
   });
 
-  useEffect(() => { fetchProfile(); }, []);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -57,29 +68,33 @@ const ServiceProviderResume = () => {
         setError(null);
       } else {
         console.error("Error fetching profile:", error);
-        setError(t('resume_load_fail'));
+        setError(t("resume_load_fail"));
         setHasProfile(false);
       }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'experience_year') {
-      const numericValue = value.replace(/[^0-9]/g, '');
+    if (name === "experience_year") {
+      const numericValue = value.replace(/[^0-9]/g, "");
       setFormData((prev) => ({ ...prev, [name]: numericValue }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
 
-    if (name === 'contact_phone') {
+    if (name === "contact_phone") {
       const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
       if (!value.trim()) {
-        setPhoneError(t('resume_phone_required'));
+        setPhoneError(t("resume_phone_required"));
       } else if (!phoneRegex.test(value)) {
-        setPhoneError(t('resume_phone_invalid'));
+        setPhoneError(t("resume_phone_invalid"));
       } else {
         setPhoneError("");
       }
@@ -104,12 +119,13 @@ const ServiceProviderResume = () => {
         await fetchProfile();
         setShowForm(false);
         setIsEditMode(false);
-        toast.success(t('resume_update_success'));
+        toast.success(t("resume_update_success"));
       }
     } catch (error) {
       console.error("Error submitting profile:", error);
-      let errorMessage = t('resume_update_fail');
-      if (error?.response?.data?.message) errorMessage = error.response.data.message;
+      let errorMessage = t("resume_update_fail");
+      if (error?.response?.data?.message)
+        errorMessage = error.response.data.message;
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -117,7 +133,10 @@ const ServiceProviderResume = () => {
     }
   };
 
-  const handleEdit = () => { setIsEditMode(true); setShowForm(true); };
+  const handleEdit = () => {
+    setIsEditMode(true);
+    setShowForm(true);
+  };
 
   const handleCancelEdit = () => {
     setShowForm(false);
@@ -135,14 +154,18 @@ const ServiceProviderResume = () => {
   };
 
   const formatDate = (dateString) =>
-    new Date(dateString).toLocaleDateString("vi-VN", { year: "numeric", month: "long", day: "numeric" });
+    new Date(dateString).toLocaleDateString("vi-VN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8 px-6">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">{t('resume_loading')}</p>
+          <p className="text-gray-600 font-medium">{t("resume_loading")}</p>
         </div>
       </div>
     );
@@ -154,10 +177,15 @@ const ServiceProviderResume = () => {
         <div className="max-w-4xl mx-auto">
           <div className="bg-red-50 border border-red-200 rounded-3xl p-8 text-center">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">{t('resume_error_title')}</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              {t("resume_error_title")}
+            </h3>
             <p className="text-gray-600 mb-6">{error}</p>
-            <button onClick={fetchProfile} className="px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all">
-              {t('resume_retry')}
+            <button
+              onClick={fetchProfile}
+              className="px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all"
+            >
+              {t("resume_retry")}
             </button>
           </div>
         </div>
@@ -171,16 +199,23 @@ const ServiceProviderResume = () => {
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-3xl p-12 border border-gray-200 text-center">
             <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-emerald-50 mb-6">
-              <Briefcase className="w-12 h-12 text-emerald-600" strokeWidth={2} />
+              <Briefcase
+                className="w-12 h-12 text-emerald-600"
+                strokeWidth={2}
+              />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('resume_no_profile_title')}</h2>
-            <p className="text-gray-600 mb-8 max-w-2xl mx-auto">{t('resume_no_profile_desc')}</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              {t("resume_no_profile_title")}
+            </h2>
+            <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+              {t("resume_no_profile_desc")}
+            </p>
             <button
               onClick={() => router.push("/profile/resume/create")}
               className="inline-flex items-center gap-3 px-8 py-4 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               <Plus size={20} strokeWidth={2.5} />
-              {t('resume_no_profile_btn')}
+              {t("resume_no_profile_btn")}
             </button>
           </div>
         </div>
@@ -196,73 +231,192 @@ const ServiceProviderResume = () => {
             <div className="bg-emerald-500 text-white p-8">
               <div className="flex items-center gap-3 mb-2">
                 <Edit2 size={32} strokeWidth={2.5} />
-                <h2 className="text-3xl font-bold">{t('resume_edit_header_title')}</h2>
+                <h2 className="text-3xl font-bold">
+                  {t("resume_edit_header_title")}
+                </h2>
               </div>
-              <p className="text-emerald-100">{t('resume_edit_header_subtitle')}</p>
+              <p className="text-emerald-100">
+                {t("resume_edit_header_subtitle")}
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('resume_business_name_label')} <span className="text-red-500">*</span>
+                  {t("resume_business_name_label")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                  <input type="text" name="business_name" value={formData.business_name} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder={t('resume_business_name_placeholder')} />
+                  <Building2
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                    size={20}
+                  />
+                  <input
+                    type="text"
+                    name="business_name"
+                    value={formData.business_name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
+                    placeholder={t("resume_business_name_placeholder")}
+                  />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('resume_services_label')} <span className="text-red-500">*</span>
+                  {t("resume_services_label")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Wrench className="absolute left-4 top-4 text-gray-400" size={20} />
-                  <textarea name="services" value={formData.services} onChange={handleInputChange} required rows={3} className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none" placeholder={t('resume_services_placeholder')} />
+                  <Wrench
+                    className="absolute left-4 top-4 text-gray-400"
+                    size={20}
+                  />
+                  <textarea
+                    name="services"
+                    value={formData.services}
+                    onChange={handleInputChange}
+                    required
+                    rows={3}
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none"
+                    placeholder={t("resume_services_placeholder")}
+                  />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{t('resume_services_hint')}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {t("resume_services_hint")}
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('resume_areas_label')} <span className="text-red-500">*</span>
+                  {t("resume_areas_label")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                  <input type="text" name="service_areas" value={formData.service_areas} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder={t('resume_areas_placeholder')} />
+                  <MapPin
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                    size={20}
+                  />
+                  <input
+                    type="text"
+                    name="service_areas"
+                    value={formData.service_areas}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
+                    placeholder={t("resume_areas_placeholder")}
+                  />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{t('resume_areas_hint')}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {t("resume_areas_hint")}
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t('resume_exp_label')} <span className="text-red-500">*</span>
+                    {t("resume_exp_label")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Award className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10" size={20} />
-                    <input type="text" name="experience_year" value={formData.experience_year} onChange={handleInputChange} required inputMode="numeric" pattern="[0-9]*" className="w-full pl-12 pr-20 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder="5" />
+                    <Award
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"
+                      size={20}
+                    />
+                    <input
+                      type="text"
+                      name="experience_year"
+                      value={formData.experience_year}
+                      onChange={handleInputChange}
+                      required
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      className="w-full pl-12 pr-20 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
+                      placeholder="5"
+                    />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
-                      <button type="button" onClick={() => { const newValue = parseInt(formData.experience_year || 0) + 1; setFormData(prev => ({ ...prev, experience_year: newValue.toString() })); }} className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newValue =
+                            parseInt(formData.experience_year || 0) + 1;
+                          setFormData((prev) => ({
+                            ...prev,
+                            experience_year: newValue.toString(),
+                          }));
+                        }}
+                        className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded transition-colors"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="18 15 12 9 6 15"></polyline>
+                        </svg>
                       </button>
-                      <button type="button" onClick={() => { const newValue = Math.max(0, parseInt(formData.experience_year || 0) - 1); setFormData(prev => ({ ...prev, experience_year: newValue.toString() })); }} className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newValue = Math.max(
+                            0,
+                            parseInt(formData.experience_year || 0) - 1,
+                          );
+                          setFormData((prev) => ({
+                            ...prev,
+                            experience_year: newValue.toString(),
+                          }));
+                        }}
+                        className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded transition-colors"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
                       </button>
                     </div>
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t('resume_phone_label')} <span className="text-red-500">*</span>
+                    {t("resume_phone_label")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                    <input type="tel" name="contact_phone" value={formData.contact_phone} onChange={handleInputChange} required className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900" placeholder={t('resume_phone_placeholder')} />
+                    <Phone
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                      size={20}
+                    />
+                    <input
+                      type="tel"
+                      name="contact_phone"
+                      value={formData.contact_phone}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
+                      placeholder={t("resume_phone_placeholder")}
+                    />
                   </div>
                   {phoneError && (
                     <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-                      <XCircle size={14} strokeWidth={2.5} />{phoneError}
+                      <XCircle size={14} strokeWidth={2.5} />
+                      {phoneError}
                     </p>
                   )}
                 </div>
@@ -270,22 +424,59 @@ const ServiceProviderResume = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('resume_desc_label')} <span className="text-red-500">*</span>
+                  {t("resume_desc_label")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <FileText className="absolute left-4 top-4 text-gray-400" size={20} />
-                  <textarea name="description" value={formData.description} onChange={handleInputChange} required rows={4} className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none" placeholder={t('resume_desc_placeholder')} />
+                  <FileText
+                    className="absolute left-4 top-4 text-gray-400"
+                    size={20}
+                  />
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                    rows={4}
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900 resize-none"
+                    placeholder={t("resume_desc_placeholder")}
+                  />
                 </div>
               </div>
 
               <div className="flex gap-4 pt-4">
-                <button type="button" onClick={handleCancelEdit} className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300">{t('resume_cancel_btn')}</button>
-                <button type="submit" disabled={isCreating || !!phoneError ||
-                  !formData.business_name.trim() || !formData.services.trim() ||
-                  !formData.service_areas.trim() || !formData.experience_year ||
-                  !formData.contact_phone.trim() || !formData.description.trim()
-                } className="flex-1 px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                  {isCreating ? (<><Loader2 size={20} className="animate-spin" />{t('resume_updating')}</>) : (<><CheckCircle size={20} />{t('resume_update_btn')}</>)}
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300"
+                >
+                  {t("resume_cancel_btn")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={
+                    isCreating ||
+                    !!phoneError ||
+                    !formData.business_name.trim() ||
+                    !formData.services.trim() ||
+                    !formData.service_areas.trim() ||
+                    !formData.experience_year ||
+                    !formData.contact_phone.trim() ||
+                    !formData.description.trim()
+                  }
+                  className="flex-1 px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isCreating ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      {t("resume_updating")}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={20} />
+                      {t("resume_update_btn")}
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -299,33 +490,52 @@ const ServiceProviderResume = () => {
     <div className="min-h-screen bg-gray-50 py-8 px-6">
       <div className="max-w-5xl mx-auto">
         <div className="bg-white rounded-3xl overflow-hidden border border-gray-200 mb-6">
-          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-8">
+          <div className="bg-linear-to-r from-emerald-500 to-emerald-600 text-white p-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
                   <Briefcase size={32} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold mb-1">{t('resume_view_title')}</h1>
-                  <p className="text-emerald-100">{t('resume_view_subtitle')}</p>
+                  <h1 className="text-3xl font-bold mb-1">
+                    {t("resume_view_title")}
+                  </h1>
+                  <p className="text-emerald-100">
+                    {t("resume_view_subtitle")}
+                  </p>
                 </div>
               </div>
-              <button onClick={handleEdit} className="group flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl font-semibold hover:bg-emerald-50 transition-all duration-300">
-                <Edit2 size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform duration-300" />
-                <span>{t('resume_edit_btn')}</span>
+              <button
+                onClick={handleEdit}
+                className="group flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl font-semibold hover:bg-emerald-50 transition-all duration-300"
+              >
+                <Edit2
+                  size={18}
+                  strokeWidth={2.5}
+                  className="group-hover:rotate-12 transition-transform duration-300"
+                />
+                <span>{t("resume_edit_btn")}</span>
               </button>
             </div>
           </div>
 
           <div className="p-8 space-y-6">
-            <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-6 border-2 border-emerald-100">
+            <div className="bg-linear-to-br from-emerald-50 to-white rounded-2xl p-6 border-2 border-emerald-100">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-emerald-500 rounded-xl">
-                  <Building2 size={24} className="text-white" strokeWidth={2.5} />
+                  <Building2
+                    size={24}
+                    className="text-white"
+                    strokeWidth={2.5}
+                  />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-500 mb-1">{t('resume_section_business')}</p>
-                  <h2 className="text-2xl font-bold text-gray-900">{profileData.business_name}</h2>
+                  <p className="text-sm font-medium text-gray-500 mb-1">
+                    {t("resume_section_business")}
+                  </p>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {profileData.business_name}
+                  </h2>
                 </div>
               </div>
             </div>
@@ -333,13 +543,24 @@ const ServiceProviderResume = () => {
             <div className="bg-white rounded-2xl p-6 border border-gray-200">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-emerald-50 rounded-xl">
-                  <Wrench size={22} className="text-emerald-600" strokeWidth={2.5} />
+                  <Wrench
+                    size={22}
+                    className="text-emerald-600"
+                    strokeWidth={2.5}
+                  />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-500 mb-2">{t('resume_section_services')}</p>
+                  <p className="text-sm font-semibold text-gray-500 mb-2">
+                    {t("resume_section_services")}
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {profileData.services.split(",").map((service, index) => (
-                      <span key={index} className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium border border-emerald-200">{service.trim()}</span>
+                      <span
+                        key={index}
+                        className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium border border-emerald-200"
+                      >
+                        {service.trim()}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -349,37 +570,78 @@ const ServiceProviderResume = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white rounded-2xl p-6 border border-gray-200">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-emerald-50 rounded-xl"><MapPin size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
+                  <div className="p-3 bg-emerald-50 rounded-xl">
+                    <MapPin
+                      size={22}
+                      className="text-emerald-600"
+                      strokeWidth={2.5}
+                    />
+                  </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 mb-2">{t('resume_section_areas')}</p>
-                    <p className="text-base font-semibold text-gray-900">{profileData.service_areas}</p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">
+                      {t("resume_section_areas")}
+                    </p>
+                    <p className="text-base font-semibold text-gray-900">
+                      {profileData.service_areas}
+                    </p>
                   </div>
                 </div>
               </div>
               <div className="bg-white rounded-2xl p-6 border border-gray-200">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-emerald-50 rounded-xl"><Award size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
+                  <div className="p-3 bg-emerald-50 rounded-xl">
+                    <Award
+                      size={22}
+                      className="text-emerald-600"
+                      strokeWidth={2.5}
+                    />
+                  </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 mb-2">{t('resume_section_exp')}</p>
-                    <p className="text-base font-semibold text-gray-900">{profileData.experience_year} {t('resume_section_exp_unit')}</p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">
+                      {t("resume_section_exp")}
+                    </p>
+                    <p className="text-base font-semibold text-gray-900">
+                      {profileData.experience_year}{" "}
+                      {t("resume_section_exp_unit")}
+                    </p>
                   </div>
                 </div>
               </div>
               <div className="bg-white rounded-2xl p-6 border border-gray-200">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-emerald-50 rounded-xl"><Phone size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
+                  <div className="p-3 bg-emerald-50 rounded-xl">
+                    <Phone
+                      size={22}
+                      className="text-emerald-600"
+                      strokeWidth={2.5}
+                    />
+                  </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 mb-2">{t('resume_section_phone')}</p>
-                    <p className="text-base font-semibold text-gray-900">{profileData.contact_phone}</p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">
+                      {t("resume_section_phone")}
+                    </p>
+                    <p className="text-base font-semibold text-gray-900">
+                      {profileData.contact_phone}
+                    </p>
                   </div>
                 </div>
               </div>
               <div className="bg-white rounded-2xl p-6 border border-gray-200">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-emerald-50 rounded-xl"><Calendar size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
+                  <div className="p-3 bg-emerald-50 rounded-xl">
+                    <Calendar
+                      size={22}
+                      className="text-emerald-600"
+                      strokeWidth={2.5}
+                    />
+                  </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-500 mb-2">{t('resume_section_created')}</p>
-                    <p className="text-base font-semibold text-gray-900">{formatDate(profileData.created_at)}</p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">
+                      {t("resume_section_created")}
+                    </p>
+                    <p className="text-base font-semibold text-gray-900">
+                      {formatDate(profileData.created_at)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -387,10 +649,20 @@ const ServiceProviderResume = () => {
 
             <div className="bg-white rounded-2xl p-6 border border-gray-200">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-emerald-50 rounded-xl"><FileText size={22} className="text-emerald-600" strokeWidth={2.5} /></div>
+                <div className="p-3 bg-emerald-50 rounded-xl">
+                  <FileText
+                    size={22}
+                    className="text-emerald-600"
+                    strokeWidth={2.5}
+                  />
+                </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-500 mb-3">{t('resume_section_desc')}</p>
-                  <p className="text-gray-700 leading-relaxed">{profileData.description}</p>
+                  <p className="text-sm font-semibold text-gray-500 mb-3">
+                    {t("resume_section_desc")}
+                  </p>
+                  <p className="text-gray-700 leading-relaxed">
+                    {profileData.description}
+                  </p>
                 </div>
               </div>
             </div>
@@ -399,10 +671,16 @@ const ServiceProviderResume = () => {
 
         <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
           <div className="flex items-start gap-3">
-            <CheckCircle className="text-blue-600 flex-shrink-0 mt-1" size={20} strokeWidth={2.5} />
+            <CheckCircle
+              className="text-blue-600 shrink-0 mt-1"
+              size={20}
+              strokeWidth={2.5}
+            />
             <div>
-              <h4 className="font-bold text-gray-900 mb-1">{t('resume_tip_title')}</h4>
-              <p className="text-sm text-gray-700">{t('resume_tip_desc')}</p>
+              <h4 className="font-bold text-gray-900 mb-1">
+                {t("resume_tip_title")}
+              </h4>
+              <p className="text-sm text-gray-700">{t("resume_tip_desc")}</p>
             </div>
           </div>
         </div>

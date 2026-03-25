@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Search, Filter, Ban, ShieldOff, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { usersAPI } from "../../../../../lib/api";
@@ -54,49 +54,54 @@ export function UsersPage() {
         : "N/A",
   });
 
-  const fetchUsers = async (params = {}) => {
-    setLoading(true);
-    try {
-      const res = await usersAPI.filterUsers(params);
+  const fetchUsers = useCallback(
+    async (params = {}) => {
+      setLoading(true);
+      try {
+        const res = await usersAPI.filterUsers(params);
 
-      const listRaw = Array.isArray(res?.data)
-        ? res.data
-        : Array.isArray(res?.data?.data)
-          ? res.data.data
-          : [];
+        const listRaw = Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.data?.data)
+            ? res.data.data
+            : [];
 
-      setUsers(listRaw.map(mapUser));
+        setUsers(listRaw.map(mapUser));
 
-      const pgn = res?.data?.pagination || res?.pagination || null;
+        const pgn = res?.data?.pagination || res?.pagination || null;
 
-      setPagination(
-        pgn
-          ? {
-              totalItems: Number(pgn.totalItems ?? 0),
-              totalPages: Number(pgn.totalPages ?? 0),
-              currentPage: Number(pgn.currentPage ?? page),
-              itemsPerPage: Number(pgn.itemsPerPage ?? LIMIT),
-            }
-          : {
-              totalItems: Number(res?.data?.totalItems ?? listRaw.length ?? 0),
-              totalPages: Math.max(
-                1,
-                Number(
-                  res?.data?.totalPages ??
-                    Math.ceil((listRaw.length || 0) / LIMIT),
+        setPagination(
+          pgn
+            ? {
+                totalItems: Number(pgn.totalItems ?? 0),
+                totalPages: Number(pgn.totalPages ?? 0),
+                currentPage: Number(pgn.currentPage ?? page),
+                itemsPerPage: Number(pgn.itemsPerPage ?? LIMIT),
+              }
+            : {
+                totalItems: Number(
+                  res?.data?.totalItems ?? listRaw.length ?? 0,
                 ),
-              ),
-              currentPage: page,
-              itemsPerPage: LIMIT,
-            },
-      );
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error(t("error_fetching_users") || "Error fetching users");
-    } finally {
-      setLoading(false);
-    }
-  };
+                totalPages: Math.max(
+                  1,
+                  Number(
+                    res?.data?.totalPages ??
+                      Math.ceil((listRaw.length || 0) / LIMIT),
+                  ),
+                ),
+                currentPage: page,
+                itemsPerPage: LIMIT,
+              },
+        );
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast.error(t("error_fetching_users") || "Error fetching users");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [page, t],
+  );
 
   useEffect(() => {
     const params = {
@@ -111,7 +116,7 @@ export function UsersPage() {
     if (typeof isBanned === "boolean") params.is_banned = isBanned;
 
     fetchUsers(params);
-  }, [page, searchTerm, roleFilter, statusFilter]);
+  }, [page, searchTerm, roleFilter, statusFilter, fetchUsers]);
 
   const handleViewDetail = (user) => {
     setUserDetailId(user.id);

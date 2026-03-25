@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useProductStore } from "../../../../../store/useProductStore";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -237,10 +238,12 @@ export default function ProductDetailPage() {
           {/* Left column */}
           <div className="space-y-4">
             {/* Product Image */}
-            <div className="rounded-2xl overflow-hidden bg-gray-100 aspect-[4/3] w-full">
-              <img
+            <div className="rounded-2xl overflow-hidden bg-gray-100 aspect-4/3 w-full">
+              <Image
                 src={primaryImage}
                 alt={p.name}
+                width={96}
+                height={96}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   e.currentTarget.src = "/images/product-placeholder.jpg";
@@ -337,10 +340,12 @@ export default function ProductDetailPage() {
                 {t("product_detail_seller_label")}
               </p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                  <img
+                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0">
+                  <Image
                     src={p.user_id?.avatar}
                     alt={p.user_id?.full_name || "Seller"}
+                    width={96}
+                    height={96}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";

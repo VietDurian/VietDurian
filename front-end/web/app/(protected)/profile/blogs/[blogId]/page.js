@@ -37,7 +37,7 @@ export default function BlogDetailPage() {
       }
     };
     fetchBlog();
-  }, [blogId]);
+  }, [blogId, t]);
 
   if (loading) {
     return (
@@ -138,7 +138,7 @@ export default function BlogDetailPage() {
               )}
               <div className="p-8">
                 <div className="flex items-start gap-4 mb-6">
-                  <div className="flex-shrink-0 w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  <div className="shrink-0 w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-lg">
                     {index + 1}
                   </div>
                   <h2 className="text-2xl md:text-3xl font-bold text-gray-900 flex-1">

@@ -42,7 +42,7 @@ export default function BlogDetailPage() {
     if (params.id) {
       fetchBlogDetail();
     }
-  }, [params.id]);
+  }, [params.id, t]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -130,7 +130,7 @@ export default function BlogDetailPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <section className="bg-emerald-500 pt-20 pb-12">
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-350 mx-auto">
           <div className="px-4">
             <Link
               href="/blogs"
@@ -153,7 +153,7 @@ export default function BlogDetailPage() {
             </Link>
           </div>
 
-          <div className="max-w-[1000px] mx-auto text-center px-4">
+          <div className="max-w-250 mx-auto text-center px-4">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
               {blog.title}
             </h1>
@@ -179,7 +179,7 @@ export default function BlogDetailPage() {
       </section>
 
       <section className="py-12 px-4">
-        <div className="max-w-[1500px] mx-auto">
+        <div className="max-w-375 mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-8">
             {blog.knowledgeBlocks && blog.knowledgeBlocks.length > 0 && (
               <div className="lg:sticky lg:top-24 h-fit">
@@ -208,7 +208,7 @@ export default function BlogDetailPage() {
                         }`}
                       >
                         <span
-                          className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                          className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                             activeBlock === index
                               ? "bg-emerald-100 text-emerald-600"
                               : "bg-gray-100 text-gray-500"
@@ -254,7 +254,7 @@ export default function BlogDetailPage() {
 
                     <div className="p-8">
                       <div className="flex items-start gap-4 mb-4">
-                        <div className="flex-shrink-0 w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold">
+                        <div className="shrink-0 w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold">
                           {index + 1}
                         </div>
                         <h2 className="text-2xl font-bold text-gray-900 flex-1">

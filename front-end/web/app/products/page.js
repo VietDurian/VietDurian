@@ -142,7 +142,15 @@ export default function ProductsPage() {
       }
     };
     fetchProducts();
-  }, [searchTerm, sortBy, sortOrder, selectedType, pagination.currentPage]);
+  }, [
+    searchTerm,
+    sortBy,
+    sortOrder,
+    selectedType,
+    pagination.currentPage,
+    pagination.itemsPerPage,
+    t,
+  ]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -196,7 +204,7 @@ export default function ProductsPage() {
 
       {/* ── Hero Section ── */}
       <section className="bg-emerald-500 pt-32 pb-16 px-4">
-        <div className="max-w-[1400px] mx-auto text-center">
+        <div className="max-w-350 mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             {t("products_page_title")}
           </h1>
@@ -228,7 +236,7 @@ export default function ProductsPage() {
 
       {/* Filter Section */}
       <section className="bg-white border-b border-gray-200 py-6 px-4 shadow-sm">
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-350 mx-auto">
           <div className="flex flex-col gap-3">
             <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
               <Tag className="w-5 h-5 text-emerald-500" />
@@ -268,7 +276,7 @@ export default function ProductsPage() {
 
       {/* Products List */}
       <section className="py-16 px-4">
-        <div className="max-w-[1400px] mx-auto">
+        <div className="max-w-350 mx-auto">
           {loading ? (
             <div className="flex flex-col justify-center items-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
@@ -315,7 +323,7 @@ export default function ProductsPage() {
                         onClick={() =>
                           setIsSortDropdownOpen(!isSortDropdownOpen)
                         }
-                        className="min-w-[160px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
+                        className="min-w-40 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
                       >
                         <span>{getCurrentSortLabel()}</span>
                         <ChevronDown
