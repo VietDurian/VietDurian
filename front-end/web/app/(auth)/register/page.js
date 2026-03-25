@@ -95,12 +95,12 @@ export default function RegisterPage() {
   useEffect(() => {
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (!normalizedEmail || emailError) {
-      setEmailExistsError("");
-      return;
-    }
-
     const timeoutId = setTimeout(async () => {
+      // Giờ setEmailExistsError nằm trong callback → không còn synchronous nữa
+      if (!normalizedEmail || emailError) {
+        setEmailExistsError("");
+        return;
+      }
       const requestId = emailCheckRequestIdRef.current + 1;
       emailCheckRequestIdRef.current = requestId;
 
