@@ -26,6 +26,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useChatStore } from "@/store/useChatStore";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
 
 const categoryConfig = {
   "Dịch vụ": { icon: Wrench, bg: "from-blue-500 to-cyan-500" },
@@ -115,7 +116,7 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
         className="w-full flex items-center justify-between px-6 py-5 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all group"
       >
         <div className="flex items-center gap-4">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-linear-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-sm">
             <Info size={18} className="text-white" />
           </div>
           <div className="text-left">
@@ -146,7 +147,7 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
               >
                 <div className="flex items-start justify-between">
                   <div
-                    className={`w-11 h-11 rounded-xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center shadow-md`}
+                    className={`w-11 h-11 rounded-xl bg-linear-to-br ${cat.gradient} flex items-center justify-center shadow-md`}
                   >
                     <Icon size={22} className="text-white" />
                   </div>
@@ -175,7 +176,7 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
                 </div>
                 {isActive && (
                   <div
-                    className={`absolute inset-0 rounded-2xl pointer-events-none bg-gradient-to-br ${cat.gradient} opacity-5`}
+                    className={`absolute inset-0 rounded-2xl pointer-events-none bg-linear-to-br ${cat.gradient} opacity-5`}
                   />
                 )}
               </button>
@@ -259,7 +260,7 @@ const FilterBar = ({
           <button
             type="button"
             onClick={() => setShowSortDropdown(!showSortDropdown)}
-            className="min-w-[140px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
+            className="min-w-35 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
           >
             <span>{selectedSortLabel}</span>
             <ChevronDown
@@ -379,9 +380,11 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
               className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100 cursor-pointer"
               onClick={() => router.push(`/profile/${post.authorId}`)}
             >
-              <img
+              <Image
                 src={post.userAvatar || "/images/avatar.jpg"}
                 alt={post.userName}
+                width={96}
+                height={96}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -395,7 +398,7 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
                     const Icon = cfg.icon;
                     return (
                       <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${cfg.bg} text-white shadow-sm shrink-0`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${cfg.bg} text-white shadow-sm shrink-0`}
                       >
                         <Icon size={11} />
                         {post.category}
@@ -435,9 +438,11 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
 
         {post.image && (
           <div className="rounded-xl overflow-hidden mb-4 border border-gray-200">
-            <img
+            <Image
               src={post.image}
               alt="Post content"
+              width={96}
+              height={96}
               className="w-full h-auto object-cover"
             />
           </div>

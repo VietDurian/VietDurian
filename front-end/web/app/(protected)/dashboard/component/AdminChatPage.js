@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Image as ImageIcon, Loader2, Search, Send, X } from "lucide-react";
@@ -8,6 +7,7 @@ import { toast } from "sonner";
 import { useChatStore } from "@/store/useChatStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { formatMessageTime } from "@/lib/utils";
+import Image from "next/image";
 
 export default function AdminChatPage() {
   const {
@@ -173,9 +173,11 @@ export default function AdminChatPage() {
                     }`}
                   >
                     <div className="relative shrink-0">
-                      <img
+                      <Image
                         src={u.avatar || "/images/avatar.jpg"}
                         alt={u.full_name}
+                        width={96}
+                        height={96}
                         className="w-11 h-11 rounded-full object-cover"
                       />
                       {isOnline && (
@@ -201,9 +203,11 @@ export default function AdminChatPage() {
           {selectedUser ? (
             <>
               <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-3">
-                <img
+                <Image
                   src={selectedUser.avatar || "/images/avatar.jpg"}
                   alt={selectedUser.full_name}
+                  width={96}
+                  height={96}
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <div>
@@ -239,9 +243,11 @@ export default function AdminChatPage() {
                         }`}
                       >
                         {!isMine && (
-                          <img
+                          <Image
                             src={selectedUser.avatar || "/images/avatar.jpg"}
                             alt={selectedUser.full_name}
+                            width={96}
+                            height={96}
                             className="w-8 h-8 rounded-full object-cover shrink-0"
                           />
                         )}
@@ -253,9 +259,11 @@ export default function AdminChatPage() {
                           }`}
                         >
                           {message.image && (
-                            <img
+                            <Image
                               src={message.image}
                               alt="Attachment"
+                              width={96}
+                              height={96}
                               className="max-w-56 rounded-lg mb-2"
                             />
                           )}
@@ -282,9 +290,11 @@ export default function AdminChatPage() {
               <div className="border-t border-gray-200 p-3 bg-white">
                 {imagePreview && (
                   <div className="mb-3 relative w-fit">
-                    <img
+                    <Image
                       src={imagePreview}
                       alt="Preview"
+                      width={96}
+                      height={96}
                       className="w-24 h-24 object-cover rounded-lg border border-gray-200"
                     />
                     <button

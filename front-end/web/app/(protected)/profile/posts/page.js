@@ -36,6 +36,7 @@ import { useChatStore } from "@/store/useChatStore";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
 
 const getCategoriesByRole = (role) => {
   switch (role) {
@@ -81,7 +82,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
   const { t } = useLanguage();
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
         <p className="text-gray-800 text-sm mb-6 text-center">{message}</p>
         <div className="flex gap-3">
@@ -201,7 +202,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
       setError("");
       setDropdownOpen(false);
     }
-  }, [post]);
+  }, [post, categories]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "unset";
@@ -297,8 +298,10 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
           className="space-y-4 p-4 max-h-[calc(100vh-200px)] overflow-y-auto"
         >
           <div className="flex items-center gap-3">
-            <img
+            <Image
               src={user?.avatar || "/images/avatar.jpg"}
+              width={96}
+              height={96}
               className="w-11 h-11 rounded-full border border-gray-200"
               alt="Avatar"
             />
@@ -383,7 +386,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={t("edit_post_desc_placeholder")}
-              className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500"
+              className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-35 placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500"
               maxLength={1000}
             />
             <div className="text-xs text-gray-500 text-right">
@@ -451,9 +454,11 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
               </div>
             ) : (
               <div className="relative rounded-lg overflow-hidden border border-gray-200">
-                <img
+                <Image
                   src={imagePreview}
                   alt="Preview"
+                  width={96}
+                  height={96}
                   className="w-full h-auto object-contain bg-gray-50 max-h-80"
                 />
                 <button
@@ -542,8 +547,8 @@ const Post = ({
       setIsLiked(!newState);
       toast.error(
         err?.response?.data?.message ||
-          err?.message ||
-          t("profile_posts_like_fail"),
+        err?.message ||
+        t("profile_posts_like_fail"),
       );
     } finally {
       setIsTogglingFavorite(false);
@@ -560,9 +565,9 @@ const Post = ({
 
   const cfg = post.category
     ? categoryConfig[post.category] || {
-        icon: LayoutGrid,
-        bg: "from-gray-500 to-slate-500",
-      }
+      icon: LayoutGrid,
+      bg: "from-gray-500 to-slate-500",
+    }
     : null;
 
   return (
@@ -574,9 +579,11 @@ const Post = ({
               className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100 cursor-pointer"
               onClick={() => router.push(`/profile/${post.authorId}`)}
             >
-              <img
+              <Image
                 src={post.userAvatar || "/images/avatar.jpg"}
                 alt={post.userName}
+                width={96}
+                height={96}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -590,7 +597,7 @@ const Post = ({
                     const Icon = cfg.icon;
                     return (
                       <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${cfg.bg} text-white shadow-sm shrink-0`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${cfg.bg} text-white shadow-sm shrink-0`}
                       >
                         <Icon size={11} />
                         {post.category}
@@ -689,9 +696,11 @@ const Post = ({
 
         {post.image && (
           <div className="rounded-xl overflow-hidden mb-4 border border-gray-200">
-            <img
+            <Image
               src={post.image}
               alt="Post content"
+              width={96}
+              height={96}
               className="w-full h-auto object-cover"
             />
           </div>
@@ -791,25 +800,27 @@ export default function PostsPage() {
             .map((f) => f.post_id?._id || f.post_id)
             .filter(Boolean),
         );
-        const normalized = (postsData || []).map((post) => ({
-          id: post._id,
-          authorId: user._id || user.id,
-          userName: user?.full_name || user?.name || user?.username || "Bạn",
-          userHandle: user?.username || user?.email || "",
-          userAvatar: user?.avatar || "/images/avatar.jpg",
-          timestamp: post.created_at
-            ? new Date(post.created_at).toLocaleString("vi-VN")
-            : "Vừa xong",
-          title: post.title || "",
-          content: post.content,
-          link: post.contact,
-          image: post.image,
-          category: post.category,
-          likes: post.likes_count || 0,
-          comments: post.comments_count || 0,
-          status: post.status || "progressing",
-          isLiked: favoritePostIds.has(post._id),
-        }));
+        const normalized = (postsData || [])
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .map((post) => ({
+            id: post._id,
+            authorId: user._id || user.id,
+            userName: user?.full_name || user?.name || user?.username || "Bạn",
+            userHandle: user?.username || user?.email || "",
+            userAvatar: user?.avatar || "/images/avatar.jpg",
+            timestamp: post.created_at
+              ? new Date(post.created_at).toLocaleString("vi-VN")
+              : "Vừa xong",
+            title: post.title || "",
+            content: post.content,
+            link: post.contact,
+            image: post.image,
+            category: post.category,
+            likes: post.likes_count || 0,
+            comments: post.comments_count || 0,
+            status: post.status || "progressing",
+            isLiked: favoritePostIds.has(post._id),
+          }));
         setPosts(normalized);
         const withComments = await Promise.all(
           normalized.map(async (post) => {
@@ -840,7 +851,7 @@ export default function PostsPage() {
     return () => {
       cancelled = true;
     };
-  }, [user, statusFilter]);
+  }, [user, statusFilter, t]);
 
   const handleLikeUpdate = (postId, isLiked) => {
     setPosts((prev) =>
@@ -941,7 +952,7 @@ export default function PostsPage() {
               <div className="relative status-dropdown">
                 <button
                   onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                  className="min-w-[170px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
+                  className="min-w-42.5 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
                 >
                   <span>{currentStatusLabel}</span>
                   <ChevronDown

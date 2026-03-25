@@ -92,8 +92,14 @@ export default function SeasonDiariesPage() {
   }, [seasonDiaries, searchQuery, activeFilter]);
 
   const FILTER_TABS = [
-    { key: "all", label: `${t("season_filter_all")} (${seasonDiaries.length})` },
-    { key: "in_progress", label: `${t("season_filter_inprogress")} (${inProgressCount})` },
+    {
+      key: "all",
+      label: `${t("season_filter_all")} (${seasonDiaries.length})`,
+    },
+    {
+      key: "in_progress",
+      label: `${t("season_filter_inprogress")} (${inProgressCount})`,
+    },
     {
       key: "completed",
       label: `${t("season_filter_completed")} (${seasonDiaries.length - inProgressCount})`,
@@ -112,7 +118,7 @@ export default function SeasonDiariesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/30">
       {/* ── Sticky Header ─────────────────────────────────── */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="mx-auto px-6 py-5">
@@ -137,7 +143,7 @@ export default function SeasonDiariesPage() {
 
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-4 mb-5">
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/60 rounded-xl p-4 border border-emerald-200">
+            <div className="bg-linear-to-br from-emerald-50 to-emerald-100/60 rounded-xl p-4 border border-emerald-200">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-emerald-700 font-medium">
@@ -153,14 +159,15 @@ export default function SeasonDiariesPage() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-teal-50 to-teal-100/60 rounded-xl p-4 border border-teal-200">
+            <div className="bg-linear-to-br from-teal-50 to-teal-100/60 rounded-xl p-4 border border-teal-200">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-teal-700 font-medium">
                     {t("season_stat_area")}
                   </p>
                   <p className="text-2xl font-bold text-teal-900 mt-0.5">
-                    {totalArea.toLocaleString("vi-VN")} {t("season_stat_area_unit")}
+                    {totalArea.toLocaleString("vi-VN")}{" "}
+                    {t("season_stat_area_unit")}
                   </p>
                 </div>
                 <div className="w-11 h-11 bg-teal-200 rounded-xl flex items-center justify-center">
@@ -169,7 +176,7 @@ export default function SeasonDiariesPage() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-lime-50 to-lime-100/60 rounded-xl p-4 border border-lime-200">
+            <div className="bg-linear-to-br from-lime-50 to-lime-100/60 rounded-xl p-4 border border-lime-200">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-lime-700 font-medium">
@@ -208,10 +215,11 @@ export default function SeasonDiariesPage() {
             <button
               key={tab.key}
               onClick={() => setActiveFilter(tab.key)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${activeFilter === tab.key
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                activeFilter === tab.key
                   ? "bg-emerald-500 text-white border-emerald-500"
                   : "bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:text-emerald-600"
-                }`}
+              }`}
             >
               {tab.label}
             </button>
@@ -225,7 +233,9 @@ export default function SeasonDiariesPage() {
               <BookOpen className="w-14 h-14 text-emerald-500" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {searchQuery ? t("season_empty_notfound") : t("season_empty_title")}
+              {searchQuery
+                ? t("season_empty_notfound")
+                : t("season_empty_title")}
             </h2>
             <p className="text-gray-500 text-center max-w-md mb-8">
               {searchQuery
@@ -255,7 +265,12 @@ export default function SeasonDiariesPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredDiaries.map((diary) => (
-                <SeasonDiaryCard key={diary._id} diary={diary} statusConfig={STATUS_CONFIG} t={t} />
+                <SeasonDiaryCard
+                  key={diary._id}
+                  diary={diary}
+                  statusConfig={STATUS_CONFIG}
+                  t={t}
+                />
               ))}
             </div>
           </>
@@ -300,7 +315,7 @@ function SeasonDiaryCard({ diary, statusConfig, t }) {
     <div className="h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300 group flex flex-col">
       {/* Card header – colored band */}
       <div
-        className="relative p-4 bg-gradient-to-br from-emerald-600 to-teal-700 cursor-pointer shrink-0"
+        className="relative p-4 bg-linear-to-br from-emerald-600 to-teal-700 cursor-pointer shrink-0"
         onClick={handleDetail}
       >
         {/* Planting area code */}
@@ -370,14 +385,19 @@ function SeasonDiaryCard({ diary, statusConfig, t }) {
         {/* Stats row */}
         <div className="flex items-center gap-3 py-3 border-t border-b border-gray-100 mb-3">
           <div className="flex-1 text-center">
-            <p className="text-xs text-gray-400 mb-0.5">{t("season_card_area")}</p>
+            <p className="text-xs text-gray-400 mb-0.5">
+              {t("season_card_area")}
+            </p>
             <p className="text-sm font-semibold text-gray-700">
-              {(Number(diary.area) || 0).toLocaleString("vi-VN")} {t("season_stat_area_unit")}
+              {(Number(diary.area) || 0).toLocaleString("vi-VN")}{" "}
+              {t("season_stat_area_unit")}
             </p>
           </div>
           <div className="w-px h-8 bg-gray-200" />
           <div className="flex-1 text-center">
-            <p className="text-xs text-gray-400 mb-0.5">{t("season_card_rowbed")}</p>
+            <p className="text-xs text-gray-400 mb-0.5">
+              {t("season_card_rowbed")}
+            </p>
             <p className="text-sm font-semibold text-gray-700">
               {diary.row_bed_count ?? "–"}
             </p>

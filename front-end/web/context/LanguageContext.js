@@ -1685,6 +1685,83 @@ const translations = {
         my_products_card_detail: 'Xem chi tiết',
         my_products_card_status: 'Status:',
 
+        // General
+        diary_title: "Nhật ký canh tác",
+        diary_subtitle: "(chỉ đọc — dữ liệu từ nhà sản xuất)",
+        diary_loading: "Đang tải…",
+        diary_empty: "Chưa có dữ liệu",
+        diary_no_diary_linked: "Sản phẩm chưa liên kết nhật ký canh tác.",
+
+        // Section titles
+        diary_section_seed: "Nhật ký mua giống",
+        diary_section_fertilizer_buy: "Nhật ký mua vật tư / phân bón",
+        diary_section_fertilizer_use: "Nhật ký sử dụng phân bón / thuốc BVTV",
+        diary_section_packaging: "Nhật ký xử lý & đóng gói",
+        diary_section_harvest: "Nhật ký thu hoạch & tiêu thụ",
+        diary_section_irrigation: "Nhật ký tưới tiêu",
+        diary_section_labor: "Nhật ký lao động",
+
+        // Error messages
+        diary_error_seed: "Không thể tải dữ liệu mua giống",
+        diary_error_fertilizer_buy: "Không thể tải dữ liệu mua phân bón",
+        diary_error_fertilizer_use: "Không thể tải dữ liệu sử dụng phân bón",
+        diary_error_packaging: "Không thể tải dữ liệu xử lý đóng gói",
+        diary_error_harvest: "Không thể tải dữ liệu thu hoạch",
+        diary_error_irrigation: "Không thể tải dữ liệu tưới tiêu",
+        diary_error_labor: "Không thể tải dữ liệu lao động",
+
+        // Column headers — shared
+        diary_col_purchase_date: "Ngày mua",
+        diary_col_supplier_name: "Nhà cung cấp",
+        diary_col_quantity: "Số lượng",
+        diary_col_unit: "Đơn vị",
+
+        // Column headers — seed
+        diary_col_seed_name: "Tên giống",
+        diary_col_seed_quantity: "Số lượng (cây)",
+
+        // Column headers — fertilizer buy
+        diary_col_material_name: "Tên vật tư / phân bón",
+
+        // Column headers — fertilizer use
+        diary_col_usage_date: "Ngày sử dụng",
+        diary_col_fertilizer_name: "Tên phân bón",
+        diary_col_fertilizer_amount: "Liều lượng phân",
+        diary_col_pesticide_name: "Tên thuốc BVTV",
+        diary_col_pesticide_concentration: "Nồng độ / liều lượng",
+        diary_col_preharvest_interval: "Thời gian cách ly",
+
+        // Column headers — packaging
+        diary_col_handling_date: "Ngày xử lý",
+        diary_col_packaging_type: "Loại bao bì",
+        diary_col_storage_location: "Nơi lưu trữ",
+        diary_col_treatment_method: "Phương pháp xử lý",
+
+        // Column headers — harvest
+        diary_col_harvest_date: "Ngày thu hoạch",
+        diary_col_harvest_quantity: "Sản lượng (kg)",
+        diary_col_sale_date: "Ngày bán",
+        diary_col_consumed_weight: "KL tiêu thụ (kg)",
+
+        // Column headers — irrigation
+        diary_col_execution_date: "Ngày thực hiện",
+        diary_col_irrigation_item: "Hạng mục tưới",
+        diary_col_irrigation_method: "Phương pháp",
+        diary_col_irrigation_duration: "Thời gian tưới",
+        diary_col_irrigation_area: "Diện tích",
+        diary_col_performed_by: "Người thực hiện",
+
+        // Irrigation method labels
+        diary_irrigation_nho_giot: "Nhỏ giọt",
+        diary_irrigation_phun_mua: "Phun mưa",
+        diary_irrigation_thu_cong: "Thủ công",
+
+        // Column headers — labor
+        diary_col_labor_hire_date: "Ngày thuê",
+        diary_col_work_description: "Công việc",
+        diary_col_worker_quantity: "Số lượng người",
+        diary_col_working_time: "Thời gian làm việc",
+
     },
 
 
@@ -3331,6 +3408,83 @@ const translations = {
         my_products_empty: 'No products found.',
         my_products_card_detail: 'View Detail',
         my_products_card_status: 'Status:',
+
+        // General
+        diary_title: "Farming Diary",
+        diary_subtitle: "(read-only — data from producer)",
+        diary_loading: "Loading…",
+        diary_empty: "No data available",
+        diary_no_diary_linked: "This product has no linked farming diary.",
+
+        // Section titles
+        diary_section_seed: "Seed Purchase Log",
+        diary_section_fertilizer_buy: "Input / Fertilizer Purchase Log",
+        diary_section_fertilizer_use: "Fertilizer / Pesticide Usage Log",
+        diary_section_packaging: "Processing & Packaging Log",
+        diary_section_harvest: "Harvest & Sales Log",
+        diary_section_irrigation: "Irrigation Log",
+        diary_section_labor: "Labor Log",
+
+        // Error messages
+        diary_error_seed: "Failed to load seed purchase data",
+        diary_error_fertilizer_buy: "Failed to load fertilizer purchase data",
+        diary_error_fertilizer_use: "Failed to load fertilizer usage data",
+        diary_error_packaging: "Failed to load packaging data",
+        diary_error_harvest: "Failed to load harvest data",
+        diary_error_irrigation: "Failed to load irrigation data",
+        diary_error_labor: "Failed to load labor data",
+
+        // Column headers — shared
+        diary_col_purchase_date: "Purchase Date",
+        diary_col_supplier_name: "Supplier",
+        diary_col_quantity: "Quantity",
+        diary_col_unit: "Unit",
+
+        // Column headers — seed
+        diary_col_seed_name: "Seed Name",
+        diary_col_seed_quantity: "Quantity (plants)",
+
+        // Column headers — fertilizer buy
+        diary_col_material_name: "Input / Fertilizer Name",
+
+        // Column headers — fertilizer use
+        diary_col_usage_date: "Usage Date",
+        diary_col_fertilizer_name: "Fertilizer Name",
+        diary_col_fertilizer_amount: "Fertilizer Dose",
+        diary_col_pesticide_name: "Pesticide Name",
+        diary_col_pesticide_concentration: "Concentration / Dose",
+        diary_col_preharvest_interval: "Pre-harvest Interval",
+
+        // Column headers — packaging
+        diary_col_handling_date: "Handling Date",
+        diary_col_packaging_type: "Packaging Type",
+        diary_col_storage_location: "Storage Location",
+        diary_col_treatment_method: "Treatment Method",
+
+        // Column headers — harvest
+        diary_col_harvest_date: "Harvest Date",
+        diary_col_harvest_quantity: "Output (kg)",
+        diary_col_sale_date: "Sale Date",
+        diary_col_consumed_weight: "Consumed Weight (kg)",
+
+        // Column headers — irrigation
+        diary_col_execution_date: "Date",
+        diary_col_irrigation_item: "Irrigation Item",
+        diary_col_irrigation_method: "Method",
+        diary_col_irrigation_duration: "Duration",
+        diary_col_irrigation_area: "Area",
+        diary_col_performed_by: "Performed By",
+
+        // Irrigation method labels
+        diary_irrigation_nho_giot: "Drip",
+        diary_irrigation_phun_mua: "Sprinkler",
+        diary_irrigation_thu_cong: "Manual",
+
+        // Column headers — labor
+        diary_col_labor_hire_date: "Hire Date",
+        diary_col_work_description: "Work Description",
+        diary_col_worker_quantity: "No. of Workers",
+        diary_col_working_time: "Working Hours",
     },
 };
 

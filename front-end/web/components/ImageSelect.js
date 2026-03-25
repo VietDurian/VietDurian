@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
+import Image from "next/image";
 
 export default function ImageSelect({
   label = "Ảnh minh họa",
@@ -89,9 +90,11 @@ export default function ImageSelect({
       >
         {preview ? (
           <div className="flex items-center gap-3 p-4">
-            <img
+            <Image
               src={preview}
               alt="Preview"
+              width={96}
+              height={96}
               className="w-24 h-16 object-cover rounded-lg border border-emerald-100 shrink-0"
             />
             <div className="flex-1 min-w-0 pr-8">
@@ -115,7 +118,7 @@ export default function ImageSelect({
         ) : (
           <div className="flex flex-col items-center justify-center py-9 px-4 gap-2">
             <div className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 shadow-sm mb-1">
-              <Upload className="w-[18px] h-[18px]" />
+              <Upload className="w-4.5 h-4.5" />
             </div>
             <p className="text-sm font-medium text-gray-600">
               Nhấn để tải ảnh từ máy

@@ -989,4 +989,63 @@ export const capabilityProfileAPI = {
   },
 };
 
+export const diaryPublicAPI = {
+  // Mua giống
+  async getBuyingSeeds(seasonDiaryId, params = {}) {
+    const response = await apiClient.get('/buying-seed', {
+      params: { season_diary_id: seasonDiaryId, limit: 500, ...params },
+    });
+    // tuỳ backend trả về { data: [] } hay []  — lấy an toàn
+    return response.data?.data ?? response.data ?? [];
+  },
+
+  // Mua phân bón / vật tư
+  async getBuyingFertilizers(seasonDiaryId, params = {}) {
+    const response = await apiClient.get('/buying-fertilizers', {
+      params: { season_diary_id: seasonDiaryId, limit: 500, ...params },
+    });
+    return response.data?.data ?? response.data ?? [];
+  },
+
+  // Sử dụng phân bón / thuốc BVTV
+  async getUseFertilizers(seasonDiaryId, params = {}) {
+    const response = await apiClient.get('/use-fertilizers', {
+      params: { season_diary_id: seasonDiaryId, limit: 500, ...params },
+    });
+    return response.data?.data ?? response.data ?? [];
+  },
+
+  // Xử lý & đóng gói
+  async getPackagingHandlings(seasonDiaryId, params = {}) {
+    const response = await apiClient.get('/packaging-handling', {
+      params: { season_diary_id: seasonDiaryId, limit: 500, ...params },
+    });
+    return response.data?.data ?? response.data ?? [];
+  },
+
+  // Thu hoạch & tiêu thụ
+  async getHarvestConsumptions(seasonDiaryId, params = {}) {
+    const response = await apiClient.get('/harvest-consumption', {
+      params: { season_diary_id: seasonDiaryId, limit: 500, ...params },
+    });
+    return response.data?.data ?? response.data ?? [];
+  },
+
+  // Chi phí tưới tiêu
+  async getIrrigationCosts(seasonDiaryId, params = {}) {
+    const response = await apiClient.get('/irrigation-costs', {
+      params: { season_diary_id: seasonDiaryId, limit: 500, ...params },
+    });
+    return response.data?.data ?? response.data ?? [];
+  },
+
+  // Chi phí lao động
+  async getLaborCosts(seasonDiaryId, params = {}) {
+    const response = await apiClient.get('/labor-costs', {
+      params: { season_diary_id: seasonDiaryId, limit: 500, ...params },
+    });
+    return response.data?.data ?? response.data ?? [];
+  },
+};
+
 export default apiClient;

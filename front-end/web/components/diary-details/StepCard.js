@@ -10,6 +10,7 @@ import {
 import { actionTypeConfig } from "@/constants";
 import { useDiaryStore } from "@/store/useDiaryStore";
 import EditStepModal from "@/components/diary-details/EditStepModal";
+import Image from "next/image";
 
 export function StepCard({ step, index, diaryId, canEdit = true }) {
   const { editStep, isStepEditing, deleteStep, isStepDeleting } =
@@ -198,9 +199,11 @@ export function StepCard({ step, index, diaryId, canEdit = true }) {
 
         {step.image && (
           <div className="rounded-xl overflow-hidden border border-gray-200 max-w-xs">
-            <img
+            <Image
               src={step.image}
               alt={step.step_name}
+              width={96}
+              height={96}
               className="w-full h-32 object-cover"
             />
           </div>

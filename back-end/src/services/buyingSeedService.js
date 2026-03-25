@@ -2,8 +2,6 @@ import { BuyingSeedModel } from '@/model/buyingSeedModel';
 import { SeasonDiaryModel } from '@/model/seasonDiaryModel';
 import createError from 'http-errors';
 
-const toObjectIdString = (value) => value?.toString();
-
 const parsePage = (page) => {
 	const parsed = Number.parseInt(page, 10);
 	return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
@@ -31,11 +29,6 @@ const viewBuyingSeedList = async ({ page, limit, seasonDiaryId, userId, role }) 
 
 			if (!diary) {
 				throw createError(404, 'Season diary not found');
-			}
-
-			const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-			if (!isOwner && role !== 'admin') {
-				throw createError(403, 'You do not have permission to access this season diary');
 			}
 		}
 
@@ -76,11 +69,6 @@ const createBuyingSeed = async ({ userId, role, data }) => {
 			throw createError(404, 'Season diary not found');
 		}
 
-		const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-		if (!isOwner && role !== 'admin') {
-			throw createError(403, 'You do not have permission to access this season diary');
-		}
-
 		const created = await BuyingSeedModel.create(data);
 		return created;
 	} catch (error) {
@@ -101,11 +89,6 @@ const updateBuyingSeed = async ({ buyingSeedId, userId, role, data }) => {
 
 		if (!diary) {
 			throw createError(404, 'Season diary not found');
-		}
-
-		const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-		if (!isOwner && role !== 'admin') {
-			throw createError(403, 'You do not have permission to access this season diary');
 		}
 
 		delete data.season_diary_id;
@@ -134,11 +117,6 @@ const deleteBuyingSeed = async ({ buyingSeedId, userId, role }) => {
 
 		if (!diary) {
 			throw createError(404, 'Season diary not found');
-		}
-
-		const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-		if (!isOwner && role !== 'admin') {
-			throw createError(403, 'You do not have permission to access this season diary');
 		}
 
 		await BuyingSeedModel.findByIdAndDelete(buyingSeedId);

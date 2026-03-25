@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Heart,
   MessageCircle,
@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 import { useChatStore } from "@/store/useChatStore";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
 
 const POST_CATEGORIES = [
   "Dịch vụ",
@@ -79,7 +80,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
   const { t } = useLanguage();
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
         <p className="text-gray-800 text-sm mb-6 text-center">{message}</p>
         <div className="flex gap-3">
@@ -201,7 +202,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
       setError("");
       setDropdownOpen(false);
     }
-  }, [post]);
+  }, [post, categories]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "unset";
@@ -298,8 +299,10 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
           className="space-y-4 p-4 max-h-[calc(100vh-200px)] overflow-y-auto"
         >
           <div className="flex items-center gap-3">
-            <img
+            <Image
               src={user?.avatar || "/images/avatar.jpg"}
+              width={96}
+              height={96}
               className="w-11 h-11 rounded-full border border-gray-200"
               alt="Avatar"
             />
@@ -384,7 +387,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={t("fav_posts_edit_desc_placeholder")}
-              className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-[140px] placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-600"
+              className="w-full bg-white text-gray-900 text-base resize-none outline-none min-h-35 placeholder:text-gray-500 border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-600"
               maxLength={1000}
             />
             <div className="text-xs text-gray-500 text-right">
@@ -452,9 +455,11 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
               </div>
             ) : (
               <div className="relative rounded-lg overflow-hidden border border-gray-200">
-                <img
+                <Image
                   src={imagePreview}
                   alt="Preview"
+                  width={96}
+                  height={96}
                   className="w-full h-auto object-contain bg-gray-50 max-h-80"
                 />
                 <button
@@ -616,9 +621,11 @@ const FavoritePostCard = ({
                 if (authorId) router.push(`/profile/${authorId}`);
               }}
             >
-              <img
+              <Image
                 src={authorInfo.avatar}
                 alt={authorInfo.name}
+                width={96}
+                height={96}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -632,7 +639,7 @@ const FavoritePostCard = ({
                     const Icon = cfg.icon;
                     return (
                       <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${cfg.bg} text-white shadow-sm shrink-0`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${cfg.bg} text-white shadow-sm shrink-0`}
                       >
                         <Icon size={11} />
                         {post.post_id.category}
@@ -738,9 +745,11 @@ const FavoritePostCard = ({
 
         {post.post_id?.image && (
           <div className="rounded-xl overflow-hidden mb-4 border border-gray-200">
-            <img
+            <Image
               src={post.post_id.image}
               alt="Post content"
+              width={96}
+              height={96}
               className="w-full h-auto object-cover"
             />
           </div>
@@ -803,12 +812,7 @@ export default function FavoritePostsModal() {
   const { user } = useAuth();
   const router = useRouter();
   const { setSelectedUser, addContact } = useChatStore();
-
-  useEffect(() => {
-    loadFavorites();
-  }, []);
-
-  const loadFavorites = async () => {
+  const loadFavorites = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -851,7 +855,10 @@ export default function FavoritePostsModal() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+  useEffect(() => {
+    loadFavorites();
+  }, [loadFavorites]);
 
   const handleToggleFavorite = async (postId) => {
     try {

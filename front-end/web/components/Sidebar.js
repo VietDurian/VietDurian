@@ -1,6 +1,5 @@
 // QuyNTCE180596
 "use client";
-/* eslint-disable @next/next/no-img-element */
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
@@ -9,6 +8,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeleton/SidebarSkeleton";
 import { Ellipsis, Search, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 // This component is a sidebar for the chat
 const Sidebar = () => {
@@ -137,9 +137,11 @@ const Sidebar = () => {
               }}
             >
               <div className="relative shrink-0">
-                <img
+                <Image
                   src={user.avatar || "/images/avatar.jpg"}
                   alt={user.full_name}
+                  width={96}
+                  height={96}
                   className="w-11 h-11 object-cover rounded-full"
                 />
                 {onlineUsers.includes(user._id) && (
