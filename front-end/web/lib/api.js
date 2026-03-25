@@ -85,11 +85,12 @@ export const aiAPI = {
 export const usersAPI = {
   async getAllUsers(params = { page: 1, limit: 10 }) {
     const response = await apiClient.get("/user", { params });
+    console.log("Response from getAllUsers:", response.data);
     return response.data;
   },
   async getUserById(id) {
     const response = await apiClient.get(`/user/${id}`);
-    console.log("aaaaaaaaaaaaaaaaaResponse from getUserById:", response.data);
+    console.log("Response from getUserById:", response.data);
 
     return response.data;
   },
