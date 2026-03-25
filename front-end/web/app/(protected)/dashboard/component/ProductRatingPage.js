@@ -121,7 +121,6 @@ function ProductThumb({ src, alt }) {
   return (
     <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
       {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <Image
           src={src}
           alt={alt || "product"}

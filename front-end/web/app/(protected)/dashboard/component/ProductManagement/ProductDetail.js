@@ -5,11 +5,11 @@ import { useLanguage } from "../../context/LanguageContext";
 import Image from "next/image";
 
 export function ProductDetail({ product, onClose }) {
-  if (!product) return null;
   const { t } = useLanguage?.() || { t: (s) => s };
 
   // Lock body scroll while modal is open and add ESC key to close
   useEffect(() => {
+    if (!product) return;
     const onKey = (e) => {
       if (e.key === "Escape") onClose?.();
     };
@@ -20,7 +20,15 @@ export function ProductDetail({ product, onClose }) {
       document.body.style.overflow = original;
       window.removeEventListener("keydown", onKey);
     };
-  }, [onClose]);
+  }, [onClose, product]);
+
+  const rating = useMemo(
+    () => Math.max(0, Math.min(5, Number(product.rating) || 0)),
+    [product.rating],
+  );
+
+  if (!product) return null;
+
   const decimalToNumber = (value) => {
     if (typeof value === "number") return value;
     if (typeof value === "object" && value?.$numberDecimal)
@@ -81,10 +89,6 @@ export function ProductDetail({ product, onClose }) {
     }
   };
 
-  const rating = useMemo(
-    () => Math.max(0, Math.min(5, Number(product.rating) || 0)),
-    [product.rating],
-  );
   const full = Math.floor(rating);
   const hasHalf = rating - full >= 0.5 && full < 5;
   const empty = 5 - full - (hasHalf ? 1 : 0);
@@ -263,7 +267,6 @@ export function ProductDetail({ product, onClose }) {
                 <aside className="space-y-5">
                   <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-[#1a4d2e] text-white shadow-xl">
                     {hasImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <Image
                         src={product.imageUrl}
                         alt={product.name || "product"}
@@ -272,14 +275,14 @@ export function ProductDetail({ product, onClose }) {
                         className="absolute inset-0 h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#1a4d2e]/90 to-[#2d7a4f]/80" />
+                      <div className="absolute inset-0 bg-linear-to-br from-[#1a4d2e]/90 to-[#2d7a4f]/80" />
                     )}
                     {!hasImage && (
                       <span className="absolute inset-0 flex items-center justify-center text-8xl font-black text-white/10">
                         {(product.name || "--")?.charAt(0)}
                       </span>
                     )}
-                    <div className="relative z-10 flex min-h-[320px] flex-col justify-end gap-2 p-6">
+                    <div className="relative z-10 flex min-h-80 flex-col justify-end gap-2 p-6">
                       <div
                         className={`max-w-sm rounded-2xl px-4 py-3 ${hasImage ? "bg-black/50 text-white backdrop-blur-sm" : "text-white/90"}`}
                       >
@@ -335,7 +338,7 @@ export function ProductDetail({ product, onClose }) {
                       {harvestMilestones.map((milestone) => (
                         <div
                           key={milestone.key}
-                          className={`rounded-2xl border border-slate-100 bg-gradient-to-br ${milestone.accent} p-4 shadow-inner`}
+                          className={`rounded-2xl border border-slate-100 bg-linear-to-br ${milestone.accent} p-4 shadow-inner`}
                         >
                           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
                             {milestone.label}

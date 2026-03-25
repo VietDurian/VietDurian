@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Check, Trash2 } from "lucide-react";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
 
 const fmt = (n) => new Intl.NumberFormat("vi-VN").format(Math.round(n));
 const fmtDate = (iso) =>
@@ -14,7 +15,7 @@ function InfoCard({ title, iconPath, children }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="flex items-center gap-2.5 px-5 py-4 border-b border-gray-50">
-        <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+        <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
           <svg
             className="w-3.5 h-3.5 text-emerald-600"
             fill="none"
@@ -206,14 +207,21 @@ export default function SeasonDiaryDetailPage() {
       {/* ── Hero Banner ── */}
       <div className="bg-linear-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5">
         <div className="flex items-start gap-4 flex-wrap">
-          <img
-            src={owner.avatar}
-            alt={owner.full_name}
-            className="w-14 h-14 rounded-2xl object-cover ring-2 ring-white/30 flex-shrink-0 bg-emerald-600"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
+          {/* Hero Banner avatar */}
+          {owner?.avatar ? (
+            <Image
+              src={owner.avatar}
+              alt={owner?.full_name || ""}
+              width={96}
+              height={96}
+              className="w-14 h-14 rounded-2xl object-cover ring-2 ring-white/30 shrink-0 bg-emerald-600"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-emerald-600 shrink-0" />
+          )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
               <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
@@ -287,23 +295,30 @@ export default function SeasonDiaryDetailPage() {
           iconPath="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
         >
           <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-50">
-            <img
-              src={owner.avatar}
-              alt={owner.full_name}
-              className="w-10 h-10 rounded-xl object-cover flex-shrink-0 bg-gray-100"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
+            {/* Card 1 owner avatar */}
+            {owner?.avatar ? (
+              <Image
+                src={owner.avatar}
+                alt={owner?.full_name || ""}
+                width={96}
+                height={96}
+                className="w-10 h-10 rounded-xl object-cover shrink-0 bg-gray-100"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-gray-100 shrink-0" />
+            )}
             <div className="min-w-0">
               <p className="text-sm font-semibold text-gray-800 truncate">
-                {owner.full_name || "—"}
+                {owner?.full_name || "—"}
               </p>
               <p className="text-xs text-gray-400 truncate">
-                {owner.email || "—"}
+                {owner?.email || "—"}
               </p>
               <p className="text-xs text-gray-300 font-mono mt-0.5 truncate">
-                {owner._id || "—"}
+                {owner?._id || "—"}
               </p>
             </div>
           </div>

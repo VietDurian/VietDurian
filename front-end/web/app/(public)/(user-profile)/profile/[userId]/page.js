@@ -24,6 +24,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
 
 const RoleBadge = ({ role }) => {
   const { t } = useLanguage();
@@ -51,7 +52,7 @@ const RoleBadge = ({ role }) => {
   };
   return (
     <div
-      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${config.color} text-white shadow-lg`}
+      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r ${config.color} text-white shadow-lg`}
     >
       <Crown size={14} strokeWidth={2.5} />
       <span className="text-sm font-bold tracking-wide">{config.label}</span>
@@ -209,9 +210,11 @@ export default function PublicProfilePage() {
           <div className="relative z-10 p-8">
             <div className="flex items-center gap-6 mb-8">
               <div className="relative group">
-                <img
+                <Image
                   src={profileData.avatar || "/images/default-avatar.png"}
                   alt={profileData.full_name}
+                  width={96}
+                  height={96}
                   className="relative w-35 h-35 rounded-full border-4 border-white object-cover"
                   onError={(e) => {
                     e.target.src = "/images/default-avatar.png";
@@ -302,7 +305,7 @@ export default function PublicProfilePage() {
             </h2>
 
             <div className="space-y-4">
-              <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl p-6 border-2 border-emerald-100">
+              <div className="bg-linear-to-br from-emerald-50 to-white rounded-2xl p-6 border-2 border-emerald-100">
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-emerald-500 rounded-xl">
                     <Building2
@@ -447,7 +450,7 @@ export default function PublicProfilePage() {
           </div>
           <button
             onClick={() => router.push(`/chat?chatId=${userId}`)}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-emerald-200 flex-shrink-0"
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-emerald-200 shrink-0"
           >
             <MessageCircle size={18} strokeWidth={2.5} />
             {t("public_profile_cta_btn")}

@@ -12,10 +12,6 @@ export function UserDetail({ userId, isOpen, onClose }) {
   useEffect(() => {
     if (!userId || !isOpen) return;
 
-    setLoading(true);
-    setError(null);
-    setUser(null);
-
     usersAPI
       .getUserById(userId)
       .then((data) => {

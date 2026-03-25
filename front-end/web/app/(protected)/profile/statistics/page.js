@@ -33,19 +33,24 @@ function DonutChart({ segments, size = 180 }) {
     cx = size / 2,
     cy = size / 2;
   const circumference = 2 * Math.PI * r;
-  let cumOffset = 0;
-  const slices = segments.map((s) => {
+
+  const slices = segments.reduce((acc, s) => {
     const dash = (s.percent / 100) * circumference;
-    const slice = { ...s, dash, gap: circumference - dash, offset: cumOffset };
-    cumOffset += dash;
-    return slice;
-  });
+    const offset =
+      acc.length > 0
+        ? acc[acc.length - 1].offset + acc[acc.length - 1].dash
+        : 0;
+    acc.push({ ...s, dash, gap: circumference - dash, offset });
+    return acc;
+  }, []);
+
   return (
+    // ← cái này bị mất
     <svg
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      className="rotate-[-90deg]"
+      className="-rotate-90"
     >
       {slices.map((s, i) => (
         <circle
@@ -63,7 +68,7 @@ function DonutChart({ segments, size = 180 }) {
       <circle cx={cx} cy={cy} r={56} fill="white" />
     </svg>
   );
-}
+} // ← cái này cũng bị mất
 
 // ── KPI CARD ──────────────────────────────────────────────────────────────────
 function KpiCard({
@@ -120,7 +125,9 @@ function GardenDropdown({ gardens, selectedId, onSelect, t }) {
   const [open, setOpen] = useState(false);
 
   const statusLabel = (s) =>
-    s === "In progressing" ? t("stats_status_inprogress") : t("stats_status_ended");
+    s === "In progressing"
+      ? t("stats_status_inprogress")
+      : t("stats_status_ended");
   const statusStyle = (s) =>
     s === "In progressing"
       ? "bg-emerald-100 text-emerald-700"
@@ -138,7 +145,7 @@ function GardenDropdown({ gardens, selectedId, onSelect, t }) {
             t("stats_dropdown_label")}
         </h2>
         <svg
-          className={`w-5 h-5 text-emerald-200 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
+          className={`w-5 h-5 text-emerald-200 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -172,7 +179,7 @@ function GardenDropdown({ gardens, selectedId, onSelect, t }) {
               >
                 {/* Icon */}
                 <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${isActive ? "bg-emerald-600" : "bg-gray-100"}`}
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${isActive ? "bg-emerald-600" : "bg-gray-100"}`}
                 >
                   <svg
                     className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-400"}`}
@@ -211,7 +218,7 @@ function GardenDropdown({ gardens, selectedId, onSelect, t }) {
                 {/* Checkmark */}
                 {isActive && (
                   <svg
-                    className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-1.5"
+                    className="w-4 h-4 text-emerald-500 shrink-0 mt-1.5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -278,15 +285,25 @@ export default function StatisticsPage() {
   );
 
   useEffect(() => {
-    if (!gardens.length) {
-      setSelectedId(null);
-      return;
-    }
+    let cancelled = false;
 
-    setSelectedId((prev) => {
-      if (prev && gardens.some((g) => g.diary.id === prev)) return prev;
-      return gardens[0].diary.id;
-    });
+    const init = async () => {
+      if (!gardens.length) {
+        if (!cancelled) setSelectedId(null);
+        return;
+      }
+      if (!cancelled) {
+        setSelectedId((prev) => {
+          if (prev && gardens.some((g) => g.diary.id === prev)) return prev;
+          return gardens[0].diary.id;
+        });
+      }
+    };
+
+    init();
+    return () => {
+      cancelled = true;
+    };
   }, [gardens]);
 
   useEffect(() => {
@@ -300,7 +317,7 @@ export default function StatisticsPage() {
 
   const stats =
     seasonDiaryStatistics?.diary &&
-      String(seasonDiaryStatistics.diary.id) === String(selectedId)
+    String(seasonDiaryStatistics.diary.id) === String(selectedId)
       ? seasonDiaryStatistics
       : null;
 
@@ -420,7 +437,7 @@ export default function StatisticsPage() {
   return (
     <div className="space-y-6 p-5">
       {/* ── Banner ──────────────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5 flex flex-wrap items-start justify-between gap-4">
+      <div className="bg-linear-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5 flex flex-wrap items-start justify-between gap-4">
         <div>
           {/* Status pill */}
           <div className="flex items-center gap-2 mb-2">
@@ -465,7 +482,7 @@ export default function StatisticsPage() {
           ].map((c) => (
             <div
               key={c.label}
-              className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-right min-w-[140px]"
+              className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-right min-w-35"
             >
               <p className="text-emerald-100 text-xs">{c.label}</p>
               <p className="text-white font-bold text-base mt-0.5">{c.value}</p>
@@ -491,7 +508,7 @@ export default function StatisticsPage() {
             title={t("stats_cost_breakdown_title")}
           />
           <div className="flex items-center gap-6">
-            <div className="relative flex-shrink-0">
+            <div className="relative shrink-0">
               <DonutChart segments={breakdown} size={180} />
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <p className="text-xs text-gray-400">{t("stats_cost_total")}</p>
@@ -506,7 +523,7 @@ export default function StatisticsPage() {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-1.5">
                       <span
-                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
                         style={{ background: item.color }}
                       />
                       <span className="text-xs text-gray-600 font-medium">
@@ -656,9 +673,7 @@ export default function StatisticsPage() {
                 </div>
               ))}
               {isStatisticsLoading && (
-                <p className="text-xs text-gray-400">
-                  {t("stats_updating")}
-                </p>
+                <p className="text-xs text-gray-400">{t("stats_updating")}</p>
               )}
             </div>
           </div>

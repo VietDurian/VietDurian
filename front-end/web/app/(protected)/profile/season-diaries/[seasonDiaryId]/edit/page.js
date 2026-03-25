@@ -127,32 +127,44 @@ export default function EditSeasonDiary() {
 
   useEffect(() => {
     if (!seasonDiaryDetail?._id) return;
-    const members = Array.isArray(seasonDiaryDetail.members)
-      ? seasonDiaryDetail.members.join(", ")
-      : seasonDiaryDetail.members || "";
 
-    setFormData({
-      garden_name: seasonDiaryDetail.garden_name || "",
-      farmer_name: seasonDiaryDetail.farmer_name || "",
-      location: seasonDiaryDetail.location || "",
-      latitude: seasonDiaryDetail.latitude
-        ? String(seasonDiaryDetail.latitude)
-        : "",
-      longitude: seasonDiaryDetail.longitude
-        ? String(seasonDiaryDetail.longitude)
-        : "",
-      members,
-      planting_area_code: seasonDiaryDetail.planting_area_code || "",
-      crop_variety: Array.isArray(seasonDiaryDetail.crop_variety)
-        ? seasonDiaryDetail.crop_variety
-        : [],
-      farmer_code: seasonDiaryDetail.farmer_code || "",
-      row_bed_count: seasonDiaryDetail.row_bed_count
-        ? String(seasonDiaryDetail.row_bed_count)
-        : "",
-      area: seasonDiaryDetail.area ? String(seasonDiaryDetail.area) : "",
-      land_use_history: seasonDiaryDetail.land_use_history || "",
-    });
+    let cancelled = false;
+
+    const init = async () => {
+      const members = Array.isArray(seasonDiaryDetail.members)
+        ? seasonDiaryDetail.members.join(", ")
+        : seasonDiaryDetail.members || "";
+
+      if (!cancelled) {
+        setFormData({
+          garden_name: seasonDiaryDetail.garden_name || "",
+          farmer_name: seasonDiaryDetail.farmer_name || "",
+          location: seasonDiaryDetail.location || "",
+          latitude: seasonDiaryDetail.latitude
+            ? String(seasonDiaryDetail.latitude)
+            : "",
+          longitude: seasonDiaryDetail.longitude
+            ? String(seasonDiaryDetail.longitude)
+            : "",
+          members,
+          planting_area_code: seasonDiaryDetail.planting_area_code || "",
+          crop_variety: Array.isArray(seasonDiaryDetail.crop_variety)
+            ? seasonDiaryDetail.crop_variety
+            : [],
+          farmer_code: seasonDiaryDetail.farmer_code || "",
+          row_bed_count: seasonDiaryDetail.row_bed_count
+            ? String(seasonDiaryDetail.row_bed_count)
+            : "",
+          area: seasonDiaryDetail.area ? String(seasonDiaryDetail.area) : "",
+          land_use_history: seasonDiaryDetail.land_use_history || "",
+        });
+      }
+    };
+
+    init();
+    return () => {
+      cancelled = true;
+    };
   }, [seasonDiaryDetail]);
 
   const isSubmitDisabled =

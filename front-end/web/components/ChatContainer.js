@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
 
 import React, { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
@@ -8,6 +7,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 import { Image as ImageIcon, Loader2, Send, X } from "lucide-react";
 import { toast } from "sonner";
+import Image from "next/image";
 
 const ChatContainer = () => {
   const {
@@ -90,9 +90,11 @@ const ChatContainer = () => {
     <div className="flex-1 flex flex-col min-w-0 bg-white">
       {selectedUser && (
         <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-3">
-          <img
+          <Image
             src={selectedUser.avatar || "/images/avatar.jpg"}
             alt={selectedUser.full_name}
+            width={96}
+            height={96}
             className="w-10 h-10 rounded-full object-cover"
           />
           <div>
@@ -126,22 +128,27 @@ const ChatContainer = () => {
                 ref={messageEndRef}
               >
                 {!isMine && (
-                  <img
+                  <Image
                     src={selectedUser?.avatar || "/images/avatar.jpg"}
                     alt={selectedUser?.full_name}
+                    width={96}
+                    height={96}
                     className="w-8 h-8 rounded-full object-cover shrink-0"
                   />
                 )}
                 <div
-                  className={`max-w-[80%] rounded-2xl px-3 py-2 shadow-sm ${isMine
+                  className={`max-w-[80%] rounded-2xl px-3 py-2 shadow-sm ${
+                    isMine
                       ? "bg-emerald-600 text-white rounded-br-sm"
                       : "bg-white text-gray-900 border border-gray-100 rounded-bl-sm"
-                    }`}
+                  }`}
                 >
                   {message.image && (
-                    <img
+                    <Image
                       src={message.image}
                       alt="Attachment"
+                      width={96}
+                      height={96}
                       className="max-w-56 rounded-lg mb-2"
                     />
                   )}
@@ -167,9 +174,11 @@ const ChatContainer = () => {
       <div className="border-t border-gray-200 p-3 bg-white">
         {imagePreview && (
           <div className="mb-3 relative w-fit">
-            <img
+            <Image
               src={imagePreview}
               alt="Preview"
+              width={96}
+              height={96}
               className="w-24 h-24 object-cover rounded-lg border border-gray-200"
             />
             <button

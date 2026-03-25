@@ -31,19 +31,23 @@ function DonutChart({ segments, size = 180 }) {
     cx = size / 2,
     cy = size / 2;
   const circumference = 2 * Math.PI * r;
-  let cumOffset = 0;
-  const slices = segments.map((s) => {
+
+  const slices = segments.reduce((acc, s) => {
     const dash = (s.percent / 100) * circumference;
-    const slice = { ...s, dash, gap: circumference - dash, offset: cumOffset };
-    cumOffset += dash;
-    return slice;
-  });
+    const offset =
+      acc.length > 0
+        ? acc[acc.length - 1].offset + acc[acc.length - 1].dash
+        : 0;
+    acc.push({ ...s, dash, gap: circumference - dash, offset });
+    return acc;
+  }, []);
+
   return (
     <svg
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      className="rotate-[-90deg]"
+      className="-rotate-90"
     >
       {slices.map((s, i) => (
         <circle
@@ -256,7 +260,7 @@ export default function StatisticsPage() {
   return (
     <div className="space-y-6 p-5">
       {/* ── Banner ── */}
-      <div className="bg-gradient-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5 flex flex-wrap items-start justify-between gap-4">
+      <div className="bg-linear-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">
@@ -292,7 +296,7 @@ export default function StatisticsPage() {
           ].map((c) => (
             <div
               key={c.label}
-              className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-right min-w-[140px]"
+              className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-right min-w-35"
             >
               <p className="text-emerald-100 text-xs">{c.label}</p>
               <p className="text-white font-bold text-base mt-0.5">{c.value}</p>
@@ -318,7 +322,7 @@ export default function StatisticsPage() {
             title={t("stats_cost_breakdown_title")}
           />
           <div className="flex items-center gap-6">
-            <div className="relative flex-shrink-0">
+            <div className="relative shrink-0">
               <DonutChart segments={breakdown} size={180} />
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <p className="text-xs text-gray-400">
@@ -336,7 +340,7 @@ export default function StatisticsPage() {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-1.5">
                       <span
-                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
                         style={{ background: item.color }}
                       />
                       <span className="text-xs text-gray-600 font-medium">

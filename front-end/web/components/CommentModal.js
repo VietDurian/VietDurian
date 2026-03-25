@@ -1,32 +1,53 @@
 "use client";
 import { X, Heart, ThumbsUp, Smile, Angry, Send, Flag } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { commentAPI, reactionCommentAPI, reportCommentAPI } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
 
 const REACTION_TYPES = ["like", "love", "haha", "angry"];
 
 const getReactionIcon = (type, size = 18, filled = false) => {
   const iconProps = { size, strokeWidth: 2 };
   switch (type) {
-    case "like": return <ThumbsUp {...iconProps} className={filled ? "fill-blue-500 text-blue-500" : "text-blue-500"} />;
-    case "love": return <Heart {...iconProps} className={filled ? "fill-red-500 text-red-500" : "text-red-500"} />;
-    case "haha": return <Smile {...iconProps} className="text-yellow-500" />;
-    case "angry": return <Angry {...iconProps} className="text-orange-600" />;
-    default: return null;
+    case "like":
+      return (
+        <ThumbsUp
+          {...iconProps}
+          className={filled ? "fill-blue-500 text-blue-500" : "text-blue-500"}
+        />
+      );
+    case "love":
+      return (
+        <Heart
+          {...iconProps}
+          className={filled ? "fill-red-500 text-red-500" : "text-red-500"}
+        />
+      );
+    case "haha":
+      return <Smile {...iconProps} className="text-yellow-500" />;
+    case "angry":
+      return <Angry {...iconProps} className="text-orange-600" />;
+    default:
+      return null;
   }
 };
 
 const getReactionColor = (type) => {
   switch (type) {
-    case "like": return "text-blue-500";
-    case "love": return "text-red-500";
-    case "haha": return "text-yellow-500";
-    case "angry": return "text-orange-600";
-    default: return "text-gray-500";
+    case "like":
+      return "text-blue-500";
+    case "love":
+      return "text-red-500";
+    case "haha":
+      return "text-yellow-500";
+    case "angry":
+      return "text-orange-600";
+    default:
+      return "text-gray-500";
   }
 };
 
@@ -54,15 +75,21 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
   const { t } = useLanguage();
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50">
+    <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
         <p className="text-gray-800 text-sm mb-6 text-center">{message}</p>
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm">
-            {t('comment_delete_cancel')}
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition text-sm"
+          >
+            {t("comment_delete_cancel")}
           </button>
-          <button onClick={onConfirm} className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm">
-            {t('comment_delete_confirm_btn')}
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm"
+          >
+            {t("comment_delete_confirm_btn")}
           </button>
         </div>
       </div>
@@ -75,29 +102,41 @@ const ReportCommentModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
   const { t } = useLanguage();
   const [reason, setReason] = useState("");
 
-  useEffect(() => { if (!isOpen) setReason(""); }, [isOpen]);
+  useEffect(() => {
+    if (!isOpen) {
+      const reset = async () => {
+        setReason("");
+      };
+      reset();
+    }
+  }, [isOpen]);
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50">
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-orange-100 rounded-full">
               <Flag size={18} className="text-orange-500" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">{t('comment_report_title')}</h3>
+            <h3 className="text-lg font-bold text-gray-900">
+              {t("comment_report_title")}
+            </h3>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition"
+          >
             <X size={20} className="text-gray-600" />
           </button>
         </div>
-        <p className="text-sm text-gray-500 mb-4">{t('comment_report_desc')}</p>
+        <p className="text-sm text-gray-500 mb-4">{t("comment_report_desc")}</p>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder={t('comment_report_placeholder')}
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent min-h-[100px] max-h-[200px]"
+          placeholder={t("comment_report_placeholder")}
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent min-h-25 max-h-50"
         />
         <div className="flex justify-end mt-4">
           <button
@@ -106,8 +145,13 @@ const ReportCommentModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
             className="px-4 py-2 rounded-lg text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isSubmitting ? (
-              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />{t('comment_report_submitting')}</>
-            ) : t('comment_report_submit')}
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                {t("comment_report_submitting")}
+              </>
+            ) : (
+              t("comment_report_submit")
+            )}
           </button>
         </div>
       </div>
@@ -121,11 +165,16 @@ const ReactionModal = ({ isOpen, onClose, commentId, reactions }) => {
 
   const getReactionLabel = (type) => {
     switch (type) {
-      case "like": return t('comment_reaction_like');
-      case "love": return t('comment_reaction_love');
-      case "haha": return t('comment_reaction_haha');
-      case "angry": return t('comment_reaction_angry');
-      default: return "";
+      case "like":
+        return t("comment_reaction_like");
+      case "love":
+        return t("comment_reaction_love");
+      case "haha":
+        return t("comment_reaction_haha");
+      case "angry":
+        return t("comment_reaction_angry");
+      default:
+        return "";
     }
   };
 
@@ -136,32 +185,54 @@ const ReactionModal = ({ isOpen, onClose, commentId, reactions }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[70vh] flex flex-col">
         <div className="flex items-center justify-between p-5 border-b border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900">{t('comment_reaction_title')}</h3>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition">
+          <h3 className="text-lg font-bold text-gray-900">
+            {t("comment_reaction_title")}
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition"
+          >
             <X size={20} className="text-gray-600" />
           </button>
         </div>
         <div className="flex flex-wrap gap-4 p-5 justify-center border-b border-gray-200">
-          {Object.entries(commentReactions.breakdown || {}).map(([type, count]) =>
-            count > 0 ? (
-              <div key={type} className="flex flex-col items-center gap-1">
-                {getReactionIcon(type, 24, true)}
-                <span className="text-sm font-semibold text-gray-900">{count}</span>
-                <span className="text-xs text-gray-500">{getReactionLabel(type)}</span>
-              </div>
-            ) : null
+          {Object.entries(commentReactions.breakdown || {}).map(
+            ([type, count]) =>
+              count > 0 ? (
+                <div key={type} className="flex flex-col items-center gap-1">
+                  {getReactionIcon(type, 24, true)}
+                  <span className="text-sm font-semibold text-gray-900">
+                    {count}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {getReactionLabel(type)}
+                  </span>
+                </div>
+              ) : null,
           )}
         </div>
         <div className="flex-1 overflow-y-auto p-5">
           {commentReactions.reactions?.map((reaction) => {
-            const userInfo = typeof reaction.user_id === "object" ? reaction.user_id : null;
+            const userInfo =
+              typeof reaction.user_id === "object" ? reaction.user_id : null;
             const avatar = userInfo?.avatar || "/images/avatar.jpg";
-            const displayName = userInfo?.full_name || userInfo?.username || "Unknown User";
+            const displayName =
+              userInfo?.full_name || userInfo?.username || "Unknown User";
             return (
               <div key={reaction._id} className="flex items-center gap-3 py-2">
-                <img src={avatar} alt={displayName} className="w-9 h-9 rounded-full" />
-                <span className="flex-1 text-sm font-medium text-gray-900">{displayName}</span>
-                <div className="w-6 h-6 flex items-center justify-center">{getReactionIcon(reaction.type, 16, true)}</div>
+                <Image
+                  src={avatar}
+                  alt={displayName}
+                  width={96}
+                  height={96}
+                  className="w-9 h-9 rounded-full"
+                />
+                <span className="flex-1 text-sm font-medium text-gray-900">
+                  {displayName}
+                </span>
+                <div className="w-6 h-6 flex items-center justify-center">
+                  {getReactionIcon(reaction.type, 16, true)}
+                </div>
               </div>
             );
           })}
@@ -173,29 +244,51 @@ const ReactionModal = ({ isOpen, onClose, commentId, reactions }) => {
 
 // ─── Comment Item ─────────────────────────────────────────────────────────────
 const CommentItem = ({
-  comment, isReply = false, authUser, onReply, onEdit, onDelete, onReport,
-  reactions, onReactionPress, showReactionOptions, toggleReactionOptions, onShowReactionModal,
+  comment,
+  isReply = false,
+  authUser,
+  onReply,
+  onEdit,
+  onDelete,
+  onReport,
+  reactions,
+  onReactionPress,
+  showReactionOptions,
+  toggleReactionOptions,
+  onShowReactionModal,
 }) => {
   const { t } = useLanguage();
   const router = useRouter();
-  const authorId = typeof comment.author_id === "object" ? comment.author_id?._id : comment.author_id;
+  const authorId =
+    typeof comment.author_id === "object"
+      ? comment.author_id?._id
+      : comment.author_id;
   const isOwnComment = authorId === authUser?._id;
-  const userName = comment.author_id?.full_name || comment.author_id?.username || "Unknown User";
+  const userName =
+    comment.author_id?.full_name ||
+    comment.author_id?.username ||
+    "Unknown User";
   const avatarUrl = comment.author_id?.avatar;
 
   const commentReactions = reactions[comment._id];
   const userReaction = commentReactions?.reactions?.find((r) => {
-    const reactionUserId = typeof r.user_id === "object" ? r.user_id?._id : r.user_id;
+    const reactionUserId =
+      typeof r.user_id === "object" ? r.user_id?._id : r.user_id;
     return reactionUserId === authUser?._id;
   });
 
   const getReactionLabel = (type) => {
     switch (type) {
-      case "like": return t('comment_reaction_like');
-      case "love": return t('comment_reaction_love');
-      case "haha": return t('comment_reaction_haha');
-      case "angry": return t('comment_reaction_angry');
-      default: return "";
+      case "like":
+        return t("comment_reaction_like");
+      case "love":
+        return t("comment_reaction_love");
+      case "haha":
+        return t("comment_reaction_haha");
+      case "angry":
+        return t("comment_reaction_angry");
+      default:
+        return "";
     }
   };
 
@@ -210,31 +303,48 @@ const CommentItem = ({
   const mostReacted = getMostReactedType(commentReactions?.breakdown);
 
   return (
-    <div className={`flex gap-3 mb-4 ${isReply ? "ml-12 pl-4 border-l-2 border-gray-100" : ""}`}>
-      <img
+    <div
+      className={`flex gap-3 mb-4 ${isReply ? "ml-12 pl-4 border-l-2 border-gray-100" : ""}`}
+    >
+      <Image
         src={avatarUrl || "/images/avatar.jpg"}
         alt={userName}
-        className="w-10 h-10 rounded-full flex-shrink-0 mt-2.5 cursor-pointer"
+        width={96}
+        height={96}
+        className="w-10 h-10 rounded-full shrink-0 mt-2.5 cursor-pointer"
         onClick={() => {
-          const id = typeof comment.author_id === "object" ? comment.author_id?._id : comment.author_id;
+          const id =
+            typeof comment.author_id === "object"
+              ? comment.author_id?._id
+              : comment.author_id;
           if (id) router.push(`/profile/${id}`);
         }}
       />
       <div className="flex-1">
         <div className="bg-gray-50 rounded-2xl px-4 py-2.5 inline-block max-w-full">
           <p className="font-semibold text-sm text-gray-900">{userName}</p>
-          <p className="text-sm text-gray-700 mt-1 break-words">{comment.content}</p>
+          <p className="text-sm text-gray-700 mt-1 wrap-break-word">
+            {comment.content}
+          </p>
         </div>
 
         <div className="flex items-center gap-5 mt-1.5 ml-3 text-xs relative">
-          <span className="text-gray-400">{getTimeAgo(comment.created_at)}</span>
+          <span className="text-gray-400">
+            {getTimeAgo(comment.created_at)}
+          </span>
 
           {!userReaction ? (
-            <button onClick={() => toggleReactionOptions(comment._id)} className="text-gray-500 hover:text-gray-700 font-medium">
-              {t('comment_action_like')}
+            <button
+              onClick={() => toggleReactionOptions(comment._id)}
+              className="text-gray-500 hover:text-gray-700 font-medium"
+            >
+              {t("comment_action_like")}
             </button>
           ) : (
-            <button onClick={() => toggleReactionOptions(comment._id)} className={`font-medium ${getReactionColor(userReaction.type)}`}>
+            <button
+              onClick={() => toggleReactionOptions(comment._id)}
+              className={`font-medium ${getReactionColor(userReaction.type)}`}
+            >
               {getReactionLabel(userReaction.type)}
             </button>
           )}
@@ -242,12 +352,21 @@ const CommentItem = ({
           {showReactionOptions[comment._id] && (
             <div className="absolute bottom-6 left-7 bg-white rounded-full shadow-lg px-2 py-1.5 flex gap-2 z-10 border border-gray-100">
               {REACTION_TYPES.map((type) => (
-                <button key={type} onClick={() => onReactionPress(comment._id, type)} className="hover:scale-110 transition-transform p-1">
+                <button
+                  key={type}
+                  onClick={() => onReactionPress(comment._id, type)}
+                  className="hover:scale-110 transition-transform p-1"
+                >
                   {getReactionIcon(type, 20)}
                 </button>
               ))}
               {userReaction && (
-                <button onClick={() => onReactionPress(comment._id, userReaction.type)} className="hover:scale-110 transition-transform p-1 border-l border-gray-200 pl-2">
+                <button
+                  onClick={() =>
+                    onReactionPress(comment._id, userReaction.type)
+                  }
+                  className="hover:scale-110 transition-transform p-1 border-l border-gray-200 pl-2"
+                >
                   <X size={18} className="text-red-500" />
                 </button>
               )}
@@ -255,34 +374,53 @@ const CommentItem = ({
           )}
 
           {commentReactions && commentReactions.total > 0 && (
-            <button onClick={() => onShowReactionModal(comment._id)} className="flex items-center gap-1 hover:underline">
+            <button
+              onClick={() => onShowReactionModal(comment._id)}
+              className="flex items-center gap-1 hover:underline"
+            >
               {mostReacted && (
-                <div className="w-4 h-4 flex items-center justify-center">{getReactionIcon(mostReacted, 14, true)}</div>
+                <div className="w-4 h-4 flex items-center justify-center">
+                  {getReactionIcon(mostReacted, 14, true)}
+                </div>
               )}
-              <span className="text-gray-500 text-xs">{commentReactions.total}</span>
+              <span className="text-gray-500 text-xs">
+                {commentReactions.total}
+              </span>
             </button>
           )}
 
           {!isReply && (
-            <button onClick={() => onReply(comment)} className="text-gray-500 hover:text-gray-700 font-medium">
-              {t('comment_action_reply')}
+            <button
+              onClick={() => onReply(comment)}
+              className="text-gray-500 hover:text-gray-700 font-medium"
+            >
+              {t("comment_action_reply")}
             </button>
           )}
 
           {isOwnComment && (
             <>
-              <button onClick={() => onEdit(comment)} className="text-gray-500 hover:text-gray-700 font-medium">
-                {t('comment_action_edit')}
+              <button
+                onClick={() => onEdit(comment)}
+                className="text-gray-500 hover:text-gray-700 font-medium"
+              >
+                {t("comment_action_edit")}
               </button>
-              <button onClick={() => onDelete(comment._id)} className="text-red-500 hover:text-red-700 font-medium">
-                {t('comment_action_delete')}
+              <button
+                onClick={() => onDelete(comment._id)}
+                className="text-red-500 hover:text-red-700 font-medium"
+              >
+                {t("comment_action_delete")}
               </button>
             </>
           )}
 
           {!isOwnComment && (
-            <button onClick={() => onReport(comment._id)} className="text-orange-500 hover:text-orange-700 font-medium">
-              {t('comment_action_report')}
+            <button
+              onClick={() => onReport(comment._id)}
+              className="text-orange-500 hover:text-orange-700 font-medium"
+            >
+              {t("comment_action_report")}
             </button>
           )}
         </div>
@@ -314,7 +452,13 @@ const CommentItem = ({
 };
 
 // ─── Main Modal ───────────────────────────────────────────────────────────────
-export default function CommentModal({ isOpen, onClose, postId, post, onCommentCountChange }) {
+export default function CommentModal({
+  isOpen,
+  onClose,
+  postId,
+  post,
+  onCommentCountChange,
+}) {
   const { t } = useLanguage();
   const { authUser } = useAuthStore();
   const [comments, setComments] = useState([]);
@@ -338,13 +482,11 @@ export default function CommentModal({ isOpen, onClose, postId, post, onCommentC
     const maxHeight = 120;
     textarea.style.height = "auto";
     textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
-    textarea.style.overflowY = textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+    textarea.style.overflowY =
+      textarea.scrollHeight > maxHeight ? "auto" : "hidden";
   };
 
-  useEffect(() => { if (isOpen && postId) loadComments(); }, [isOpen, postId]);
-  useEffect(() => { if (!isOpen) return; autoResizeTextarea(textInputRef.current); }, [commentText, isOpen]);
-
-  const loadComments = async () => {
+  const loadComments = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await commentAPI.getCommentsByPost(postId, "all");
@@ -352,7 +494,10 @@ export default function CommentModal({ isOpen, onClose, postId, post, onCommentC
         setComments(response.data);
         const countComments = (commentsList) => {
           let count = commentsList.length;
-          commentsList.forEach((comment) => { if (comment.children?.length > 0) count += countComments(comment.children); });
+          commentsList.forEach((comment) => {
+            if (comment.children?.length > 0)
+              count += countComments(comment.children);
+          });
           return count;
         };
         const total = countComments(response.data);
@@ -361,7 +506,8 @@ export default function CommentModal({ isOpen, onClose, postId, post, onCommentC
         const loadReactionsRecursive = async (commentsList) => {
           for (const comment of commentsList) {
             await loadReactions(comment._id);
-            if (comment.children?.length > 0) await loadReactionsRecursive(comment.children);
+            if (comment.children?.length > 0)
+              await loadReactionsRecursive(comment.children);
           }
         };
         await loadReactionsRecursive(response.data);
@@ -371,22 +517,40 @@ export default function CommentModal({ isOpen, onClose, postId, post, onCommentC
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [onCommentCountChange, postId]);
+
+  useEffect(() => {
+    if (isOpen && postId) loadComments();
+  }, [isOpen, postId, loadComments]);
+  useEffect(() => {
+    if (!isOpen) return;
+    autoResizeTextarea(textInputRef.current);
+  }, [commentText, isOpen]);
 
   const loadReactions = async (commentId) => {
     try {
-      const response = await reactionCommentAPI.getReactionsByComment(commentId);
+      const response =
+        await reactionCommentAPI.getReactionsByComment(commentId);
       if (response.data) {
         setReactions((prev) => ({
           ...prev,
-          [commentId]: { total: response.data.total || 0, breakdown: response.data.breakdown || {}, reactions: response.data.reactions || [] },
+          [commentId]: {
+            total: response.data.total || 0,
+            breakdown: response.data.breakdown || {},
+            reactions: response.data.reactions || [],
+          },
         }));
       }
-    } catch (error) { console.error("Failed to load reactions:", error); }
+    } catch (error) {
+      console.error("Failed to load reactions:", error);
+    }
   };
 
   const toggleReactionOptions = (commentId) => {
-    setShowReactionOptions((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
+    setShowReactionOptions((prev) => ({
+      ...prev,
+      [commentId]: !prev[commentId],
+    }));
   };
 
   const handleReactionPress = async (commentId, reactionType) => {
@@ -396,23 +560,48 @@ export default function CommentModal({ isOpen, onClose, postId, post, onCommentC
     );
     try {
       if (userReaction) {
-        if (userReaction.type === reactionType) await reactionCommentAPI.deleteReaction(userReaction._id);
-        else await reactionCommentAPI.updateReaction(userReaction._id, reactionType);
+        if (userReaction.type === reactionType)
+          await reactionCommentAPI.deleteReaction(userReaction._id);
+        else
+          await reactionCommentAPI.updateReaction(
+            userReaction._id,
+            reactionType,
+          );
       } else {
-        await reactionCommentAPI.addReaction({ comment_id: commentId, userId: authUser._id, type: reactionType });
+        await reactionCommentAPI.addReaction({
+          comment_id: commentId,
+          userId: authUser._id,
+          type: reactionType,
+        });
       }
       await loadReactions(commentId);
       setShowReactionOptions((prev) => ({ ...prev, [commentId]: false }));
     } catch (error) {
       console.error("Failed to handle reaction:", error);
-      toast.error(t('comment_reaction_fail'));
+      toast.error(t("comment_reaction_fail"));
     }
   };
 
-  const handleReply = (comment) => { setReplyingTo(comment); setEditingComment(null); setCommentText(""); textInputRef.current?.focus(); };
-  const handleEdit = (comment) => { setEditingComment(comment); setReplyingTo(null); setCommentText(comment.content); textInputRef.current?.focus(); };
-  const handleCancelReply = () => { setReplyingTo(null); setCommentText(""); };
-  const handleCancelEdit = () => { setEditingComment(null); setCommentText(""); };
+  const handleReply = (comment) => {
+    setReplyingTo(comment);
+    setEditingComment(null);
+    setCommentText("");
+    textInputRef.current?.focus();
+  };
+  const handleEdit = (comment) => {
+    setEditingComment(comment);
+    setReplyingTo(null);
+    setCommentText(comment.content);
+    textInputRef.current?.focus();
+  };
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+    setCommentText("");
+  };
+  const handleCancelEdit = () => {
+    setEditingComment(null);
+    setCommentText("");
+  };
 
   const handleSaveEdit = async () => {
     if (!editingComment || !commentText.trim()) return;
@@ -423,24 +612,31 @@ export default function CommentModal({ isOpen, onClose, postId, post, onCommentC
       setCommentText("");
     } catch (error) {
       console.error("Failed to update comment:", error);
-      toast.error(t('comment_edit_fail'));
+      toast.error(t("comment_edit_fail"));
     }
   };
 
   const handleSendComment = async () => {
     if (!commentText.trim() || !authUser?._id) return;
     try {
-      await commentAPI.createComment({ post_id: postId, content: commentText.trim(), parent_id: replyingTo?._id || null });
+      await commentAPI.createComment({
+        post_id: postId,
+        content: commentText.trim(),
+        parent_id: replyingTo?._id || null,
+      });
       await loadComments();
       setCommentText("");
       setReplyingTo(null);
     } catch (error) {
       console.error("Failed to create comment:", error);
-      toast.error(t('comment_create_fail'));
+      toast.error(t("comment_create_fail"));
     }
   };
 
-  const openDeleteConfirm = (commentId) => { setDeletingCommentId(commentId); setConfirmModalOpen(true); };
+  const openDeleteConfirm = (commentId) => {
+    setDeletingCommentId(commentId);
+    setConfirmModalOpen(true);
+  };
 
   const handleDeleteComment = async () => {
     if (!deletingCommentId) return;
@@ -451,23 +647,29 @@ export default function CommentModal({ isOpen, onClose, postId, post, onCommentC
       setDeletingCommentId(null);
     } catch (error) {
       console.error("Failed to delete comment:", error);
-      toast.error(t('comment_delete_fail'));
+      toast.error(t("comment_delete_fail"));
     }
   };
 
-  const handleReportComment = (commentId) => { setReportCommentId(commentId); setReportModalOpen(true); };
+  const handleReportComment = (commentId) => {
+    setReportCommentId(commentId);
+    setReportModalOpen(true);
+  };
 
   const handleSubmitReport = async (reason) => {
     if (!reason.trim()) return;
     setIsSubmittingReport(true);
     try {
-      await reportCommentAPI.createReport({ comment_id: reportCommentId, reason: reason.trim() });
+      await reportCommentAPI.createReport({
+        comment_id: reportCommentId,
+        reason: reason.trim(),
+      });
       setReportModalOpen(false);
       setReportCommentId(null);
-      toast.success(t('comment_report_success'));
+      toast.success(t("comment_report_success"));
     } catch (error) {
       console.error("Failed to report comment:", error);
-      toast.error(t('comment_report_fail'));
+      toast.error(t("comment_report_fail"));
     } finally {
       setIsSubmittingReport(false);
     }
@@ -481,8 +683,13 @@ export default function CommentModal({ isOpen, onClose, postId, post, onCommentC
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-5 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">{t('comment_modal_title')}</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition">
+            <h2 className="text-xl font-bold text-gray-900">
+              {t("comment_modal_title")}
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-full transition"
+            >
               <X size={24} className="text-gray-600" />
             </button>
           </div>
@@ -494,7 +701,9 @@ export default function CommentModal({ isOpen, onClose, postId, post, onCommentC
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-700"></div>
               </div>
             ) : comments.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">{t('comment_empty')}</div>
+              <div className="text-center py-12 text-gray-500">
+                {t("comment_empty")}
+              </div>
             ) : (
               comments.map((comment) => (
                 <CommentItem
@@ -520,35 +729,59 @@ export default function CommentModal({ isOpen, onClose, postId, post, onCommentC
             {replyingTo && (
               <div className="flex items-center justify-between bg-emerald-50 rounded-lg px-3 py-2 mb-3">
                 <p className="text-sm text-gray-700">
-                  {t('comment_reply_banner')}{" "}
-                  <span className="font-semibold">{replyingTo.author_id?.full_name || replyingTo.author_id?.username}</span>
+                  {t("comment_reply_banner")}{" "}
+                  <span className="font-semibold">
+                    {replyingTo.author_id?.full_name ||
+                      replyingTo.author_id?.username}
+                  </span>
                 </p>
-                <button onClick={handleCancelReply} className="text-gray-500 hover:text-gray-700"><X size={18} /></button>
+                <button
+                  onClick={handleCancelReply}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={18} />
+                </button>
               </div>
             )}
 
             {editingComment && (
               <div className="flex items-center justify-between bg-orange-50 rounded-lg px-3 py-2 mb-3">
-                <p className="text-sm text-gray-700 font-medium">{t('comment_edit_banner')}</p>
-                <button onClick={handleCancelEdit} className="text-gray-500 hover:text-gray-700"><X size={18} /></button>
+                <p className="text-sm text-gray-700 font-medium">
+                  {t("comment_edit_banner")}
+                </p>
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={18} />
+                </button>
               </div>
             )}
 
             <div className="flex items-start gap-3">
-              <img src={authUser?.avatar || "/images/avatar.jpg"} alt="Your avatar" className="w-10 h-10 rounded-full flex-shrink-0" />
+              <Image
+                src={authUser?.avatar || "/images/avatar.jpg"}
+                alt="Your avatar"
+                width={96}
+                height={96}
+                className="w-10 h-10 rounded-full shrink-0"
+              />
               <div className="flex-1 relative">
                 <textarea
                   ref={textInputRef}
                   value={commentText}
-                  onChange={(e) => { setCommentText(e.target.value); autoResizeTextarea(e.target); }}
+                  onChange={(e) => {
+                    setCommentText(e.target.value);
+                    autoResizeTextarea(e.target);
+                  }}
                   placeholder={
                     editingComment
-                      ? t('comment_placeholder_edit')
+                      ? t("comment_placeholder_edit")
                       : replyingTo
-                        ? `${t('comment_placeholder_reply')} ${replyingTo.author_id?.username || ""}...`
-                        : t('comment_placeholder_default')
+                        ? `${t("comment_placeholder_reply")} ${replyingTo.author_id?.username || ""}...`
+                        : t("comment_placeholder_default")
                   }
-                  className="w-full bg-gray-100 rounded-2xl px-4 py-2.5 text-sm text-black resize-none focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white border border-gray-300 min-h-[44px] max-h-[120px]"
+                  className="w-full bg-gray-100 rounded-2xl px-4 py-2.5 text-sm text-black resize-none focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white border border-gray-300 min-h-11 max-h-30"
                   rows={1}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -561,7 +794,7 @@ export default function CommentModal({ isOpen, onClose, postId, post, onCommentC
               <button
                 onClick={editingComment ? handleSaveEdit : handleSendComment}
                 disabled={!commentText.trim()}
-                className="p-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:bg-gray-300 rounded-full transition flex-shrink-0"
+                className="p-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:bg-gray-300 rounded-full transition shrink-0"
               >
                 <Send size={20} className="text-white" />
               </button>
@@ -570,13 +803,29 @@ export default function CommentModal({ isOpen, onClose, postId, post, onCommentC
         </div>
       </div>
 
-      <ReactionModal isOpen={!!reactionModalCommentId} onClose={() => setReactionModalCommentId(null)} commentId={reactionModalCommentId} reactions={reactions} />
-      <ReportCommentModal isOpen={reportModalOpen} onClose={() => { setReportModalOpen(false); setReportCommentId(null); }} onSubmit={handleSubmitReport} isSubmitting={isSubmittingReport} />
+      <ReactionModal
+        isOpen={!!reactionModalCommentId}
+        onClose={() => setReactionModalCommentId(null)}
+        commentId={reactionModalCommentId}
+        reactions={reactions}
+      />
+      <ReportCommentModal
+        isOpen={reportModalOpen}
+        onClose={() => {
+          setReportModalOpen(false);
+          setReportCommentId(null);
+        }}
+        onSubmit={handleSubmitReport}
+        isSubmitting={isSubmittingReport}
+      />
       <ConfirmModal
         isOpen={confirmModalOpen}
-        onClose={() => { setConfirmModalOpen(false); setDeletingCommentId(null); }}
+        onClose={() => {
+          setConfirmModalOpen(false);
+          setDeletingCommentId(null);
+        }}
         onConfirm={handleDeleteComment}
-        message={t('comment_delete_confirm')}
+        message={t("comment_delete_confirm")}
       />
     </>
   );

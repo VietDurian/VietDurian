@@ -7,6 +7,7 @@ import { useProductStore as useTypeProductStore } from "@/store/useTypeProduct";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useLanguage } from "@/context/LanguageContext";
+import Image from "next/image";
 
 export default function EditProduct() {
   const router = useRouter();
@@ -506,9 +507,11 @@ export default function EditProduct() {
               </div>
             ) : (
               <div className="relative rounded-lg overflow-hidden border border-gray-200">
-                <img
+                <Image
                   src={imagePreview}
                   alt="Preview"
+                  width={96}
+                  height={96}
                   className="w-full h-auto object-contain bg-gray-50 max-h-80"
                 />
                 <button
