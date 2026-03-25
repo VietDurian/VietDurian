@@ -2,8 +2,6 @@ import { IrrigationCostsModel } from '@/model/irrigationCostsModel';
 import { SeasonDiaryModel } from '@/model/seasonDiaryModel';
 import createError from 'http-errors';
 
-const toObjectIdString = (value) => value?.toString();
-
 const parsePage = (page) => {
 	const parsed = Number.parseInt(page, 10);
 	return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
@@ -121,7 +119,7 @@ const sanitizeIrrigationPayload = (payload) => {
 	return sanitized;
 };
 
-const ensureSeasonDiaryAccess = async ({ seasonDiaryId, userId, role }) => {
+const ensureSeasonDiaryExists = async ({ seasonDiaryId }) => {
 	if (!seasonDiaryId) {
 		return;
 	}
@@ -130,19 +128,12 @@ const ensureSeasonDiaryAccess = async ({ seasonDiaryId, userId, role }) => {
 	if (!diary) {
 		throw createError(404, 'Season diary not found');
 	}
-
-	const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-	if (!isOwner && role !== 'admin') {
-		throw createError(403, 'You do not have permission to access this season diary');
-	}
 };
 
 const viewIrrigationCostsList = async ({
 	page,
 	limit,
 	seasonDiaryId,
-	userId,
-	role,
 }) => {
 	const pageNumber = parsePage(page);
 	const limitNumber = parseLimit(limit);
@@ -150,10 +141,8 @@ const viewIrrigationCostsList = async ({
 	const query = { season_diary_id: { $ne: null } };
 
 	if (seasonDiaryId) {
-		await ensureSeasonDiaryAccess({ seasonDiaryId, userId, role });
+		await ensureSeasonDiaryExists({ seasonDiaryId });
 		query.season_diary_id = seasonDiaryId;
-	} else if (role !== 'admin') {
-		query.created_by = userId;
 	}
 
 	const [items, total] = await Promise.all([
@@ -181,16 +170,12 @@ const viewIrrigationCostsList = async ({
 	};
 };
 
-const createIrrigationCosts = async ({ userId, role, data }) => {
+const createIrrigationCosts = async ({ userId, data }) => {
 	if (!data?.season_diary_id) {
 		throw createError(400, 'season_diary_id is required');
 	}
 
-	await ensureSeasonDiaryAccess({
-		seasonDiaryId: data?.season_diary_id,
-		userId,
-		role,
-	});
+	await ensureSeasonDiaryExists({ seasonDiaryId: data?.season_diary_id });
 
 	const payload = {
 		...sanitizeIrrigationPayload(data),
@@ -203,20 +188,14 @@ const createIrrigationCosts = async ({ userId, role, data }) => {
 	return created;
 };
 
-const updateIrrigationCosts = async ({ irrigationCostId, userId, role, data }) => {
+const updateIrrigationCosts = async ({ irrigationCostId, data }) => {
 	const existing = await IrrigationCostsModel.findById(irrigationCostId);
 	if (!existing) {
 		throw createError(404, 'Irrigation costs log not found');
 	}
 
-	const isCreator =
-		toObjectIdString(existing.created_by) === toObjectIdString(userId) || role === 'admin';
-	if (!isCreator) {
-		throw createError(403, 'You do not have permission to update this log');
-	}
-
 	const targetSeasonDiaryId = data?.season_diary_id || existing.season_diary_id;
-	await ensureSeasonDiaryAccess({ seasonDiaryId: targetSeasonDiaryId, userId, role });
+	await ensureSeasonDiaryExists({ seasonDiaryId: targetSeasonDiaryId });
 
 	const payload = sanitizeIrrigationPayload(data);
 	if (Object.prototype.hasOwnProperty.call(payload, 'execution_date')) {
@@ -230,19 +209,13 @@ const updateIrrigationCosts = async ({ irrigationCostId, userId, role, data }) =
 	return updated;
 };
 
-const deleteIrrigationCosts = async ({ irrigationCostId, userId, role }) => {
+const deleteIrrigationCosts = async ({ irrigationCostId }) => {
 	const existing = await IrrigationCostsModel.findById(irrigationCostId)
 		.select('_id created_by')
 		.lean();
 
 	if (!existing) {
 		throw createError(404, 'Irrigation costs log not found');
-	}
-
-	const isCreator =
-		toObjectIdString(existing.created_by) === toObjectIdString(userId) || role === 'admin';
-	if (!isCreator) {
-		throw createError(403, 'You do not have permission to delete this log');
 	}
 
 	await IrrigationCostsModel.findByIdAndDelete(irrigationCostId);
