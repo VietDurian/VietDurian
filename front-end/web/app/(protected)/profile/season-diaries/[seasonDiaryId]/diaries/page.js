@@ -9,12 +9,68 @@ import { usePackagingHandlingStore } from "@/store/usePackagingHandlingStore";
 import { useHarvestConsumptionStore } from "@/store/useHarvestConsumptionStore";
 import { useIrrigationCostStore } from "@/store/useIrrigationCostStore";
 import { useLaborCostsStore } from "@/store/useLaborCostsStore";
+import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useLanguage } from "@/context/LanguageContext";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const genId = () => Math.random().toString(36).slice(2, 10);
 const flatCols = (d) => d.groups.flatMap((g) => g.cols);
 const emptyRow = (d) => Object.fromEntries(flatCols(d).map((c) => [c.key, ""]));
+const PDF_FONT_FILE = "Roboto-Regular.ttf";
+const PDF_FONT_URL = "/fonts/Roboto/static/Roboto-Regular.ttf";
+const PDF_FONT_BOLD_FILE = "Roboto-Bold.ttf";
+const PDF_FONT_BOLD_URL = "/fonts/Roboto/static/Roboto-Bold.ttf";
+const PDF_FONT_FAMILY = "Roboto";
+
+let pdfFontBase64Promise;
+let pdfFontBoldBase64Promise;
+
+const arrayBufferToBase64 = (buffer) => {
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  let binary = "";
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  return btoa(binary);
+};
+
+const getPdfFontBase64 = async () => {
+  if (pdfFontBase64Promise) return pdfFontBase64Promise;
+
+  pdfFontBase64Promise = fetch(PDF_FONT_URL)
+    .then((res) => {
+      if (!res.ok) throw new Error("Unable to load PDF font");
+      return res.arrayBuffer();
+    })
+    .then(arrayBufferToBase64);
+
+  return pdfFontBase64Promise;
+};
+
+const getPdfFontBoldBase64 = async () => {
+  if (pdfFontBoldBase64Promise) return pdfFontBoldBase64Promise;
+
+  pdfFontBoldBase64Promise = fetch(PDF_FONT_BOLD_URL)
+    .then((res) => {
+      if (!res.ok) throw new Error("Unable to load PDF bold font");
+      return res.arrayBuffer();
+    })
+    .then(arrayBufferToBase64);
+
+  return pdfFontBoldBase64Promise;
+};
+
+const sanitizeFileNamePart = (value) =>
+  String(value || "")
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const normalizeBuyingSeed = (item) => ({
   id: item?._id,
@@ -587,7 +643,13 @@ function DeleteModal({ count, onConfirm, onClose }) {
 }
 
 // ── DIARY TABLE ───────────────────────────────────────────────────────────────
-function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
+function DiaryTable({
+  diary,
+  diaries,
+  seasonDiaryId,
+  initialRows,
+  onRowsChange,
+}) {
   const { t } = useLanguage();
   const cols = flatCols(diary);
   const isBuyingSeedDiary = diary.id === "1.4";
@@ -693,6 +755,7 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
   const [selected, setSelected] = useState(new Set());
   const [page, setPage] = useState(1);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const { toast, show: showToast } = useToast();
 
   useEffect(() => {
@@ -804,7 +867,8 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
         isIrrigationCostUpdating ||
         isIrrigationCostDeleting)) ||
     (isLaborCostsDiary &&
-      (isLaborCostCreating || isLaborCostUpdating || isLaborCostDeleting));
+      (isLaborCostCreating || isLaborCostUpdating || isLaborCostDeleting)) ||
+    isExportingPdf;
 
   const filtered = useMemo(() => {
     if (!search) return rows;
@@ -830,6 +894,174 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
   const openEdit = (row) => {
     setEditRow({ ...row });
     setModal("edit");
+  };
+
+  const formatCellForExport = (col, val) => {
+    if (val === "" || val === null || val === undefined) return "-";
+
+    if (col.type === "date") {
+      try {
+        const d = new Date(val);
+        if (Number.isNaN(d.getTime())) return String(val);
+        return d.toLocaleDateString("vi-VN");
+      } catch {
+        return String(val);
+      }
+    }
+
+    if (col.type === "currency") {
+      const n = Number(val);
+      return Number.isNaN(n)
+        ? String(val)
+        : `${new Intl.NumberFormat("vi-VN").format(n)} VND`;
+    }
+
+    if (col.type === "select" && col.options) {
+      const opt = col.options.find((o) => o.value === val);
+      return opt?.label || String(val);
+    }
+
+    return String(val);
+  };
+
+  const handleExportPDF = async () => {
+    if (!seasonDiaryId || isExportingPdf) {
+      if (!seasonDiaryId) {
+        showToast(t("diary_toast_missing_season"), "error");
+      }
+      return;
+    }
+
+    setIsExportingPdf(true);
+    try {
+      await Promise.all([
+        getBuyingSeeds({ seasonDiaryId, page: 1, limit: 1000 }),
+        getBuyingFertilizers({ seasonDiaryId, page: 1, limit: 1000 }),
+        getUseFertilizers({ seasonDiaryId, page: 1, limit: 1000 }),
+        getPackagingHandlings({ seasonDiaryId, page: 1, limit: 1000 }),
+        getHarvestConsumptions({ seasonDiaryId, page: 1, limit: 1000 }),
+        getIrrigationCosts({ seasonDiaryId, page: 1, limit: 1000 }),
+        getLaborCosts({ seasonDiaryId, page: 1, limit: 1000 }),
+      ]);
+
+      const rowsByDiaryId = {
+        1.4: (useBuyingSeedStore.getState().buyingSeeds || [])
+          .map(normalizeBuyingSeed)
+          .filter((r) => r.id),
+        1.5: (useBuyingFertilizerStore.getState().buyingFertilizers || [])
+          .map(normalizeBuyingFertilizer)
+          .filter((r) => r.id),
+        1.6: (useUseFertilizerStore.getState().useFertilizers || [])
+          .map(normalizeUseFertilizer)
+          .filter((r) => r.id),
+        1.7: (usePackagingHandlingStore.getState().packagingHandlings || [])
+          .map(normalizePackagingHandling)
+          .filter((r) => r.id),
+        1.8: (useHarvestConsumptionStore.getState().harvestConsumptions || [])
+          .map(normalizeHarvestConsumption)
+          .filter((r) => r.id),
+        1.9: (useIrrigationCostStore.getState().irrigationCosts || [])
+          .map(normalizeIrrigationCost)
+          .filter((r) => r.id),
+        "1.10": (useLaborCostsStore.getState().laborCosts || [])
+          .map(normalizeLaborCost)
+          .filter((r) => r.id),
+      };
+
+      const exportDiaries = (diaries || []).filter((d) =>
+        ["1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "1.10"].includes(d.id),
+      );
+
+      if (exportDiaries.length === 0) {
+        showToast("Khong tim thay cau hinh nhat ky de xuat PDF", "error");
+        return;
+      }
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "pt",
+        format: "a4",
+      });
+      let pdfFontFamily = "helvetica";
+
+      try {
+        const pdfFontBase64 = await getPdfFontBase64();
+        const pdfFontBoldBase64 = await getPdfFontBoldBase64();
+        doc.addFileToVFS(PDF_FONT_FILE, pdfFontBase64);
+        doc.addFileToVFS(PDF_FONT_BOLD_FILE, pdfFontBoldBase64);
+        doc.addFont(PDF_FONT_FILE, PDF_FONT_FAMILY, "normal");
+        doc.addFont(PDF_FONT_BOLD_FILE, PDF_FONT_FAMILY, "bold");
+        pdfFontFamily = PDF_FONT_FAMILY;
+      } catch {
+        pdfFontFamily = "helvetica";
+      }
+
+      doc.setFont(pdfFontFamily, "normal");
+
+      exportDiaries.forEach((d, idx) => {
+        if (idx > 0) doc.addPage();
+
+        const colsDef = flatCols(d);
+        const tableHead = colsDef.map((c) =>
+          String(c.label || "").replace(/\n/g, " "),
+        );
+        const tableRows = (rowsByDiaryId[d.id] || []).map((row) =>
+          colsDef.map((c) => formatCellForExport(c, row[c.key])),
+        );
+
+        doc.setFontSize(14);
+        doc.setFont(pdfFontFamily, "normal");
+        doc.text(`Nhật ký ${d.id}: ${d.title}`, 40, 40);
+        doc.setFontSize(10);
+        doc.setFont(pdfFontFamily, "normal");
+        doc.text(`Tổng số bản ghi: ${tableRows.length}`, 40, 58);
+
+        autoTable(doc, {
+          startY: 72,
+          head: [tableHead],
+          body: tableRows.length > 0 ? tableRows : [["Không có dữ liệu"]],
+          styles: {
+            font: pdfFontFamily,
+            fontStyle: "normal",
+            fontSize: 8,
+            cellPadding: 4,
+            overflow: "linebreak",
+          },
+          headStyles: {
+            font: pdfFontFamily,
+            fontStyle: "bold",
+            fillColor: [5, 150, 105],
+            textColor: 255,
+          },
+          theme: "grid",
+          margin: { left: 20, right: 20 },
+        });
+      });
+
+      const seasonDiaryStore = useSeasonDiaryStore.getState();
+      let seasonDiaryDetail = seasonDiaryStore.seasonDiaryDetail;
+
+      if (seasonDiaryDetail?._id !== seasonDiaryId) {
+        seasonDiaryDetail =
+          await seasonDiaryStore.getSeasonDiaryDetail(seasonDiaryId);
+      }
+
+      const rawGardenName =
+        seasonDiaryDetail?.garden_name ||
+        seasonDiaryDetail?.gardenName ||
+        seasonDiaryDetail?.name ||
+        "season-diary";
+      const safeGardenName =
+        sanitizeFileNamePart(rawGardenName) || "season-diary";
+      const datePart = new Date().toISOString().slice(0, 10);
+
+      doc.save(`${safeGardenName}-${datePart}.pdf`);
+      showToast("Xuất PDF thành công");
+    } catch {
+      showToast("Xuất PDF thất bại", "error");
+    } finally {
+      setIsExportingPdf(false);
+    }
   };
 
   const handleSave = async (form) => {
@@ -1062,7 +1294,7 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
               setPage(1);
             }}
             placeholder={t("diary_search_placeholder")}
-            className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+            className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent bg-white placeholder:text-gray-400"
           />
         </div>
         {selected.size > 0 && (
@@ -1075,10 +1307,11 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
             {t("diary_delete_selected_suffix")}
           </button>
         )}
+        {/* Create new record button */}
         <button
           onClick={openCreate}
           disabled={isActionBusy}
-          className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-emerald-200"
+          className="cursor-pointer flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-emerald-200"
         >
           <svg
             className="w-4 h-4"
@@ -1094,6 +1327,27 @@ function DiaryTable({ diary, seasonDiaryId, initialRows, onRowsChange }) {
             />
           </svg>
           {t("diary_add_btn")}
+        </button>
+        {/* Export PDF file button */}
+        <button
+          onClick={handleExportPDF}
+          disabled={isExportingPdf}
+          className="cursor-pointer flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-emerald-200 text-emerald-700 rounded-xl text-sm font-medium transition shadow-sm shadow-emerald-200 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          {isExportingPdf ? "Đang xuất PDF..." : "Xuất PDF"}
         </button>
       </div>
 
@@ -1871,7 +2125,12 @@ export default function DiaryPage() {
       </div>
 
       {/* Table — re-mounts on switch to reset state */}
-      <DiaryTable key={diary.id} diary={diary} seasonDiaryId={seasonDiaryId} />
+      <DiaryTable
+        key={diary.id}
+        diary={diary}
+        diaries={DIARIES}
+        seasonDiaryId={seasonDiaryId}
+      />
     </div>
   );
 }
