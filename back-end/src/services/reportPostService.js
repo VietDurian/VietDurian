@@ -12,7 +12,7 @@ export const getAllReport = async (search, page = 1, limit = 10) => {
 		const allReports = await query.lean();
 
 		const filteredReports = allReports.filter((report) =>
-			report.post_id?.content?.toLowerCase().includes(search.toLowerCase()),
+			report.post_id?.title?.toLowerCase().includes(search.toLowerCase()),
 		);
 
 		total = filteredReports.length;
@@ -21,7 +21,7 @@ export const getAllReport = async (search, page = 1, limit = 10) => {
 		total = await ReportPostModel.countDocuments();
 		reports = await ReportPostModel.find()
 			.populate('user_id', 'full_name avatar')
-			.populate('post_id', 'content')
+			.populate('post_id', 'title content')
 			.skip(skip)
 			.limit(limit)
 			.lean();
