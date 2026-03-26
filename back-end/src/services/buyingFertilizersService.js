@@ -2,8 +2,6 @@ import { BuyingFertilizersModel } from '@/model/buyingFertilizersModel';
 import { SeasonDiaryModel } from '@/model/seasonDiaryModel';
 import createError from 'http-errors';
 
-const toObjectIdString = (value) => value?.toString();
-
 const parsePage = (page) => {
 	const parsed = Number.parseInt(page, 10);
 	return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
@@ -21,8 +19,6 @@ const viewBuyingFertilizersList = async ({
 	page,
 	limit,
 	seasonDiaryId,
-	userId,
-	role,
 }) => {
 	try {
 		const pageNumber = parsePage(page);
@@ -37,11 +33,6 @@ const viewBuyingFertilizersList = async ({
 
 			if (!diary) {
 				throw createError(404, 'Season diary not found');
-			}
-
-			const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-			if (!isOwner && role !== 'admin') {
-				throw createError(403, 'You do not have permission to access this season diary');
 			}
 		}
 
@@ -72,7 +63,7 @@ const viewBuyingFertilizersList = async ({
 	}
 };
 
-const createBuyingFertilizers = async ({ userId, role, data }) => {
+const createBuyingFertilizers = async ({ data }) => {
 	try {
 		const diary = await SeasonDiaryModel.findById(data.season_diary_id)
 			.select('_id user_id')
@@ -82,11 +73,6 @@ const createBuyingFertilizers = async ({ userId, role, data }) => {
 			throw createError(404, 'Season diary not found');
 		}
 
-		const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-		if (!isOwner && role !== 'admin') {
-			throw createError(403, 'You do not have permission to access this season diary');
-		}
-
 		const created = await BuyingFertilizersModel.create(data);
 		return created;
 	} catch (error) {
@@ -94,7 +80,7 @@ const createBuyingFertilizers = async ({ userId, role, data }) => {
 	}
 };
 
-const updateBuyingFertilizers = async ({ buyingFertilizersId, userId, role, data }) => {
+const updateBuyingFertilizers = async ({ buyingFertilizersId, data }) => {
 	try {
 		const existing = await BuyingFertilizersModel.findById(buyingFertilizersId);
 		if (!existing) {
@@ -109,11 +95,6 @@ const updateBuyingFertilizers = async ({ buyingFertilizersId, userId, role, data
 			throw createError(404, 'Season diary not found');
 		}
 
-		const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-		if (!isOwner && role !== 'admin') {
-			throw createError(403, 'You do not have permission to access this season diary');
-		}
-
 		delete data.season_diary_id;
 
 		Object.assign(existing, data);
@@ -124,7 +105,7 @@ const updateBuyingFertilizers = async ({ buyingFertilizersId, userId, role, data
 	}
 };
 
-const deleteBuyingFertilizers = async ({ buyingFertilizersId, userId, role }) => {
+const deleteBuyingFertilizers = async ({ buyingFertilizersId }) => {
 	try {
 		const existing = await BuyingFertilizersModel.findById(buyingFertilizersId)
 			.select('_id season_diary_id')
@@ -140,11 +121,6 @@ const deleteBuyingFertilizers = async ({ buyingFertilizersId, userId, role }) =>
 
 		if (!diary) {
 			throw createError(404, 'Season diary not found');
-		}
-
-		const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-		if (!isOwner && role !== 'admin') {
-			throw createError(403, 'You do not have permission to access this season diary');
 		}
 
 		await BuyingFertilizersModel.findByIdAndDelete(buyingFertilizersId);

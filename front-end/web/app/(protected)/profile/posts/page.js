@@ -547,8 +547,8 @@ const Post = ({
       setIsLiked(!newState);
       toast.error(
         err?.response?.data?.message ||
-          err?.message ||
-          t("profile_posts_like_fail"),
+        err?.message ||
+        t("profile_posts_like_fail"),
       );
     } finally {
       setIsTogglingFavorite(false);
@@ -565,9 +565,9 @@ const Post = ({
 
   const cfg = post.category
     ? categoryConfig[post.category] || {
-        icon: LayoutGrid,
-        bg: "from-gray-500 to-slate-500",
-      }
+      icon: LayoutGrid,
+      bg: "from-gray-500 to-slate-500",
+    }
     : null;
 
   return (
@@ -800,25 +800,27 @@ export default function PostsPage() {
             .map((f) => f.post_id?._id || f.post_id)
             .filter(Boolean),
         );
-        const normalized = (postsData || []).map((post) => ({
-          id: post._id,
-          authorId: user._id || user.id,
-          userName: user?.full_name || user?.name || user?.username || "Bạn",
-          userHandle: user?.username || user?.email || "",
-          userAvatar: user?.avatar || "/images/avatar.jpg",
-          timestamp: post.created_at
-            ? new Date(post.created_at).toLocaleString("vi-VN")
-            : "Vừa xong",
-          title: post.title || "",
-          content: post.content,
-          link: post.contact,
-          image: post.image,
-          category: post.category,
-          likes: post.likes_count || 0,
-          comments: post.comments_count || 0,
-          status: post.status || "progressing",
-          isLiked: favoritePostIds.has(post._id),
-        }));
+        const normalized = (postsData || [])
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .map((post) => ({
+            id: post._id,
+            authorId: user._id || user.id,
+            userName: user?.full_name || user?.name || user?.username || "Bạn",
+            userHandle: user?.username || user?.email || "",
+            userAvatar: user?.avatar || "/images/avatar.jpg",
+            timestamp: post.created_at
+              ? new Date(post.created_at).toLocaleString("vi-VN")
+              : "Vừa xong",
+            title: post.title || "",
+            content: post.content,
+            link: post.contact,
+            image: post.image,
+            category: post.category,
+            likes: post.likes_count || 0,
+            comments: post.comments_count || 0,
+            status: post.status || "progressing",
+            isLiked: favoritePostIds.has(post._id),
+          }));
         setPosts(normalized);
         const withComments = await Promise.all(
           normalized.map(async (post) => {

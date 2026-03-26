@@ -2,8 +2,6 @@ import { UseFertilizersModel } from "@/model/useFertilizersModel";
 import { SeasonDiaryModel } from "@/model/seasonDiaryModel";
 import createError from "http-errors";
 
-const toObjectIdString = (value) => value?.toString();
-
 const parsePage = (page) => {
   const parsed = Number.parseInt(page, 10);
   return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
@@ -17,21 +15,13 @@ const parseLimit = (limit) => {
   return parsed > 100 ? 100 : parsed;
 };
 
-const ensureDiaryAccess = async ({ seasonDiaryId, userId, role }) => {
+const ensureDiaryExists = async ({ seasonDiaryId }) => {
   const diary = await SeasonDiaryModel.findById(seasonDiaryId)
     .select("_id user_id")
     .lean();
 
   if (!diary) {
     throw createError(404, "Season diary not found");
-  }
-
-  const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-  if (!isOwner && role !== "admin") {
-    throw createError(
-      403,
-      "You do not have permission to access this season diary",
-    );
   }
 };
 
@@ -48,8 +38,6 @@ const viewUseFertilizersList = async ({
   page,
   limit,
   seasonDiaryId,
-  userId,
-  role,
 }) => {
   try {
     const pageNumber = parsePage(page);
@@ -58,7 +46,7 @@ const viewUseFertilizersList = async ({
     const query = seasonDiaryId ? { season_diary_id: seasonDiaryId } : {};
 
     if (seasonDiaryId) {
-      await ensureDiaryAccess({ seasonDiaryId, userId, role });
+      await ensureDiaryExists({ seasonDiaryId });
     }
 
     const [items, total] = await Promise.all([
@@ -88,13 +76,9 @@ const viewUseFertilizersList = async ({
   }
 };
 
-const createUseFertilizers = async ({ userId, role, data }) => {
+const createUseFertilizers = async ({ data }) => {
   try {
-    await ensureDiaryAccess({
-      seasonDiaryId: data.season_diary_id,
-      userId,
-      role,
-    });
+    await ensureDiaryExists({ seasonDiaryId: data.season_diary_id });
 
     const created = await UseFertilizersModel.create(data);
     return created;
@@ -105,8 +89,6 @@ const createUseFertilizers = async ({ userId, role, data }) => {
 
 const updateUseFertilizers = async ({
   useFertilizersId,
-  userId,
-  role,
   data,
 }) => {
   try {
@@ -115,11 +97,7 @@ const updateUseFertilizers = async ({
       throw createError(404, "Use fertilizers record not found");
     }
 
-    await ensureDiaryAccess({
-      seasonDiaryId: existing.season_diary_id,
-      userId,
-      role,
-    });
+    await ensureDiaryExists({ seasonDiaryId: existing.season_diary_id });
 
     delete data.season_diary_id;
 
@@ -142,7 +120,7 @@ const updateUseFertilizers = async ({
   }
 };
 
-const deleteUseFertilizers = async ({ useFertilizersId, userId, role }) => {
+const deleteUseFertilizers = async ({ useFertilizersId }) => {
   try {
     const existing = await UseFertilizersModel.findById(useFertilizersId)
       .select("_id season_diary_id")
@@ -152,11 +130,7 @@ const deleteUseFertilizers = async ({ useFertilizersId, userId, role }) => {
       throw createError(404, "Use fertilizers record not found");
     }
 
-    await ensureDiaryAccess({
-      seasonDiaryId: existing.season_diary_id,
-      userId,
-      role,
-    });
+    await ensureDiaryExists({ seasonDiaryId: existing.season_diary_id });
 
     await UseFertilizersModel.findByIdAndDelete(useFertilizersId);
     return true;

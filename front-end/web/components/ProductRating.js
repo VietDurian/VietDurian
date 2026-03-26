@@ -55,23 +55,6 @@ export default function ProductRating({ productId, userId }) {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [deletingRatingId, setDeletingRatingId] = useState(null);
 
-  useEffect(() => {
-    if (productId) {
-      fetchRatings();
-    }
-  }, [productId, fetchRatings]);
-
-  useEffect(() => {
-    if (isRatingModalVisible || isReviewDetailModalVisible) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isRatingModalVisible, isReviewDetailModalVisible]);
-
   const fetchRatings = useCallback(async () => {
     try {
       const response = await ratingAPI.getRatingsByProductId(productId, {
@@ -133,6 +116,25 @@ export default function ProductRating({ productId, userId }) {
       toast.error(t("rating_toast_load_fail"));
     }
   }, [productId, t, userId]);
+
+  useEffect(() => {
+    if (productId) {
+      fetchRatings();
+    }
+  }, [productId, fetchRatings]);
+
+  useEffect(() => {
+    if (isRatingModalVisible || isReviewDetailModalVisible) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isRatingModalVisible, isReviewDetailModalVisible]);
+
+
 
   // ── Mở confirm modal thay vì gọi confirm() native ────────────────────────
   const openDeleteConfirm = (ratingId) => {
@@ -227,11 +229,10 @@ export default function ProductRating({ productId, userId }) {
       return (
         <span
           key={index}
-          className={`inline-block transition-all ${
-            isInteractive
-              ? "text-5xl cursor-pointer hover:scale-110"
-              : "text-xl"
-          } ${isFilled ? "text-yellow-400" : "text-gray-300"}`}
+          className={`inline-block transition-all ${isInteractive
+            ? "text-5xl cursor-pointer hover:scale-110"
+            : "text-xl"
+            } ${isFilled ? "text-yellow-400" : "text-gray-300"}`}
           onClick={isInteractive ? () => handleStarClick(starValue) : undefined}
           onMouseEnter={
             isInteractive ? () => setHoveredStar(starValue) : undefined

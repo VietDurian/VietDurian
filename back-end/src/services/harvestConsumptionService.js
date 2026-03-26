@@ -123,19 +123,14 @@ const validateRequiredHarvestFieldsOnUpdate = (payload) => {
 	}
 };
 
-const ensureSeasonDiaryAccess = async ({ seasonDiaryId, userId }) => {
+const ensureSeasonDiaryExists = async ({ seasonDiaryId }) => {
 	if (!seasonDiaryId) {
 		return;
 	}
 
-	const diary = await SeasonDiaryModel.findById(seasonDiaryId).select('_id user_id').lean();
+	const diary = await SeasonDiaryModel.findById(seasonDiaryId).select('_id').lean();
 	if (!diary) {
 		throw createError(404, 'Season diary not found');
-	}
-
-	const isOwner = String(diary.user_id) === String(userId);
-	if (!isOwner) {
-		throw createError(403, 'You do not have permission to access this season diary');
 	}
 };
 
@@ -146,10 +141,8 @@ const viewHarvestConsumptionList = async ({ page, limit, seasonDiaryId, userId }
 	const query = { season_diary_id: { $ne: null } };
 
 	if (seasonDiaryId) {
-		await ensureSeasonDiaryAccess({ seasonDiaryId, userId });
+		await ensureSeasonDiaryExists({ seasonDiaryId });
 		query.season_diary_id = seasonDiaryId;
-	} else {
-		query.created_by = userId;
 	}
 
 	const [items, total] = await Promise.all([
@@ -182,10 +175,7 @@ const createHarvestConsumption = async ({ userId, data }) => {
 		throw createError(400, 'season_diary_id is required');
 	}
 
-	await ensureSeasonDiaryAccess({
-		seasonDiaryId: data.season_diary_id,
-		userId,
-	});
+	await ensureSeasonDiaryExists({ seasonDiaryId: data.season_diary_id });
 
 	const payload = {
 		...sanitizePayload(data),
@@ -204,13 +194,8 @@ const updateHarvestConsumption = async ({ harvestConsumptionId, userId, data }) 
 		throw createError(404, 'Harvest/consumption log not found');
 	}
 
-	const isCreator = String(existing.created_by) === String(userId);
-	if (!isCreator) {
-		throw createError(403, 'You do not have permission to update this log');
-	}
-
 	const targetSeasonDiaryId = data?.season_diary_id || existing.season_diary_id;
-	await ensureSeasonDiaryAccess({ seasonDiaryId: targetSeasonDiaryId, userId });
+	await ensureSeasonDiaryExists({ seasonDiaryId: targetSeasonDiaryId });
 
 	const payload = sanitizePayload(data);
 	validateRequiredHarvestFieldsOnUpdate(payload);
@@ -228,11 +213,6 @@ const deleteHarvestConsumption = async ({ harvestConsumptionId, userId }) => {
 
 	if (!existing) {
 		throw createError(404, 'Harvest/consumption log not found');
-	}
-
-	const isCreator = String(existing.created_by) === String(userId);
-	if (!isCreator) {
-		throw createError(403, 'You do not have permission to delete this log');
 	}
 
 	await HarvestConsumptionModel.findByIdAndDelete(harvestConsumptionId);
