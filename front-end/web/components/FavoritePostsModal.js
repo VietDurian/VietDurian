@@ -72,6 +72,7 @@ const detectContactType = (val) => {
 
 // ── Report Post Modal ─────────────────────────────────────
 const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
+  const { t } = useLanguage();
   const fileInputRef = useRef(null);
   const [selectedReason, setSelectedReason] = useState("");
   const [customReason, setCustomReason] = useState("");
@@ -82,10 +83,10 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
   const [error, setError] = useState("");
 
   const REPORT_REASONS = [
-    "Spam hoặc quảng cáo",
-    "Thông tin sai lệch",
-    "Nội dung không phù hợp",
-    "Khác",
+    t("report_reason_spam"),
+    t("report_reason_misinformation"),
+    t("report_reason_inappropriate"),
+    t("report_reason_other"),
   ];
 
   useEffect(() => {
@@ -108,7 +109,7 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      setError("Ảnh không được vượt quá 5MB");
+      setError(t("report_image_too_large"));
       return;
     }
     const reader = new FileReader();
@@ -122,14 +123,14 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
   };
 
   const getFinalReason = () => {
-    if (selectedReason === "Khác") return customReason.trim();
+    if (selectedReason === t("report_reason_other")) return customReason.trim();
     return selectedReason;
   };
 
   const handleSubmit = async () => {
     const reason = getFinalReason();
     if (!reason) {
-      setError("Vui lòng chọn hoặc nhập lý do báo cáo");
+      setError(t("report_error_no_reason"));
       return;
     }
     setIsSubmitting(true);
@@ -143,7 +144,7 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
       setError(
         err?.response?.data?.message ||
         err?.message ||
-        "Không thể gửi báo cáo, vui lòng thử lại"
+        t("report_error_submit_fail")
       );
     } finally {
       setIsSubmitting(false);
@@ -161,7 +162,7 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
             <div className="p-1.5 bg-orange-100 rounded-full">
               <Flag size={16} className="text-orange-500" />
             </div>
-            <h2 className="text-lg font-bold text-gray-900">Báo cáo bài viết</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t("report_modal_title")}</h2>
           </div>
           <button
             onClick={onClose}
@@ -178,15 +179,13 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Đã gửi báo cáo</h3>
-            <p className="text-gray-500 text-sm mb-6">
-              Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét và xử lý sớm nhất.
-            </p>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{t("report_success_title")}</h3>
+            <p className="text-gray-500 text-sm mb-6">{t("report_success_desc")}</p>
             <button
               onClick={onClose}
               className="px-6 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition text-sm"
             >
-              Đóng
+              {t("report_success_close")}
             </button>
           </div>
         ) : (
@@ -201,7 +200,7 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Lý do báo cáo
+                  {t("report_reason_label")}
                 </label>
                 <div className="space-y-2">
                   {REPORT_REASONS.map((reason) => (
@@ -211,7 +210,7 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                       onClick={() => {
                         setSelectedReason(reason);
                         setError("");
-                        if (reason !== "Khác") setCustomReason("");
+                        if (reason !== t("report_reason_other")) setCustomReason("");
                       }}
                       className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${selectedReason === reason
                         ? "border-orange-400 bg-orange-50 text-orange-700"
@@ -224,15 +223,15 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                 </div>
               </div>
 
-              {selectedReason === "Khác" && (
+              {selectedReason === t("report_reason_other") && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Mô tả chi tiết
+                    {t("report_custom_reason_label")}
                   </label>
                   <textarea
                     value={customReason}
                     onChange={(e) => { setCustomReason(e.target.value); setError(""); }}
-                    placeholder="Nhập lý do cụ thể..."
+                    placeholder={t("report_custom_reason_placeholder")}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none min-h-20"
                     maxLength={500}
                   />
@@ -243,8 +242,8 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
               {/* Image upload */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Ảnh minh chứng{" "}
-                  <span className="text-gray-400 font-normal">(tuỳ chọn)</span>
+                  {t("report_image_label")}{" "}
+                  <span className="text-gray-400 font-normal">({t("report_image_optional")})</span>
                 </label>
                 {!imagePreview ? (
                   <div
@@ -252,8 +251,8 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                     className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all"
                   >
                     <ImageIcon className="mx-auto text-gray-400 mb-2" size={26} />
-                    <p className="text-sm font-medium text-gray-600">Nhấn để tải ảnh lên</p>
-                    <p className="text-xs text-gray-400 mt-0.5">PNG, JPG tối đa 5MB</p>
+                    <p className="text-sm font-medium text-gray-600">{t("report_image_click")}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{t("report_image_hint")}</p>
                   </div>
                 ) : (
                   <div className="relative rounded-lg overflow-hidden border border-gray-200">
@@ -289,7 +288,7 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
               {error && (
                 <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                   <AlertCircle size={16} />
-                  <span>{error}</span>
+                  <span>{t("error_reason_min_length")}</span>
                 </div>
               )}
 
@@ -299,19 +298,19 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                   disabled={
                     isSubmitting ||
                     !selectedReason ||
-                    (selectedReason === "Khác" && !customReason.trim())
+                    (selectedReason === t("report_reason_other") && !customReason.trim())
                   }
                   className="w-full px-4 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-medium transition text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 size={16} className="animate-spin" />
-                      Đang gửi...
+                      {t("report_submitting")}
                     </>
                   ) : (
                     <>
                       <Flag size={16} />
-                      Gửi báo cáo
+                      {t("report_submit_btn")}
                     </>
                   )}
                 </button>
@@ -660,7 +659,7 @@ const FavoritePostCard = ({ post, onToggleFavorite, onEdit, onDeleteConfirm, onC
               <button
                 onClick={() => setIsReportModalOpen(true)}
                 className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-full transition-all"
-                title="Báo cáo bài viết"
+                title={t("report_btn_tooltip")}
               >
                 <Flag size={18} />
               </button>

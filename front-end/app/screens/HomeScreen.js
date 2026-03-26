@@ -341,7 +341,7 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                     {error ? (
                       <View style={reportStyles.errorRow}>
                         <Ionicons name="alert-circle" size={16} color="#ef4444" />
-                        <Text style={reportStyles.errorText}>{error}</Text>
+                        <Text style={reportStyles.errorText}>Lý do là bắt buộc và phải có ít nhất 10 ký tự.</Text>
                       </View>
                     ) : null}
 
