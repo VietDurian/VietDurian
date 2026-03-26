@@ -1,24 +1,34 @@
-'use client'
+﻿'use client'
 
 import { permissionAPI } from '@/lib/api'
 import React, { useEffect, useMemo, useState } from 'react'
-import { Search, Filter, Star, StarHalf, Trash2, Eye, EyeClosed } from 'lucide-react';
+import { Eye } from 'lucide-react'
 import PermissionRequestDetail from './PermissionRequestDetail'
+import { useLanguage } from '../../context/LanguageContext'
 
-// This page now renders real permission requests fetched from the API.
+const getStatusLabel = (value, t) => {
+    const status = String(value || 'pending').toLowerCase()
+    const map = {
+        pending: t('pending') || 'Pending',
+        approved: t('approved') || 'Approved',
+        rejected: t('rejected') || 'Rejected',
+    }
+    return map[status] || (t('pending') || 'Pending')
+}
 
 export default function PermissionPage() {
+    const { t, language } = useLanguage()
+    const isVi = language !== 'en'
+    const locale = language === 'en' ? 'en-US' : 'vi-VN'
     const [query, setQuery] = useState('')
-    const [lastSaved, setLastSaved] = useState(null)
     const [permission, setPermission] = useState([])
-    const [status, setStatus] = useState('all');
+    const [status, setStatus] = useState('all')
     const [showDetail, setShowDetail] = useState(false)
     const [selectedRequest, setSelectedRequest] = useState(null)
     const [isLoadingDetail, setIsLoadingDetail] = useState(false)
     const [page, setPage] = useState(1)
     const LIMIT = 10
     const [pagination, setPagination] = useState({ totalItems: 0, totalPages: 0, currentPage: 1, itemsPerPage: LIMIT })
-
 
     useEffect(() => {
         const timer = setTimeout(async () => {
@@ -74,18 +84,16 @@ export default function PermissionPage() {
                     itemsPerPage: LIMIT,
                 })
             } catch (error) {
-                console.error('Error searching permissions:', error)
+                console.error('Lỗi khi tìm kiếm yêu cầu quyền:', error)
             }
-        }, 400);
+        }, 400)
 
-        return () => clearTimeout(timer);
-    }, [query, status, page]);
+        return () => clearTimeout(timer)
+    }, [query, status, page])
 
-    // Reset to first page when filters/search change
     useEffect(() => {
         setPage(1)
     }, [query, status])
-
 
     const mappedPermissions = useMemo(() => {
         if (!Array.isArray(permission)) return []
@@ -96,15 +104,15 @@ export default function PermissionPage() {
             description: item.description,
             status: item?.verify_cccd,
             verify_cccd: item?.verify_cccd,
-            user_name: item.user?.full_name || 'Unknown User',
-            email: item.user?.email || 'No Email',
-            phone: item.user?.phone || 'No Phone',
+            user_name: item.user?.full_name || (isVi ? 'Người dùng chưa xác định' : 'Unknown user'),
+            email: item.user?.email || (isVi ? 'Chưa có email' : 'No email'),
+            phone: item.user?.phone || (isVi ? 'Chưa có số điện thoại' : 'No phone number'),
             avatar: item.user?.avatar || '',
-            role: item.user?.role || 'Unknown Role',
+            role: item.user?.role || (isVi ? 'Chưa xác định vai trò' : 'Unknown role'),
             created_at: item.created_at,
             updated_at: item.updated_at,
         }))
-    }, [permission])
+    }, [permission, isVi])
 
     const filteredPermissions = useMemo(() => {
         const data = Array.isArray(mappedPermissions) ? mappedPermissions : []
@@ -125,73 +133,27 @@ export default function PermissionPage() {
         }
     }
 
-    const renderDocuments = (doc) => {
-        if (!doc) return <span className="text-gray-400">No document</span>
-        if (Array.isArray(doc)) {
-            if (doc.length === 0) return <span className="text-gray-400">No document</span>
-            return (
-                <div className="flex flex-wrap gap-2">
-                    {doc.map((d, idx) => {
-                        // Handle both string and object formats
-                        const url = typeof d === 'string' ? d : d?.url
-                        const type = typeof d === 'object' ? d?.type : null
-                        const label = type ? {
-                            'cccd_front': 'CCCD-F',
-                            'cccd_back': 'CCCD-B',
-                            'certificate': 'Cert',
-                            'degree': 'Deg',
-                            'other': 'Other'
-                        }[type] || `Doc ${idx + 1}` : `Doc ${idx + 1}`
-
-                        return (
-                            <a
-                                key={idx}
-                                href={url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-[#1a4d2e] underline text-xs md:text-sm"
-                                title={type || 'Document'}
-                            >
-                                {label}
-                            </a>
-                        )
-                    })}
-                </div>
-            )
-        }
-        const url = typeof doc === 'string' ? doc : doc?.url
-        return (
-            <a href={url} target="_blank" rel="noreferrer" className="text-[#1a4d2e] underline">
-                View
-            </a>
-        )
-    }
-
-    // Khi update status, fetch lại danh sách (không đổi biến)
-    const handleRequestUpdated = async ({ id, status }) => {
-        setSelectedRequest((prev) => prev ? { ...prev, status, verify_cccd: status } : prev);
-        // Đóng popup detail
-        setShowDetail(false);
-        // Fetch lại danh sách permissions
+    const handleRequestUpdated = async () => {
+        setShowDetail(false)
         try {
             const params = {
                 page,
                 limit: LIMIT,
                 ...(status !== 'all' ? { status } : {}),
-            };
-            let res;
-            if (!query.trim()) {
-                res = await permissionAPI.getAllPermissions(params);
-            } else {
-                res = await permissionAPI.searchPermissions(query.trim(), params);
             }
+
+            const res = !query.trim()
+                ? await permissionAPI.getAllPermissions(params)
+                : await permissionAPI.searchPermissions(query.trim(), params)
+
             const listRaw = Array.isArray(res?.data)
                 ? res.data
                 : Array.isArray(res?.data?.data)
                     ? res.data.data
-                    : [];
-            setPermission(listRaw);
-            const pgn = res?.data?.pagination || res?.pagination || null;
+                    : []
+            setPermission(listRaw)
+
+            const pgn = res?.data?.pagination || res?.pagination || null
             setPagination(pgn ? {
                 totalItems: Number(pgn.totalItems ?? 0),
                 totalPages: Number(pgn.totalPages ?? 0),
@@ -202,22 +164,19 @@ export default function PermissionPage() {
                 totalPages: Math.max(1, Number(res?.data?.totalPages ?? Math.ceil(listRaw.length / LIMIT))),
                 currentPage: page,
                 itemsPerPage: LIMIT,
-            });
+            })
         } catch (error) {
-            console.error('Error refreshing permissions:', error);
+            console.error('Lỗi khi làm mới danh sách yêu cầu quyền:', error)
         }
     }
 
     const handleViewDetail = async (req) => {
-        setIsLoadingDetail(true);
-        setShowDetail(true);
+        setIsLoadingDetail(true)
+        setShowDetail(true)
         try {
-            // Call API để lấy chi tiết đầy đủ bao gồm proofs
             const res = await permissionAPI.getPermissionById(req.id)
             const detailData = res?.data?.data || res?.data
 
-
-            // Map lại dữ liệu để phù hợp với request object
             const fullRequest = {
                 id: detailData.id,
                 email: detailData.user_id?.email || req.email,
@@ -233,90 +192,70 @@ export default function PermissionPage() {
                 created_at: detailData.user_id?.created_at || detailData.created_at,
                 updated_at: detailData.user_id?.updated_at || detailData.updated_at,
             }
-            console.log("ddiidididididid", detailData.id)
             setSelectedRequest(fullRequest)
         } catch (error) {
-            console.error('Error fetching permission detail:', error)
+            console.error('Lỗi khi lấy chi tiết yêu cầu quyền:', error)
         } finally {
-            setIsLoadingDetail(false);
+            setIsLoadingDetail(false)
         }
     }
 
     return (
         <>
             <div className="p-4 md:p-8">
-                {/* Header */}
                 <div className="mb-6 md:mb-8 flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-[#1a4d2e] mb-2">Permission Requests</h1>
-                        <p className="text-sm md:text-base text-gray-600">Manage and review user role upgrade requests</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {/* <button
-                        onClick={resetChanges}
-                        className="px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50"
-                    >
-                        Reset
-                    </button> */}
-
+                        <h1 className="text-2xl md:text-3xl font-bold text-[#1a4d2e] mb-2">{isVi ? 'Yêu cầu quyền hạn' : 'Permission Requests'}</h1>
+                        <p className="text-sm md:text-base text-gray-600">{isVi ? 'Quản lý và duyệt yêu cầu nâng quyền của người dùng' : 'Manage and review user role upgrade requests'}</p>
                     </div>
                 </div>
 
-                {/* Search */}
                 <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100 mb-6">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Search permissions</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">{isVi ? 'Tìm kiếm yêu cầu quyền' : 'Search permission requests'}</label>
                             <input
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                placeholder="Search by user, email"
+                                placeholder={isVi ? 'Tìm theo người dùng, email' : 'Search by user, email'}
                                 className="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
                             />
                         </div>
-                        {/* Filter by status */}
                         <div className="sm:col-span-1">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Status
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('status') || 'Status'}</label>
                             <select
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value)}
-                                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 bg-white
-      focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
+                                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
                             >
-                                <option value="all">All</option>
-                                <option value="pending">Pending</option>
-                                <option value="approved">Approved</option>
-                                <option value="rejected">Rejected</option>
+                                <option value="all">{t('all') || 'All'}</option>
+                                <option value="pending">{t('pending') || 'Pending'}</option>
+                                <option value="approved">{t('approved') || 'Approved'}</option>
+                                <option value="rejected">{t('rejected') || 'Rejected'}</option>
                             </select>
                         </div>
-
                     </div>
-
                 </div>
 
-
-                {/* Permissions Table */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
                     <div className="min-w-[700px] md:min-w-0">
                         <table className="w-full min-w-[700px] md:min-w-0 text-sm">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">User</th>
-                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Phone</th>
-                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Role</th>
-                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Description</th>
-                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Status</th>
-                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Created</th>
-                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Actions</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('user') || 'User'}</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('phone') || 'Phone'}</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('role') || 'Role'}</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('description') || 'Description'}</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('status') || 'Status'}</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('created_at') || 'Created'}</th>
+                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('actions') || 'Actions'}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {filteredPermissions.length === 0 ? (
                                     <tr>
                                         <td className="px-3 py-6 md:px-6 text-center text-gray-500" colSpan={9}>
-                                            No permission requests match your filters.
+                                            {isVi ? 'Không có yêu cầu quyền nào phù hợp bộ lọc.' : 'No permission requests match your filters.'}
                                         </td>
                                     </tr>
                                 ) : (
@@ -343,17 +282,17 @@ export default function PermissionPage() {
                                                             : 'bg-yellow-100 text-yellow-700'
                                                         }`}
                                                 >
-                                                    {req.status || 'pending'}
+                                                    {getStatusLabel(req.status, t)}
                                                 </span>
                                             </td>
                                             <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-gray-700">
-                                                {req.created_at ? new Date(req.created_at).toLocaleString() : '—'}
+                                                {req.created_at ? new Date(req.created_at).toLocaleString(locale) : '—'}
                                             </td>
                                             <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-gray-700">
-                                                <Eye className='w-4 h-4 cursor-pointer hover:text-[#1a4d2e] transition'
+                                                <Eye
+                                                    className='w-4 h-4 cursor-pointer hover:text-[#1a4d2e] transition'
                                                     onClick={() => handleViewDetail(req)}
-                                                >
-                                                </Eye>
+                                                />
                                             </td>
                                         </tr>
                                     ))
@@ -363,7 +302,6 @@ export default function PermissionPage() {
                     </div>
                 </div>
 
-                {/* Results Info & Pagination Controls (aligned with ProductPage) */}
                 <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div className="text-sm text-gray-600 text-center md:text-left">
                         {(() => {
@@ -372,7 +310,7 @@ export default function PermissionPage() {
                             const cur = Number(page ?? 1)
                             const start = total === 0 ? 0 : (cur - 1) * perPage + 1
                             const end = Math.min(cur * perPage, total)
-                            return `Showing ${start}–${end} of ${total} requests`
+                            return `${t('showing_range') || 'Showing'} ${start}-${end} ${t('of') || 'of'} ${total} ${isVi ? 'yêu cầu' : 'requests'}`
                         })()}
                     </div>
 
@@ -382,7 +320,7 @@ export default function PermissionPage() {
                             disabled={page <= 1}
                             className={`px-3 py-1.5 text-sm rounded-md border ${page <= 1 ? 'text-gray-400 border-gray-200 bg-white cursor-not-allowed' : 'text-[#1a4d2e] border-gray-300 hover:bg-gray-50'}`}
                         >
-                            Previous
+                            {t('previous') || 'Previous'}
                         </button>
 
                         {Array.from({ length: Number(pagination.totalPages ?? 0) || effectiveTotalPages }, (_, i) => i + 1).map((n) => (
@@ -400,11 +338,12 @@ export default function PermissionPage() {
                             disabled={page >= (Number(pagination.totalPages ?? 0) || effectiveTotalPages)}
                             className={`px-3 py-1.5 text-sm rounded-md border ${page >= (Number(pagination.totalPages ?? 0) || effectiveTotalPages) ? 'text-gray-400 border-gray-200 bg-white cursor-not-allowed' : 'text-[#1a4d2e] border-gray-300 hover:bg-gray-50'}`}
                         >
-                            Next
+                            {t('next') || 'Next'}
                         </button>
                     </div>
                 </div>
             </div>
+
             {showDetail && (
                 <div className="fixed inset-0 z-50">
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" onClick={() => setShowDetail(false)} />
@@ -423,4 +362,3 @@ export default function PermissionPage() {
         </>
     )
 }
-
