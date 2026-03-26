@@ -53,7 +53,6 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
     "Spam hoặc quảng cáo",
     "Thông tin sai lệch",
     "Nội dung không phù hợp",
-    "Lừa đảo",
     "Khác",
   ];
 
