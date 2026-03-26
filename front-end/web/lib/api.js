@@ -679,6 +679,20 @@ export async function getAllReport(params) {
   }
 }
 
+// Create report post
+export async function createReport(data) {
+  try {
+    const response = await apiClient.post("/report", data);
+    return response?.data?.data || response?.data;
+  } catch (error) {
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to create report";
+    throw new Error(message);
+  }
+}
+
 // Update report
 export async function updateReport(reportId) {
   try {
