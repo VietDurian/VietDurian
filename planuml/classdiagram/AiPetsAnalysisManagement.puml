@@ -1,0 +1,144 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
+
+package "AiPetsAnalysisModule" {
+
+    ' --- ROUTE & MIDDLEWARE (Predict AI Analysis only) ---
+    class AiRoute {
+        +predict(req, res): void
+    }
+
+    class UploadMiddleware {
+        +single(fieldName): Middleware
+        +memoryStorage(): Storage
+        +limits.fileSize: number
+    }
+
+    ' --- CONTROLLER (Predict AI Analysis only) ---
+    class AiController {
+        -aiService: AiService
+        -DISEASE_INFO: Map<string, DiseaseInfo>
+        +predict(req, res, next): Promise<void>
+        +localizeAiResult(aiResult): AIPredictionLocalized
+    }
+
+    ' --- SERVICE (Guard + Predict) ---
+    class AiService {
+        -AI_SERVICE_URL: string
+        -GEMINI_API_KEY: string
+        -GEMINI_MODEL: string
+        -GEMINI_FALLBACK_MODELS: string[]
+        +guardDurianImage(params): Promise<AIGuardResult>
+        +predictDisease(params): Promise<AIPredictionRaw>
+    }
+
+    ' --- INTEGRATION ACCESS ---
+    class GeminiGuardAPI {
+        +listGeminiModels(): GeminiModel[]
+        +requestGeminiGuard(modelName, base64, mimetype): GuardProviderResponse
+    }
+
+    class PythonAIServiceAPI {
+        +predict(image): AIPredictionRaw
+    }
+
+    class ExternalAIProviders {
+    }
+
+    ' --- ENTITIES (FULL DATA FIELDS) ---
+    class AIImageUpload {
+        +field_name: string
+        +original_name: string
+        +mimetype: string
+        +size_bytes: number
+        +buffer: binary
+    }
+
+    class DiseaseInfo {
+        +vi_name: string
+        +solutions: string[]
+    }
+
+    class AIGuardResult {
+        +provider: string
+        +is_durian_related: boolean
+        +confidence: number
+        +reason: string
+        +model: string
+        +bypassed: boolean
+        +retry_after_seconds: number
+    }
+
+    class TopKPrediction {
+        +class_name: string
+        +probability: number
+    }
+
+    class LocalizedTopKPrediction {
+        +class_name_en: string
+        +class_name_vi: string
+        +probability: number
+    }
+
+    class AIPredictionRaw {
+        +predicted_class: string
+        +confidence: number
+        +top_k: TopKPrediction[]
+        +probabilities: Map<string, number>
+        +model: string
+        +image_size: number[]
+    }
+
+    class AIPredictionLocalized {
+        +predicted_class_en: string
+        +predicted_class_vi: string
+        +confidence: number
+        +solutions: string[]
+        +top_k: LocalizedTopKPrediction[]
+        +probabilities: Map<string, number>
+        +model: string
+        +image_size: number[]
+        +guard: AIGuardResult
+    }
+
+    class AiPredictResponse {
+        +code: number
+        +success: boolean
+        +message: string
+        +data: AIPredictionLocalized
+    }
+}
+
+' --- RELATIONSHIPS ---
+
+' === DEPENDENCY ===
+AiRoute ..> UploadMiddleware : Dependency
+AiRoute ..> AiController : Dependency
+AiController ..> AiService : Dependency
+AiController ..> DiseaseInfo : Dependency
+AiController ..> AiPredictResponse : Dependency
+AiController ..> AIPredictionLocalized : Dependency
+AiService ..> GeminiGuardAPI : Dependency
+AiService ..> PythonAIServiceAPI : Dependency
+AiService ..> AIGuardResult : Dependency
+AiService ..> AIPredictionRaw : Dependency
+
+' === DEPENDENCY: Transformation ===
+AIPredictionLocalized ..> AIPredictionRaw : transforms
+AIPredictionLocalized ..> AIGuardResult : includes
+
+' === ASSOCIATION ===
+AIPredictionRaw "1" --> "many   " TopKPrediction
+AIPredictionLocalized "1" --> "many   " LocalizedTopKPrediction
+
+' === INTEGRATION ===
+GeminiGuardAPI --> ExternalAIProviders : calls Gemini API
+PythonAIServiceAPI --> ExternalAIProviders : calls Python AI /predict
+
+@enduml
