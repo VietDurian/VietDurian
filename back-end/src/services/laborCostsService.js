@@ -2,8 +2,6 @@ import { LaborCostsModel } from '@/model/laborCostsModel';
 import { SeasonDiaryModel } from '@/model/seasonDiaryModel';
 import createError from 'http-errors';
 
-const toObjectIdString = (value) => value?.toString();
-
 const parsePage = (page) => {
 	const parsed = Number.parseInt(page, 10);
 	return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
@@ -137,7 +135,7 @@ const sanitizePayload = (payload) => {
 	return sanitized;
 };
 
-const ensureSeasonDiaryAccess = async ({ seasonDiaryId, userId, role }) => {
+const ensureSeasonDiaryExists = async ({ seasonDiaryId }) => {
 	if (!seasonDiaryId) {
 		return;
 	}
@@ -146,24 +144,17 @@ const ensureSeasonDiaryAccess = async ({ seasonDiaryId, userId, role }) => {
 	if (!diary) {
 		throw createError(404, 'Season diary not found');
 	}
-
-	const isOwner = toObjectIdString(diary.user_id) === toObjectIdString(userId);
-	if (!isOwner && role !== 'admin') {
-		throw createError(403, 'You do not have permission to access this season diary');
-	}
 };
 
-const viewLaborCostsList = async ({ page, limit, seasonDiaryId, userId, role }) => {
+const viewLaborCostsList = async ({ page, limit, seasonDiaryId }) => {
 	const pageNumber = parsePage(page);
 	const limitNumber = parseLimit(limit);
 	const skip = (pageNumber - 1) * limitNumber;
 	const query = { season_diary_id: { $ne: null } };
 
 	if (seasonDiaryId) {
-		await ensureSeasonDiaryAccess({ seasonDiaryId, userId, role });
+		await ensureSeasonDiaryExists({ seasonDiaryId });
 		query.season_diary_id = seasonDiaryId;
-	} else if (role !== 'admin') {
-		query.created_by = userId;
 	}
 
 	const [items, total] = await Promise.all([
@@ -191,16 +182,12 @@ const viewLaborCostsList = async ({ page, limit, seasonDiaryId, userId, role }) 
 	};
 };
 
-const createLaborCosts = async ({ userId, role, data }) => {
+const createLaborCosts = async ({ userId, data }) => {
 	if (!data?.season_diary_id) {
 		throw createError(400, 'season_diary_id is required');
 	}
 
-	await ensureSeasonDiaryAccess({
-		seasonDiaryId: data.season_diary_id,
-		userId,
-		role,
-	});
+	await ensureSeasonDiaryExists({ seasonDiaryId: data.season_diary_id });
 
 	const payload = {
 		...sanitizePayload(data),
@@ -211,20 +198,14 @@ const createLaborCosts = async ({ userId, role, data }) => {
 	return created;
 };
 
-const updateLaborCosts = async ({ laborCostId, userId, role, data }) => {
+const updateLaborCosts = async ({ laborCostId, data }) => {
 	const existing = await LaborCostsModel.findById(laborCostId);
 	if (!existing) {
 		throw createError(404, 'Labor costs log not found');
 	}
 
-	const isCreator =
-		toObjectIdString(existing.created_by) === toObjectIdString(userId) || role === 'admin';
-	if (!isCreator) {
-		throw createError(403, 'You do not have permission to update this log');
-	}
-
 	const targetSeasonDiaryId = data?.season_diary_id || existing.season_diary_id;
-	await ensureSeasonDiaryAccess({ seasonDiaryId: targetSeasonDiaryId, userId, role });
+	await ensureSeasonDiaryExists({ seasonDiaryId: targetSeasonDiaryId });
 
 	const payload = sanitizePayload(data);
 	delete payload.created_by;
@@ -234,19 +215,13 @@ const updateLaborCosts = async ({ laborCostId, userId, role, data }) => {
 	return updated;
 };
 
-const deleteLaborCosts = async ({ laborCostId, userId, role }) => {
+const deleteLaborCosts = async ({ laborCostId }) => {
 	const existing = await LaborCostsModel.findById(laborCostId)
 		.select('_id created_by')
 		.lean();
 
 	if (!existing) {
 		throw createError(404, 'Labor costs log not found');
-	}
-
-	const isCreator =
-		toObjectIdString(existing.created_by) === toObjectIdString(userId) || role === 'admin';
-	if (!isCreator) {
-		throw createError(403, 'You do not have permission to delete this log');
 	}
 
 	await LaborCostsModel.findByIdAndDelete(laborCostId);

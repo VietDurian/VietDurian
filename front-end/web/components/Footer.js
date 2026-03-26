@@ -46,8 +46,8 @@ export default function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1.5fr_1.2fr] gap-10">
 
                     {/* Col 1: Brand */}
-                    <div>
-                        <div className="relative w-36 h-16 bg-white/20 rounded-lg ring-1 ring-white/30 mb-4">
+                    <div className="mt-[-15px]">
+                        <div className="relative w-36 h-16 mb-4">
                             <Image src="/images/VietDurian-logo.png" alt="VietDurian" fill className="object-contain" />
                         </div>
                         <p className="text-white/80 text-sm leading-relaxed mb-5">{t('footer_desc')}</p>

@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import { usersAPI } from "../../../../../lib/api";
-import { useLanguage } from "../../context/LanguageContext";
-import Image from "next/image";
+import { useEffect, useMemo, useState } from 'react';
+import { usersAPI } from '../../../../../lib/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 export function UserDetail({ userId, isOpen, onClose }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,117 +11,134 @@ export function UserDetail({ userId, isOpen, onClose }) {
   useEffect(() => {
     if (!userId || !isOpen) return;
 
-    usersAPI
-      .getUserById(userId)
-      .then((data) => {
+    let cancelled = false;
+
+    const loadUserDetail = async () => {
+      await Promise.resolve();
+      if (cancelled) return;
+
+      setLoading(true);
+      setError(null);
+      setUser(null);
+
+      try {
+        const data = await usersAPI.getUserById(userId);
         const detail = data?.data || data;
-        setUser(detail);
-      })
-      .catch((err) => {
-        console.error("Error fetching user detail:", err);
-        setError(
-          t("error_fetching_user_detail") || "Error fetching user detail",
-        );
-      })
-      .finally(() => setLoading(false));
+        if (!cancelled) {
+          setUser(detail);
+        }
+      } catch (err) {
+        console.error('Error fetching user detail:', err);
+        if (!cancelled) {
+          setError(t('error_fetching_user_detail') || 'Error fetching user detail');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadUserDetail();
+
+    return () => {
+      cancelled = true;
+    };
   }, [userId, isOpen, t]);
 
-  const fullName = user?.full_name || user?.name || "No Name";
-  const role = user?.role ? t(user.role) || user.role : "";
-  const email = user?.email || "";
-  const phone = user?.phone || "";
-  const location = user?.location || user?.address || "";
-  const avatar = user?.avatar || "";
+  const fullName = user?.full_name || user?.name || t('user_detail_no_name') || 'No Name';
+  const role = user?.role ? t(user.role) || user.role : '';
+  const email = user?.email || '';
+  const phone = user?.phone || '';
+  const location = user?.location || user?.address || '';
+  const avatar = user?.avatar || '';
+  const locale = language === 'en' ? 'en-US' : 'vi-VN';
   const createdDate =
     user?.created_at || user?.createdAt
-      ? new Date(user.created_at || user.createdAt).toLocaleDateString("vi-VN")
-      : "";
+      ? new Date(user.created_at || user.createdAt).toLocaleDateString(locale)
+      : '';
 
   const statusText = user?.is_banned
-    ? t("blocked") || "Blocked"
-    : t("active") || "Active";
+    ? t('blocked') || 'Blocked'
+    : t('active') || 'Active';
 
   const statusClass = user?.is_banned
-    ? "bg-red-100 text-red-700 border border-red-200"
-    : "bg-green-100 text-green-700 border border-green-200";
+    ? 'bg-red-100 text-red-700 border border-red-200'
+    : 'bg-emerald-100 text-emerald-700 border border-emerald-200';
 
   const profileFields = useMemo(() => {
     if (!user) return [];
 
     const items = [
       {
-        key: "email",
-        label: t("email") || "Email",
+        key: 'email',
+        label: t('email') || 'Email',
         value: email,
       },
       {
-        key: "phone",
-        label: t("phone") || "Phone",
+        key: 'phone',
+        label: t('phone') || 'Phone',
         value: phone,
       },
       {
-        key: "role",
-        label: t("role") || "Role",
+        key: 'role',
+        label: t('role') || 'Role',
         value: role,
       },
       {
-        key: "status",
-        label: t("status") || "Status",
+        key: 'status',
+        label: t('status') || 'Status',
         value: statusText,
         badge: true,
         badgeClass: statusClass,
       },
       {
-        key: "location",
-        label: t("location") || "Location",
+        key: 'location',
+        label: t('location') || 'Location',
         value: location,
       },
       {
-        key: "joinDate",
-        label: t("join_date") || "Join Date",
+        key: 'joinDate',
+        label: t('join_date') || 'Join Date',
         value: createdDate,
       },
     ];
 
     return items.filter((item) => {
-      if (item.key === "status") return true;
-      return item.value && String(item.value).trim() !== "";
+      if (item.key === 'status') return true;
+      return item.value && String(item.value).trim() !== '';
     });
-  }, [
-    user,
-    t,
-    email,
-    phone,
-    role,
-    statusText,
-    statusClass,
-    location,
-    createdDate,
-  ]);
+  }, [user, t, email, phone, role, statusText, statusClass, location, createdDate]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] px-4 py-6">
-      <div className="relative w-full max-w-sm sm:max-w-md overflow-hidden rounded-3xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] border border-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 backdrop-blur-[2px] px-4 py-6">
+      <div className="relative w-full max-w-5xl overflow-hidden rounded-[28px] bg-white shadow-[0_25px_80px_rgba(0,0,0,0.14)] border border-gray-100">
         <button
-          className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow-sm backdrop-blur hover:bg-white"
+          className="absolute right-4 top-4 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-md backdrop-blur hover:bg-white"
           onClick={onClose}
         >
           <span className="text-xl leading-none">&times;</span>
         </button>
 
         {loading ? (
-          <div className="p-8">
-            <div className="h-36 rounded-[20px] bg-linear-to-r from-sky-100 via-fuchsia-100 to-rose-100 animate-pulse" />
-            <div className="-mt-10 px-4">
-              <div className="h-20 w-20 rounded-full bg-gray-200 border-4 border-white animate-pulse" />
-              <div className="mt-4 h-6 w-40 rounded bg-gray-200 animate-pulse" />
-              <div className="mt-3 h-4 w-28 rounded bg-gray-100 animate-pulse" />
-              <div className="mt-6 space-y-3">
-                <div className="h-16 rounded-2xl bg-gray-100 animate-pulse" />
-                <div className="h-16 rounded-2xl bg-gray-100 animate-pulse" />
-                <div className="h-16 rounded-2xl bg-gray-100 animate-pulse" />
+          <div className="grid grid-cols-1 lg:grid-cols-[340px_minmax(0,1fr)] min-h-[560px]">
+            <div className="bg-gradient-to-br from-[#eef9f1] via-[#f7fcf8] to-[#eaf6ee] p-6 lg:p-8">
+              <div className="flex flex-col items-center lg:items-start">
+                <div className="h-28 w-28 rounded-full bg-white animate-pulse border border-gray-200" />
+                <div className="mt-5 h-7 w-40 rounded bg-gray-200 animate-pulse" />
+                <div className="mt-3 h-5 w-28 rounded bg-gray-100 animate-pulse" />
+                <div className="mt-5 h-8 w-24 rounded-full bg-gray-200 animate-pulse" />
+              </div>
+            </div>
+
+            <div className="p-6 lg:p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="h-24 rounded-2xl bg-gray-100 animate-pulse" />
+                <div className="h-24 rounded-2xl bg-gray-100 animate-pulse" />
+                <div className="h-24 rounded-2xl bg-gray-100 animate-pulse" />
+                <div className="h-24 rounded-2xl bg-gray-100 animate-pulse" />
               </div>
             </div>
           </div>
@@ -133,52 +149,105 @@ export function UserDetail({ userId, isOpen, onClose }) {
             </div>
           </div>
         ) : user ? (
-          <>
-            <div className="h-36 w-full bg-linear-to-r from-sky-200 via-fuchsia-200 to-rose-300" />
+          <div className="grid grid-cols-1 lg:grid-cols-[340px_minmax(0,1fr)] min-h-[560px]">
+            {/* Left panel */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#eef9f1] via-[#f8fdf9] to-[#edf7f0] px-6 py-8 text-gray-800 lg:px-8 border-r border-[#e6f0e8]">
+              <div className="absolute inset-0 opacity-70">
+                <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-[#dff1e5]" />
+                <div className="absolute bottom-8 -left-8 h-28 w-28 rounded-full bg-[#e9f7ed]" />
+              </div>
 
-            <div className="relative px-5 pb-5">
-              <div className="-mt-12 flex items-end gap-4">
-                <div className="shrink-0 rounded-full border-4 border-white bg-white shadow-md">
+              <div className="relative flex h-full flex-col items-center text-center lg:items-start lg:text-left">
+                <div className="rounded-full border-4 border-white bg-white shadow-md">
                   {avatar ? (
-                    <Image
+                    <img
                       src={avatar}
                       alt={fullName}
-                      width={96}
-                      height={96}
-                      className="h-24 w-24 rounded-full object-cover"
+                      className="h-28 w-28 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-linear-to-br from-[#1a4d2e] to-[#2d7a4f] text-3xl font-bold text-white">
-                      {fullName?.charAt(0)?.toUpperCase() || "?"}
+                    <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-[#7bbf8e] to-[#4f9b68] text-4xl font-bold text-white">
+                      {fullName?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                   )}
                 </div>
-              </div>
 
-              <div className="mt-4">
-                <h2 className="text-[28px] leading-tight font-bold text-gray-900 wrap-break-word">
+                <h2 className="mt-5 text-2xl font-bold leading-tight break-words text-[#183a24]">
                   {fullName}
                 </h2>
 
                 {role ? (
-                  <p className="mt-1 text-sm font-medium text-[#6b6ee8] wrap-break-word">
+                  <p className="mt-2 text-sm font-medium text-[#4f7d5f] break-words">
                     {role}
                   </p>
                 ) : null}
+
+                <div className="mt-5">
+                  <span
+                    className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-semibold ${statusClass}`}
+                  >
+                    {statusText}
+                  </span>
+                </div>
+
+                <div className="mt-8 w-full space-y-4">
+                  <div className="rounded-2xl border border-[#dcebdd] bg-white/80 p-4 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6a8d75]">
+                      {t('user_detail_account_overview') || 'Account Overview'}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-gray-600">
+                      {t('user_detail_account_overview_desc') ||
+                        'This panel provides a quick overview of the selected user account, including profile status and essential information.'}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl border border-[#dcebdd] bg-white/80 p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#6a8d75]">
+                        {t('user_detail_member_since') || 'Member Since'}
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-gray-800 break-words">
+                        {createdDate || t('user_detail_updating') || 'Updating...'}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-[#dcebdd] bg-white/80 p-4 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#6a8d75]">
+                        {t('contact') || 'Contact'}
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-gray-800 break-words">
+                        {phone || email || t('user_detail_no_data') || 'No data'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right panel */}
+            <div className="bg-[#fcfcfd] px-6 py-8 lg:px-8">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  {t('user_detail_personal_information') || 'Personal Information'}
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {t('user_detail_review_description') ||
+                    'Review detailed account information of the selected user.'}
+                </p>
               </div>
 
               {profileFields.length > 0 ? (
-                <div className="mt-5 space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {profileFields.map((item) => (
                     <div
                       key={item.key}
-                      className="rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm"
+                      className="rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm transition hover:shadow-md"
                     >
                       <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
                         {item.label}
                       </div>
 
-                      <div className="mt-1">
+                      <div className="mt-2 min-h-[28px]">
                         {item.badge ? (
                           <span
                             className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${item.badgeClass}`}
@@ -186,7 +255,7 @@ export function UserDetail({ userId, isOpen, onClose }) {
                             {item.value}
                           </span>
                         ) : (
-                          <div className="text-[15px] font-medium text-gray-800 wrap-break-word">
+                          <div className="text-[15px] font-medium text-gray-800 break-words">
                             {item.value}
                           </div>
                         )}
@@ -194,22 +263,21 @@ export function UserDetail({ userId, isOpen, onClose }) {
                     </div>
                   ))}
                 </div>
-              ) : null}
+              ) : (
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-gray-500">
+                  {t('user_detail_no_user_data') || 'No user data.'}
+                </div>
+              )}
 
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={onClose}
-                  className="rounded-xl bg-[#1a4d2e] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#143c24]"
-                >
-                  {t("close") || "Close"}
-                </button>
+              <div className="mt-8 flex justify-end">
+
               </div>
             </div>
-          </>
+          </div>
         ) : (
           <div className="p-6">
             <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-gray-500">
-              {t("no_user_data") || "No user data."}
+              {t('user_detail_no_user_data') || 'No user data.'}
             </div>
           </div>
         )}

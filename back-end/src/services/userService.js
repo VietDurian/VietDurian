@@ -74,11 +74,52 @@ const searchUsers = async (query) => {
   return allMatches.slice(0, 10);
 };
 
-const filterUsers = async ({ role, is_banned }) => {
+const toPositiveInt = (value) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+const filterUsers = async ({ role, is_banned, keyword, page, limit, excludeUserId }) => {
   const filter = {};
   if (role) filter.role = role;
   if (is_banned !== undefined) filter.is_banned = is_banned;
-  return await User.find(filter).select("-password");
+  if (excludeUserId) filter._id = { $ne: excludeUserId };
+
+  const normalizedKeyword = (keyword || "").trim();
+  if (normalizedKeyword) {
+    filter.$or = [
+      { full_name: { $regex: normalizedKeyword, $options: "i" } },
+      { email: { $regex: normalizedKeyword, $options: "i" } },
+    ];
+  }
+
+  const pageNumber = toPositiveInt(page);
+  const limitNumber = toPositiveInt(limit);
+
+  // Keep backward compatibility for old callers: without page/limit return full list.
+  if (!pageNumber || !limitNumber) {
+    return await User.find(filter).sort({ createdAt: -1 }).select("-password");
+  }
+
+  const skip = (pageNumber - 1) * limitNumber;
+  const [users, totalItems] = await Promise.all([
+    User.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNumber)
+      .select("-password"),
+    User.countDocuments(filter),
+  ]);
+
+  return {
+    data: users,
+    pagination: {
+      totalItems,
+      totalPages: Math.max(1, Math.ceil(totalItems / limitNumber)),
+      currentPage: pageNumber,
+      itemsPerPage: limitNumber,
+    },
+  };
 };
 
 const sortUsers = async ({ sortBy = "createdAt", order = "desc" }) => {
