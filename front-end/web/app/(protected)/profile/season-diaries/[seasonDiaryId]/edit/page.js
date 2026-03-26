@@ -13,6 +13,7 @@ import {
   Layers,
 } from "lucide-react";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
+import { useTypeProductStore } from "@/store/useTypeProduct";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
@@ -22,13 +23,65 @@ const LocationPickerMap = dynamic(
   { ssr: false },
 );
 
-const CROP_VARIETIES = [
-  "Ri6",
-  "Monthong",
-  "Musang King",
-  "Dona",
-  "Black Thorn",
-];
+const PROVINCE_CODES = new Set([
+  "AG",
+  "BL",
+  "BK",
+  "BG",
+  "BN",
+  "BR",
+  "BD",
+  "BP",
+  "BT",
+  "CM",
+  "CT",
+  "CB",
+  "DN",
+  "DL",
+  "DK",
+  "DB",
+  "DT",
+  "GL",
+  "HG",
+  "HN",
+  "HA",
+  "HT",
+  "HD",
+  "HP",
+  "HB",
+  "HU",
+  "HY",
+  "KH",
+  "KG",
+  "KT",
+  "LC",
+  "LD",
+  "LS",
+  "LA",
+  "ND",
+  "NA",
+  "NB",
+  "NT",
+  "PT",
+  "PY",
+  "QB",
+  "QN",
+  "QG",
+  "QT",
+  "ST",
+  "SL",
+  "TN",
+  "TB",
+  "TH",
+  "TT",
+  "TG",
+  "TV",
+  "TQ",
+  "VL",
+  "VP",
+  "YB",
+  "SG",
+]);
 
 const INITIAL_FORM = {
   garden_name: "",
@@ -115,10 +168,39 @@ export default function EditSeasonDiary() {
     updateSeasonDiary,
     isSeasonDiaryUpdating,
   } = useSeasonDiaryStore();
+  const { types, fetchTypes, isTypesLoading } = useTypeProductStore();
 
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [selectedVariety, setSelectedVariety] = useState("");
   const [memberInput, setMemberInput] = useState("");
+
+  const cropVarieties = Array.from(
+    new Set(
+      (types || [])
+        .map((type) => type?.name?.trim())
+        .filter((name) => typeof name === "string" && name.length > 0),
+    ),
+  );
+
+  const validatePlantingAreaCode = (code) => {
+    if (!code) return null;
+    const match = code.match(/^VN-([A-Z]{2})OR-([0-5]\d{3})$/);
+    if (!match) return t("create_code_err_format");
+    const [, province, num] = match;
+    if (!PROVINCE_CODES.has(province)) {
+      return t("create_code_err_province").replace("%s", province);
+    }
+    if (num === "0000") return t("create_code_err_zero");
+    return null;
+  };
+
+  const plantingAreaCodeError = validatePlantingAreaCode(
+    formData.planting_area_code,
+  );
+
+  useEffect(() => {
+    fetchTypes();
+  }, [fetchTypes]);
 
   useEffect(() => {
     if (!seasonDiaryId) return;
@@ -176,6 +258,7 @@ export default function EditSeasonDiary() {
     !formData.latitude ||
     !formData.longitude ||
     !formData.planting_area_code.trim() ||
+    !!plantingAreaCodeError ||
     !formData.farmer_code.trim() ||
     formData.crop_variety.length === 0 ||
     !formData.row_bed_count.toString().trim() ||
@@ -342,7 +425,7 @@ export default function EditSeasonDiary() {
               >
                 {t("edit_season_planting_code_label")}
               </FieldLabel>
-              <Input
+              <input
                 id="planting_area_code"
                 name="planting_area_code"
                 value={formData.planting_area_code}
@@ -353,7 +436,32 @@ export default function EditSeasonDiary() {
                   }))
                 }
                 placeholder={t("edit_season_planting_code_placeholder")}
+                maxLength={13}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 outline-none transition-colors text-sm
+      ${
+        plantingAreaCodeError && formData.planting_area_code
+          ? "border-red-400 focus:ring-red-400 focus:border-red-400"
+          : "border-gray-300 focus:ring-emerald-500 focus:border-emerald-500"
+      }`}
               />
+              <p className="text-xs text-gray-400 mt-1">
+                {t("create_planting_code_format")}{" "}
+                <span>{t("create_planting_code_format_desc")}</span>
+                &nbsp;·&nbsp;{t("create_planting_code_example")}{" "}
+                <span>{t("create_planting_code_example_val")}</span>
+              </p>
+              {plantingAreaCodeError && formData.planting_area_code && (
+                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                  <X className="w-3 h-3" />
+                  {plantingAreaCodeError}
+                </p>
+              )}
+              {!plantingAreaCodeError && formData.planting_area_code && (
+                <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
+                  <Check className="w-3 h-3" />
+                  {t("create_planting_code_valid")}
+                </p>
+              )}
             </div>
 
             <div>
@@ -421,17 +529,21 @@ export default function EditSeasonDiary() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors text-sm"
               >
                 <option value="">
-                  {formData.crop_variety.length >= 5
-                    ? t("edit_season_variety_max")
-                    : t("edit_season_variety_placeholder")}
+                  {isTypesLoading
+                    ? t("create_variety_loading")
+                    : formData.crop_variety.length >= 5
+                      ? t("edit_season_variety_max")
+                      : cropVarieties.length === 0
+                        ? t("create_variety_empty")
+                        : t("edit_season_variety_placeholder")}
                 </option>
-                {CROP_VARIETIES.filter(
-                  (v) => !formData.crop_variety.includes(v),
-                ).map((v) => (
-                  <option key={v} value={v}>
-                    {v}
-                  </option>
-                ))}
+                {cropVarieties
+                  .filter((v) => !formData.crop_variety.includes(v))
+                  .map((v) => (
+                    <option key={v} value={v}>
+                      {v}
+                    </option>
+                  ))}
               </select>
               {formData.crop_variety.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
