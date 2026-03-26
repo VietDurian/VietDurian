@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { usersAPI } from '../../../../../lib/api';
-import { useLanguage } from '../../context/LanguageContext';
+import { useEffect, useMemo, useState } from "react";
+import { usersAPI } from "../../../../../lib/api";
+import { useLanguage } from "../../context/LanguageContext";
+import Image from "next/image";
 
 export function UserDetail({ userId, isOpen, onClose }) {
   const { t, language } = useLanguage();
@@ -28,9 +29,11 @@ export function UserDetail({ userId, isOpen, onClose }) {
           setUser(detail);
         }
       } catch (err) {
-        console.error('Error fetching user detail:', err);
+        console.error("Error fetching user detail:", err);
         if (!cancelled) {
-          setError(t('error_fetching_user_detail') || 'Error fetching user detail');
+          setError(
+            t("error_fetching_user_detail") || "Error fetching user detail",
+          );
         }
       } finally {
         if (!cancelled) {
@@ -46,69 +49,80 @@ export function UserDetail({ userId, isOpen, onClose }) {
     };
   }, [userId, isOpen, t]);
 
-  const fullName = user?.full_name || user?.name || t('user_detail_no_name') || 'No Name';
-  const role = user?.role ? t(user.role) || user.role : '';
-  const email = user?.email || '';
-  const phone = user?.phone || '';
-  const location = user?.location || user?.address || '';
-  const avatar = user?.avatar || '';
-  const locale = language === 'en' ? 'en-US' : 'vi-VN';
+  const fullName =
+    user?.full_name || user?.name || t("user_detail_no_name") || "No Name";
+  const role = user?.role ? t(user.role) || user.role : "";
+  const email = user?.email || "";
+  const phone = user?.phone || "";
+  const location = user?.location || user?.address || "";
+  const avatar = user?.avatar || "";
+  const locale = language === "en" ? "en-US" : "vi-VN";
   const createdDate =
     user?.created_at || user?.createdAt
       ? new Date(user.created_at || user.createdAt).toLocaleDateString(locale)
-      : '';
+      : "";
 
   const statusText = user?.is_banned
-    ? t('blocked') || 'Blocked'
-    : t('active') || 'Active';
+    ? t("blocked") || "Blocked"
+    : t("active") || "Active";
 
   const statusClass = user?.is_banned
-    ? 'bg-red-100 text-red-700 border border-red-200'
-    : 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+    ? "bg-red-100 text-red-700 border border-red-200"
+    : "bg-emerald-100 text-emerald-700 border border-emerald-200";
 
   const profileFields = useMemo(() => {
     if (!user) return [];
 
     const items = [
       {
-        key: 'email',
-        label: t('email') || 'Email',
+        key: "email",
+        label: t("email") || "Email",
         value: email,
       },
       {
-        key: 'phone',
-        label: t('phone') || 'Phone',
+        key: "phone",
+        label: t("phone") || "Phone",
         value: phone,
       },
       {
-        key: 'role',
-        label: t('role') || 'Role',
+        key: "role",
+        label: t("role") || "Role",
         value: role,
       },
       {
-        key: 'status',
-        label: t('status') || 'Status',
+        key: "status",
+        label: t("status") || "Status",
         value: statusText,
         badge: true,
         badgeClass: statusClass,
       },
       {
-        key: 'location',
-        label: t('location') || 'Location',
+        key: "location",
+        label: t("location") || "Location",
         value: location,
       },
       {
-        key: 'joinDate',
-        label: t('join_date') || 'Join Date',
+        key: "joinDate",
+        label: t("join_date") || "Join Date",
         value: createdDate,
       },
     ];
 
     return items.filter((item) => {
-      if (item.key === 'status') return true;
-      return item.value && String(item.value).trim() !== '';
+      if (item.key === "status") return true;
+      return item.value && String(item.value).trim() !== "";
     });
-  }, [user, t, email, phone, role, statusText, statusClass, location, createdDate]);
+  }, [
+    user,
+    t,
+    email,
+    phone,
+    role,
+    statusText,
+    statusClass,
+    location,
+    createdDate,
+  ]);
 
   if (!isOpen) return null;
 
@@ -123,8 +137,8 @@ export function UserDetail({ userId, isOpen, onClose }) {
         </button>
 
         {loading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-[340px_minmax(0,1fr)] min-h-[560px]">
-            <div className="bg-gradient-to-br from-[#eef9f1] via-[#f7fcf8] to-[#eaf6ee] p-6 lg:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[340px_minmax(0,1fr)] min-h-140">
+            <div className="bg-linear-to-br from-[#eef9f1] via-[#f7fcf8] to-[#eaf6ee] p-6 lg:p-8">
               <div className="flex flex-col items-center lg:items-start">
                 <div className="h-28 w-28 rounded-full bg-white animate-pulse border border-gray-200" />
                 <div className="mt-5 h-7 w-40 rounded bg-gray-200 animate-pulse" />
@@ -149,9 +163,9 @@ export function UserDetail({ userId, isOpen, onClose }) {
             </div>
           </div>
         ) : user ? (
-          <div className="grid grid-cols-1 lg:grid-cols-[340px_minmax(0,1fr)] min-h-[560px]">
+          <div className="grid grid-cols-1 lg:grid-cols-[340px_minmax(0,1fr)] min-h-140">
             {/* Left panel */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#eef9f1] via-[#f8fdf9] to-[#edf7f0] px-6 py-8 text-gray-800 lg:px-8 border-r border-[#e6f0e8]">
+            <div className="relative overflow-hidden bg-linear-to-br from-[#eef9f1] via-[#f8fdf9] to-[#edf7f0] px-6 py-8 text-gray-800 lg:px-8 border-r border-[#e6f0e8]">
               <div className="absolute inset-0 opacity-70">
                 <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-[#dff1e5]" />
                 <div className="absolute bottom-8 -left-8 h-28 w-28 rounded-full bg-[#e9f7ed]" />
@@ -160,24 +174,26 @@ export function UserDetail({ userId, isOpen, onClose }) {
               <div className="relative flex h-full flex-col items-center text-center lg:items-start lg:text-left">
                 <div className="rounded-full border-4 border-white bg-white shadow-md">
                   {avatar ? (
-                    <img
+                    <Image
                       src={avatar}
                       alt={fullName}
+                      width={96}
+                      height={96}
                       className="h-28 w-28 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-[#7bbf8e] to-[#4f9b68] text-4xl font-bold text-white">
-                      {fullName?.charAt(0)?.toUpperCase() || '?'}
+                    <div className="flex h-28 w-28 items-center justify-center rounded-full bg-linear-to-br from-[#7bbf8e] to-[#4f9b68] text-4xl font-bold text-white">
+                      {fullName?.charAt(0)?.toUpperCase() || "?"}
                     </div>
                   )}
                 </div>
 
-                <h2 className="mt-5 text-2xl font-bold leading-tight break-words text-[#183a24]">
+                <h2 className="mt-5 text-2xl font-bold leading-tight wrap-break-word text-[#183a24]">
                   {fullName}
                 </h2>
 
                 {role ? (
-                  <p className="mt-2 text-sm font-medium text-[#4f7d5f] break-words">
+                  <p className="mt-2 text-sm font-medium text-[#4f7d5f] wrap-break-word">
                     {role}
                   </p>
                 ) : null}
@@ -193,30 +209,35 @@ export function UserDetail({ userId, isOpen, onClose }) {
                 <div className="mt-8 w-full space-y-4">
                   <div className="rounded-2xl border border-[#dcebdd] bg-white/80 p-4 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6a8d75]">
-                      {t('user_detail_account_overview') || 'Account Overview'}
+                      {t("user_detail_account_overview") || "Account Overview"}
                     </p>
                     <p className="mt-2 text-sm leading-6 text-gray-600">
-                      {t('user_detail_account_overview_desc') ||
-                        'This panel provides a quick overview of the selected user account, including profile status and essential information.'}
+                      {t("user_detail_account_overview_desc") ||
+                        "This panel provides a quick overview of the selected user account, including profile status and essential information."}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-2xl border border-[#dcebdd] bg-white/80 p-4 shadow-sm">
                       <p className="text-xs font-semibold uppercase tracking-wide text-[#6a8d75]">
-                        {t('user_detail_member_since') || 'Member Since'}
+                        {t("user_detail_member_since") || "Member Since"}
                       </p>
-                      <p className="mt-2 text-sm font-semibold text-gray-800 break-words">
-                        {createdDate || t('user_detail_updating') || 'Updating...'}
+                      <p className="mt-2 text-sm font-semibold text-gray-800 wrap-break-word">
+                        {createdDate ||
+                          t("user_detail_updating") ||
+                          "Updating..."}
                       </p>
                     </div>
 
                     <div className="rounded-2xl border border-[#dcebdd] bg-white/80 p-4 shadow-sm">
                       <p className="text-xs font-semibold uppercase tracking-wide text-[#6a8d75]">
-                        {t('contact') || 'Contact'}
+                        {t("contact") || "Contact"}
                       </p>
-                      <p className="mt-2 text-sm font-semibold text-gray-800 break-words">
-                        {phone || email || t('user_detail_no_data') || 'No data'}
+                      <p className="mt-2 text-sm font-semibold text-gray-800 wrap-break-word">
+                        {phone ||
+                          email ||
+                          t("user_detail_no_data") ||
+                          "No data"}
                       </p>
                     </div>
                   </div>
@@ -228,11 +249,12 @@ export function UserDetail({ userId, isOpen, onClose }) {
             <div className="bg-[#fcfcfd] px-6 py-8 lg:px-8">
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">
-                  {t('user_detail_personal_information') || 'Personal Information'}
+                  {t("user_detail_personal_information") ||
+                    "Personal Information"}
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  {t('user_detail_review_description') ||
-                    'Review detailed account information of the selected user.'}
+                  {t("user_detail_review_description") ||
+                    "Review detailed account information of the selected user."}
                 </p>
               </div>
 
@@ -247,7 +269,7 @@ export function UserDetail({ userId, isOpen, onClose }) {
                         {item.label}
                       </div>
 
-                      <div className="mt-2 min-h-[28px]">
+                      <div className="mt-2 min-h-7">
                         {item.badge ? (
                           <span
                             className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${item.badgeClass}`}
@@ -255,7 +277,7 @@ export function UserDetail({ userId, isOpen, onClose }) {
                             {item.value}
                           </span>
                         ) : (
-                          <div className="text-[15px] font-medium text-gray-800 break-words">
+                          <div className="text-[15px] font-medium text-gray-800 wrap-break-word">
                             {item.value}
                           </div>
                         )}
@@ -265,19 +287,17 @@ export function UserDetail({ userId, isOpen, onClose }) {
                 </div>
               ) : (
                 <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-gray-500">
-                  {t('user_detail_no_user_data') || 'No user data.'}
+                  {t("user_detail_no_user_data") || "No user data."}
                 </div>
               )}
 
-              <div className="mt-8 flex justify-end">
-
-              </div>
+              <div className="mt-8 flex justify-end"></div>
             </div>
           </div>
         ) : (
           <div className="p-6">
             <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-gray-500">
-              {t('user_detail_no_user_data') || 'No user data.'}
+              {t("user_detail_no_user_data") || "No user data."}
             </div>
           </div>
         )}
