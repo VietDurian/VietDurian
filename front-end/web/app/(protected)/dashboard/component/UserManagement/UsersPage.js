@@ -276,22 +276,22 @@ export function UsersPage() {
 					<table className="min-w-full">
 						<thead className="bg-gray-50">
 							<tr>
-								<th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+								<th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
 									{t("name") || "Name"}
 								</th>
-								<th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+								<th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
 									{t("email") || "Email"}
 								</th>
-								<th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+								<th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
 									{t("phone") || "Phone"}
 								</th>
-								<th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+								<th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
 									{t("role") || "Role"}
 								</th>
-								<th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+								<th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
 									{t("status") || "Status"}
 								</th>
-								<th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+								<th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
 									{t("actions") || "Actions"}
 								</th>
 							</tr>
@@ -322,8 +322,8 @@ export function UsersPage() {
 											<div
 												style={{ display: user.avatar ? "none" : "flex" }}
 												className={`w-10 h-10 rounded-full items-center justify-center text-white font-bold ${user.status === "blocked"
-														? "bg-linear-to-br from-red-500 to-red-700"
-														: "bg-linear-to-br from-[#1a4d2e] to-[#2d7a4f]"
+													? "bg-linear-to-br from-red-500 to-red-700"
+													: "bg-linear-to-br from-[#1a4d2e] to-[#2d7a4f]"
 													}`}
 											>
 												{user.name?.charAt(0) || "?"}
@@ -331,8 +331,8 @@ export function UsersPage() {
 											<div className="ml-3">
 												<p
 													className={`font-medium ${user.status === "blocked"
-															? "text-gray-500 line-through"
-															: "text-gray-900"
+														? "text-gray-500 line-through"
+														: "text-gray-900"
 														}`}
 												>
 													{user.name}
@@ -377,8 +377,8 @@ export function UsersPage() {
 											<button
 												onClick={() => handleBlockUnblock(user)}
 												className={`p-2 rounded-lg transition-colors group ${user.status === "blocked"
-														? "hover:bg-green-100"
-														: "hover:bg-red-100"
+													? "hover:bg-green-100"
+													: "hover:bg-red-100"
 													}`}
 												title={
 													user.status === "blocked"
@@ -422,8 +422,8 @@ export function UsersPage() {
 						<div className="flex items-start gap-3 mb-3">
 							<div
 								className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shrink-0 ${user.status === "blocked"
-										? "bg-linear-to-br from-red-500 to-red-700"
-										: "bg-linear-to-br from-[#1a4d2e] to-[#2d7a4f]"
+									? "bg-linear-to-br from-red-500 to-red-700"
+									: "bg-linear-to-br from-[#1a4d2e] to-[#2d7a4f]"
 									}`}
 							>
 								{user.name?.charAt(0) || "?"}
@@ -432,8 +432,8 @@ export function UsersPage() {
 							<div className="flex-1 min-w-0">
 								<h3
 									className={`font-medium truncate ${user.status === "blocked"
-											? "text-gray-500 line-through"
-											: "text-gray-900"
+										? "text-gray-500 line-through"
+										: "text-gray-900"
 										}`}
 								>
 									{user.name}
@@ -464,8 +464,8 @@ export function UsersPage() {
 								<button
 									onClick={() => handleBlockUnblock(user)}
 									className={`p-2 rounded-lg transition-colors group ${user.status === "blocked"
-											? "hover:bg-green-100"
-											: "hover:bg-red-100"
+										? "hover:bg-green-100"
+										: "hover:bg-red-100"
 										}`}
 								>
 									{user.status === "blocked" ? (
@@ -498,8 +498,8 @@ export function UsersPage() {
 						onClick={() => goToPage(page - 1)}
 						disabled={page <= 1}
 						className={`px-3 py-1.5 text-sm rounded-md border ${page <= 1
-								? "text-gray-400 border-gray-200 bg-white cursor-not-allowed"
-								: "text-[#1a4d2e] border-gray-300 hover:bg-gray-50"
+							? "text-gray-400 border-gray-200 bg-white cursor-not-allowed"
+							: "text-[#1a4d2e] border-gray-300 hover:bg-gray-50"
 							}`}
 					>
 						{t("previous") || "Previous"}
@@ -523,8 +523,8 @@ export function UsersPage() {
 							key={n}
 							onClick={() => goToPage(n)}
 							className={`px-3 py-1.5 text-sm rounded-md border ${n === page
-									? "bg-[#1a4d2e] text-white border-[#1a4d2e]"
-									: "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+								? "bg-[#1a4d2e] text-white border-[#1a4d2e]"
+								: "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
 								}`}
 						>
 							{n}
@@ -545,16 +545,16 @@ export function UsersPage() {
 								))
 						}
 						className={`px-3 py-1.5 text-sm rounded-md border ${page >=
-								(pagination.totalPages ||
-									Math.max(
-										1,
-										Math.ceil(
-											(pagination.totalItems || 0) /
-											(pagination.itemsPerPage || LIMIT),
-										),
-									))
-								? "text-gray-400 border-gray-200 bg-white cursor-not-allowed"
-								: "text-[#1a4d2e] border-gray-300 hover:bg-gray-50"
+							(pagination.totalPages ||
+								Math.max(
+									1,
+									Math.ceil(
+										(pagination.totalItems || 0) /
+										(pagination.itemsPerPage || LIMIT),
+									),
+								))
+							? "text-gray-400 border-gray-200 bg-white cursor-not-allowed"
+							: "text-[#1a4d2e] border-gray-300 hover:bg-gray-50"
 							}`}
 					>
 						{t("next") || "Next"}
@@ -577,14 +577,14 @@ export function UsersPage() {
 						<div className="flex justify-center">
 							<div
 								className={`flex h-14 w-14 items-center justify-center rounded-full ${selectedUser.status === "blocked"
-										? "bg-green-50"
-										: "bg-red-50"
+									? "bg-green-50"
+									: "bg-red-50"
 									}`}
 							>
 								<div
 									className={`flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold ${selectedUser.status === "blocked"
-											? "bg-green-100 text-green-600"
-											: "bg-red-100 text-red-500"
+										? "bg-green-100 text-green-600"
+										: "bg-red-100 text-red-500"
 										}`}
 								>
 									!
@@ -601,9 +601,9 @@ export function UsersPage() {
 						<p className="mt-4 text-center text-sm leading-6 text-gray-500">
 							{selectedUser.status === "blocked"
 								? t("unblock_description") ||
-								  "User will be able to login and use the system again."
+								"User will be able to login and use the system again."
 								: t("block_description") ||
-								  "User will not be able to login and use the system."}
+								"User will not be able to login and use the system."}
 						</p>
 
 						<div className="mt-6 grid grid-cols-2 gap-3">
@@ -621,8 +621,8 @@ export function UsersPage() {
 								onClick={confirmBlockUnblock}
 								disabled={loading}
 								className={`h-11 rounded-xl text-sm font-medium text-white transition ${selectedUser.status === "blocked"
-										? "bg-green-500 hover:bg-green-600"
-										: "bg-red-500 hover:bg-red-600"
+									? "bg-green-500 hover:bg-green-600"
+									: "bg-red-500 hover:bg-red-600"
 									} ${loading ? "cursor-not-allowed opacity-50" : ""}`}
 							>
 								{loading
