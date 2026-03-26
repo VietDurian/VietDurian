@@ -17,6 +17,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function LoginPage() {
     email: "",
     password: "",
   });
-  const { login, isLoggingIn } = useAuthStore();
+  const { login, isLoggingIn, resendVerificationOtp } = useAuthStore();
   const { login: loginContext, user, loading, loginWithGoogle } = useAuth();
   const [activeRole, setActiveRole] = useState(null);
 
@@ -43,6 +44,19 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const result = await login(formData);
+
+    if (result?.requiresEmailVerification) {
+      const normalizedEmail = formData.email?.trim().toLowerCase();
+
+      if (!normalizedEmail) {
+        toast.error("Không tìm thấy email để gửi OTP xác minh");
+        return;
+      }
+
+      await resendVerificationOtp(normalizedEmail);
+      router.push(`/verify-email?email=${encodeURIComponent(normalizedEmail)}`);
+      return;
+    }
 
     if (result?.user && result?.token) {
       loginContext(result.user, result.token);
@@ -263,10 +277,11 @@ export default function LoginPage() {
                     className={`
               h-12 w-12 flex items-center justify-center
               rounded-xl transition-all
-              ${isOpen
-                        ? "bg-emerald-500 text-white"
-                        : "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200"
-                      }
+              ${
+                isOpen
+                  ? "bg-emerald-500 text-white"
+                  : "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200"
+              }
             `}
                   >
                     <Icon size={22} />
@@ -280,8 +295,9 @@ export default function LoginPage() {
 
                   {/* Arrow indicator */}
                   <div
-                    className={`transition-transform duration-300 ${isOpen ? "rotate-180 text-emerald-600" : "text-gray-400"
-                      }`}
+                    className={`transition-transform duration-300 ${
+                      isOpen ? "rotate-180 text-emerald-600" : "text-gray-400"
+                    }`}
                   >
                     <ChevronDown />
                   </div>
@@ -291,10 +307,11 @@ export default function LoginPage() {
                 <div
                   className={`
             grid transition-all duration-300
-            ${isOpen
-                      ? "grid-rows-[1fr] opacity-100 mt-4"
-                      : "grid-rows-[0fr] opacity-0"
-                    }
+            ${
+              isOpen
+                ? "grid-rows-[1fr] opacity-100 mt-4"
+                : "grid-rows-[0fr] opacity-0"
+            }
           `}
                 >
                   <div className="overflow-hidden">
