@@ -6,14 +6,16 @@ import { Eye } from 'lucide-react'
 import PermissionRequestDetail from './PermissionRequestDetail'
 import { useLanguage } from '../../context/LanguageContext'
 
-const getStatusLabel = (value, t) => {
-    const status = String(value || 'pending').toLowerCase()
+const getStatusLabel = (value, t, isVi) => {
+    const status = String(value || 'none').toLowerCase()
     const map = {
-        pending: t('pending') || 'Pending',
-        approved: t('approved') || 'Approved',
-        rejected: t('rejected') || 'Rejected',
+        none: isVi ? 'Chưa gửi' : (t('none') || (t('not_submitted') || 'None')),
+        pending: isVi ? 'Đang chờ duyệt' : (t('pending') || 'Pending'),
+        approved: isVi ? 'Đã duyệt' : (t('approved') || 'Approved'),
+        reject: isVi ? 'Từ chối' : (t('reject') || (t('rejected') || 'Reject')),
+        rejected: isVi ? 'Từ chối' : (t('rejected') || 'Rejected'),
     }
-    return map[status] || (t('pending') || 'Pending')
+    return map[status] || (isVi ? 'Chưa gửi' : (t('none') || 'None'))
 }
 
 export default function PermissionPage() {
@@ -29,6 +31,7 @@ export default function PermissionPage() {
     const [page, setPage] = useState(1)
     const LIMIT = 10
     const [pagination, setPagination] = useState({ totalItems: 0, totalPages: 0, currentPage: 1, itemsPerPage: LIMIT })
+    const normalizedStatus = status === 'reject' ? 'rejected' : status
 
     useEffect(() => {
         const timer = setTimeout(async () => {
@@ -36,7 +39,7 @@ export default function PermissionPage() {
                 const params = {
                     page,
                     limit: LIMIT,
-                    ...(status !== 'all' ? { status } : {}),
+                    ...(normalizedStatus !== 'all' ? { status: normalizedStatus } : {}),
                 }
 
                 if (!query.trim()) {
@@ -89,7 +92,7 @@ export default function PermissionPage() {
         }, 400)
 
         return () => clearTimeout(timer)
-    }, [query, status, page])
+    }, [query, normalizedStatus, page])
 
     useEffect(() => {
         setPage(1)
@@ -116,9 +119,12 @@ export default function PermissionPage() {
 
     const filteredPermissions = useMemo(() => {
         const data = Array.isArray(mappedPermissions) ? mappedPermissions : []
-        if (status === 'all') return data
-        return data.filter((req) => String(req.status || '').toLowerCase() === String(status).toLowerCase())
-    }, [mappedPermissions, status])
+        if (normalizedStatus === 'all') return data
+        return data.filter((req) => {
+            const currentStatus = String(req.status || 'none').toLowerCase()
+            return currentStatus === String(normalizedStatus).toLowerCase()
+        })
+    }, [mappedPermissions, normalizedStatus])
 
     const effectiveTotalPages = useMemo(() => {
         const totalItems = Number(pagination.totalItems || filteredPermissions.length || 0)
@@ -139,7 +145,7 @@ export default function PermissionPage() {
             const params = {
                 page,
                 limit: LIMIT,
-                ...(status !== 'all' ? { status } : {}),
+                ...(normalizedStatus !== 'all' ? { status: normalizedStatus } : {}),
             }
 
             const res = !query.trim()
@@ -228,10 +234,11 @@ export default function PermissionPage() {
                                 onChange={(e) => setStatus(e.target.value)}
                                 className="w-full rounded-lg border border-gray-200 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
                             >
-                                <option value="all">{t('all') || 'All'}</option>
-                                <option value="pending">{t('pending') || 'Pending'}</option>
-                                <option value="approved">{t('approved') || 'Approved'}</option>
-                                <option value="rejected">{t('rejected') || 'Rejected'}</option>
+                                <option value="all">{isVi ? 'Tất cả' : (t('all') || 'All')}</option>
+                                <option value="none">{isVi ? 'Chưa gửi' : (t('none') || (t('not_submitted') || 'None'))}</option>
+                                <option value="pending">{isVi ? 'Đang chờ duyệt' : (t('pending') || 'Pending')}</option>
+                                <option value="reject">{isVi ? 'Từ chối' : (t('reject') || (t('rejected') || 'Reject'))}</option>
+                                <option value="approved">{isVi ? 'Đã duyệt' : (t('approved') || 'Approved')}</option>
                             </select>
                         </div>
                     </div>
@@ -279,10 +286,12 @@ export default function PermissionPage() {
                                                         ? 'bg-green-100 text-green-700'
                                                         : req.status === 'rejected'
                                                             ? 'bg-red-100 text-red-700'
-                                                            : 'bg-yellow-100 text-yellow-700'
+                                                            : req.status === 'pending'
+                                                                ? 'bg-yellow-100 text-yellow-700'
+                                                                : 'bg-gray-100 text-gray-700'
                                                         }`}
                                                 >
-                                                    {getStatusLabel(req.status, t)}
+                                                    {getStatusLabel(req.status, t, isVi)}
                                                 </span>
                                             </td>
                                             <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-gray-700">
