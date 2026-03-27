@@ -492,8 +492,11 @@ export default function CommentScreen({ onBack }) {
                     </View>
                 )}
             </View>
-
-            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
+            >
                 {commentsLoading ? (
                     <View style={styles.centerWrap}>
                         <ActivityIndicator size="large" color="#16a34a" />
@@ -596,7 +599,7 @@ export default function CommentScreen({ onBack }) {
             {/* Confirm delete modal */}
             <ConfirmModal
                 visible={confirmVisible}
-                message="Ban co chac muon xoa binh luan nay? Tat ca tra loi cung se bi xoa."
+                message="Bạn có chắc muốn xóa bình luận này, tất cả câu trả lời cũng sẽ bị xóa"
                 onClose={() => { setConfirmVisible(false); setDeletingId(null); }}
                 onConfirm={handleConfirmDelete}
             />
@@ -732,7 +735,7 @@ const styles = StyleSheet.create({
     inputArea: {
         backgroundColor: "#fff",
         borderTopWidth: 1, borderTopColor: "#f3f4f6",
-        paddingBottom: Platform.OS === "ios" ? 8 : 10,
+        paddingBottom: Platform.OS === "ios" ? 44 : 28,
     },
     contextBanner: {
         flexDirection: "row", alignItems: "center", justifyContent: "space-between",
