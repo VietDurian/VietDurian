@@ -210,8 +210,9 @@ const translations = {
 
 		// Reports Page
 		reports: 'Báo cáo',
+		title_report: 'Nội dung bài viết',
 		manage_reports: 'Xử lý các báo cáo vi phạm từ người dùng',
-		search_reports: 'Tìm theo tên người báo cáo / lý do / trạng thái…',
+		search_reports: 'Tìm theo nội dung bài viết...',
 		reporter: 'Người báo cáo',
 		reason: 'Lý do',
 		report_image: 'Hình ảnh',
@@ -546,8 +547,9 @@ const translations = {
 
 		// Reports Page
 		reports: 'Reports',
+		title_report: 'Post content',
 		manage_reports: 'Handle violation reports from users',
-		search_reports: 'Search by reporter name / reason / status…',
+		search_reports: 'Search by post content...',
 		reporter: 'Reporter',
 		reason: 'Reason',
 		report_image: 'Image',

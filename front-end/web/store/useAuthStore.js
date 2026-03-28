@@ -166,8 +166,17 @@ export const useAuthStore = create((set, get) => ({
       return { user, token };
     } catch (error) {
       const message = error?.response?.data?.message || "Đăng nhập thất bại";
+      const normalizedMessage = message.toLowerCase();
+      const requiresEmailVerification = normalizedMessage.includes(
+        "vui lòng xác minh địa chỉ email của bạn trước khi đăng nhập",
+      );
       toast.error(message);
-      return null;
+      return {
+        user: null,
+        token: null,
+        message,
+        requiresEmailVerification,
+      };
     } finally {
       set({ isLoggingIn: false });
     }

@@ -1,14 +1,13 @@
 import { create } from "zustand";
 import axios from "axios";
 
-// ── API client (dùng ENV) ─────────────────────────────────────────────────────
+// ── API client ────────────────────────────────────────────────────────────────
 const apiClient = axios.create({
     baseURL: process.env.EXPO_PUBLIC_API_URL,
     headers: { "Content-Type": "application/json" },
     timeout: 15000,
 });
 
-// Interceptor tự thêm Bearer token
 apiClient.interceptors.request.use((config) => {
     try {
         const { useAuthStore } = require("./useAuthStore");
@@ -18,7 +17,7 @@ apiClient.interceptors.request.use((config) => {
     return config;
 });
 
-// ── Helper ────────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 export const parseDecimal = (val) => {
     if (val == null) return 0;
     if (typeof val === "object" && val.$numberDecimal)
@@ -32,12 +31,8 @@ const normalizeProduct = (p) => ({
     rating: parseDecimal(p.rating),
 });
 
-// ── Store ─────────────────────────────────────────────────────────────────────
+// ── Product Store ─────────────────────────────────────────────────────────────
 export const useProductStore = create((set, get) => ({
-
-    // ════════════════════════════════════════
-    // STATE
-    // ════════════════════════════════════════
 
     products: [],
     productTypes: [],
@@ -54,37 +49,25 @@ export const useProductStore = create((set, get) => ({
     productDetail: null,
     productDetailLoading: false,
     productDetailError: null,
+    liveDetailRating: null,
 
-    // ════════════════════════════════════════
-    // ACTIONS: Product Types
-    // ════════════════════════════════════════
-
+    // ── Product Types ─────────────────────────────────────────────────────────
     fetchProductTypes: async () => {
         set({ typesLoading: true });
         try {
             const res = await apiClient.get("/type-product", { params: { limit: 20 } });
             const data = res.data?.data ?? res.data ?? [];
-            set({
-                productTypes: Array.isArray(data) ? data : [],
-                typesLoading: false,
-            });
+            set({ productTypes: Array.isArray(data) ? data : [], typesLoading: false });
         } catch (err) {
             console.error("[useProductStore] fetchProductTypes:", err.message);
             set({ typesLoading: false });
         }
     },
 
-    // ════════════════════════════════════════
-    // ACTIONS: Products List
-    // ════════════════════════════════════════
-
+    // ── Products List ─────────────────────────────────────────────────────────
     fetchProducts: async ({
-        page = 1,
-        limit = 9,
-        sortBy = "created_at",
-        sortOrder = "desc",
-        name = "",
-        typeId = "",
+        page = 1, limit = 9, sortBy = "created_at",
+        sortOrder = "desc", name = "", typeId = "",
     } = {}) => {
         set({ productsLoading: true, productsError: null });
         try {
@@ -94,12 +77,7 @@ export const useProductStore = create((set, get) => ({
 
             const res = await apiClient.get("/products", { params });
             const body = res.data;
-
-            const raw =
-                body?.data ??
-                body?.products ??
-                (Array.isArray(body) ? body : []);
-
+            const raw = body?.data ?? body?.products ?? (Array.isArray(body) ? body : []);
             const products = raw.map(normalizeProduct);
             const pag = body?.pagination ?? {};
 
@@ -115,21 +93,14 @@ export const useProductStore = create((set, get) => ({
             });
         } catch (err) {
             console.error("[useProductStore] fetchProducts:", err.message);
-            set({
-                productsError: "Không thể tải sản phẩm. Vui lòng thử lại.",
-                productsLoading: false,
-            });
+            set({ productsError: "Không thể tải sản phẩm. Vui lòng thử lại.", productsLoading: false });
         }
     },
 
     // Infinite scroll
     appendProducts: async ({
-        page = 2,
-        limit = 9,
-        sortBy = "created_at",
-        sortOrder = "desc",
-        name = "",
-        typeId = "",
+        page = 2, limit = 9, sortBy = "created_at",
+        sortOrder = "desc", name = "", typeId = "",
     } = {}) => {
         try {
             const params = { page, limit, sortBy, sortOrder };
@@ -138,12 +109,7 @@ export const useProductStore = create((set, get) => ({
 
             const res = await apiClient.get("/products", { params });
             const body = res.data;
-
-            const raw =
-                body?.data ??
-                body?.products ??
-                (Array.isArray(body) ? body : []);
-
+            const raw = body?.data ?? body?.products ?? (Array.isArray(body) ? body : []);
             const newItems = raw.map(normalizeProduct);
             const pag = body?.pagination ?? {};
 
@@ -161,32 +127,134 @@ export const useProductStore = create((set, get) => ({
         }
     },
 
-    // ════════════════════════════════════════
-    // ACTIONS: Product Detail
-    // ════════════════════════════════════════
-
+    // ── Product Detail ────────────────────────────────────────────────────────
     fetchProductById: async (productId) => {
-        set({ productDetailLoading: true, productDetailError: null });
+        set({ productDetailLoading: true, productDetailError: null, liveDetailRating: null });
         try {
             const res = await apiClient.get(`/products/${productId}`);
             const product = normalizeProduct(res.data?.data ?? res.data);
+            set({ productDetail: product, productDetailLoading: false });
 
-            set({
-                productDetail: product,
-                productDetailLoading: false,
-            });
+            // Fetch live rating
+            try {
+                const ratingRes = await apiClient.get(`/ratings/product/${productId}`, { params: { limit: 1 } });
+                const avg = ratingRes.data?.statistics?.averageRating;
+                if (avg != null) set({ liveDetailRating: parseFloat(avg) });
+            } catch (_) { /* rating is optional */ }
+
         } catch (err) {
             console.error("[useProductStore] fetchProductById:", err.message);
-            set({
-                productDetailError: "Không tìm thấy sản phẩm.",
-                productDetailLoading: false,
-            });
+            set({ productDetailError: "Không tìm thấy sản phẩm.", productDetailLoading: false });
         }
     },
 
     clearProductDetail: () =>
-        set({
-            productDetail: null,
-            productDetailError: null,
-        }),
+        set({ productDetail: null, productDetailError: null, liveDetailRating: null }),
+}));
+
+// ── Diary Store ───────────────────────────────────────────────────────────────
+const diaryFetch = async (url, seasonDiaryId) => {
+    const res = await apiClient.get(url, {
+        params: { season_diary_id: seasonDiaryId, limit: 500 },
+    });
+    const data = res.data?.data ?? res.data ?? [];
+    return Array.isArray(data) ? data : [];
+};
+
+export const useDiaryStore = create((set) => ({
+
+    // Seeds
+    buyingSeeds: [], loadingSeeds: false, errorSeeds: null,
+    fetchBuyingSeeds: async (id) => {
+        set({ loadingSeeds: true, errorSeeds: null });
+        try {
+            const data = await diaryFetch("/buying-seed", id);
+            set({ buyingSeeds: data, loadingSeeds: false });
+        } catch {
+            set({ errorSeeds: "Không thể tải dữ liệu mua giống", loadingSeeds: false });
+        }
+    },
+
+    // Buying fertilizers
+    buyingFertilizers: [], loadingFertilizers: false, errorFertilizers: null,
+    fetchBuyingFertilizers: async (id) => {
+        set({ loadingFertilizers: true, errorFertilizers: null });
+        try {
+            const data = await diaryFetch("/buying-fertilizers", id);
+            set({ buyingFertilizers: data, loadingFertilizers: false });
+        } catch {
+            set({ errorFertilizers: "Không thể tải dữ liệu mua phân bón", loadingFertilizers: false });
+        }
+    },
+
+    // Use fertilizers
+    useFertilizers: [], loadingUseFertilizers: false, errorUseFertilizers: null,
+    fetchUseFertilizers: async (id) => {
+        set({ loadingUseFertilizers: true, errorUseFertilizers: null });
+        try {
+            const data = await diaryFetch("/use-fertilizers", id);
+            set({ useFertilizers: data, loadingUseFertilizers: false });
+        } catch {
+            set({ errorUseFertilizers: "Không thể tải dữ liệu sử dụng phân bón", loadingUseFertilizers: false });
+        }
+    },
+
+    // Packaging
+    packaging: [], loadingPackaging: false, errorPackaging: null,
+    fetchPackaging: async (id) => {
+        set({ loadingPackaging: true, errorPackaging: null });
+        try {
+            const data = await diaryFetch("/packaging-handling", id);
+            set({ packaging: data, loadingPackaging: false });
+        } catch {
+            set({ errorPackaging: "Không thể tải dữ liệu xử lý đóng gói", loadingPackaging: false });
+        }
+    },
+
+    // Harvest
+    harvest: [], loadingHarvest: false, errorHarvest: null,
+    fetchHarvest: async (id) => {
+        set({ loadingHarvest: true, errorHarvest: null });
+        try {
+            const data = await diaryFetch("/harvest-consumption", id);
+            set({ harvest: data, loadingHarvest: false });
+        } catch {
+            set({ errorHarvest: "Không thể tải dữ liệu thu hoạch", loadingHarvest: false });
+        }
+    },
+
+    // Irrigation
+    irrigation: [], loadingIrrigation: false, errorIrrigation: null,
+    fetchIrrigation: async (id) => {
+        set({ loadingIrrigation: true, errorIrrigation: null });
+        try {
+            const data = await diaryFetch("/irrigation-costs", id);
+            set({ irrigation: data, loadingIrrigation: false });
+        } catch {
+            set({ errorIrrigation: "Không thể tải dữ liệu tưới tiêu", loadingIrrigation: false });
+        }
+    },
+
+    // Labor
+    labor: [], loadingLabor: false, errorLabor: null,
+    fetchLabor: async (id) => {
+        set({ loadingLabor: true, errorLabor: null });
+        try {
+            const data = await diaryFetch("/labor-costs", id);
+            set({ labor: data, loadingLabor: false });
+        } catch {
+            set({ errorLabor: "Không thể tải dữ liệu lao động", loadingLabor: false });
+        }
+    },
+
+    // Reset all diary state (call when leaving product detail)
+    clearDiary: () => set({
+        buyingSeeds: [], loadingSeeds: false, errorSeeds: null,
+        buyingFertilizers: [], loadingFertilizers: false, errorFertilizers: null,
+        useFertilizers: [], loadingUseFertilizers: false, errorUseFertilizers: null,
+        packaging: [], loadingPackaging: false, errorPackaging: null,
+        harvest: [], loadingHarvest: false, errorHarvest: null,
+        irrigation: [], loadingIrrigation: false, errorIrrigation: null,
+        labor: [], loadingLabor: false, errorLabor: null,
+    }),
 }));

@@ -8,9 +8,10 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useAppStore } from "../store/useAppStore";
-import { useProductStore } from "../store/useProductStore";
+import { useProductStore, useDiaryStore } from "../store/useProductStore";
 import { useAuthStore } from "../store/useAuthStore";
 import ProductRating from "../components/ProductRating";
+import DiarySection from "../components/DiarySection";
 
 // ── Mock fallback ─────────────────────────────────────────────────────────────
 const MOCK_PRODUCT = {
@@ -51,6 +52,8 @@ export default function ProductDetailScreen() {
         fetchProductById, clearProductDetail,
     } = useProductStore();
 
+    const { clearDiary } = useDiaryStore();
+
     // Dùng selectedProduct làm fallback nhanh, sau đó fetch chi tiết
     const product = productDetail ?? selectedProduct ?? MOCK_PRODUCT;
     const rating = liveDetailRating ?? Number(product.rating ?? 0);
@@ -64,7 +67,10 @@ export default function ProductDetailScreen() {
     useEffect(() => {
         const id = selectedProduct?._id;
         if (id) fetchProductById(id);
-        return () => clearProductDetail();
+        return () => {
+            clearProductDetail();
+            clearDiary();
+        };
     }, [selectedProduct?._id]);
 
     const price = new Intl.NumberFormat("vi-VN", {
@@ -74,6 +80,12 @@ export default function ProductDetailScreen() {
     const formatDate = (d) => {
         if (!d) return "N/A";
         return new Date(d).toLocaleDateString("vi-VN");
+    };
+    const getDiaryId = () => {
+        if (!product?.season_diary_id) return null;
+        return typeof product.season_diary_id === "object"
+            ? product.season_diary_id?._id
+            : product.season_diary_id;
     };
 
     // ── Loading / Error ─────────────────────────────────
@@ -279,10 +291,7 @@ export default function ProductDetailScreen() {
                             )}
 
                             {activeTab === "diary" && (
-                                <View style={styles.diaryEmpty}>
-                                    <MaterialCommunityIcons name="notebook-outline" size={38} color="#D1D5DB" />
-                                    <Text style={styles.diaryEmptyText}>Chưa có nhật ký canh tác</Text>
-                                </View>
+                                <DiarySection diaryId={getDiaryId()} />
                             )}
                         </View>
                     </View>

@@ -15,10 +15,11 @@ import {
   LayoutGrid,
   ChevronDown,
   Info,
+  Flag,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { favoriteAPI, getOwnPosts, commentAPI } from "@/lib/api";
+import { favoriteAPI, getOwnPosts, commentAPI, createReport } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 import Navbar from "@/components/Navbar";
 import { useRouter } from "next/navigation";
@@ -34,6 +35,272 @@ const categoryConfig = {
   "Sản phẩm": { icon: Package, bg: "from-emerald-500 to-teal-500" },
   "Thuê dịch vụ": { icon: HandCoins, bg: "from-purple-500 to-violet-500" },
   Khác: { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" },
+};
+
+// ─── Report Post Modal ────────────────────────────────────────────────────────
+const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
+  const { t } = useLanguage();
+  const fileInputRef = useRef(null);
+  const [selectedReason, setSelectedReason] = useState("");
+  const [customReason, setCustomReason] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageData, setImageData] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  const REPORT_REASONS = [
+    t("report_reason_spam"),
+    t("report_reason_misinformation"),
+    t("report_reason_inappropriate"),
+    t("report_reason_other"),
+  ];
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedReason("");
+      setCustomReason("");
+      setImagePreview("");
+      setImageData("");
+      setError("");
+      setSubmitted(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "unset";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError(t("report_image_too_large"));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result?.toString() || "";
+      setImageData(result);
+      setImagePreview(result);
+      setError("");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const getFinalReason = () => {
+    if (selectedReason === t("report_reason_other")) return customReason.trim();
+    return selectedReason;
+  };
+
+  const handleSubmit = async () => {
+    const reason = getFinalReason();
+    if (!reason) {
+      setError(t("report_error_no_reason"));
+      return;
+    }
+    setIsSubmitting(true);
+    setError("");
+    try {
+      const payload = { post_id: postId, reason };
+      if (imageData) payload.image = imageData;
+      await createReport(payload);
+      setSubmitted(true);
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+        err?.message ||
+        t("report_error_submit_fail")
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[calc(100vh-80px)] mt-16">
+        {/* Header */}
+        <div className="relative flex items-center justify-center p-4 border-b border-gray-200 shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-orange-100 rounded-full">
+              <Flag size={16} className="text-orange-500" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-900">{t("report_modal_title")}</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="absolute right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition"
+          >
+            <X size={18} className="text-gray-600" />
+          </button>
+        </div>
+
+        {submitted ? (
+          /* Success state */
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{t("report_success_title")}</h3>
+            <p className="text-gray-500 text-sm mb-6">{t("report_success_desc")}</p>
+            <button
+              onClick={onClose}
+              className="px-6 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition text-sm"
+            >
+              {t("report_success_close")}
+            </button>
+          </div>
+        ) : (
+          /* Form state — scrollable */
+          <div className="overflow-y-auto flex-1">
+            <div className="p-5 space-y-4">
+              {postTitle && (
+                <p className="text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200 line-clamp-2">
+                  {postTitle}
+                </p>
+              )}
+
+              {/* Reason buttons */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  {t("report_reason_label")}
+                </label>
+                <div className="space-y-2">
+                  {REPORT_REASONS.map((reason) => (
+                    <button
+                      key={reason}
+                      type="button"
+                      onClick={() => {
+                        setSelectedReason(reason);
+                        setError("");
+                        if (reason !== t("report_reason_other")) setCustomReason("");
+                      }}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${selectedReason === reason
+                        ? "border-orange-400 bg-orange-50 text-orange-700"
+                        : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                        }`}
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom reason textarea — only when "Khác/Other" selected */}
+              {selectedReason === t("report_reason_other") && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t("report_custom_reason_label")}
+                  </label>
+                  <textarea
+                    value={customReason}
+                    onChange={(e) => {
+                      setCustomReason(e.target.value);
+                      setError("");
+                    }}
+                    placeholder={t("report_custom_reason_placeholder")}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none min-h-20"
+                    maxLength={500}
+                  />
+                  <div className="text-xs text-gray-400 text-right mt-1">
+                    {customReason.length}/500
+                  </div>
+                </div>
+              )}
+
+              {/* Image upload */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {t("report_image_label")}{" "}
+                  <span className="text-gray-400 font-normal">({t("report_image_optional")})</span>
+                </label>
+                {!imagePreview ? (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all"
+                  >
+                    <ImageIcon className="mx-auto text-gray-400 mb-2" size={26} />
+                    <p className="text-sm font-medium text-gray-600">
+                      {t("report_image_click")}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">{t("report_image_hint")}</p>
+                  </div>
+                ) : (
+                  <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                    <Image
+                      src={imagePreview}
+                      alt="Preview"
+                      width={400}
+                      height={200}
+                      className="w-full h-auto object-contain bg-gray-50 max-h-48"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePreview("");
+                        setImageData("");
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  <AlertCircle size={16} />
+                  <span>{t("error_reason_min_length")}</span>
+                </div>
+              )}
+
+              {/* Buttons */}
+              <div className="pt-1 pb-1">
+                <button
+                  onClick={handleSubmit}
+                  disabled={
+                    isSubmitting ||
+                    !selectedReason ||
+                    (selectedReason === t("report_reason_other") && !customReason.trim())
+                  }
+                  className="w-full px-4 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-medium transition text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      {t("report_submitting")}
+                    </>
+                  ) : (
+                    <>
+                      <Flag size={16} />
+                      {t("report_submit_btn")}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 // ─── Category Guide Section ───────────────────────────────────────────────────
@@ -128,9 +395,7 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
             </p>
           </div>
         </div>
-        <div
-          className={`text-gray-400 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}
-        >
+        <div className={`text-gray-400 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}>
           <ChevronDown size={22} />
         </div>
       </button>
@@ -146,38 +411,24 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
                 className={`group relative flex flex-col gap-3 p-4 rounded-2xl border-2 transition-all text-left shadow-sm hover:shadow-md ${isActive ? `${cat.bgLight} ${cat.borderColor} ring-2 ${cat.ringColor}` : "bg-white border-gray-200"}`}
               >
                 <div className="flex items-start justify-between">
-                  <div
-                    className={`w-11 h-11 rounded-xl bg-linear-to-br ${cat.gradient} flex items-center justify-center shadow-md`}
-                  >
+                  <div className={`w-11 h-11 rounded-xl bg-linear-to-br ${cat.gradient} flex items-center justify-center shadow-md`}>
                     <Icon size={22} className="text-white" />
                   </div>
-                  <span
-                    className={`text-xs font-semibold px-2 py-1 rounded-full ${cat.tagBg}`}
-                  >
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${cat.tagBg}`}>
                     {cat.tagLine}
                   </span>
                 </div>
                 <div>
-                  <h4 className={`font-bold text-base ${cat.textColor} mb-0.5`}>
-                    {cat.key}
-                  </h4>
+                  <h4 className={`font-bold text-base ${cat.textColor} mb-0.5`}>{cat.key}</h4>
                   <p className="text-xs font-medium text-gray-400">{cat.who}</p>
                 </div>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  {cat.desc}
-                </p>
-                <div
-                  className={`flex items-center gap-1.5 text-xs font-semibold ${cat.textColor} mt-auto`}
-                >
+                <p className="text-sm text-gray-600 leading-relaxed">{cat.desc}</p>
+                <div className={`flex items-center gap-1.5 text-xs font-semibold ${cat.textColor} mt-auto`}>
                   <Filter size={13} />
-                  {isActive
-                    ? t("posts_filter_active")
-                    : t("posts_filter_click")}
+                  {isActive ? t("posts_filter_active") : t("posts_filter_click")}
                 </div>
                 {isActive && (
-                  <div
-                    className={`absolute inset-0 rounded-2xl pointer-events-none bg-linear-to-br ${cat.gradient} opacity-5`}
-                  />
+                  <div className={`absolute inset-0 rounded-2xl pointer-events-none bg-linear-to-br ${cat.gradient} opacity-5`} />
                 )}
               </button>
             );
@@ -202,14 +453,6 @@ const FilterBar = ({
   const [showFilters, setShowFilters] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
-  const POST_CATEGORIES = [
-    t("posts_cat_all"),
-    t("posts_cat_service"),
-    t("posts_cat_experience"),
-    t("posts_cat_product"),
-    t("posts_cat_hire"),
-    t("posts_cat_other"),
-  ];
   const POST_CATEGORIES_MAP = [
     { label: t("posts_cat_all"), value: "Tất cả" },
     { label: t("posts_cat_service"), value: "Dịch vụ" },
@@ -244,10 +487,7 @@ const FilterBar = ({
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-6">
       <div className="flex gap-3 mb-0">
         <div className="flex-1 relative">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={20}
-          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
             value={searchQuery}
@@ -263,19 +503,14 @@ const FilterBar = ({
             className="min-w-35 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
           >
             <span>{selectedSortLabel}</span>
-            <ChevronDown
-              className={`w-4 h-4 text-gray-500 transition-all duration-200 ${showSortDropdown ? "rotate-180" : ""}`}
-            />
+            <ChevronDown className={`w-4 h-4 text-gray-500 transition-all duration-200 ${showSortDropdown ? "rotate-180" : ""}`} />
           </button>
           {showSortDropdown && (
             <div className="absolute top-full right-0 mt-2 w-full bg-white border-2 border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
               {SORT_OPTIONS.map((option, index) => (
                 <button
                   key={option.value}
-                  onClick={() => {
-                    onSortChange(option.value);
-                    setShowSortDropdown(false);
-                  }}
+                  onClick={() => { onSortChange(option.value); setShowSortDropdown(false); }}
                   className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${selectedSort === option.value ? "bg-emerald-50 text-emerald-700 font-semibold" : "text-gray-700 hover:bg-gray-50"} ${index !== SORT_OPTIONS.length - 1 ? "border-b border-gray-100" : ""}`}
                 >
                   {option.label}
@@ -326,7 +561,7 @@ const FilterBar = ({
 };
 
 // ─── Post Card ────────────────────────────────────────────────────────────────
-const Post = ({ post, onLikeUpdate, onContact }) => {
+const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
   const { t } = useLanguage();
   const router = useRouter();
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
@@ -334,13 +569,12 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(post.likes || 0);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
-  useEffect(() => {
-    setIsLiked(post.isLiked || false);
-  }, [post.isLiked]);
-  useEffect(() => {
-    setCommentCount(post.comments || 0);
-  }, [post.comments]);
+  const isOwnPost = currentUserId && post.authorId === currentUserId;
+
+  useEffect(() => { setIsLiked(post.isLiked || false); }, [post.isLiked]);
+  useEffect(() => { setCommentCount(post.comments || 0); }, [post.comments]);
 
   const handleLike = async () => {
     if (isTogglingFavorite) return;
@@ -354,21 +588,14 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
       onLikeUpdate?.(post.id, newLikedState);
     } catch (error) {
       setIsLiked(previousLikedState);
-      alert(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Không thể cập nhật yêu thích",
-      );
+      alert(error?.response?.data?.message || error?.message || "Không thể cập nhật yêu thích");
     } finally {
       setIsTogglingFavorite(false);
     }
   };
 
   const cfg = post.category
-    ? categoryConfig[post.category] || {
-        icon: LayoutGrid,
-        bg: "from-gray-500 to-slate-500",
-      }
+    ? categoryConfig[post.category] || { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" }
     : null;
 
   return (
@@ -390,21 +617,16 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h4 className="font-bold text-gray-900 text-base">
-                  {post.userName}
-                </h4>
-                {cfg &&
-                  (() => {
-                    const Icon = cfg.icon;
-                    return (
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${cfg.bg} text-white shadow-sm shrink-0`}
-                      >
-                        <Icon size={11} />
-                        {post.category}
-                      </span>
-                    );
-                  })()}
+                <h4 className="font-bold text-gray-900 text-base">{post.userName}</h4>
+                {cfg && (() => {
+                  const Icon = cfg.icon;
+                  return (
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${cfg.bg} text-white shadow-sm shrink-0`}>
+                      <Icon size={11} />
+                      {post.category}
+                    </span>
+                  );
+                })()}
               </div>
               <p className="text-gray-500 text-sm truncate">
                 {post.userHandle && post.userHandle}
@@ -413,12 +635,21 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
               </p>
             </div>
           </div>
+
+          {/* Report button — chỉ hiện với post của người khác */}
+          {!isOwnPost && (
+            <button
+              onClick={() => setIsReportModalOpen(true)}
+              className="shrink-0 p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-full transition-all ml-2"
+              title={t("report_btn_tooltip")}
+            >
+              <Flag size={18} />
+            </button>
+          )}
         </div>
 
         {post.title && (
-          <h3 className="font-bold text-gray-900 text-lg leading-snug mb-2">
-            {post.title}
-          </h3>
+          <h3 className="font-bold text-gray-900 text-lg leading-snug mb-2">{post.title}</h3>
         )}
 
         <div className="text-base text-gray-600 leading-relaxed mb-4">
@@ -427,24 +658,14 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
 
         {post.contact && (
           <div className="mb-4">
-            <span className="text-sm font-semibold text-gray-500">
-              {t("posts_contact_label")}
-            </span>
-            <span className="text-sm font-semibold text-emerald-700">
-              {post.contact}
-            </span>
+            <span className="text-sm font-semibold text-gray-500">{t("posts_contact_label")}</span>
+            <span className="text-sm font-semibold text-emerald-700">{post.contact}</span>
           </div>
         )}
 
         {post.image && (
           <div className="rounded-xl overflow-hidden mb-4 border border-gray-200">
-            <Image
-              src={post.image}
-              alt="Post content"
-              width={96}
-              height={96}
-              className="w-full h-auto object-cover"
-            />
+            <Image src={post.image} alt="Post content" width={96} height={96} className="w-full h-auto object-cover" />
           </div>
         )}
 
@@ -459,18 +680,14 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
             ) : (
               <Heart size={20} className={`${isLiked ? "fill-current" : ""}`} />
             )}
-            {likeCount > 0 && (
-              <span className="text-sm font-medium">{likeCount}</span>
-            )}
+            {likeCount > 0 && <span className="text-sm font-medium">{likeCount}</span>}
           </button>
           <button
             onClick={() => setIsCommentModalOpen(true)}
             className="flex items-center gap-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition px-3 py-1.5 rounded-lg"
           >
             <MessageCircle size={20} />
-            {commentCount > 0 && (
-              <span className="text-sm font-medium">{commentCount}</span>
-            )}
+            {commentCount > 0 && <span className="text-sm font-medium">{commentCount}</span>}
           </button>
           <button
             onClick={() => onContact?.(post)}
@@ -480,11 +697,19 @@ const Post = ({ post, onLikeUpdate, onContact }) => {
           </button>
         </div>
       </article>
+
       <CommentModal
         isOpen={isCommentModalOpen}
         onClose={() => setIsCommentModalOpen(false)}
         postId={post.id}
         onCommentCountChange={setCommentCount}
+      />
+
+      <ReportPostModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        postId={post.id}
+        postTitle={post.title || post.content?.slice(0, 80)}
       />
     </>
   );
@@ -503,6 +728,8 @@ export default function PostsContent() {
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [selectedSort, setSelectedSort] = useState("newest");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const currentUserId = user?._id || user?.id;
 
   useEffect(() => {
     let isCancelled = false;
@@ -523,23 +750,17 @@ export default function PostsContent() {
         const favoritePostIds = new Set(
           (favoritesResponse.data || [])
             .map((fav) => fav.post_id?._id || fav.post_id)
-            .filter(Boolean),
+            .filter(Boolean)
         );
         const normalizedPosts = (postsData || []).map((post) => {
           const author = post.author || {};
           return {
             id: post._id,
             authorId: author._id || author.id,
-            userName:
-              author.full_name ||
-              author.name ||
-              author.username ||
-              "Người dùng",
+            userName: author.full_name || author.name || author.username || "Người dùng",
             userHandle: author.email || "",
             userAvatar: author.avatar || "/images/avatar.jpg",
-            timestamp: post.created_at
-              ? new Date(post.created_at).toLocaleString("vi-VN")
-              : "Vừa xong",
+            timestamp: post.created_at ? new Date(post.created_at).toLocaleString("vi-VN") : "Vừa xong",
             title: post.title || "",
             content: post.content,
             contact: post.contact,
@@ -559,42 +780,31 @@ export default function PostsContent() {
               const res = await commentAPI.getCommentsByPost(post.id, "all");
               const countComments = (list) => {
                 let count = list.length;
-                list.forEach((c) => {
-                  if (c.children?.length) count += countComments(c.children);
-                });
+                list.forEach((c) => { if (c.children?.length) count += countComments(c.children); });
                 return count;
               };
               return { ...post, comments: countComments(res.data || []) };
-            } catch {
-              return post;
-            }
-          }),
+            } catch { return post; }
+          })
         );
         if (!isCancelled) setPosts(postsWithComments);
       } catch (error) {
-        if (!isCancelled)
-          setPostsError(error?.message || "Không thể tải bài viết");
+        if (!isCancelled) setPostsError(error?.message || "Không thể tải bài viết");
       } finally {
         if (!isCancelled) setLoadingPosts(false);
       }
     };
     loadPostsWithFavorites();
-    return () => {
-      isCancelled = true;
-    };
+    return () => { isCancelled = true; };
   }, [selectedCategory, selectedSort, searchQuery]);
 
   const handleLikeUpdate = (postId, isLiked) => {
     setPosts((prev) =>
       prev.map((post) =>
         post.id === postId
-          ? {
-              ...post,
-              isLiked,
-              likes: isLiked ? post.likes + 1 : post.likes - 1,
-            }
-          : post,
-      ),
+          ? { ...post, isLiked, likes: isLiked ? post.likes + 1 : post.likes - 1 }
+          : post
+      )
     );
   };
 
@@ -605,10 +815,7 @@ export default function PostsContent() {
   };
 
   const handleContact = (post) => {
-    if (!authUser) {
-      router.push("/login");
-      return;
-    }
+    if (!authUser) { router.push("/login"); return; }
     const receiverId = post.authorId;
     if (!receiverId) return;
     const chatUser = {
@@ -628,9 +835,7 @@ export default function PostsContent() {
         <div className="w-full max-w-4xl">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {t("posts_page_title")}
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("posts_page_title")}</h1>
               <p className="text-gray-600">{t("posts_page_subtitle")}</p>
             </div>
             {posts.length > 0 && (
@@ -641,10 +846,7 @@ export default function PostsContent() {
             )}
           </div>
 
-          <CategoryGuideSection
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
+          <CategoryGuideSection selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
           <FilterBar
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
@@ -664,37 +866,17 @@ export default function PostsContent() {
           {postsError && (
             <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-emerald-100">
               <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-emerald-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
+                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {t("posts_login_required_title")}
-              </h3>
-              <p className="text-gray-500 text-sm mb-6">
-                {t("posts_login_required_desc")}
-              </p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">{t("posts_login_required_title")}</h3>
+              <p className="text-gray-500 text-sm mb-6">{t("posts_login_required_desc")}</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link
-                  href="/login"
-                  className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm"
-                >
+                <Link href="/login" className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">
                   {t("posts_login_btn")}
                 </Link>
-                <Link
-                  href="/register"
-                  className="px-6 py-2.5 border border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors text-sm"
-                >
+                <Link href="/register" className="px-6 py-2.5 border border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors text-sm">
                   {t("posts_register_btn")}
                 </Link>
               </div>
@@ -705,9 +887,7 @@ export default function PostsContent() {
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <ImageIcon className="text-gray-400" size={28} />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">
-                {t("posts_not_found_title")}
-              </h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">{t("posts_not_found_title")}</h3>
               <p className="text-gray-500 mb-4">{t("posts_not_found_desc")}</p>
               <button
                 onClick={handleClearFilters}
@@ -723,6 +903,7 @@ export default function PostsContent() {
               post={post}
               onLikeUpdate={handleLikeUpdate}
               onContact={handleContact}
+              currentUserId={currentUserId}
             />
           ))}
         </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import {
   Search,
@@ -16,7 +16,7 @@ import { ProductDetail } from "./ProductDetail";
 import Image from "next/image";
 
 export function ProductsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [products, setProducts] = useState([]);
   const [productTypes, setProductTypes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -51,7 +51,7 @@ export function ProductsPage() {
       typeof value === "number"
         ? value
         : Number(String(value).replace(/[^\d.-]/g, ""));
-    if (Number.isNaN(n)) return "0 ₫";
+    if (Number.isNaN(n)) return "0 VND";
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
@@ -65,10 +65,10 @@ export function ProductsPage() {
     return Number.isNaN(date.getTime())
       ? "--"
       : new Intl.DateTimeFormat("vi-VN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }).format(date);
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }).format(date);
   };
 
   const getTypeBadgeColor = (type) => {
@@ -356,10 +356,10 @@ export function ProductsPage() {
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-[#1a4d2e] mb-2">
-          {t("products")}
+          {t("products") || "Products"}
         </h1>
         <p className="text-sm md:text-base text-gray-600">
-          {t("manage_products")}
+          {t("manage_products") || "Manage products"}
         </p>
       </div>
 
@@ -371,7 +371,7 @@ export function ProductsPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder={t("search_product")}
+              placeholder={t("search_product") || "Search product"}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a4d2e] focus:border-transparent"
@@ -390,9 +390,9 @@ export function ProductsPage() {
             appearance-none bg-white
         "
             >
-              <option value="all">{t("all_status")}</option>
-              <option value="active">{t("active")}</option>
-              <option value="inactive">{t("inactive")}</option>
+              <option value="all">{t("all_status") || "All status"}</option>
+              <option value="active">{t("active") || "Active"}</option>
+              <option value="inactive">{t("inactive") || "Inactive"}</option>
             </select>
           </div>
 
@@ -409,8 +409,8 @@ export function ProductsPage() {
             appearance-none bg-white
         "
             >
-              <option value="desc">{t("rating_high_to_low")}</option>
-              <option value="asc">{t("rating_low_to_high")}</option>
+              <option value="desc">{t("rating_high_to_low") || "Rating high to low"}</option>
+              <option value="asc">{t("rating_low_to_high") || "Rating low to high"}</option>
             </select>
           </div>
 
@@ -584,8 +584,8 @@ export function ProductsPage() {
                         setConfirmDelete({ id: p.id, name: p.name })
                       }
                       className="inline-flex items-center justify-center p-2 rounded-md border border-red-200 text-red-600 hover:text-white hover:bg-red-600 hover:border-red-600 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-500"
-                      aria-label={t("Delete")}
-                      title={t("Delete")}
+                      aria-label={t("delete") || "Delete"}
+                      title={t("delete") || "Delete"}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -649,10 +649,10 @@ export function ProductsPage() {
                     {t("weight") || "Weight"}: {p.weight}
                   </span>
                   <span>
-                    {t("Harvest Start")}: {formatDate(p.harvestStartDate)}
+                    {t("harvest_start") || "Harvest Start"}: {formatDate(p.harvestStartDate)}
                   </span>
                   <span>
-                    {t("Harvest End")}: {formatDate(p.harvestEndDate)}
+                    {t("harvest_end") || "Harvest End"}: {formatDate(p.harvestEndDate)}
                   </span>
                   <span>
                     {t("status")}:{" "}
@@ -684,7 +684,7 @@ export function ProductsPage() {
             const cur = Number(page ?? 1);
             const start = total === 0 ? 0 : (cur - 1) * perPage + 1;
             const end = Math.min(cur * perPage, total);
-            return `${t("Showing") || "Showing"} ${start}–${end} ${t("of") || "of"} ${total} ${(t("products") || "products").toLowerCase()}`;
+            return `${t("showing_range") || "Showing"} ${start}-${end} ${t("of") || "of"} ${total} ${(t("products") || "products").toLowerCase()}`;
           })()}
         </div>
 
@@ -694,7 +694,7 @@ export function ProductsPage() {
             disabled={page <= 1}
             className={`px-3 py-1.5 text-sm rounded-md border ${page <= 1 ? "text-gray-400 border-gray-200 bg-white cursor-not-allowed" : "text-[#1a4d2e] border-gray-300 hover:bg-gray-50"}`}
           >
-            {t("Previous") || "Previous"}
+            {t("previous") || "Previous"}
           </button>
 
           {Array.from(
@@ -705,7 +705,7 @@ export function ProductsPage() {
                   1,
                   Math.ceil(
                     (pagination.totalItems || 0) /
-                      (pagination.itemsPerPage || LIMIT),
+                    (pagination.itemsPerPage || LIMIT),
                   ),
                 ),
             },
@@ -729,13 +729,13 @@ export function ProductsPage() {
                   1,
                   Math.ceil(
                     (pagination.totalItems || 0) /
-                      (pagination.itemsPerPage || LIMIT),
+                    (pagination.itemsPerPage || LIMIT),
                   ),
                 ))
             }
             className={`px-3 py-1.5 text-sm rounded-md border ${page >= (pagination.totalPages || Math.max(1, Math.ceil((pagination.totalItems || 0) / (pagination.itemsPerPage || LIMIT)))) ? "text-gray-400 border-gray-200 bg-white cursor-not-allowed" : "text-[#1a4d2e] border-gray-300 hover:bg-gray-50"}`}
           >
-            {t("Next") || "Next"}
+            {t("next") || "Next"}
           </button>
         </div>
       </div>
@@ -762,12 +762,14 @@ export function ProductsPage() {
                 id="confirm-delete-title"
                 className="text-lg font-semibold text-gray-900"
               >
-                {t("Confirm Delete")}
+                {language === "en" ? "Confirm Delete" : "Xác nhận xóa"}
               </h2>
             </div>
             <div className="p-4 text-sm text-gray-600">
-              {t("Are you sure you want to delete")}{" "}
-              {confirmDelete?.name || t("this product")}?
+              {language === "en"
+                ? "Are you sure you want to delete"
+                : "Bạn có chắc chắn muốn xóa"}{" "}
+              {confirmDelete?.name || (language === "en" ? "this product" : "sản phẩm này")}?
             </div>
             <div className="p-4 flex justify-end gap-2">
               <button
@@ -775,7 +777,7 @@ export function ProductsPage() {
                 onClick={() => setConfirmDelete(null)}
                 className="px-3 py-1.5 text-sm rounded-md border bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
               >
-                {t("Cancel")}
+                {t("cancel") || "Cancel"}
               </button>
               <button
                 type="button"
@@ -785,7 +787,7 @@ export function ProductsPage() {
                 }}
                 className="px-3 py-1.5 text-sm rounded-md border bg-red-600 text-white border-red-600 hover:bg-red-700"
               >
-                {t("Delete")}
+                {t("delete") || "Delete"}
               </button>
             </div>
           </div>
@@ -794,3 +796,6 @@ export function ProductsPage() {
     </div>
   );
 }
+
+
+

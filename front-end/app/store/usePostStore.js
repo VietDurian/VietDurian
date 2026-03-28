@@ -238,4 +238,11 @@ export const usePostStore = create((set, get) => ({
             get().fetchFavorites();
         }
     },
+
+    // ── Report Post ──────────────────────────────────────────────────────────────
+    reportPost: async (postId, reason, imageData = null) => {
+        const payload = { post_id: postId, reason };
+        if (imageData) payload.image = imageData;
+        await apiClient.post("/report", payload);
+    },
 }));
