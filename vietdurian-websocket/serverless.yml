@@ -1,27 +1,19 @@
 # serverless.yml
 service: vietdurian-websocket
 
+useDotenv: true
+
 provider:
   name: aws
-  runtime: nodejs24.x
+  runtime: nodejs20.x
   region: ap-southeast-1
   environment:
-    CONNECTIONS_TABLE: ${self:service}-connections-${sls:stage}
     STAGE: ${sls:stage}
+    MONGODB_URI: ${env:MONGODB_URI}
+    JWT_SECRET: ${env:JWT_SECRET}
   iam:
     role:
       statements:
-        - Effect: Allow
-          Action:
-            - dynamodb:PutItem
-            - dynamodb:DeleteItem
-            - dynamodb:GetItem
-            - dynamodb:Scan
-            - dynamodb:Query
-            - dynamodb:UpdateItem
-          Resource:
-            - !GetAtt ConnectionsTable.Arn
-            - !Sub "${ConnectionsTable.Arn}/index/*"
         - Effect: Allow
           Action:
             - execute-api:ManageConnections
@@ -36,8 +28,7 @@ functions:
           route: $connect
           authorizer:
             name: wsAuthorizer
-            identitySources:
-              - route.request.querystring.token
+            identitySource: route.request.querystring.token
 
   disconnect:
     handler: handlers/disconnect.handler
@@ -51,47 +42,51 @@ functions:
       - websocket:
           route: $default
 
-  sendMessage:
-    handler: handlers/sendMessage.handler
-    events:
-      - websocket:
-          route: sendMessage
-
   getOnlineUsers:
     handler: handlers/getOnlineUsers.handler
     events:
       - websocket:
           route: getOnlineUsers
 
+  getUserConversations:
+    handler: handlers/getUserConversations.handler
+    events:
+      - websocket:
+          route: getUserConversations
+
+  getConversationDetails:
+    handler: handlers/getConversationDetails.handler
+    events:
+      - websocket:
+          route: getConversationDetails
+
+  sendMessage:
+    handler: handlers/sendMessage.handler
+    events:
+      - websocket:
+          route: sendMessage
+
+  updateMessage:
+    handler: handlers/updateMessage.handler
+    events:
+      - websocket:
+          route: updateMessage
+
+  deleteMessage:
+    handler: handlers/deleteMessage.handler
+    events:
+      - websocket:
+          route: deleteMessage
+
+  getAllConversations:
+    handler: handlers/getAllConversations.handler
+    events:
+      - websocket:
+          route: getAllConversations
+
   wsAuthorizer:
     handler: handlers/authorizer.handler
 
-resources:
-  Resources:
-    ConnectionsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.CONNECTIONS_TABLE}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: connectionId
-            AttributeType: S
-          - AttributeName: userId
-            AttributeType: S
-        KeySchema:
-          - AttributeName: connectionId
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: userId-index
-            KeySchema:
-              - AttributeName: userId
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
-        TimeToLiveSpecification:
-          AttributeName: ttl
-          Enabled: true
-
-
 plugins:
   - serverless-offline
+  - serverless-dotenv-plugin

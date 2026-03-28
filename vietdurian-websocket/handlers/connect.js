@@ -1,5 +1,5 @@
 // handlers/connect.js
-const db = require("../lib/dynamo");
+const db = require("..lib/mongo");
 const { broadcast } = require("../lib/sender");
 
 exports.handler = async (event) => {

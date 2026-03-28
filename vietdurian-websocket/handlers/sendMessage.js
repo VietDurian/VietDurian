@@ -1,55 +1,60 @@
-// handlers/sendMessage.js
-const db = require("../lib/dynamo");
-const { sendToUser, sendToConnection } = require("../lib/sender");
+const { reply } = require("../lib/sender");
+const { chatService } = require("../services/chatService");
+const db = require("../lib/mongo");
 
 exports.handler = async (event) => {
-  const connectionId = event.requestContext.connectionId;
-  const domainName = event.requestContext.domainName;
-  const stage = event.requestContext.stage;
-
-  let body;
-  try {
-    body = JSON.parse(event.body);
-  } catch {
-    return { statusCode: 400, body: "Invalid JSON" };
-  }
-
-  const { targetUserId, message, conversationId } = body;
-
-  if (!targetUserId || !message) {
-    return { statusCode: 400, body: "targetUserId and message are required" };
-  }
+  const { connectionId, domainName, stage } = event.requestContext;
+  const authorizer = event.requestContext.authorizer;
+  const { content, conversationId, receiverId } = JSON.parse(
+    event.body || "{}",
+  );
 
   try {
-    // Lấy thông tin sender
-    const sender = await db.getConnection(connectionId);
-
-    const payload = {
-      event: "newMessage",
-      data: {
-        senderId: sender?.userId,
-        senderName: sender?.username,
-        senderAvatar: sender?.avatar,
-        message,
-        conversationId,
-        timestamp: Date.now(),
-      },
-    };
-
-    // Gửi tới người nhận
-    await sendToUser(targetUserId, payload, domainName, stage);
-
-    // Echo lại cho chính sender (để sync UI)
-    await sendToConnection(
-      connectionId,
-      { ...payload, self: true },
-      domainName,
-      stage,
+    const newMessage = await chatService.sendMessage(
+      authorizer.userId,
+      authorizer.role,
+      authorizer.username,
+      authorizer.avatar,
+      { content, conversationId, receiverId },
     );
 
-    return { statusCode: 200, body: "Message sent" };
+    // Gửi lại cho sender
+    await reply(connectionId, domainName, stage, {
+      event: "newMessage",
+      data: newMessage,
+    });
+
+    // Push realtime cho receiver nếu đang online
+    if (receiverId) {
+      const receiverConnections = await db.getConnectionsByUserId(receiverId);
+      const {
+        ApiGatewayManagementApiClient,
+        PostToConnectionCommand,
+      } = require("@aws-sdk/client-apigatewaymanagementapi");
+      const client = new ApiGatewayManagementApiClient({
+        endpoint: `https://${domainName}/${stage}`,
+      });
+      await Promise.allSettled(
+        receiverConnections.map((c) =>
+          client.send(
+            new PostToConnectionCommand({
+              ConnectionId: c.connectionId,
+              Data: Buffer.from(
+                JSON.stringify({ event: "newMessage", data: newMessage }),
+              ),
+            }),
+          ),
+        ),
+      );
+    }
+
+    return { statusCode: 200 };
   } catch (err) {
-    console.error("SendMessage error:", err);
-    return { statusCode: 500, body: "Failed to send message" };
+    await reply(connectionId, domainName, stage, {
+      event: "error",
+      action: "sendMessage",
+      message: err.message,
+    });
+    return { statusCode: 500 };
   }
 };
