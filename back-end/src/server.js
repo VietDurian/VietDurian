@@ -33,6 +33,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "https://dev.d2k0kt672erqlu.amplifyapp.com",
+      "https://viet-durian.vercel.app",
     ],
     credentials: true,
   }),

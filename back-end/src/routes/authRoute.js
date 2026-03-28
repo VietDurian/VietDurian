@@ -536,6 +536,30 @@ Router.post(
   authController.changePassword,
 );
 
+/**
+ * @swagger
+ * /auth/check:
+ *   get:
+ *     summary: Check authentication status
+ *     description: Validate current JWT token and return current authenticated user data.
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Token is valid, return current user info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               description: Current authenticated user object
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *       500:
+ *         description: Server error
+ */
+
 Router.get("/check", authMiddleware.protect, authController.checkAuth);
 
 export const authRoute = Router;
