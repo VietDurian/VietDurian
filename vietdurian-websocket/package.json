@@ -1,22 +1,20 @@
 {
   "name": "vietdurian-websocket",
   "version": "1.0.0",
-  "description": "WebSocket service for VietDurian using AWS API Gateway WebSocket + Lambda",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "deploy": "serverless deploy --stage dev",
-    "deploy:prod": "serverless deploy --stage prod",
-    "offline": "serverless offline start",
-    "remove": "serverless remove --stage dev"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
   },
   "dependencies": {
-    "@aws-sdk/client-apigatewaymanagementapi": "^3.0.0",
-    "@aws-sdk/client-dynamodb": "^3.0.0",
-    "@aws-sdk/lib-dynamodb": "^3.0.0",
-    "jsonwebtoken": "^9.0.0"
+    "socket.io": "^4.7.0",
+    "express": "^4.18.0",
+    "mongoose": "^8.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "dotenv": "^16.0.0",
+    "cors": "^2.8.5"
   },
   "devDependencies": {
-    "serverless": "^3.0.0",
-    "serverless-offline": "^13.0.0"
+    "nodemon": "^3.0.0"
   }
 }

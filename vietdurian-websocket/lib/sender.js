@@ -2,58 +2,40 @@
 const {
   ApiGatewayManagementApiClient,
   PostToConnectionCommand,
-  DeleteConnectionCommand,
 } = require("@aws-sdk/client-apigatewaymanagementapi");
-const db = require("./dynamo");
 
-const getClient = (domainName, stage) => {
-  const endpoint = `https://${domainName}/${stage}`;
-  return new ApiGatewayManagementApiClient({ endpoint });
-};
+const getClient = (domainName, stage) =>
+  new ApiGatewayManagementApiClient({
+    endpoint: `https://${domainName}/${stage}`,
+  });
 
-// Gửi message tới 1 connectionId
-const sendToConnection = async (connectionId, data, domainName, stage) => {
+// Gửi về đúng connectionId
+const reply = async (connectionId, domainName, stage, payload) => {
   const client = getClient(domainName, stage);
-  try {
-    await client.send(
-      new PostToConnectionCommand({
-        ConnectionId: connectionId,
-        Data: JSON.stringify(data),
-      }),
-    );
-    return true;
-  } catch (err) {
-    if (err.$metadata?.httpStatusCode === 410) {
-      // Connection đã stale → xoá khỏi DB
-      await db.deleteConnection(connectionId);
-    }
-    return false;
-  }
+  await client.send(
+    new PostToConnectionCommand({
+      ConnectionId: connectionId,
+      Data: Buffer.from(JSON.stringify(payload)),
+    }),
+  );
 };
 
-// Gửi tới tất cả connections của 1 userId
-const sendToUser = async (userId, data, domainName, stage) => {
-  const connections = await db.getConnectionsByUserId(userId);
-  await Promise.all(
+// Broadcast tất cả connections
+const broadcast = async (payload, domainName, stage) => {
+  const db = require("./mongo");
+  const connections = await db.getAllConnections();
+  const client = getClient(domainName, stage);
+
+  await Promise.allSettled(
     connections.map((c) =>
-      sendToConnection(c.connectionId, data, domainName, stage),
+      client.send(
+        new PostToConnectionCommand({
+          ConnectionId: c.connectionId,
+          Data: Buffer.from(JSON.stringify(payload)),
+        }),
+      ),
     ),
   );
 };
 
-// Broadcast tới tất cả connections đang online
-const broadcast = async (
-  data,
-  domainName,
-  stage,
-  excludeConnectionId = null,
-) => {
-  const connections = await db.getAllConnections();
-  await Promise.all(
-    connections
-      .filter((c) => c.connectionId !== excludeConnectionId)
-      .map((c) => sendToConnection(c.connectionId, data, domainName, stage)),
-  );
-};
-
-module.exports = { sendToConnection, sendToUser, broadcast };
+module.exports = { reply, broadcast };
