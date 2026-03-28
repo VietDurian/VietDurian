@@ -1,0 +1,170 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
+
+package "StatisticsDiaryModule" {
+
+	' --- ROUTE & MIDDLEWARE (View Statistics Detail only) ---
+	class SeasonDiaryRoute {
+		+statisticsSeasonDiary(req, res): void
+	}
+
+	class AuthMiddleware {
+		+protect(req): UserInfo
+	}
+
+	' --- CONTROLLER (View Statistics Detail only) ---
+	class SeasonDiaryController {
+		-seasonDiaryService: SeasonDiaryService
+		+statisticsSeasonDiary(req, res, next): Promise<void>
+	}
+
+	' --- SERVICE (View Statistics Detail only) ---
+	class SeasonDiaryService {
+		-seasonDiaryModel: SeasonDiaryModel
+		-buyingSeedModel: BuyingSeedModel
+		-buyingFertilizersModel: BuyingFertilizersModel
+		-laborCostsModel: LaborCostsModel
+		-irrigationCostsModel: IrrigationCostsModel
+		-harvestConsumptionModel: HarvestConsumptionModel
+		+getSeasonDiaryStatistics(params): Promise<SeasonDiaryStatistics>
+	}
+
+	' --- DATA ACCESS ---
+	class SeasonDiaryModel {
+		+findById(...)
+	}
+
+	class BuyingSeedModel {
+		+aggregate(...)
+	}
+
+	class BuyingFertilizersModel {
+		+aggregate(...)
+	}
+
+	class LaborCostsModel {
+		+aggregate(...)
+	}
+
+	class IrrigationCostsModel {
+		+aggregate(...)
+	}
+
+	class HarvestConsumptionModel {
+		+aggregate(...)
+	}
+
+	class Database {
+	}
+
+	' --- ENTITIES (FULL MODEL FIELDS) ---
+	class SeasonDiary {
+		+_id: ObjectId
+		+user_id: ObjectId
+		+garden_info: (garden_name, farmer_name, location, longitude, latitude)
+		+farm_info: (members, planting_area_code, crop_variety, farmer_code, row_bed_count, area, land_use_history)
+		+status: string
+		+end_date: Date
+		+timestamps: (created_at, updated_at)
+	}
+
+	class BuyingSeed {
+		+_id: ObjectId
+		+season_diary_id: ObjectId
+		+detail: (purchase_date, seed_name, quantity, total_price)
+		+supplier: (supplier_name, supplier_address)
+		+timestamps: (created_at, updated_at)
+	}
+
+	class BuyingFertilizers {
+		+_id: ObjectId
+		+season_diary_id: ObjectId
+		+detail: (purchase_date, material_name, quantity, total_price, unit)
+		+supplier: (supplier_name, supplier_address)
+		+timestamps: (created_at, updated_at)
+	}
+
+	class LaborCosts {
+		+_id: ObjectId
+		+season_diary_id: ObjectId
+		+created_by: ObjectId
+		+labor: (labor_hire_date, work_description, worker_quantity)
+		+working_time: (hours, minutes)
+		+cost: (total_price_vnd)
+		+people: (worker_or_team_name, supervisor_name)
+		+timestamps: (created_at, updated_at)
+	}
+
+	class IrrigationCosts {
+		+_id: ObjectId
+		+season_diary_id: ObjectId
+		+created_by: ObjectId
+		+execution: (execution_date, irrigation_item, irrigation_method, irrigation_area)
+		+irrigation_duration: (hours, minutes)
+		+cost: (electricity_fuel_cost)
+		+performed_by: string
+		+timestamps: (created_at, updated_at)
+	}
+
+	class HarvestConsumption {
+		+_id: ObjectId
+		+season_diary_id: ObjectId
+		+created_by: ObjectId
+		+harvest: (harvest_date, harvest_quantity_kg)
+		+sale: (sale_date, buyer_or_consumption_address, consumed_weight_kg, sale_unit_price_vnd)
+		+timestamps: (created_at, updated_at)
+	}
+
+	' --- RESPONSE DTO (Statistics Detail) ---
+	class SeasonDiaryStatistics {
+		+diary: (id, garden_name, status, area, start_date, end_date)
+		+overview: (total_cost, total_revenue, profit, margin_percent, cost_per_kg, yield_per_area)
+		+harvest: (total_harvest_kg, total_consumed_kg, unsold_weight_kg, consumed_rate_percent)
+		+cost_breakdown: (seed.amount, seed.percent, fertilizer.amount, fertilizer.percent, labor.amount, labor.percent, irrigation.amount, irrigation.percent)
+	}
+}
+
+' --- RELATIONSHIPS ---
+
+' === DEPENDENCY ===
+SeasonDiaryRoute ..> AuthMiddleware : Dependency
+SeasonDiaryRoute ..> SeasonDiaryController : Dependency
+SeasonDiaryController ..> SeasonDiaryService : Dependency
+SeasonDiaryService ..> SeasonDiaryModel : Dependency
+SeasonDiaryService ..> BuyingSeedModel : Dependency
+SeasonDiaryService ..> BuyingFertilizersModel : Dependency
+SeasonDiaryService ..> LaborCostsModel : Dependency
+SeasonDiaryService ..> IrrigationCostsModel : Dependency
+SeasonDiaryService ..> HarvestConsumptionModel : Dependency
+SeasonDiaryService ..> SeasonDiaryStatistics : Dependency
+
+' === DEPENDENCY: Model uses Entity ===
+SeasonDiaryModel ..> SeasonDiary : Dependency
+BuyingSeedModel ..> BuyingSeed : Dependency
+BuyingFertilizersModel ..> BuyingFertilizers : Dependency
+LaborCostsModel ..> LaborCosts : Dependency
+IrrigationCostsModel ..> IrrigationCosts : Dependency
+HarvestConsumptionModel ..> HarvestConsumption : Dependency
+
+' === ASSOCIATION ===
+SeasonDiary "1" --> "many   " BuyingSeed
+SeasonDiary "1" --> "many   " BuyingFertilizers
+SeasonDiary "1" --> "many   " LaborCosts
+SeasonDiary "1" --> "many   " IrrigationCosts
+SeasonDiary "1" --> "many   " HarvestConsumption
+
+' === PERSISTENCE ===
+SeasonDiaryModel --> Database : queries
+BuyingSeedModel --> Database : queries
+BuyingFertilizersModel --> Database : queries
+LaborCostsModel --> Database : queries
+IrrigationCostsModel --> Database : queries
+HarvestConsumptionModel --> Database : queries
+
+@enduml
