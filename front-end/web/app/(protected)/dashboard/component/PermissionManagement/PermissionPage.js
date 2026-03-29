@@ -18,6 +18,15 @@ const getStatusLabel = (value, t, isVi) => {
     return map[status] || (isVi ? 'Chưa gửi' : (t('none') || 'None'))
 }
 
+const getStatusBadgeClass = (value) => {
+    const status = String(value || 'none').toLowerCase()
+    if (status === 'approved') return 'bg-green-100 text-green-700 ring-1 ring-green-200'
+    if (status === 'rejected' || status === 'reject') return 'bg-red-100 text-red-700 ring-1 ring-red-200'
+    if (status === 'pending') return 'bg-yellow-100 text-yellow-700 ring-1 ring-yellow-200'
+    if (status === 'none') return 'bg-slate-200 text-slate-700 ring-1 ring-slate-300'
+    return 'bg-gray-100 text-gray-700 ring-1 ring-gray-200'
+}
+
 export default function PermissionPage() {
     const { t, language } = useLanguage()
     const isVi = language !== 'en'
@@ -105,8 +114,8 @@ export default function PermissionPage() {
             user_id: item.user_id?._id,
             requestRole: item.requested_role,
             description: item.description,
-            status: item?.verify_cccd,
-            verify_cccd: item?.verify_cccd,
+            status: item?.verify_cccd || 'none',
+            verify_cccd: item?.verify_cccd || 'none',
             user_name: item.user?.full_name || (isVi ? 'Người dùng chưa xác định' : 'Unknown user'),
             email: item.user?.email || (isVi ? 'Chưa có email' : 'No email'),
             phone: item.user?.phone || (isVi ? 'Chưa có số điện thoại' : 'No phone number'),
@@ -193,8 +202,8 @@ export default function PermissionPage() {
                 description: detailData.description,
                 document: detailData.document,
                 proofs: detailData.proofs,
-                status: detailData.verify_cccd || detailData.status || req.status || 'pending',
-                verify_cccd: detailData.verify_cccd || detailData.status || req.status || 'pending',
+                status: detailData.verify_cccd || detailData.status || req.status || 'none',
+                verify_cccd: detailData.verify_cccd || detailData.status || req.status || 'none',
                 created_at: detailData.user_id?.created_at || detailData.created_at,
                 updated_at: detailData.user_id?.updated_at || detailData.updated_at,
             }
@@ -282,14 +291,7 @@ export default function PermissionPage() {
                                             </td>
                                             <td className="px-3 py-3 md:px-6 md:py-4 text-sm">
                                                 <span
-                                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${req.status === 'approved'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : req.status === 'rejected'
-                                                            ? 'bg-red-100 text-red-700'
-                                                            : req.status === 'pending'
-                                                                ? 'bg-yellow-100 text-yellow-700'
-                                                                : 'bg-gray-100 text-gray-700'
-                                                        }`}
+                                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(req.status)}`}
                                                 >
                                                     {getStatusLabel(req.status, t, isVi)}
                                                 </span>
