@@ -1,0 +1,95 @@
+actor Users
+boundary CapabilityProfileFormPage
+control serviceProviderProfileController
+participant ":serviceProviderProfileService" as Service
+participant ":serviceProviderProfileModel" as Model
+database Database
+
+activate Users
+Users->CapabilityProfileFormPage: 1. Open capability profile update form
+activate CapabilityProfileFormPage
+CapabilityProfileFormPage->serviceProviderProfileController: 2. GET /service-provider-profile/capability
+activate serviceProviderProfileController
+serviceProviderProfileController->Service: 3. getCapabilityProfile(userId)
+activate Service
+Service->Model: 4. findByUserId(userId)
+activate Model
+Model->Database: 5. findOne()
+activate Database
+Database-->Model: 6. Return existing capability profile
+deactivate Database
+Model-->Service: 7. Return profile document
+deactivate Model
+Service->Service: 8. mapToCapabilityDTO()
+activate Service
+space
+deactivate Service
+Service-->serviceProviderProfileController: 9. Return capability profile data
+deactivate Service
+serviceProviderProfileController-->CapabilityProfileFormPage: 10. Return capability profile data
+deactivate serviceProviderProfileController
+CapabilityProfileFormPage-->Users: 11. Display current capability + service areas
+
+Users->CapabilityProfileFormPage: 12. Update capability + service areas
+Users->CapabilityProfileFormPage: 13. Submit update capability profile form
+CapabilityProfileFormPage->CapabilityProfileFormPage: 14. Validate input
+activate CapabilityProfileFormPage
+space
+deactivate CapabilityProfileFormPage
+opt Validation error
+    CapabilityProfileFormPage-->Users: 14.1 Display validation error
+end
+
+CapabilityProfileFormPage->serviceProviderProfileController: 15. PUT /service-provider-profile/capability
+activate serviceProviderProfileController
+serviceProviderProfileController->Service: 16. updateCapabilityProfile(userId, payload)
+activate Service
+
+Service->Model: 17. findByUserId(userId)
+activate Model
+Model->Database: 18. findOne()
+activate Database
+Database-->Model: 19. Return existing profile document (or null)
+deactivate Database
+Model-->Service: 20. Return result
+deactivate Model
+
+Service->Service: 21. checkExistingProfile()
+activate Service
+space
+deactivate Service
+alt profile not found
+    Service-->serviceProviderProfileController: 21.1 Return error: profile not found
+    serviceProviderProfileController-->CapabilityProfileFormPage: 21.1.1 Return error
+    CapabilityProfileFormPage-->Users: 21.1.2 Display error: profile not found
+else profile exists
+    Service->Service: 22. validateCapabilityData()
+    activate Service
+    space
+    deactivate Service
+    opt domain validation error
+        Service-->serviceProviderProfileController: 22.1 Return error: invalid data
+        serviceProviderProfileController-->CapabilityProfileFormPage: 22.1.1 Return error
+        CapabilityProfileFormPage-->Users: 22.1.2 Display validation error
+    else data valid
+        Service->Model: 23. updateProfile(userId, payload)
+        activate Model
+        Model->Database: 24. findOneAndUpdate()
+        activate Database
+        Database-->Model: 25. Return updated profile
+        deactivate Database
+        Model-->Service: 26. Return updated profile
+        deactivate Model
+        Service->Service: 27. mapToCapabilityDTO()
+        activate Service
+        space
+        deactivate Service
+        Service-->serviceProviderProfileController: 28. Return success + updated capability data
+        deactivate Service
+        serviceProviderProfileController-->CapabilityProfileFormPage: 29. Return success + updated capability data
+        deactivate serviceProviderProfileController
+        CapabilityProfileFormPage-->Users: 30. Display success + updated service areas
+        deactivate CapabilityProfileFormPage
+        deactivate Users
+    end
+end
