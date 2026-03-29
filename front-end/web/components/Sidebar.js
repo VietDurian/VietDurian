@@ -154,8 +154,7 @@ const Sidebar = () => {
                   {user.full_name}
                 </div>
                 <div className="text-xs text-gray-500 truncate">
-                  {user.email ||
-                    (onlineUsers.includes(user._id) ? "Online" : "Offline")}
+                  {user.lastMessage?.text || "Bắt đầu cuộc trò chuyện"}
                 </div>
               </div>
 
