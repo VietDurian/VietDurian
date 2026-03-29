@@ -84,15 +84,32 @@ export const useChatStore = create((set, get) => ({
       const newMsg = res.data;
       set({ messages: [...messages, newMsg] });
 
-      // Broadcast realtime cho người kia
-      const ws = useAuthStore.getState().ws;
-      const authUser = useAuthStore.getState().authUser;
-      const roomId = ["chat", authUser._id, selectedUser._id].sort().join(":");
+      const { users } = get();
+      const isExisting = users.some((u) => u._id === selectedUser._id);
 
+      if (isExisting) {
+        set({
+          users: users.map((u) =>
+            u._id === selectedUser._id
+              ? {
+                  ...u,
+                  lastMessage: {
+                    text: newMsg.text,
+                    createdAt: newMsg.createdAt,
+                  },
+                }
+              : u,
+          ),
+        });
+      } else {
+        await get().loadContacts();
+      }
+
+      const ws = useAuthStore.getState().ws;
       ws?.send(
         JSON.stringify({
           type: "message",
-          roomId,
+          roomId: `user:${selectedUser._id}`,
           payload: newMsg,
         }),
       );
@@ -105,42 +122,26 @@ export const useChatStore = create((set, get) => ({
     const { selectedUser } = get();
     if (!selectedUser) return;
 
-    const ws = useAuthStore.getState().ws;
-    if (!ws) return;
-
     const authUser = useAuthStore.getState().authUser;
     const roomId = ["chat", authUser._id, selectedUser._id].sort().join(":");
 
-    const doSubscribe = () => {
-      ws.send(JSON.stringify({ type: "join_room", roomId }));
-
-      const handler = (event) => {
-        const msg = JSON.parse(event.data);
-        if (msg.type !== "message") return;
-        if (msg.roomId !== roomId) return;
-        if (msg.senderId === authUser._id) return;
-        set({ messages: [...get().messages, msg.payload] });
-      };
-
-      ws.addEventListener("message", handler);
-      set({ messageListener: handler });
+    const tryJoin = () => {
+      const ws = useAuthStore.getState().ws;
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "join_room", roomId }));
+        clearInterval(joinInterval);
+      }
     };
 
-    // ← Đây là fix: check readyState trước khi send
-    if (ws.readyState === WebSocket.OPEN) {
-      doSubscribe();
-    } else {
-      ws.addEventListener("open", doSubscribe, { once: true });
-    }
+    const joinInterval = setInterval(tryJoin, 500);
+    set({ _joinInterval: joinInterval });
+    tryJoin();
   },
 
   unsubscribeFromMessages: () => {
-    const ws = useAuthStore.getState().ws;
-    const { messageListener } = get();
-    if (ws && messageListener) {
-      ws.removeEventListener("message", messageListener);
-      set({ messageListener: null });
-    }
+    const { _joinInterval } = get();
+    clearInterval(_joinInterval);
+    set({ _joinInterval: null });
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),

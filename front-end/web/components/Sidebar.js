@@ -21,7 +21,7 @@ const Sidebar = () => {
     deleteConversation,
   } = useChatStore();
 
-  const { onlineUsers, socket } = useAuthStore();
+  const { onlineUsers } = useAuthStore();
   const [search, setSearch] = useState("");
   const router = useRouter();
 
@@ -45,20 +45,6 @@ const Sidebar = () => {
   useEffect(() => {
     loadContacts();
   }, [loadContacts]);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleNewMessage = () => {
-      loadContacts();
-    };
-
-    socket.on("newMessage", handleNewMessage);
-
-    return () => {
-      socket.off("newMessage", handleNewMessage);
-    };
-  }, [socket, loadContacts]);
 
   // Popup closes when clicked outside
   useEffect(() => {
