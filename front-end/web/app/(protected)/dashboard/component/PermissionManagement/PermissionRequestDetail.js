@@ -18,14 +18,15 @@ const formatDate = (value, locale = "vi-VN") => {
 };
 
 const formatStatus = (value, isVi) => {
-  const status = (value || "pending").toLowerCase();
+  const status = (value || "none").toLowerCase();
   const statusMap = {
+    none: isVi ? "Chưa gửi" : "Not submitted",
     pending: isVi ? "Đang chờ duyệt" : "Pending",
     approved: isVi ? "Đã duyệt" : "Approved",
     rejected: isVi ? "Đã từ chối" : "Rejected",
   };
 
-  return statusMap[status] || (isVi ? "Đang chờ duyệt" : "Pending");
+  return statusMap[status] || (isVi ? "Chưa gửi" : "Not submitted");
 };
 
 const getProofLabel = (proofType, index, isVi) => {
@@ -86,7 +87,7 @@ export default function PermissionRequestDetail({
     request?.verify_cccd ||
     request?.status ||
     request?.data?.verify_cccd ||
-    "pending";
+    "none";
 
   const documentsToDisplay =
     request?.proofs ||
@@ -116,6 +117,11 @@ export default function PermissionRequestDetail({
       },
       {
         label:
+          currentStatus === "none"
+            ? isVi
+              ? "Trạng thái hồ sơ"
+              : "Profile status"
+            :
           currentStatus === "pending"
             ? isVi
               ? "Trạng thái xử lý"
@@ -124,6 +130,11 @@ export default function PermissionRequestDetail({
               ? "Cập nhật lần cuối"
               : "Last updated",
         value:
+          currentStatus === "none"
+            ? isVi
+              ? "Chưa gửi yêu cầu"
+              : "Not submitted"
+            :
           currentStatus === "pending"
             ? isVi
               ? "Đang chờ duyệt"
@@ -134,6 +145,8 @@ export default function PermissionRequestDetail({
             ? "bg-emerald-500"
             : currentStatus === "rejected"
               ? "bg-rose-500"
+              : currentStatus === "none"
+                ? "bg-slate-400"
               : "bg-amber-500",
       },
     ],
@@ -141,6 +154,14 @@ export default function PermissionRequestDetail({
   );
 
   const statusTheme = {
+    none: {
+      card: "bg-gradient-to-br from-slate-100 via-white to-slate-200/70 border-slate-300/80",
+      overlay: "from-slate-700/10 via-slate-500/5",
+      badge: "bg-slate-200 text-slate-800 ring-slate-300/80",
+      dot: "bg-slate-500",
+      action:
+        "bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700",
+    },
     pending: {
       card: "bg-gradient-to-br from-amber-50 via-white to-amber-100/70 border-amber-200/70",
       overlay: "from-amber-700/10 via-amber-500/5",
@@ -167,7 +188,7 @@ export default function PermissionRequestDetail({
     },
   };
 
-  const theme = statusTheme[currentStatus] || statusTheme.pending;
+  const theme = statusTheme[currentStatus] || statusTheme.none;
 
   const renderDocuments = (doc) => {
     if (!doc || (Array.isArray(doc) && doc.length === 0)) {
