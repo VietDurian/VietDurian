@@ -15,6 +15,7 @@ export const useAuthStore = create((set, get) => ({
   isUpdatingProfile: false,
   isCheckingAuth: true, // FIX: default true để tránh flash redirect trước khi check xong
   onlineUsers: [],
+  ws: null,
 
   checkAuth: async () => {
     set({ isCheckingAuth: true }); // FIX: set true trước khi check
@@ -206,5 +207,63 @@ export const useAuthStore = create((set, get) => ({
     } finally {
       set({ isUpdatingProfile: false });
     }
+  },
+
+  connectWS: () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return;
+
+    let reconnectAttempts = 0;
+    const MAX_ATTEMPTS = 10;
+    let shouldReconnect = true; // ← flag kiểm soát
+
+    const connect = () => {
+      const ws = new WebSocket(
+        `wss://vietdurian-websocket.onrender.com/ws?token=${token}`,
+      );
+
+      ws.onopen = () => {
+        console.log("[WS] Connected");
+        reconnectAttempts = 0;
+        set({ ws });
+      };
+
+      ws.onclose = () => {
+        console.log("[WS] Disconnected");
+        set({ ws: null });
+        // ← Chỉ reconnect nếu không phải do logout
+        if (shouldReconnect && reconnectAttempts < MAX_ATTEMPTS) {
+          const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
+          reconnectAttempts++;
+          console.log(`[WS] Reconnecting in ${delay}ms...`);
+          setTimeout(connect, delay);
+        }
+      };
+
+      ws.onerror = (e) => console.error("[WS] Error", e);
+
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type === "online_users") {
+          set({ onlineUsers: msg.userIds });
+        }
+      };
+
+      // Lưu hàm cancel vào store để disconnectWS gọi được
+      set({
+        _cancelReconnect: () => {
+          shouldReconnect = false;
+        },
+      });
+    };
+
+    connect();
+  },
+
+  disconnectWS: () => {
+    const { ws, _cancelReconnect } = get();
+    _cancelReconnect?.(); // ← tắt reconnect trước
+    ws?.close();
+    set({ ws: null, _cancelReconnect: null });
   },
 }));

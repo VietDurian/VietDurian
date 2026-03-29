@@ -81,46 +81,64 @@ export const useChatStore = create((set, get) => ({
         `/messages/send/${selectedUser._id}`,
         messageData,
       );
-      set({ messages: [...messages, res.data] });
+      const newMsg = res.data;
+      set({ messages: [...messages, newMsg] });
+
+      // Broadcast realtime cho người kia
+      const ws = useAuthStore.getState().ws;
+      const authUser = useAuthStore.getState().authUser;
+      const roomId = ["chat", authUser._id, selectedUser._id].sort().join(":");
+
+      ws?.send(
+        JSON.stringify({
+          type: "message",
+          roomId,
+          payload: newMsg,
+        }),
+      );
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message);
     }
   },
 
   subscribeToMessages: () => {
     const { selectedUser } = get();
-
     if (!selectedUser) return;
 
-    const socket = useAuthStore.getState().socket;
-    if (!socket) return;
+    const ws = useAuthStore.getState().ws;
+    if (!ws) return;
 
-    const { messageListener } = get();
-    if (messageListener) {
-      socket.off("newMessage", messageListener);
-    }
+    const authUser = useAuthStore.getState().authUser;
+    const roomId = ["chat", authUser._id, selectedUser._id].sort().join(":");
 
-    const handler = (newMessage) => {
-      const isMessageSentFromSelectedUser =
-        newMessage.senderId === selectedUser._id;
-      if (!isMessageSentFromSelectedUser) return;
+    const doSubscribe = () => {
+      ws.send(JSON.stringify({ type: "join_room", roomId }));
 
-      set({
-        messages: [...get().messages, newMessage],
-      });
+      const handler = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type !== "message") return;
+        if (msg.roomId !== roomId) return;
+        if (msg.senderId === authUser._id) return;
+        set({ messages: [...get().messages, msg.payload] });
+      };
+
+      ws.addEventListener("message", handler);
+      set({ messageListener: handler });
     };
 
-    socket.on("newMessage", handler);
-    set({ messageListener: handler });
+    // ← Đây là fix: check readyState trước khi send
+    if (ws.readyState === WebSocket.OPEN) {
+      doSubscribe();
+    } else {
+      ws.addEventListener("open", doSubscribe, { once: true });
+    }
   },
 
   unsubscribeFromMessages: () => {
-    const socket = useAuthStore.getState().socket;
-    if (!socket) return;
-
+    const ws = useAuthStore.getState().ws;
     const { messageListener } = get();
-    if (messageListener) {
-      socket.off("newMessage", messageListener);
+    if (ws && messageListener) {
+      ws.removeEventListener("message", messageListener);
       set({ messageListener: null });
     }
   },

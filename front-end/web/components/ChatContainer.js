@@ -102,9 +102,14 @@ const ChatContainer = () => {
               {selectedUser.full_name}
             </p>
             <p className="text-xs text-gray-500">
-              {onlineUsers.includes(selectedUser._id)
-                ? "Đang hoạt động"
-                : "Ngoại tuyến"}
+              {onlineUsers.includes(selectedUser._id) ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />{" "}
+                  Đang hoạt động
+                </>
+              ) : (
+                "Ngoại tuyến"
+              )}
             </p>
           </div>
         </div>

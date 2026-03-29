@@ -11,7 +11,6 @@ const getContacts = async (req, res) => {
       participants: myId,
     }).populate("participants", "-password");
 
-    // Return the other participant from each conversation
     const contacts = (
       await Promise.all(
         conversations.map(async (conv) => {
@@ -19,7 +18,13 @@ const getContacts = async (req, res) => {
             (p) => p._id.toString() !== myId.toString(),
           );
 
-          if (other) return other;
+          if (other) {
+            // ← Thêm lastMessage vào đây
+            return {
+              ...other.toObject(),
+              lastMessage: conv.lastMessage || null,
+            };
+          }
 
           const lastPairMessage = await Message.findOne({
             conversationId: conv._id,
@@ -39,7 +44,11 @@ const getContacts = async (req, res) => {
             return null;
           }
 
-          return User.findById(otherUserId).select("-password");
+          const user = await User.findById(otherUserId).select("-password");
+          // ← Thêm lastMessage vào đây
+          return user
+            ? { ...user.toObject(), lastMessage: conv.lastMessage || null }
+            : null;
         }),
       )
     ).filter(Boolean);
@@ -55,7 +64,6 @@ const getContacts = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
