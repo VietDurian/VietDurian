@@ -19,12 +19,20 @@ import { LanguageSwitcher } from "./component/LanguageSwitcher";
 import PermissionPage from "./component/PermissionManagement/PermissionPage.js";
 import { AdminProfilePage } from "./component/AdminProfilePage";
 import AdminChatPage from "./component/AdminChatPage";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function App() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { connectWS, disconnectWS } = useAuthStore();
+
+  // ← Connect WS khi vào /chat, disconnect khi rời
+  useEffect(() => {
+    connectWS();
+    return () => disconnectWS();
+  }, [connectWS, disconnectWS]);
 
   useEffect(() => {
     if (loading) return;
