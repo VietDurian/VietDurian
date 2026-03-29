@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import { toast } from "sonner";
+import { useChatStore } from "./useChatStore";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -215,7 +216,7 @@ export const useAuthStore = create((set, get) => ({
 
     let reconnectAttempts = 0;
     const MAX_ATTEMPTS = 10;
-    let shouldReconnect = true; // ← flag kiểm soát
+    let shouldReconnect = true;
 
     const connect = () => {
       const ws = new WebSocket(
@@ -231,11 +232,9 @@ export const useAuthStore = create((set, get) => ({
       ws.onclose = () => {
         console.log("[WS] Disconnected");
         set({ ws: null });
-        // ← Chỉ reconnect nếu không phải do logout
         if (shouldReconnect && reconnectAttempts < MAX_ATTEMPTS) {
           const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
           reconnectAttempts++;
-          console.log(`[WS] Reconnecting in ${delay}ms...`);
           setTimeout(connect, delay);
         }
       };
@@ -244,12 +243,47 @@ export const useAuthStore = create((set, get) => ({
 
       ws.onmessage = (event) => {
         const msg = JSON.parse(event.data);
+
         if (msg.type === "online_users") {
           set({ onlineUsers: msg.userIds });
         }
+
+        if (msg.type === "message") {
+          const authUser = get().authUser;
+          const senderId = msg.payload?.senderId;
+          const { users } = useChatStore.getState();
+          const isExisting = users.some((u) => u._id === senderId);
+
+          if (isExisting) {
+            useChatStore.setState({
+              users: users.map((u) =>
+                u._id === senderId
+                  ? {
+                      ...u,
+                      lastMessage: {
+                        text: msg.payload?.text,
+                        createdAt: msg.payload?.createdAt,
+                      },
+                    }
+                  : u,
+              ),
+            });
+          } else {
+            useChatStore.getState().loadContacts();
+          }
+
+          const { selectedUser, messages } = useChatStore.getState();
+          if (selectedUser?._id === senderId && senderId !== authUser?._id) {
+            const alreadyExists = messages.some(
+              (m) => m._id === msg.payload?._id,
+            );
+            if (!alreadyExists) {
+              useChatStore.setState({ messages: [...messages, msg.payload] });
+            }
+          }
+        }
       };
 
-      // Lưu hàm cancel vào store để disconnectWS gọi được
       set({
         _cancelReconnect: () => {
           shouldReconnect = false;
