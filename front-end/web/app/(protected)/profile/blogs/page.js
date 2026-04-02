@@ -55,7 +55,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, message }) => {
 const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-1002 flex items-center justify-center p-4 bg-black/50">
+    <div className="fixed top-0 left-0 w-screen h-screen flex items-center justify-center p-4 bg-black/50" style={{ zIndex: 9999 }}>
       <div className="bg-white text-black w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
         <div className="relative flex items-center justify-center p-4 border-b border-gray-200">
           <h2 className="text-xl font-bold text-center flex-1">{title}</h2>
