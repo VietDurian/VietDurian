@@ -437,25 +437,6 @@ export default function PublicProfilePage() {
             </div>
           </div>
         )}
-
-        {/* Contact CTA */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-200 flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-gray-900 mb-1">
-              {t("public_profile_cta_title")} {profileData.full_name}?
-            </h3>
-            <p className="text-sm text-gray-500">
-              {t("public_profile_cta_desc")}
-            </p>
-          </div>
-          <button
-            onClick={() => router.push(`/chat?chatId=${userId}`)}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-emerald-200 shrink-0"
-          >
-            <MessageCircle size={18} strokeWidth={2.5} />
-            {t("public_profile_cta_btn")}
-          </button>
-        </div>
       </div>
     </div>
   );
