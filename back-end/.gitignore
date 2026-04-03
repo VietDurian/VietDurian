@@ -16,3 +16,6 @@ out/
 .vscode/
 *.swp
 *.swo
+.serverless/
+.serverless_plugins/
+.webpack/
