@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 import io
 from pathlib import Path
 from typing import Any
@@ -141,7 +142,6 @@ async def predict(image: UploadFile = File(...)) -> JSONResponse:
 if __name__ == "__main__":
     import uvicorn
 
-
-
-
-    uvicorn.run("app:app", host="127.0.0.1", port=8001, reload=False)
+    host = os.getenv("AI_HOST", "0.0.0.0")
+    port = int(os.getenv("AI_PORT", "8001"))
+    uvicorn.run("app:app", host=host, port=port, reload=False)

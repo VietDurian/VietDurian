@@ -8,6 +8,7 @@ provider:
   stage: prod
   region: ap-southeast-1
   environment:
+    NODE_ENV: production
     AUTHOR: ${env:AUTHOR}
     MONGODB_URI: ${env:MONGODB_URI}
     MONGODB_URI_ATLAS: ${env:MONGODB_URI_ATLAS}
