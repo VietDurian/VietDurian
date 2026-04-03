@@ -1,4 +1,4 @@
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://127.0.0.1:8001";
+const LOCAL_AI_SERVICE_URL = "http://127.0.0.1:8001";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
 
@@ -83,6 +83,21 @@ const fallbackNotDurianResult = (provider, reason) => ({
     reason ||
     "Anh tai len khong phai anh sau rieng hoac khong lien quan den sau rieng. Vui long tai anh ro la, than, canh hoac trai sau rieng.",
 });
+
+const getAiServiceUrl = () => {
+  const configuredUrl = String(process.env.AI_SERVICE_URL || "").trim();
+  if (configuredUrl) return configuredUrl;
+
+  const nodeEnv = String(process.env.NODE_ENV || "").toLowerCase();
+  if (nodeEnv === "production") {
+    const err = new Error("AI_SERVICE_URL is required in production environment.");
+    err.status = 500;
+    err.code = "AI_SERVICE_URL_MISSING";
+    throw err;
+  }
+
+  return LOCAL_AI_SERVICE_URL;
+};
 
 const requestGeminiGuard = async ({ modelName, base64, mimetype }) => {
   const normalizedModelName = (modelName || "").replace(/^models\//, "").trim() || null;
@@ -285,7 +300,8 @@ const predictDisease = async ({ buffer, filename, mimetype }) => {
     throw err;
   }
 
-  const url = `${AI_SERVICE_URL.replace(/\/$/, "")}/predict`;
+  const aiServiceUrl = getAiServiceUrl();
+  const url = `${aiServiceUrl.replace(/\/$/, "")}/predict`;
 
   // Node 18+ provides global fetch/FormData/Blob
   const form = new FormData();
@@ -300,7 +316,7 @@ const predictDisease = async ({ buffer, filename, mimetype }) => {
     });
   } catch (cause) {
     const err = new Error(
-      `Cannot reach AI service at ${AI_SERVICE_URL}. Start the Python service (uvicorn) or set AI_SERVICE_URL correctly.`,
+      `Cannot reach AI service at ${aiServiceUrl}. Start the Python service (uvicorn) or set AI_SERVICE_URL correctly.`,
     );
     err.status = 502;
     err.cause = cause;
