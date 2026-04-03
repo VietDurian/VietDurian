@@ -1,6 +1,6 @@
 {
   "C:\\Users\\ADMIN\\Documents\\GitHub\\VietDurian\\back-end\\serverless.yml": {
-    "versionFramework": "4.33.0",
+    "versionFramework": "4.33.3",
     "servicePath": "C:\\Users\\ADMIN\\Documents\\GitHub\\VietDurian\\back-end\\serverless.yml",
     "serviceConfigFileName": "serverless.yml",
     "service": {
@@ -35,7 +35,7 @@
           "GMAIL_USER": "nguyengiachan.gr2020@gmail.com",
           "GMAIL_PASS": "qxqmuadgapuxyysl",
           "GEMINI_API_KEY": "<REDACTED>",
-          "GEMINI_MODEL": "gemini-1.5-flash-latest",
+          "GEMINI_MODEL": "gemini-3-flash",
           "DEBUG_AI_GUARD": "false",
           "AI_GUARD_BYPASS_ON_QUOTA": "false"
         },
@@ -58,7 +58,7 @@
               "Properties": {
                 "Code": {
                   "S3Bucket": "serverless-framework-deployments-ap-southeast-1-1365b344-b52f",
-                  "S3Key": "serverless/vietdurian-nodejs-service/prod/1774431321946-2026-03-25T09:35:21.946Z/vietdurian-nodejs-service.zip"
+                  "S3Key": "serverless/vietdurian-nodejs-service/prod/1775187547010-2026-04-03T03:39:07.010Z/vietdurian-nodejs-service.zip"
                 },
                 "Handler": "src/server.handler",
                 "Runtime": "nodejs22.x",
@@ -88,7 +88,7 @@
                     "GMAIL_USER": "nguyengiachan.gr2020@gmail.com",
                     "GMAIL_PASS": "qxqmuadgapuxyysl",
                     "GEMINI_API_KEY": "<REDACTED>",
-                    "GEMINI_MODEL": "gemini-1.5-flash-latest",
+                    "GEMINI_MODEL": "gemini-3-flash",
                     "DEBUG_AI_GUARD": "false",
                     "AI_GUARD_BYPASS_ON_QUOTA": "false"
                   }
@@ -99,14 +99,14 @@
                 "AppLogGroup"
               ]
             },
-            "AppLambdaVersion7Dc7o3y91MV6XWdY4P5tG6cYo6s9PoJQTte5RLr3w": {
+            "AppLambdaVersioncmy6ApsS9u7sbdmxhSIcVj5tBofFnMekIWqZNAM9Ko": {
               "Type": "AWS::Lambda::Version",
               "DeletionPolicy": "Retain",
               "Properties": {
                 "FunctionName": {
                   "Ref": "AppLambdaFunction"
                 },
-                "CodeSha256": "e43xlAZVac3pzA13U34dMnFwZuE680qe6770ecc5UII="
+                "CodeSha256": "pKa21diujoVXWHi27X/Ay74fl4sgFiIuPYNHAMWFCgE="
               }
             },
             "ApiGatewayRestApi": {
@@ -231,7 +231,7 @@
                 "AppLambdaPermissionApiGateway"
               ]
             },
-            "ApiGatewayDeployment1774431308671": {
+            "ApiGatewayDeployment1775187525228": {
               "Type": "AWS::ApiGateway::Deployment",
               "Properties": {
                 "RestApiId": {
@@ -292,7 +292,7 @@
             "AppLambdaFunctionQualifiedArn": {
               "Description": "Current Lambda function version",
               "Value": {
-                "Ref": "AppLambdaVersion7Dc7o3y91MV6XWdY4P5tG6cYo6s9PoJQTte5RLr3w"
+                "Ref": "AppLambdaVersioncmy6ApsS9u7sbdmxhSIcVj5tBofFnMekIWqZNAM9Ko"
               },
               "Export": {
                 "Name": "sls-vietdurian-nodejs-service-prod-AppLambdaFunctionQualifiedArn"
@@ -360,7 +360,7 @@
           "timeout": 900,
           "runtime": "nodejs22.x",
           "vpc": {},
-          "versionLogicalId": "AppLambdaVersion7Dc7o3y91MV6XWdY4P5tG6cYo6s9PoJQTte5RLr3w"
+          "versionLogicalId": "AppLambdaVersioncmy6ApsS9u7sbdmxhSIcVj5tBofFnMekIWqZNAM9Ko"
         }
       },
       "custom": {
@@ -410,7 +410,7 @@
         "GMAIL_USER": "nguyengiachan.gr2020@gmail.com",
         "GMAIL_PASS": "qxqmuadgapuxyysl",
         "GEMINI_API_KEY": "<REDACTED>",
-        "GEMINI_MODEL": "gemini-1.5-flash-latest",
+        "GEMINI_MODEL": "gemini-3-flash",
         "DEBUG_AI_GUARD": "false",
         "AI_GUARD_BYPASS_ON_QUOTA": "false"
       },
@@ -433,7 +433,7 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-ap-southeast-1-1365b344-b52f",
-                "S3Key": "serverless/vietdurian-nodejs-service/prod/1774431321946-2026-03-25T09:35:21.946Z/vietdurian-nodejs-service.zip"
+                "S3Key": "serverless/vietdurian-nodejs-service/prod/1775187547010-2026-04-03T03:39:07.010Z/vietdurian-nodejs-service.zip"
               },
               "Handler": "src/server.handler",
               "Runtime": "nodejs22.x",
@@ -463,7 +463,7 @@
                   "GMAIL_USER": "nguyengiachan.gr2020@gmail.com",
                   "GMAIL_PASS": "qxqmuadgapuxyysl",
                   "GEMINI_API_KEY": "<REDACTED>",
-                  "GEMINI_MODEL": "gemini-1.5-flash-latest",
+                  "GEMINI_MODEL": "gemini-3-flash",
                   "DEBUG_AI_GUARD": "false",
                   "AI_GUARD_BYPASS_ON_QUOTA": "false"
                 }
@@ -474,14 +474,14 @@
               "AppLogGroup"
             ]
           },
-          "AppLambdaVersion7Dc7o3y91MV6XWdY4P5tG6cYo6s9PoJQTte5RLr3w": {
+          "AppLambdaVersioncmy6ApsS9u7sbdmxhSIcVj5tBofFnMekIWqZNAM9Ko": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "AppLambdaFunction"
               },
-              "CodeSha256": "e43xlAZVac3pzA13U34dMnFwZuE680qe6770ecc5UII="
+              "CodeSha256": "pKa21diujoVXWHi27X/Ay74fl4sgFiIuPYNHAMWFCgE="
             }
           },
           "ApiGatewayRestApi": {
@@ -606,7 +606,7 @@
               "AppLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1774431308671": {
+          "ApiGatewayDeployment1775187525228": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -667,7 +667,7 @@
           "AppLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "AppLambdaVersion7Dc7o3y91MV6XWdY4P5tG6cYo6s9PoJQTte5RLr3w"
+              "Ref": "AppLambdaVersioncmy6ApsS9u7sbdmxhSIcVj5tBofFnMekIWqZNAM9Ko"
             },
             "Export": {
               "Name": "sls-vietdurian-nodejs-service-prod-AppLambdaFunctionQualifiedArn"
@@ -729,12 +729,12 @@
     "serviceProviderAwsCfStackName": "vietdurian-nodejs-service-prod",
     "serviceProviderAwsCfStackId": "arn:aws:cloudformation:ap-southeast-1:867490540757:stack/vietdurian-nodejs-service-prod/24d5a510-22cc-11f1-833f-0681eab53861",
     "serviceProviderAwsCfStackCreated": "2026-03-18T13:12:41.979Z",
-    "serviceProviderAwsCfStackUpdated": "2026-03-25T07:45:16.792Z",
+    "serviceProviderAwsCfStackUpdated": "2026-04-01T11:28:40.545Z",
     "serviceProviderAwsCfStackStatus": "UPDATE_COMPLETE",
     "serviceProviderAwsCfStackOutputs": [
       {
         "OutputKey": "AppLambdaFunctionQualifiedArn",
-        "OutputValue": "arn:aws:lambda:ap-southeast-1:867490540757:function:vietdurian-nodejs-service-prod-app:31",
+        "OutputValue": "arn:aws:lambda:ap-southeast-1:867490540757:function:vietdurian-nodejs-service-prod-app:39",
         "Description": "Current Lambda function version",
         "ExportName": "sls-vietdurian-nodejs-service-prod-AppLambdaFunctionQualifiedArn"
       },
@@ -765,7 +765,7 @@
           "Properties": {
             "Code": {
               "S3Bucket": "serverless-framework-deployments-ap-southeast-1-1365b344-b52f",
-              "S3Key": "serverless/vietdurian-nodejs-service/prod/1774431321946-2026-03-25T09:35:21.946Z/vietdurian-nodejs-service.zip"
+              "S3Key": "serverless/vietdurian-nodejs-service/prod/1775187547010-2026-04-03T03:39:07.010Z/vietdurian-nodejs-service.zip"
             },
             "Handler": "src/server.handler",
             "Runtime": "nodejs22.x",
@@ -795,7 +795,7 @@
                 "GMAIL_USER": "nguyengiachan.gr2020@gmail.com",
                 "GMAIL_PASS": "qxqmuadgapuxyysl",
                 "GEMINI_API_KEY": "<REDACTED>",
-                "GEMINI_MODEL": "gemini-1.5-flash-latest",
+                "GEMINI_MODEL": "gemini-3-flash",
                 "DEBUG_AI_GUARD": "false",
                 "AI_GUARD_BYPASS_ON_QUOTA": "false"
               }
@@ -806,14 +806,14 @@
             "AppLogGroup"
           ]
         },
-        "AppLambdaVersion7Dc7o3y91MV6XWdY4P5tG6cYo6s9PoJQTte5RLr3w": {
+        "AppLambdaVersioncmy6ApsS9u7sbdmxhSIcVj5tBofFnMekIWqZNAM9Ko": {
           "Type": "AWS::Lambda::Version",
           "DeletionPolicy": "Retain",
           "Properties": {
             "FunctionName": {
               "Ref": "AppLambdaFunction"
             },
-            "CodeSha256": "e43xlAZVac3pzA13U34dMnFwZuE680qe6770ecc5UII="
+            "CodeSha256": "pKa21diujoVXWHi27X/Ay74fl4sgFiIuPYNHAMWFCgE="
           }
         },
         "ApiGatewayRestApi": {
@@ -938,7 +938,7 @@
             "AppLambdaPermissionApiGateway"
           ]
         },
-        "ApiGatewayDeployment1774431308671": {
+        "ApiGatewayDeployment1775187525228": {
           "Type": "AWS::ApiGateway::Deployment",
           "Properties": {
             "RestApiId": {
@@ -999,7 +999,7 @@
         "AppLambdaFunctionQualifiedArn": {
           "Description": "Current Lambda function version",
           "Value": {
-            "Ref": "AppLambdaVersion7Dc7o3y91MV6XWdY4P5tG6cYo6s9PoJQTte5RLr3w"
+            "Ref": "AppLambdaVersioncmy6ApsS9u7sbdmxhSIcVj5tBofFnMekIWqZNAM9Ko"
           },
           "Export": {
             "Name": "sls-vietdurian-nodejs-service-prod-AppLambdaFunctionQualifiedArn"

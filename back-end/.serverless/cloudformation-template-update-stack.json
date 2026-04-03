@@ -13,7 +13,7 @@
       "Properties": {
         "Code": {
           "S3Bucket": "serverless-framework-deployments-ap-southeast-1-1365b344-b52f",
-          "S3Key": "serverless/vietdurian-nodejs-service/prod/1774431321946-2026-03-25T09:35:21.946Z/vietdurian-nodejs-service.zip"
+          "S3Key": "serverless/vietdurian-nodejs-service/prod/1775187547010-2026-04-03T03:39:07.010Z/vietdurian-nodejs-service.zip"
         },
         "Handler": "src/server.handler",
         "Runtime": "nodejs22.x",
@@ -42,8 +42,8 @@
             "YOUR_GOOGLE_CLIENT_SECRET": "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",
             "GMAIL_USER": "nguyengiachan.gr2020@gmail.com",
             "GMAIL_PASS": "qxqmuadgapuxyysl",
-            "GEMINI_API_KEY": "AIzaSyBt6M-3PMZkNUXcaRkDE6SLIC3HnxD3iIM",
-            "GEMINI_MODEL": "gemini-1.5-flash-latest",
+            "GEMINI_API_KEY": "AIzaSyDndw08soBL1uSxQwKjLHmonqS9153Rup4",
+            "GEMINI_MODEL": "gemini-3-flash",
             "DEBUG_AI_GUARD": "false",
             "AI_GUARD_BYPASS_ON_QUOTA": "false"
           }
@@ -54,14 +54,14 @@
         "AppLogGroup"
       ]
     },
-    "AppLambdaVersion7Dc7o3y91MV6XWdY4P5tG6cYo6s9PoJQTte5RLr3w": {
+    "AppLambdaVersioncmy6ApsS9u7sbdmxhSIcVj5tBofFnMekIWqZNAM9Ko": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "AppLambdaFunction"
         },
-        "CodeSha256": "e43xlAZVac3pzA13U34dMnFwZuE680qe6770ecc5UII="
+        "CodeSha256": "pKa21diujoVXWHi27X/Ay74fl4sgFiIuPYNHAMWFCgE="
       }
     },
     "ApiGatewayRestApi": {
@@ -186,7 +186,7 @@
         "AppLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1774431308671": {
+    "ApiGatewayDeployment1775187525228": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -247,7 +247,7 @@
     "AppLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "AppLambdaVersion7Dc7o3y91MV6XWdY4P5tG6cYo6s9PoJQTte5RLr3w"
+        "Ref": "AppLambdaVersioncmy6ApsS9u7sbdmxhSIcVj5tBofFnMekIWqZNAM9Ko"
       },
       "Export": {
         "Name": "sls-vietdurian-nodejs-service-prod-AppLambdaFunctionQualifiedArn"

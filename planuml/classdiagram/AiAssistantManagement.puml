@@ -1,0 +1,165 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
+
+package "AiAssistantModule" {
+
+	' --- UI + CLIENT ACCESS ---
+	class AiFloatingButton {
+		+openMenu(): void
+		+closeMenu(): void
+		+openChat(): void
+		+closeChat(): void
+		+openScanPage(): void
+		+startNewConversation(): void
+		+handleFileChange(event): void
+		+handleSend(event): Promise<void>
+		+getMessageImageSrc(message): string
+	}
+
+	class GeminiClient {
+		+askGemini(params): Promise<string>
+	}
+
+	' --- ROUTE HANDLERS ---
+	class GeminiApiRoute {
+		-BACKEND_API_URL: string
+		-DIRECT_MODELS: string[]
+		-fallbackText: string
+		+POST(request): Promise<Response>
+		+GET(): Promise<Response>
+		+callGeminiWithRetry(params): Promise<GeminiProviderResponse>
+		+detectDiseaseViaBackend(image): Promise<DiseaseDetectionResult>
+		+formatDiseaseResultText(result): string
+	}
+
+	class GeminiPagesApiAdapter {
+		+resolveOrigin(req): string
+		+forward(routeFn, req, res): Promise<void>
+		+handler(req, res): Promise<void>
+	}
+
+	' --- INTEGRATION ACCESS ---
+	class GeminiProviderAPI {
+		+generateContent(modelName, payload): GeminiProviderResponse
+	}
+
+	class BackendAIPredictAPI {
+		+predictDisease(imageFormData): AIPredictResponse
+	}
+
+	class ExternalAIProviders {
+	}
+
+	' --- ENTITIES ---
+	class ChatMessage {
+		+id: string
+		+role: string
+		+content: string
+		+image: ChatImageInput
+		+isError: boolean
+	}
+
+	class ChatImageInput {
+		+name: string
+		+mimeType: string
+		+data: string
+		+dataUrl: string
+	}
+
+	class GeminiHistoryItem {
+		+role: string
+		+content: string
+	}
+
+	class AskGeminiRequest {
+		+message: string
+		+history: GeminiHistoryItem[]
+		+image: ChatImageInput
+	}
+
+	class GeminiRouteRequest {
+		+message: string
+		+history: GeminiHistoryItem[]
+		+image: ChatImageInput
+	}
+
+	class GeminiRouteResponse {
+		+success: boolean
+		+data: string
+		+degraded: boolean
+		+error: string
+	}
+
+	class DiseaseDetectionResult {
+		+handled: boolean
+		+text: string
+	}
+
+	class GeminiProviderResponse {
+		+candidates: object[]
+		+error: object
+	}
+
+	class AIPredictResponse {
+		+success: boolean
+		+message: string
+		+data: AIPredictionLocalized
+	}
+
+	class AIPredictionLocalized {
+		+predicted_class_vi: string
+		+confidence: number
+		+solutions: string[]
+		+guard: AIGuardResult
+	}
+
+	class AIGuardResult {
+		+is_durian_related: boolean
+		+confidence: number
+		+reason: string
+	}
+}
+
+' --- RELATIONSHIPS ---
+
+' === DEPENDENCY ===
+AiFloatingButton ..> GeminiClient : Dependency
+AiFloatingButton ..> ChatMessage : Dependency
+AiFloatingButton ..> ChatImageInput : Dependency
+GeminiClient ..> AskGeminiRequest : Dependency
+GeminiClient ..> GeminiRouteResponse : Dependency
+GeminiPagesApiAdapter ..> GeminiApiRoute : Dependency
+GeminiApiRoute ..> GeminiRouteRequest : Dependency
+GeminiApiRoute ..> GeminiRouteResponse : Dependency
+GeminiApiRoute ..> DiseaseDetectionResult : Dependency
+GeminiApiRoute ..> AIPredictResponse : Dependency
+GeminiApiRoute ..> GeminiProviderResponse : Dependency
+GeminiApiRoute ..> BackendAIPredictAPI : Dependency
+GeminiApiRoute ..> GeminiProviderAPI : Dependency
+
+' === DEPENDENCY: Transformation ===
+DiseaseDetectionResult ..> AIPredictResponse : derives text from
+GeminiRouteRequest ..> AskGeminiRequest : mirrors payload
+AIPredictResponse ..> AIPredictionLocalized : includes
+AIPredictionLocalized ..> AIGuardResult : includes
+
+' === ASSOCIATION ===
+AiFloatingButton "1" --> "many   " ChatMessage
+ChatMessage "1" --> "0..1   " ChatImageInput
+AskGeminiRequest "1" --> "many   " GeminiHistoryItem
+AskGeminiRequest "1" --> "0..1   " ChatImageInput
+GeminiRouteRequest "1" --> "many   " GeminiHistoryItem
+GeminiRouteRequest "1" --> "0..1   " ChatImageInput
+
+' === INTEGRATION ===
+GeminiClient --> GeminiPagesApiAdapter : calls /api/gemini
+GeminiProviderAPI --> ExternalAIProviders : calls Gemini API
+BackendAIPredictAPI --> ExternalAIProviders : calls Backend /ai/predict
+
+@enduml
