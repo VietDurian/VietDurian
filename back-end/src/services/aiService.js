@@ -1,66 +1,16 @@
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://127.0.0.1:8001";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash-latest";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
 
-// Keep fallbacks conservative. Auto-switching across major model families can
-// introduce unexpected quota/availability differences.
-const GEMINI_FALLBACK_MODELS = [
-  GEMINI_MODEL,
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
-  "gemini-1.5-flash-8b",
-  "gemini-1.5-flash-latest",
-  "gemini-1.5-flash",
-].filter((v, i, arr) => v && arr.indexOf(v) === i);
+// Keep guard model list aligned with chatbox for quota/stability consistency.
+const DIRECT_MODELS = [
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-flash-preview-04-17",
+  "gemini-3-flash",
+];
 
-const normalizeGeminiModelName = (name) => {
-  if (!name || typeof name !== "string") return null;
-  return name.replace(/^models\//, "").trim() || null;
-};
 
-const buildGeminiCandidateModels = (modelList = []) => {
-  const dynamic = modelList
-    .filter((m) => m?.supportedGenerationMethods?.includes("generateContent"))
-    .map((m) => normalizeGeminiModelName(m?.name))
-    .filter(Boolean)
-    // Prefer flash models first for speed/cost and broad availability.
-    .sort((a, b) => {
-      const score = (v) => {
-        const lower = v.toLowerCase();
-        if (lower.includes("flash")) return 0;
-        if (lower.includes("pro")) return 1;
-        return 2;
-      };
-      return score(a) - score(b);
-    });
-
-  return [...GEMINI_FALLBACK_MODELS, ...dynamic]
-    .map((v) => normalizeGeminiModelName(v))
-    .filter((v, i, arr) => v && arr.indexOf(v) === i);
-};
-
-const listGeminiModels = async () => {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(GEMINI_API_KEY)}`;
-  const resp = await fetch(url);
-  const data = await resp.json().catch(() => null);
-
-  if (!resp.ok) {
-    const err = new Error(data?.error?.message || `Khong the lay danh sach model Gemini (${resp.status}).`);
-    err.status = resp.status;
-    err.code = "GUARD_PROVIDER_ERROR";
-    err.detail = {
-      providerError: data?.error || null,
-      operation: "listModels",
-    };
-    err.retryAfterSeconds = extractRetryAfterSeconds({
-      resp,
-      message: data?.error?.message,
-    });
-    throw err;
-  }
-
-  return Array.isArray(data?.models) ? data.models : [];
-};
 
 const DURIAN_GUARD_PROMPT = `
 Bạn là bộ phân loại ảnh cho hệ thống bệnh sầu riêng.
@@ -125,8 +75,17 @@ const normalizeGuardResult = (payload, provider) => {
   };
 };
 
+const fallbackNotDurianResult = (provider, reason) => ({
+  provider,
+  isDurianRelated: false,
+  confidence: 0,
+  reason:
+    reason ||
+    "Anh tai len khong phai anh sau rieng hoac khong lien quan den sau rieng. Vui long tai anh ro la, than, canh hoac trai sau rieng.",
+});
+
 const requestGeminiGuard = async ({ modelName, base64, mimetype }) => {
-  const normalizedModelName = normalizeGeminiModelName(modelName);
+  const normalizedModelName = (modelName || "").replace(/^models\//, "").trim() || null;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(normalizedModelName)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
 
   const resp = await fetch(url, {
@@ -141,8 +100,8 @@ const requestGeminiGuard = async ({ modelName, base64, mimetype }) => {
           parts: [
             { text: DURIAN_GUARD_PROMPT },
             {
-              inline_data: {
-                mime_type: mimetype || "image/jpeg",
+              inlineData: {
+                mimeType: mimetype || "image/jpeg",
                 data: base64,
               },
             },
@@ -169,8 +128,7 @@ const guardWithGemini = async ({ buffer, mimetype }) => {
   }
 
   const base64 = buffer.toString("base64");
-  const availableModels = await listGeminiModels();
-  const candidateModels = buildGeminiCandidateModels(availableModels);
+  const candidateModels = [...new Set([GEMINI_MODEL, ...DIRECT_MODELS].map((m) => String(m || "").trim()).filter(Boolean))];
   let lastError = null;
   const quotaErrors = [];
 
@@ -203,6 +161,36 @@ const guardWithGemini = async ({ buffer, mimetype }) => {
         continue;
       }
 
+      const providerError = data?.error || null;
+      const errorReason = providerError?.details?.find?.((d) => d?.reason)?.reason || null;
+      const errorMessage = String(providerError?.message || "").toUpperCase();
+
+      // Treat invalid/misconfigured credentials as configuration errors, not provider outage.
+      if (
+        resp.status === 400 &&
+        (errorReason === "API_KEY_INVALID" || errorMessage.includes("API KEY NOT VALID"))
+      ) {
+        const err = new Error("GEMINI_API_KEY khong hop le hoac da het hieu luc.");
+        err.status = 500;
+        err.code = "GUARD_NOT_CONFIGURED";
+        err.detail = {
+          model: modelName,
+          providerError,
+        };
+        throw err;
+      }
+
+      if (resp.status === 403) {
+        const err = new Error("Khong co quyen truy cap Gemini API. Kiem tra API key, billing, va API restriction.");
+        err.status = 500;
+        err.code = "GUARD_NOT_CONFIGURED";
+        err.detail = {
+          model: modelName,
+          providerError,
+        };
+        throw err;
+      }
+
       const err = new Error(data?.error?.message || `Khong the goi Gemini (${resp.status}).`);
       err.status = resp.status;
       err.code = "GUARD_PROVIDER_ERROR";
@@ -220,11 +208,23 @@ const guardWithGemini = async ({ buffer, mimetype }) => {
     const rawText = data?.candidates?.[0]?.content?.parts?.find((p) => typeof p?.text === "string")?.text;
     const parsed = toSafeJson(rawText);
     if (!parsed) {
-      const err = new Error("Gemini tra ve du lieu khong hop le.");
-      err.status = 502;
-      err.code = "GUARD_PROVIDER_ERROR";
-      err.detail = { raw: rawText || null, model: modelName };
-      throw err;
+      const blockReason = data?.promptFeedback?.blockReason;
+      if (blockReason || !rawText) {
+        return {
+          ...fallbackNotDurianResult(
+            "gemini",
+            "Anh tai len khong phai anh sau rieng hoac khong du thong tin de xac dinh lien quan den sau rieng.",
+          ),
+          model: modelName,
+          blockedReason: blockReason || null,
+        };
+      }
+
+      // Prefer a safe rejection over a 502 when provider text is not strict JSON.
+      return {
+        ...fallbackNotDurianResult("gemini"),
+        model: modelName,
+      };
     }
 
     return {
@@ -243,7 +243,7 @@ const guardWithGemini = async ({ buffer, mimetype }) => {
       message: "All Gemini model candidates are quota-limited.",
       triedModels: candidateModels,
       quotaErrors,
-      availableModels: availableModels.map((m) => normalizeGeminiModelName(m?.name)).filter(Boolean),
+      availableModels: candidateModels,
       lastError,
     };
     err.retryAfterSeconds = quotaErrors
@@ -259,7 +259,7 @@ const guardWithGemini = async ({ buffer, mimetype }) => {
   err.detail = {
     message: "All Gemini model candidates failed with NOT_FOUND.",
     triedModels: candidateModels,
-    availableModels: availableModels.map((m) => normalizeGeminiModelName(m?.name)).filter(Boolean),
+    availableModels: candidateModels,
     lastError,
   };
   throw err;

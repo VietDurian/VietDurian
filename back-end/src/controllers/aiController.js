@@ -148,7 +148,14 @@ const predict = async (req, res, next) => {
         return res.status(500).json({
           code: 500,
           success: false,
-          message: "He thong dang thieu cau hinh AI guard. Vui long kiem tra GEMINI_API_KEY.",
+          message:
+            guardError?.message ||
+            "He thong dang thieu cau hinh AI guard. Vui long kiem tra GEMINI_API_KEY.",
+          data: debugAIGuard
+            ? {
+              detail: guardError?.detail || null,
+            }
+            : undefined,
         });
       }
 
@@ -164,14 +171,14 @@ const predict = async (req, res, next) => {
               retryAfterSeconds: guardError?.retryAfterSeconds || null,
             };
           } else {
-          return res.status(429).json({
-            code: 429,
-            success: false,
-            message: "Gemini da het quota tam thoi. Vui long thu lai sau.",
-            data: {
-              retryAfterSeconds: guardError?.retryAfterSeconds || null,
-            },
-          });
+            return res.status(429).json({
+              code: 429,
+              success: false,
+              message: "Gemini da het quota tam thoi. Vui long thu lai sau.",
+              data: {
+                retryAfterSeconds: guardError?.retryAfterSeconds || null,
+              },
+            });
           }
         }
 
@@ -181,11 +188,11 @@ const predict = async (req, res, next) => {
           message: "Khong the kiem tra anh voi AI guard luc nay. Vui long thu lai sau.",
           data: debugAIGuard
             ? {
-                providerStatus: guardError?.status || null,
-                providerCode: guardError?.code || null,
-                retryAfterSeconds: guardError?.retryAfterSeconds || null,
-                detail: guardError?.detail || null,
-              }
+              providerStatus: guardError?.status || null,
+              providerCode: guardError?.code || null,
+              retryAfterSeconds: guardError?.retryAfterSeconds || null,
+              detail: guardError?.detail || null,
+            }
             : undefined,
         });
       }
