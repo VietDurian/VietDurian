@@ -62,7 +62,6 @@ export function AuthProvider({ children }) {
 
   // FIX: Đọc localStorage và gọi checkAuth đúng thứ tự
   useEffect(() => {
-    console.log("THIS THING RUNS 1");
     const storedUser = localStorage.getItem("auth_user");
     const storedToken = localStorage.getItem("auth_token");
 
@@ -84,33 +83,9 @@ export function AuthProvider({ children }) {
 
     setLoading(false);
 
-    // ✅ await để connectWS chạy sau khi checkAuth xong
-    const init = async () => {
-      await useAuthStore.getState().checkAuth();
-
-      const token = localStorage.getItem("auth_token");
-      if (token) {
-        useAuthStore.getState().connectWS();
-      }
-    };
-
-    init();
-
-    // ✅ Reconnect khi mở lại tab
-    const handleVisibilityChange = () => {
-      if (document.visibilityState !== "visible") return;
-      const token = localStorage.getItem("auth_token");
-      if (!token) return;
-
-      const { ws } = useAuthStore.getState();
-      if (!ws || ws.readyState === WebSocket.CLOSED) {
-        useAuthStore.getState().connectWS();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    // FIX: Gọi checkAuth để verify token với server (background)
+    // Nếu token expired server sẽ trả 401, interceptor sẽ handle logout
+    useAuthStore.getState().checkAuth();
   }, [clearClientAuthState]);
 
   const login = useCallback((userData, authToken) => {
@@ -183,7 +158,6 @@ export function AuthProvider({ children }) {
 
   // Bắt 401 toàn cục
   useEffect(() => {
-    console.log("THIS THING RUNS 2");
     const interceptorId = apiClient.interceptors.response.use(
       (response) => response,
       (error) => {

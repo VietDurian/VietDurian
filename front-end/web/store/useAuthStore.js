@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import { toast } from "sonner";
 import { useChatStore } from "./useChatStore";
+import ReconnectingWebSocket from "reconnecting-websocket";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -19,41 +20,21 @@ export const useAuthStore = create((set, get) => ({
   ws: null,
   _cancelReconnect: null,
   _reconnectTimeoutId: null,
-  _handleOnline: null,
 
   checkAuth: async () => {
     set({ isCheckingAuth: true }); // FIX: set true trước khi check
-    console.log("THIS THING RUNS 3");
     try {
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
-        localStorage.removeItem("auth_user");
-        set({ authUser: null });
-        return;
-      }
       const res = await axiosInstance.get("/auth/check");
-      const user = res?.data?.data || res?.data;
+      const user = res?.data;
       if (user) {
         localStorage.setItem("auth_user", JSON.stringify(user));
         set({ authUser: user });
       }
-
-      get().connectWS();
     } catch (error) {
       console.log("Error in checkAuth: ", error);
-
-      const status = error?.response?.status;
-      const isUnauthorized = status === 401 || status === 403;
-
-      if (isUnauthorized) {
-        localStorage.removeItem("auth_user");
-        localStorage.removeItem("auth_token");
-        set({ authUser: null });
-        get().disconnectWS();
-      } else {
-        // Lỗi mạng/tạm thời: giữ phiên hiện tại và thử đảm bảo WS kết nối lại.
-        get().connectWS();
-      }
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("auth_token");
+      set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -240,20 +221,6 @@ export const useAuthStore = create((set, get) => ({
     const token = localStorage.getItem("auth_token");
     if (!token) return;
 
-    const stopPreviousReconnect = get()._cancelReconnect;
-    stopPreviousReconnect?.();
-
-    if (typeof window !== "undefined" && !get()._handleOnline) {
-      const handleOnline = () => {
-        const latestToken = localStorage.getItem("auth_token");
-        if (!latestToken) return;
-        get().connectWS();
-      };
-
-      window.addEventListener("online", handleOnline);
-      set({ _handleOnline: handleOnline });
-    }
-
     const existing = get().ws;
     if (
       existing &&
@@ -279,8 +246,15 @@ export const useAuthStore = create((set, get) => ({
       const activeToken = localStorage.getItem("auth_token");
       if (!activeToken) return;
 
-      const ws = new WebSocket(
+      const ws = new ReconnectingWebSocket(
         `wss://vietdurian-websocket.onrender.com/ws?token=${activeToken}`,
+        [],
+        {
+          reconnectInterval: 1000, // thử lại sau 1s
+          maxReconnectInterval: 30000, // tối đa 30s
+          reconnectDecay: 2, // exponential backoff
+          maxReconnectAttempts: 10, // thử tối đa 10 lần
+        },
       );
 
       ws.onopen = () => {
@@ -364,20 +338,10 @@ export const useAuthStore = create((set, get) => ({
   },
 
   disconnectWS: () => {
-    const { ws, _cancelReconnect, _handleOnline } = get();
+    const { ws, _cancelReconnect } = get();
     _cancelReconnect?.();
-
-    if (typeof window !== "undefined" && _handleOnline) {
-      window.removeEventListener("online", _handleOnline);
-    }
-
     ws?.close();
-    set({
-      ws: null,
-      _cancelReconnect: null,
-      _handleOnline: null,
-      onlineUsers: [],
-    });
+    set({ ws: null, _cancelReconnect: null, onlineUsers: [] });
   },
 
   connectSocket: () => get().connectWS(),
