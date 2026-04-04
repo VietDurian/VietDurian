@@ -187,7 +187,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  logout: async () => {
+  logout: async ({ shouldRefresh = true } = {}) => {
     try {
       await axiosInstance.post("/auth/logout"); // FIX: bỏ res vì không dùng
     } catch (error) {
@@ -197,6 +197,10 @@ export const useAuthStore = create((set, get) => ({
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
       set({ authUser: null });
+
+      if (shouldRefresh && typeof window !== "undefined") {
+        window.location.reload();
+      }
     }
   },
 
