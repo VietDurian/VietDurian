@@ -18,8 +18,6 @@ export const useAuthStore = create((set, get) => ({
   isCheckingAuth: true, // FIX: default true để tránh flash redirect trước khi check xong
   onlineUsers: [],
   ws: null,
-  _cancelReconnect: null,
-  _reconnectTimeoutId: null,
 
   checkAuth: async () => {
     set({ isCheckingAuth: true }); // FIX: set true trước khi check
@@ -231,14 +229,10 @@ export const useAuthStore = create((set, get) => ({
 
     const ws = new ReconnectingWebSocket(
       `wss://vietdurian-websocket.onrender.com/ws?token=${token}`,
-      [],
-      {
-        reconnectInterval: 1000,
-        maxReconnectInterval: 30000,
-        reconnectDecay: 2,
-        maxReconnectAttempts: 10,
-      },
     );
+
+    ws.debug = true;
+    ws.timeoutInterval = 5400;
 
     ws.onopen = () => {
       console.log("[WS] Connected");
@@ -299,10 +293,9 @@ export const useAuthStore = create((set, get) => ({
   },
 
   disconnectWS: () => {
-    const { ws, _cancelReconnect } = get();
-    _cancelReconnect?.();
+    const { ws } = get();
     ws?.close();
-    set({ ws: null, _cancelReconnect: null, onlineUsers: [] });
+    set({ ws: null, onlineUsers: [] });
   },
 
   connectSocket: () => get().connectWS(),
