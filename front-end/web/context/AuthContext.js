@@ -83,9 +83,33 @@ export function AuthProvider({ children }) {
 
     setLoading(false);
 
-    // FIX: Gọi checkAuth để verify token với server (background)
-    // Nếu token expired server sẽ trả 401, interceptor sẽ handle logout
-    useAuthStore.getState().checkAuth();
+    // ✅ await để connectWS chạy sau khi checkAuth xong
+    const init = async () => {
+      await useAuthStore.getState().checkAuth();
+
+      const token = localStorage.getItem("auth_token");
+      if (token) {
+        useAuthStore.getState().connectWS();
+      }
+    };
+
+    init();
+
+    // ✅ Reconnect khi mở lại tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== "visible") return;
+      const token = localStorage.getItem("auth_token");
+      if (!token) return;
+
+      const { ws } = useAuthStore.getState();
+      if (!ws || ws.readyState === WebSocket.CLOSED) {
+        useAuthStore.getState().connectWS();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [clearClientAuthState]);
 
   const login = useCallback((userData, authToken) => {
