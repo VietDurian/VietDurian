@@ -198,7 +198,8 @@ export const useAuthStore = create((set, get) => ({
       localStorage.removeItem("auth_token");
       set({ authUser: null, token: null });
 
-      get().disconnectWS();
+      await get().disconnectWSAsync();
+
       if (typeof window !== "undefined") {
         window.location.assign("/login");
       }
@@ -337,6 +338,29 @@ export const useAuthStore = create((set, get) => ({
     _cancelReconnect?.();
     ws?.close();
     set({ ws: null, _cancelReconnect: null, onlineUsers: [] });
+  },
+
+  disconnectWSAsync: () => {
+    return new Promise((resolve) => {
+      const { ws, _cancelReconnect } = get();
+
+      _cancelReconnect?.(); // dừng reconnect loop
+
+      if (!ws || ws.readyState === WebSocket.CLOSED) {
+        set({ ws: null, _cancelReconnect: null, onlineUsers: [] });
+        return resolve();
+      }
+
+      const timeout = setTimeout(() => resolve(), 2000); // fallback 2s
+
+      ws.onclose = () => {
+        clearTimeout(timeout);
+        set({ ws: null, _cancelReconnect: null, onlineUsers: [] });
+        resolve();
+      };
+
+      ws.close();
+    });
   },
 
   connectSocket: () => get().connectWS(),
