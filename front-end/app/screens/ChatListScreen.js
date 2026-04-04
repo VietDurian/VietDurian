@@ -91,27 +91,13 @@ function ChatItem({ item, isOnline, onPress }) {
 // ── Main Screen ──
 export default function ChatListScreen() {
   const [searchText, setSearchText] = useState("");
-  const { socket, onlineUsers } = useAuthStore();
+  const { onlineUsers } = useAuthStore();
   const { users, loadContacts, setSelectedUser, isUsersLoading } =
     useChatStore();
 
   useEffect(() => {
     loadContacts();
   }, [loadContacts]);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleNewMessage = () => {
-      loadContacts();
-    };
-
-    socket.on("newMessage", handleNewMessage);
-
-    return () => {
-      socket.off("newMessage", handleNewMessage);
-    };
-  }, [socket, loadContacts]);
 
   const filteredChats = useMemo(() => {
     const keyword = searchText.trim().toLowerCase();
