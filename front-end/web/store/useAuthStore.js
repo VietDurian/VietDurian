@@ -17,6 +17,7 @@ export const useAuthStore = create((set, get) => ({
   isCheckingAuth: true, // FIX: default true để tránh flash redirect trước khi check xong
   onlineUsers: [],
   ws: null,
+  _cancelReconnect: null,
 
   checkAuth: async () => {
     set({ isCheckingAuth: true }); // FIX: set true trước khi check
@@ -163,6 +164,7 @@ export const useAuthStore = create((set, get) => ({
       localStorage.setItem("auth_token", token);
 
       set({ authUser: user });
+      get().connectWS();
       toast.success(res?.data?.message || "Đăng nhập thành công");
 
       return { user, token };
@@ -190,6 +192,7 @@ export const useAuthStore = create((set, get) => ({
     } catch (error) {
       toast.error(error?.response?.data?.message || "Đăng xuất thất bại");
     } finally {
+      get().disconnectWS();
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
       set({ authUser: null });
@@ -213,6 +216,15 @@ export const useAuthStore = create((set, get) => ({
   connectWS: () => {
     const token = localStorage.getItem("auth_token");
     if (!token) return;
+
+    const existing = get().ws;
+    if (
+      existing &&
+      (existing.readyState === WebSocket.OPEN ||
+        existing.readyState === WebSocket.CONNECTING)
+    ) {
+      return;
+    }
 
     let reconnectAttempts = 0;
     const MAX_ATTEMPTS = 10;
