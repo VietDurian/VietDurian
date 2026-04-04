@@ -19,6 +19,7 @@ export const useAuthStore = create((set, get) => ({
   ws: null,
   _cancelReconnect: null,
   _reconnectTimeoutId: null,
+  _handleOnline: null,
 
   checkAuth: async () => {
     set({ isCheckingAuth: true }); // FIX: set true trước khi check
@@ -239,6 +240,20 @@ export const useAuthStore = create((set, get) => ({
     const token = localStorage.getItem("auth_token");
     if (!token) return;
 
+    const stopPreviousReconnect = get()._cancelReconnect;
+    stopPreviousReconnect?.();
+
+    if (typeof window !== "undefined" && !get()._handleOnline) {
+      const handleOnline = () => {
+        const latestToken = localStorage.getItem("auth_token");
+        if (!latestToken) return;
+        get().connectWS();
+      };
+
+      window.addEventListener("online", handleOnline);
+      set({ _handleOnline: handleOnline });
+    }
+
     const existing = get().ws;
     if (
       existing &&
@@ -349,10 +364,20 @@ export const useAuthStore = create((set, get) => ({
   },
 
   disconnectWS: () => {
-    const { ws, _cancelReconnect } = get();
+    const { ws, _cancelReconnect, _handleOnline } = get();
     _cancelReconnect?.();
+
+    if (typeof window !== "undefined" && _handleOnline) {
+      window.removeEventListener("online", _handleOnline);
+    }
+
     ws?.close();
-    set({ ws: null, _cancelReconnect: null, onlineUsers: [] });
+    set({
+      ws: null,
+      _cancelReconnect: null,
+      _handleOnline: null,
+      onlineUsers: [],
+    });
   },
 
   connectSocket: () => get().connectWS(),
