@@ -226,115 +226,76 @@ export const useAuthStore = create((set, get) => ({
       existing &&
       (existing.readyState === WebSocket.OPEN ||
         existing.readyState === WebSocket.CONNECTING)
-    ) {
+    )
       return;
-    }
 
-    const pendingReconnect = get()._reconnectTimeoutId;
-    if (pendingReconnect) {
-      clearTimeout(pendingReconnect);
-      set({ _reconnectTimeoutId: null });
-    }
+    const ws = new ReconnectingWebSocket(
+      `wss://vietdurian-websocket.onrender.com/ws?token=${token}`,
+      [],
+      {
+        reconnectInterval: 1000,
+        maxReconnectInterval: 30000,
+        reconnectDecay: 2,
+        maxReconnectAttempts: 10,
+      },
+    );
 
-    let reconnectAttempts = 0;
-    const MAX_ATTEMPTS = 10;
-    let shouldReconnect = true;
-
-    const connect = () => {
-      if (!shouldReconnect) return;
-
-      const activeToken = localStorage.getItem("auth_token");
-      if (!activeToken) return;
-
-      const ws = new ReconnectingWebSocket(
-        `wss://vietdurian-websocket.onrender.com/ws?token=${activeToken}`,
-        [],
-        {
-          reconnectInterval: 1000, // thử lại sau 1s
-          maxReconnectInterval: 30000, // tối đa 30s
-          reconnectDecay: 2, // exponential backoff
-          maxReconnectAttempts: 10, // thử tối đa 10 lần
-        },
-      );
-
-      ws.onopen = () => {
-        console.log("[WS] Connected");
-        reconnectAttempts = 0;
-        set({ ws });
-      };
-
-      ws.onclose = () => {
-        console.log("[WS] Disconnected");
-        set({ ws: null });
-        if (shouldReconnect && reconnectAttempts < MAX_ATTEMPTS) {
-          const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
-          reconnectAttempts++;
-          const timeoutId = setTimeout(() => {
-            set({ _reconnectTimeoutId: null });
-            connect();
-          }, delay);
-          set({ _reconnectTimeoutId: timeoutId });
-        }
-      };
-
-      ws.onerror = (e) => console.error("[WS] Error", e);
-
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-
-        if (msg.type === "online_users") {
-          set({ onlineUsers: msg.userIds });
-        }
-
-        if (msg.type === "message") {
-          const authUser = get().authUser;
-          const senderId = msg.payload?.senderId;
-          const { users } = useChatStore.getState();
-          const isExisting = users.some((u) => u._id === senderId);
-
-          if (isExisting) {
-            useChatStore.setState({
-              users: users.map((u) =>
-                u._id === senderId
-                  ? {
-                      ...u,
-                      lastMessage: {
-                        text: msg.payload?.text,
-                        createdAt: msg.payload?.createdAt,
-                      },
-                    }
-                  : u,
-              ),
-            });
-          } else {
-            useChatStore.getState().loadContacts();
-          }
-
-          const { selectedUser, messages } = useChatStore.getState();
-          if (selectedUser?._id === senderId && senderId !== authUser?._id) {
-            const alreadyExists = messages.some(
-              (m) => m._id === msg.payload?._id,
-            );
-            if (!alreadyExists) {
-              useChatStore.setState({ messages: [...messages, msg.payload] });
-            }
-          }
-        }
-      };
-
-      set({
-        _cancelReconnect: () => {
-          shouldReconnect = false;
-          const timeoutId = get()._reconnectTimeoutId;
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-          }
-          set({ _reconnectTimeoutId: null });
-        },
-      });
+    ws.onopen = () => {
+      console.log("[WS] Connected");
+      set({ ws });
     };
 
-    connect();
+    ws.onclose = () => {
+      console.log("[WS] Disconnected");
+      set({ ws: null });
+    };
+
+    ws.onerror = (e) => console.error("[WS] Error", e);
+
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+
+      if (msg.type === "online_users") {
+        set({ onlineUsers: msg.userIds });
+      }
+
+      if (msg.type === "message") {
+        const authUser = get().authUser;
+        const senderId = msg.payload?.senderId;
+        const { users } = useChatStore.getState();
+        const isExisting = users.some((u) => u._id === senderId);
+
+        if (isExisting) {
+          useChatStore.setState({
+            users: users.map((u) =>
+              u._id === senderId
+                ? {
+                    ...u,
+                    lastMessage: {
+                      text: msg.payload?.text,
+                      createdAt: msg.payload?.createdAt,
+                    },
+                  }
+                : u,
+            ),
+          });
+        } else {
+          useChatStore.getState().loadContacts();
+        }
+
+        const { selectedUser, messages } = useChatStore.getState();
+        if (selectedUser?._id === senderId && senderId !== authUser?._id) {
+          const alreadyExists = messages.some(
+            (m) => m._id === msg.payload?._id,
+          );
+          if (!alreadyExists) {
+            useChatStore.setState({ messages: [...messages, msg.payload] });
+          }
+        }
+      }
+    };
+
+    set({ ws });
   },
 
   disconnectWS: () => {
