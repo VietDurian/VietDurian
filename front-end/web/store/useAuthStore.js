@@ -23,7 +23,7 @@ export const useAuthStore = create((set, get) => ({
 
   checkAuth: async () => {
     set({ isCheckingAuth: true }); // FIX: set true trước khi check
-    console.log("AUTH CHECKED");
+    console.log("THIS THING RUNS 3");
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {

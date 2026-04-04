@@ -62,6 +62,7 @@ export function AuthProvider({ children }) {
 
   // FIX: Đọc localStorage và gọi checkAuth đúng thứ tự
   useEffect(() => {
+    console.log("THIS THING RUNS 1");
     const storedUser = localStorage.getItem("auth_user");
     const storedToken = localStorage.getItem("auth_token");
 
@@ -182,6 +183,7 @@ export function AuthProvider({ children }) {
 
   // Bắt 401 toàn cục
   useEffect(() => {
+    console.log("THIS THING RUNS 2");
     const interceptorId = apiClient.interceptors.response.use(
       (response) => response,
       (error) => {
