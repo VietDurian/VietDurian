@@ -20,6 +20,7 @@ export const useAuthStore = create((set, get) => ({
   ws: null,
 
   checkAuth: async () => {
+    console.log("AUTH CHECKED");
     set({ isCheckingAuth: true }); // FIX: set true trước khi check
     try {
       const res = await axiosInstance.get("/auth/check");
@@ -27,6 +28,7 @@ export const useAuthStore = create((set, get) => ({
       if (user) {
         localStorage.setItem("auth_user", JSON.stringify(user));
         set({ authUser: user });
+        get().connectWS();
       }
     } catch (error) {
       console.log("Error in checkAuth: ", error);
