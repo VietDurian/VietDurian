@@ -31,8 +31,7 @@ export default function App() {
   // ← Connect WS khi vào /chat, disconnect khi rời
   useEffect(() => {
     connectWS();
-    return () => disconnectWS();
-  }, [connectWS, disconnectWS]);
+  }, [connectWS]);
 
   useEffect(() => {
     if (loading) return;
