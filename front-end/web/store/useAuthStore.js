@@ -187,20 +187,18 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  logout: async ({ shouldRefresh = true } = {}) => {
+  logout: async () => {
     try {
       await axiosInstance.post("/auth/logout"); // FIX: bỏ res vì không dùng
+      toast.success("Đã đăng xuất");
     } catch (error) {
       toast.error(error?.response?.data?.message || "Đăng xuất thất bại");
     } finally {
-      get().disconnectWS();
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
-      set({ authUser: null });
+      set({ authUser: null, token: null });
 
-      if (shouldRefresh && typeof window !== "undefined") {
-        window.location.reload();
-      }
+      get().disconnectWS();
     }
   },
 
@@ -332,17 +330,12 @@ export const useAuthStore = create((set, get) => ({
   },
 
   disconnectWS: () => {
-    const { ws, _cancelReconnect, _reconnectTimeoutId } = get();
-    _cancelReconnect?.(); // ← tắt reconnect trước
-    if (_reconnectTimeoutId) {
-      clearTimeout(_reconnectTimeoutId);
-    }
+    const { ws, _cancelReconnect } = get();
+    _cancelReconnect?.();
     ws?.close();
-    set({
-      ws: null,
-      _cancelReconnect: null,
-      _reconnectTimeoutId: null,
-      onlineUsers: [],
-    });
+    set({ ws: null, _cancelReconnect: null, onlineUsers: [] });
   },
+
+  connectSocket: () => get().connectWS(),
+  disconnectSocket: () => get().disconnectWS(),
 }));
