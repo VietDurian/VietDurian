@@ -199,6 +199,9 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: null, token: null });
 
       get().disconnectWS();
+      if (typeof window !== "undefined") {
+        window.location.assign("/login");
+      }
     }
   },
 
