@@ -30,21 +30,29 @@ export const useAuthStore = create((set, get) => ({
         set({ authUser: null });
         return;
       }
-
-      get().connectWS();
-
       const res = await axiosInstance.get("/auth/check");
-      const user = res?.data;
+      const user = res?.data?.data || res?.data;
       if (user) {
         localStorage.setItem("auth_user", JSON.stringify(user));
         set({ authUser: user });
       }
+
+      get().connectWS();
     } catch (error) {
       console.log("Error in checkAuth: ", error);
-      localStorage.removeItem("auth_user");
-      localStorage.removeItem("auth_token");
-      set({ authUser: null });
-      get().disconnectWS();
+
+      const status = error?.response?.status;
+      const isUnauthorized = status === 401 || status === 403;
+
+      if (isUnauthorized) {
+        localStorage.removeItem("auth_user");
+        localStorage.removeItem("auth_token");
+        set({ authUser: null });
+        get().disconnectWS();
+      } else {
+        // Lỗi mạng/tạm thời: giữ phiên hiện tại và thử đảm bảo WS kết nối lại.
+        get().connectWS();
+      }
     } finally {
       set({ isCheckingAuth: false });
     }
