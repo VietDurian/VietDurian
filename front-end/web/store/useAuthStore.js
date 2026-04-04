@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import { toast } from "sonner";
 import { useChatStore } from "./useChatStore";
+import ReconnectingWebSocket from "reconnecting-websocket";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -187,20 +188,18 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  logout: async ({ shouldRefresh = true } = {}) => {
+  logout: async () => {
     try {
       await axiosInstance.post("/auth/logout"); // FIX: bỏ res vì không dùng
+      toast.success("Đã đăng xuất");
     } catch (error) {
       toast.error(error?.response?.data?.message || "Đăng xuất thất bại");
     } finally {
-      get().disconnectWS();
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
-      set({ authUser: null });
+      set({ authUser: null, token: null });
 
-      if (shouldRefresh && typeof window !== "undefined") {
-        window.location.reload();
-      }
+      get().disconnectWS();
     }
   },
 
@@ -247,8 +246,15 @@ export const useAuthStore = create((set, get) => ({
       const activeToken = localStorage.getItem("auth_token");
       if (!activeToken) return;
 
-      const ws = new WebSocket(
+      const ws = new ReconnectingWebSocket(
         `wss://vietdurian-websocket.onrender.com/ws?token=${activeToken}`,
+        [],
+        {
+          reconnectInterval: 1000, // thử lại sau 1s
+          maxReconnectInterval: 30000, // tối đa 30s
+          reconnectDecay: 2, // exponential backoff
+          maxReconnectAttempts: 10, // thử tối đa 10 lần
+        },
       );
 
       ws.onopen = () => {
@@ -332,17 +338,12 @@ export const useAuthStore = create((set, get) => ({
   },
 
   disconnectWS: () => {
-    const { ws, _cancelReconnect, _reconnectTimeoutId } = get();
-    _cancelReconnect?.(); // ← tắt reconnect trước
-    if (_reconnectTimeoutId) {
-      clearTimeout(_reconnectTimeoutId);
-    }
+    const { ws, _cancelReconnect } = get();
+    _cancelReconnect?.();
     ws?.close();
-    set({
-      ws: null,
-      _cancelReconnect: null,
-      _reconnectTimeoutId: null,
-      onlineUsers: [],
-    });
+    set({ ws: null, _cancelReconnect: null, onlineUsers: [] });
   },
+
+  connectSocket: () => get().connectWS(),
+  disconnectSocket: () => get().disconnectWS(),
 }));
