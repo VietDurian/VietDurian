@@ -43,6 +43,7 @@ export default function Home() {
 
   useEffect(() => {
     checkAuth();
+    console.log("AUTH CHECKED");
   }, [checkAuth]);
 
   useEffect(() => {
