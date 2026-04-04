@@ -23,6 +23,15 @@ export const useAuthStore = create((set, get) => ({
   checkAuth: async () => {
     set({ isCheckingAuth: true }); // FIX: set true trước khi check
     try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        localStorage.removeItem("auth_user");
+        set({ authUser: null });
+        return;
+      }
+
+      get().connectWS();
+
       const res = await axiosInstance.get("/auth/check");
       const user = res?.data;
       if (user) {
@@ -34,6 +43,7 @@ export const useAuthStore = create((set, get) => ({
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
       set({ authUser: null });
+      get().disconnectWS();
     } finally {
       set({ isCheckingAuth: false });
     }

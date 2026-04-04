@@ -34,12 +34,16 @@ import { useLanguage } from "@/context/LanguageContext";
 export default function Home() {
   const pathname = usePathname();
   const router = useRouter();
-  const { authUser, isCheckingAuth } = useAuthStore();
+  const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
   const { t } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [products, setProducts] = useState([]);
   const [imageErrors, setImageErrors] = useState({});
   const [slidesPerView, setSlidesPerView] = useState(3);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   useEffect(() => {
     if (isCheckingAuth) return;
