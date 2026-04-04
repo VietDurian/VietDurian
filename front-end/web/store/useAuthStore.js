@@ -18,6 +18,7 @@ export const useAuthStore = create((set, get) => ({
   onlineUsers: [],
   ws: null,
   _cancelReconnect: null,
+  _reconnectTimeoutId: null,
 
   checkAuth: async () => {
     set({ isCheckingAuth: true }); // FIX: set true trước khi check
@@ -226,13 +227,24 @@ export const useAuthStore = create((set, get) => ({
       return;
     }
 
+    const pendingReconnect = get()._reconnectTimeoutId;
+    if (pendingReconnect) {
+      clearTimeout(pendingReconnect);
+      set({ _reconnectTimeoutId: null });
+    }
+
     let reconnectAttempts = 0;
     const MAX_ATTEMPTS = 10;
     let shouldReconnect = true;
 
     const connect = () => {
+      if (!shouldReconnect) return;
+
+      const activeToken = localStorage.getItem("auth_token");
+      if (!activeToken) return;
+
       const ws = new WebSocket(
-        `wss://vietdurian-websocket.onrender.com/ws?token=${token}`,
+        `wss://vietdurian-websocket.onrender.com/ws?token=${activeToken}`,
       );
 
       ws.onopen = () => {
@@ -247,7 +259,11 @@ export const useAuthStore = create((set, get) => ({
         if (shouldReconnect && reconnectAttempts < MAX_ATTEMPTS) {
           const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
           reconnectAttempts++;
-          setTimeout(connect, delay);
+          const timeoutId = setTimeout(() => {
+            set({ _reconnectTimeoutId: null });
+            connect();
+          }, delay);
+          set({ _reconnectTimeoutId: timeoutId });
         }
       };
 
@@ -299,6 +315,11 @@ export const useAuthStore = create((set, get) => ({
       set({
         _cancelReconnect: () => {
           shouldReconnect = false;
+          const timeoutId = get()._reconnectTimeoutId;
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
+          set({ _reconnectTimeoutId: null });
         },
       });
     };
@@ -307,9 +328,17 @@ export const useAuthStore = create((set, get) => ({
   },
 
   disconnectWS: () => {
-    const { ws, _cancelReconnect } = get();
+    const { ws, _cancelReconnect, _reconnectTimeoutId } = get();
     _cancelReconnect?.(); // ← tắt reconnect trước
+    if (_reconnectTimeoutId) {
+      clearTimeout(_reconnectTimeoutId);
+    }
     ws?.close();
-    set({ ws: null, _cancelReconnect: null });
+    set({
+      ws: null,
+      _cancelReconnect: null,
+      _reconnectTimeoutId: null,
+      onlineUsers: [],
+    });
   },
 }));
