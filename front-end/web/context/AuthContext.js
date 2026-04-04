@@ -153,6 +153,7 @@ export function AuthProvider({ children }) {
     } finally {
       clearClientAuthState();
       isHandling401.current = false;
+      useAuthStore.getState().disconnectWS();
     }
   }, [clearClientAuthState]);
 
