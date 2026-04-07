@@ -328,7 +328,7 @@ const forgotPassword = async (email) => {
       expires_at: expiryTime,
     });
     await sendVerificationEmail(user.full_name || "User", email, otp, "reset");
-    return { message: "OTP sent to email" };
+    return { message: "OTP đã được gửi đến email của bạn" };
   } catch (error) {
     throw error;
   }
@@ -337,7 +337,7 @@ const forgotPassword = async (email) => {
 const verifyResetOtp = async (email, otp) => {
   try {
     const user = await User.findOne({ email });
-    if (!user) throw createError(404, "No user found with that email");
+    if (!user) throw createError(404, "Không tìm thấy người dùng với email đó");
 
     const otpRecord = await OTP.findOne({
       user_id: user._id,
@@ -346,7 +346,7 @@ const verifyResetOtp = async (email, otp) => {
       is_used: false,
       expires_at: { $gt: new Date() },
     });
-    if (!otpRecord) throw createError(400, "Invalid or expired OTP");
+    if (!otpRecord) throw createError(400, "OTP không hợp lệ hoặc đã hết hạn");
 
     otpRecord.is_used = true;
     await otpRecord.save();
@@ -375,13 +375,13 @@ const resetPasswordWithToken = async (token, newPassword) => {
 
     const user = await User.findById(payload.uid).select("+password");
     if (!user) {
-      throw createError(404, "User not found");
+      throw createError(404, "Người dùng không tồn tại");
     }
     const isSame = await user.comparePassword(newPassword);
     if (isSame) {
       throw createError(
         400,
-        "New password must be different from old password",
+        "Mật khẩu mới phải khác với mật khẩu cũ",
       );
     }
     user.password = newPassword;
