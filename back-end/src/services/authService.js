@@ -432,7 +432,6 @@ const googleLogin = async (token) => {
         is_verified: true,
         role: "trader",
       });
-      console.log("✅ New user created:", email);
     }
 
     // Generate JWT token
