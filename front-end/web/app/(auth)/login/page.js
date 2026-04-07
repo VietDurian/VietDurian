@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Mail,
   Lock,
@@ -29,6 +29,8 @@ export default function LoginPage() {
   const { login, isLoggingIn, resendVerificationOtp } = useAuthStore();
   const { login: loginContext, user, loading, loginWithGoogle } = useAuth();
   const [activeRole, setActiveRole] = useState(null);
+  const googleButtonContainerRef = useRef(null);
+  const [googleButtonWidth, setGoogleButtonWidth] = useState(0);
 
   useEffect(() => {
     if (loading) return;
@@ -40,6 +42,22 @@ export default function LoginPage() {
       router.push("/");
     }
   }, [loading, router, user]);
+
+  useEffect(() => {
+    if (!googleButtonContainerRef.current) return;
+
+    const updateWidth = () => {
+      const containerWidth = googleButtonContainerRef.current?.offsetWidth ?? 0;
+      setGoogleButtonWidth(Math.min(400, Math.max(200, Math.floor(containerWidth))));
+    };
+
+    updateWidth();
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(googleButtonContainerRef.current);
+
+    return () => observer.disconnect();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -189,11 +207,14 @@ export default function LoginPage() {
             </div>
 
             {/* Google Button */}
-            <div className="space-y-3 flex flex-col items-center justify-center">
+            <div
+              ref={googleButtonContainerRef}
+              className="space-y-3 flex w-full flex-col items-center justify-center"
+            >
               <GoogleLogin
                 onSuccess={handleSuccess}
                 onError={() => console.log("Login Failed")}
-                width="390"
+                width={googleButtonWidth ? String(googleButtonWidth) : undefined}
               />
             </div>
           </form>
