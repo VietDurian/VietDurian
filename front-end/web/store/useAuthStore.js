@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import { toast } from "sonner";
 import { useChatStore } from "./useChatStore";
+import ReconnectingWebSocket from "reconnecting-websocket";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -19,6 +20,7 @@ export const useAuthStore = create((set, get) => ({
   ws: null,
 
   checkAuth: async () => {
+    console.log("AUTH CHECKED");
     set({ isCheckingAuth: true }); // FIX: set true trước khi check
     try {
       const res = await axiosInstance.get("/auth/check");
@@ -26,6 +28,7 @@ export const useAuthStore = create((set, get) => ({
       if (user) {
         localStorage.setItem("auth_user", JSON.stringify(user));
         set({ authUser: user });
+        get().connectWS();
       }
     } catch (error) {
       console.log("Error in checkAuth: ", error);
@@ -163,6 +166,7 @@ export const useAuthStore = create((set, get) => ({
       localStorage.setItem("auth_token", token);
 
       set({ authUser: user });
+      get().connectWS();
       toast.success(res?.data?.message || "Đăng nhập thành công");
 
       return { user, token };
@@ -187,12 +191,15 @@ export const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       await axiosInstance.post("/auth/logout"); // FIX: bỏ res vì không dùng
+      toast.success("Đã đăng xuất");
     } catch (error) {
       toast.error(error?.response?.data?.message || "Đăng xuất thất bại");
     } finally {
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_token");
-      set({ authUser: null });
+      set({ authUser: null, token: null });
+
+      get().disconnectWS();
     }
   },
 
@@ -214,90 +221,85 @@ export const useAuthStore = create((set, get) => ({
     const token = localStorage.getItem("auth_token");
     if (!token) return;
 
-    let reconnectAttempts = 0;
-    const MAX_ATTEMPTS = 10;
-    let shouldReconnect = true;
+    const existing = get().ws;
+    if (
+      existing &&
+      (existing.readyState === WebSocket.OPEN ||
+        existing.readyState === WebSocket.CONNECTING)
+    )
+      return;
 
-    const connect = () => {
-      const ws = new WebSocket(
-        `wss://vietdurian-websocket.onrender.com/ws?token=${token}`,
-      );
+    const ws = new ReconnectingWebSocket(
+      `wss://vietdurian-websocket.onrender.com/ws?token=${token}`,
+    );
 
-      ws.onopen = () => {
-        console.log("[WS] Connected");
-        reconnectAttempts = 0;
-        set({ ws });
-      };
+    ws.debug = true;
+    ws.timeoutInterval = 5400;
 
-      ws.onclose = () => {
-        console.log("[WS] Disconnected");
-        set({ ws: null });
-        if (shouldReconnect && reconnectAttempts < MAX_ATTEMPTS) {
-          const delay = Math.min(1000 * 2 ** reconnectAttempts, 30000);
-          reconnectAttempts++;
-          setTimeout(connect, delay);
-        }
-      };
-
-      ws.onerror = (e) => console.error("[WS] Error", e);
-
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-
-        if (msg.type === "online_users") {
-          set({ onlineUsers: msg.userIds });
-        }
-
-        if (msg.type === "message") {
-          const authUser = get().authUser;
-          const senderId = msg.payload?.senderId;
-          const { users } = useChatStore.getState();
-          const isExisting = users.some((u) => u._id === senderId);
-
-          if (isExisting) {
-            useChatStore.setState({
-              users: users.map((u) =>
-                u._id === senderId
-                  ? {
-                      ...u,
-                      lastMessage: {
-                        text: msg.payload?.text,
-                        createdAt: msg.payload?.createdAt,
-                      },
-                    }
-                  : u,
-              ),
-            });
-          } else {
-            useChatStore.getState().loadContacts();
-          }
-
-          const { selectedUser, messages } = useChatStore.getState();
-          if (selectedUser?._id === senderId && senderId !== authUser?._id) {
-            const alreadyExists = messages.some(
-              (m) => m._id === msg.payload?._id,
-            );
-            if (!alreadyExists) {
-              useChatStore.setState({ messages: [...messages, msg.payload] });
-            }
-          }
-        }
-      };
-
-      set({
-        _cancelReconnect: () => {
-          shouldReconnect = false;
-        },
-      });
+    ws.onopen = () => {
+      console.log("[WS] Connected");
+      set({ ws });
     };
 
-    connect();
+    ws.onclose = () => {
+      console.log("[WS] Disconnected");
+      set({ ws: null });
+    };
+
+    ws.onerror = (e) => console.error("[WS] Error", e);
+
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+
+      if (msg.type === "online_users") {
+        set({ onlineUsers: msg.userIds });
+      }
+
+      if (msg.type === "message") {
+        const authUser = get().authUser;
+        const senderId = msg.payload?.senderId;
+        const { users } = useChatStore.getState();
+        const isExisting = users.some((u) => u._id === senderId);
+
+        if (isExisting) {
+          useChatStore.setState({
+            users: users.map((u) =>
+              u._id === senderId
+                ? {
+                    ...u,
+                    lastMessage: {
+                      text: msg.payload?.text,
+                      createdAt: msg.payload?.createdAt,
+                    },
+                  }
+                : u,
+            ),
+          });
+        } else {
+          useChatStore.getState().loadContacts();
+        }
+
+        const { selectedUser, messages } = useChatStore.getState();
+        if (selectedUser?._id === senderId && senderId !== authUser?._id) {
+          const alreadyExists = messages.some(
+            (m) => m._id === msg.payload?._id,
+          );
+          if (!alreadyExists) {
+            useChatStore.setState({ messages: [...messages, msg.payload] });
+          }
+        }
+      }
+    };
+
+    set({ ws });
   },
 
   disconnectWS: () => {
-    const { ws, _cancelReconnect } = get();
-    _cancelReconnect?.(); // ← tắt reconnect trước
+    const { ws } = get();
     ws?.close();
-    set({ ws: null, _cancelReconnect: null });
+    set({ ws: null, onlineUsers: [] });
   },
+
+  connectSocket: () => get().connectWS(),
+  disconnectSocket: () => get().disconnectWS(),
 }));

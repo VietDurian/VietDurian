@@ -11,8 +11,8 @@ test/
 logs/
 *.csv
 *.txt
+!requirements_api.txt
 checkpoints/
-*.keras
 *.h5
 runs/
 .DS_Store

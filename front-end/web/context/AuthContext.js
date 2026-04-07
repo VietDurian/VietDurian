@@ -142,24 +142,20 @@ export function AuthProvider({ children }) {
     [refreshProfile, router],
   );
 
-  const logout = useCallback(
-    async (redirectTo = "/login") => {
-      setUser(null);
-      setToken(null);
-      const target = typeof redirectTo === "string" ? redirectTo : "/login";
+  const logout = useCallback(async () => {
+    setUser(null);
+    setToken(null);
 
-      try {
-        await axiosInstance.post("/auth/logout");
-      } catch (error) {
-        console.error("Logout API failed", error);
-      } finally {
-        clearClientAuthState();
-        isHandling401.current = false;
-        router.replace(target);
-      }
-    },
-    [clearClientAuthState, router],
-  );
+    try {
+      await axiosInstance.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout API failed", error);
+    } finally {
+      clearClientAuthState();
+      isHandling401.current = false;
+      useAuthStore.getState().disconnectWS();
+    }
+  }, [clearClientAuthState]);
 
   // Bắt 401 toàn cục
   useEffect(() => {

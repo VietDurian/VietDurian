@@ -1,0 +1,119 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
+
+package "SeasonDiaryModule" {
+
+	' --- ROUTE & MIDDLEWARE ---
+	class SeasonDiaryRoute {
+		+createSeason(req, res): void
+		+viewSeasonList(req, res): void
+		+viewSeasonDetail(req, res): void
+		+finishSeason(req, res): void
+	}
+
+	class AuthMiddleware {
+		+protect(req): UserInfo
+	}
+
+	' --- CONTROLLER ---
+	class SeasonDiaryController {
+		-seasonDiaryService: SeasonDiaryService
+		+createSeason(req, res, next): Promise<void>
+		+viewSeasonList(req, res, next): Promise<void>
+		+viewSeasonDetail(req, res, next): Promise<void>
+		+finishSeason(req, res, next): Promise<void>
+	}
+
+	' --- SERVICE ---
+	class SeasonDiaryService {
+		-seasonDiaryModel: SeasonDiaryModel
+		-userModel: UserModel
+		+createSeason(params): Promise<SeasonDiary>
+		+viewSeasonList(params): Promise<SeasonDiary[]>
+		+viewSeasonDetail(params): Promise<SeasonDiary>
+		+finishSeason(params): Promise<SeasonDiary>
+	}
+
+	' --- DATA ACCESS ---
+	class SeasonDiaryModel {
+		+create(data): SeasonDiary
+		+find(filter): SeasonDiary[]
+		+findById(id): SeasonDiary | null
+		+findByIdAndUpdate(id, update, options): SeasonDiary
+		+countDocuments(filter): number
+		+save(): SeasonDiary
+	}
+
+	class UserModel {
+		+findById(id): User | null
+		+select(fields): User
+		+lean(): User
+	}
+
+	class Database {
+	}
+
+	' --- ENTITIES (FULL MODEL FIELDS) ---
+	class SeasonDiary {
+		+_id: ObjectId
+		+user_id: ObjectId
+		+garden_name: string
+		+farmer_name: string
+		+location: string
+		+longitude: string
+		+latitude: string
+		+members: string
+		+planting_area_code: string
+		+crop_variety: string[]
+		+farmer_code: string
+		+row_bed_count: number
+		+area: number
+		+land_use_history: string
+		+status: string
+		+end_date: Date
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class User {
+		+_id: ObjectId
+		+full_name: string
+		+email: string
+		+password: string
+		+phone: string
+		+avatar: string
+		+role: string
+		+is_banned: boolean
+		+is_verified: boolean
+		+created_at: Date
+		+updated_at: Date
+	}
+}
+
+' --- RELATIONSHIPS ---
+
+' === DEPENDENCY ===
+SeasonDiaryRoute ..> AuthMiddleware : Dependency
+SeasonDiaryRoute ..> SeasonDiaryController : Dependency
+SeasonDiaryController ..> SeasonDiaryService : Dependency
+SeasonDiaryService ..> SeasonDiaryModel : Dependency
+SeasonDiaryService ..> UserModel : Dependency
+
+' === DEPENDENCY: Model uses Entity ===
+SeasonDiaryModel ..> SeasonDiary : Dependency
+UserModel ..> User : Dependency
+
+' === ASSOCIATION ===
+User "1" --> "many " SeasonDiary
+
+' === PERSISTENCE ===
+SeasonDiaryModel --> Database : queries
+UserModel --> Database : queries
+
+@enduml

@@ -2,6 +2,12 @@
 import dotenv from "dotenv";
 import path from "path";
 
+// Load frontend .env first (takes priority over backend .env)
+dotenv.config({
+  path: path.resolve(process.cwd(), ".env"),
+});
+
+// Load backend .env as fallback for other vars (won't override already-set vars)
 dotenv.config({
   path: path.resolve(process.cwd(), "../../back-end/.env"),
 });
@@ -31,6 +37,7 @@ const nextConfig = {
   env: {
     API_URL: process.env.API_URL,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || process.env.API_URL,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   },
 };
 

@@ -16,7 +16,7 @@ export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
   selectedUser: null,
-  messageListener: null,
+  _joinInterval: null,
   isUsersLoading: false,
   isMessagesLoading: false,
 
@@ -102,7 +102,39 @@ export const useChatStore = create((set, get) => ({
         `/messages/send/${selectedUser._id}`,
         messageData,
       );
-      set({ messages: [...messages, res.data] });
+      const newMsg = res?.data;
+      set({ messages: [...messages, newMsg] });
+
+      const { users } = get();
+      const isExisting = users.some((u) => u._id === selectedUser._id);
+      if (isExisting) {
+        set({
+          users: users.map((u) =>
+            u._id === selectedUser._id
+              ? {
+                  ...u,
+                  lastMessage: {
+                    text: newMsg?.text,
+                    createdAt: newMsg?.createdAt,
+                  },
+                }
+              : u,
+          ),
+        });
+      } else {
+        await get().loadContacts();
+      }
+
+      const ws = useAuthStore.getState().ws;
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(
+          JSON.stringify({
+            type: "message",
+            roomId: `user:${selectedUser._id}`,
+            payload: newMsg,
+          }),
+        );
+      }
     } catch (error) {
       Toast.show({
         type: "error",
@@ -116,44 +148,30 @@ export const useChatStore = create((set, get) => ({
     const { selectedUser } = get();
     if (!selectedUser) return;
 
-    const socket = useAuthStore.getState().socket;
+    const authUser = useAuthStore.getState().authUser;
+    if (!authUser?._id) return;
 
-    // ✅ Nếu socket chưa ready, đợi nó connect rồi subscribe
-    if (!socket) {
-      const unsubscribeAuth = useAuthStore.subscribe((state) => {
-        if (state.socket) {
-          unsubscribeAuth(); // dừng watch
-          get().subscribeToMessages(); // retry
-        }
-      });
-      return;
-    }
+    const roomId = ["chat", authUser._id, selectedUser._id].sort().join(":");
 
-    // Cleanup listener cũ nếu có
-    const { messageListener } = get();
-    if (messageListener) {
-      socket.off("newMessage", messageListener);
-    }
-
-    const handler = (newMessage) => {
-      const isFromSelectedUser =
-        String(newMessage?.senderId) === String(selectedUser._id);
-      if (!isFromSelectedUser) return;
-      set({ messages: [...get().messages, newMessage] });
+    const tryJoin = () => {
+      const ws = useAuthStore.getState().ws;
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "join_room", roomId }));
+        clearInterval(joinInterval);
+        set({ _joinInterval: null });
+      }
     };
 
-    socket.on("newMessage", handler);
-    set({ messageListener: handler });
+    const joinInterval = setInterval(tryJoin, 500);
+    set({ _joinInterval: joinInterval });
+    tryJoin();
   },
 
   unsubscribeFromMessages: () => {
-    const socket = useAuthStore.getState().socket;
-    if (!socket) return;
-
-    const { messageListener } = get();
-    if (messageListener) {
-      socket.off("newMessage", messageListener);
-      set({ messageListener: null });
+    const { _joinInterval } = get();
+    if (_joinInterval) {
+      clearInterval(_joinInterval);
+      set({ _joinInterval: null });
     }
   },
 

@@ -148,22 +148,28 @@ const predict = async (req, res, next) => {
         return res.status(500).json({
           code: 500,
           success: false,
-          message: "He thong dang thieu cau hinh AI guard. Vui long kiem tra GEMINI_API_KEY.",
+          message:
+            guardError?.message ||
+            "He thong dang thieu cau hinh AI guard. Vui long kiem tra GEMINI_API_KEY.",
+          data: debugAIGuard
+            ? {
+              detail: guardError?.detail || null,
+            }
+            : undefined,
         });
       }
 
       if (guardError?.code === "GUARD_PROVIDER_ERROR") {
-        if (guardError?.status === 429) {
-          if (bypassOnQuota) {
-            guardResult = {
-              provider: "gemini",
-              isDurianRelated: true,
-              confidence: null,
-              reason: "Guard bypassed due to Gemini quota (AI_GUARD_BYPASS_ON_QUOTA=true).",
-              bypassed: true,
-              retryAfterSeconds: guardError?.retryAfterSeconds || null,
-            };
-          } else {
+        if (guardError?.status === 429 && bypassOnQuota) {
+          guardResult = {
+            provider: "gemini",
+            isDurianRelated: true,
+            confidence: null,
+            reason: "Guard bypassed due to Gemini quota (AI_GUARD_BYPASS_ON_QUOTA=true).",
+            bypassed: true,
+            retryAfterSeconds: guardError?.retryAfterSeconds || null,
+          };
+        } else if (guardError?.status === 429) {
           return res.status(429).json({
             code: 429,
             success: false,
@@ -172,25 +178,26 @@ const predict = async (req, res, next) => {
               retryAfterSeconds: guardError?.retryAfterSeconds || null,
             },
           });
-          }
-        }
-
-        return res.status(502).json({
-          code: 502,
-          success: false,
-          message: "Khong the kiem tra anh voi AI guard luc nay. Vui long thu lai sau.",
-          data: debugAIGuard
-            ? {
+        } else {
+          return res.status(502).json({
+            code: 502,
+            success: false,
+            message: "Khong the kiem tra anh voi AI guard luc nay. Vui long thu lai sau.",
+            data: debugAIGuard
+              ? {
                 providerStatus: guardError?.status || null,
                 providerCode: guardError?.code || null,
                 retryAfterSeconds: guardError?.retryAfterSeconds || null,
                 detail: guardError?.detail || null,
               }
-            : undefined,
-        });
+              : undefined,
+          });
+        }
       }
 
-      throw guardError;
+      if (!guardResult?.bypassed) {
+        throw guardError;
+      }
     }
 
     if (!guardResult?.isDurianRelated) {
