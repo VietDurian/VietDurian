@@ -76,7 +76,7 @@ const verifyEmail = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Email verified successfully",
+      message: "Email đã được xác minh thành công",
       data: {
         user: result.user,
         token: result.token,
@@ -96,7 +96,7 @@ const resendVerificationOtp = async (req, res, next) => {
     if (!email) {
       return res.status(400).json({
         code: 400,
-        message: "Please provide email",
+        message: "Vui lòng cung cấp địa chỉ email",
       });
     }
 
@@ -118,7 +118,7 @@ const login = async (req, res, next) => {
     if (!email || !password) {
       return res.status(400).json({
         code: 400,
-        message: "Please provide email and password",
+        message: "Vui lòng cung cấp địa chỉ email và mật khẩu",
       });
     }
 
@@ -191,7 +191,7 @@ const verifyResetOtp = async (req, res, next) => {
     if (!email || !otp) {
       return res.status(400).json({
         code: 400,
-        message: "Please provide email and otp",
+        message: "Vui lòng cung cấp địa chỉ email và mã OTP",
       });
     }
 
@@ -220,13 +220,13 @@ const resetPassword = async (req, res, next) => {
     if (!newPassword || !confirmPassword) {
       return res.status(400).json({
         code: 400,
-        message: "Please provide newPassword and confirmPassword",
+        message: "Vui lòng cung cấp mật khẩu mới và xác nhận mật khẩu",
       });
     }
     if (newPassword !== confirmPassword) {
       return res.status(400).json({
         code: 400,
-        message: "Passwords do not match",
+        message: "Mật khẩu xác nhận không khớp",
       });
     }
 
@@ -275,7 +275,7 @@ const changePassword = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Password changed successfully",
+      message: "Mật khẩu đã được thay đổi thành công",
     });
   } catch (error) {
     next(error);
