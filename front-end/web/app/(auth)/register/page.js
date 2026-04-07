@@ -54,6 +54,8 @@ export default function RegisterPage() {
   });
   const [emailExistsError, setEmailExistsError] = useState("");
   const emailCheckRequestIdRef = useRef(0);
+  const googleButtonContainerRef = useRef(null);
+  const [googleButtonWidth, setGoogleButtonWidth] = useState(0);
   const { loginWithGoogle } = useAuth();
 
   const ROLES = [
@@ -119,6 +121,22 @@ export default function RegisterPage() {
 
     return () => clearTimeout(timeoutId);
   }, [email, emailError, checkEmailExists]);
+
+  useEffect(() => {
+    if (!googleButtonContainerRef.current) return;
+
+    const updateWidth = () => {
+      const containerWidth = googleButtonContainerRef.current?.offsetWidth ?? 0;
+      setGoogleButtonWidth(Math.min(400, Math.max(200, Math.floor(containerWidth))));
+    };
+
+    updateWidth();
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(googleButtonContainerRef.current);
+
+    return () => observer.disconnect();
+  }, []);
 
   // Handle Submit Register Form
   const handleSubmit = async (e) => {
@@ -580,12 +598,14 @@ export default function RegisterPage() {
             </div>
 
             {/* Google Button */}
-            <div className="space-y-3">
+            <div
+              ref={googleButtonContainerRef}
+              className="space-y-3 flex w-full flex-col items-center justify-center"
+            >
               <GoogleLogin
-                onSuccess={(response) => {
-                  loginWithGoogle(response.credential);
-                }}
+                onSuccess={handleSuccess}
                 onError={() => console.log("Login Failed")}
+                width={googleButtonWidth ? String(googleButtonWidth) : undefined}
               />
             </div>
           </form>
