@@ -386,7 +386,7 @@ const resetPasswordWithToken = async (token, newPassword) => {
     }
     user.password = newPassword;
     await user.save();
-    return { message: "Password reset successfully" };
+    return { message: "Mật khẩu đã được đặt lại thành công" };
   } catch (error) {
     if (
       error.name === "JsonWebTokenError" ||
@@ -415,8 +415,6 @@ const googleLogin = async (token) => {
 
     const payload = ticket.getPayload();
     const { email, name, picture } = payload;
-
-    console.log("✅ Google token verified successfully:", email);
 
     // Check if user exists
     let user = await User.findOne({ email });
