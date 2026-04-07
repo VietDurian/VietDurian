@@ -169,7 +169,7 @@ const resendVerificationOtp = async (email) => {
       console.warn("Email credentials not configured. OTP: " + otp);
     }
 
-    return { message: "OTP resent successfully" };
+    return { message: "OTP đã được gửi lại đến email của bạn" };
   } catch (error) {
     throw error;
   }
@@ -370,7 +370,7 @@ const resetPasswordWithToken = async (token, newPassword) => {
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     if (!payload?.uid || payload.action !== "reset_password") {
-      throw createError(400, "Invalid or expired reset token");
+      throw createError(400, "Không tìm thấy người dùng hoặc hành động không hợp lệ trong token");
     }
 
     const user = await User.findById(payload.uid).select("+password");
@@ -392,7 +392,7 @@ const resetPasswordWithToken = async (token, newPassword) => {
       error.name === "JsonWebTokenError" ||
       error.name === "TokenExpiredError"
     ) {
-      throw createError(400, "Invalid or expired reset token");
+      throw createError(400, "Token đặt lại không hợp lệ hoặc đã hết hạn");
     }
     throw error;
   }
@@ -400,8 +400,6 @@ const resetPasswordWithToken = async (token, newPassword) => {
 
 const googleLogin = async (token) => {
   try {
-    console.log("🔑 Google Login - Token received:", token ? "Yes" : "No");
-    console.log("🔑 Google Client ID:", process.env.YOUR_GOOGLE_CLIENT_ID);
 
     if (!token) {
       throw createError(400, "Token is required");
