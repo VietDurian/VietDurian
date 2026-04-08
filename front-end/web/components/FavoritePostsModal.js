@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   Heart,
   MessageCircle,
@@ -367,7 +367,7 @@ const StatusBadge = ({ status }) => {
 const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const { t } = useLanguage();
   const fileInputRef = useRef(null);
-  const categories = getCategoriesByRole(user?.role);
+  const categories = useMemo(() => getCategoriesByRole(user?.role), [user?.role]);
   const [category, setCategory] = useState(post?.category || categories[0]);
   const [title, setTitle] = useState(post?.title || "");
   const [content, setContent] = useState(post?.content || "");
@@ -403,7 +403,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
       setError("");
       setDropdownOpen(false);
     }
-  }, [post, categories]);
+  }, [post]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "unset";

@@ -21,7 +21,7 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
   getOwnPosts,
@@ -157,7 +157,7 @@ const StatusBadge = ({ status }) => {
 const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const { t } = useLanguage();
   const fileInputRef = useRef(null);
-  const categories = getCategoriesByRole(user?.role);
+  const categories = useMemo(() => getCategoriesByRole(user?.role), [user?.role]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [category, setCategory] = useState(post?.category || categories[0]);
   const [title, setTitle] = useState(post?.title || "");
@@ -202,7 +202,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
       setError("");
       setDropdownOpen(false);
     }
-  }, [post, categories]);
+  }, [post]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "unset";
