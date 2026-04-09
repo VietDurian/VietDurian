@@ -560,20 +560,25 @@ export default function CommentScreen({ onBack }) {
                             source={{ uri: authUser?.avatar || "https://i.pravatar.cc/100" }}
                             style={styles.inputAvatar}
                         />
-                        <TextInput
-                            ref={inputRef}
-                            style={styles.textInput}
-                            value={inputText}
-                            onChangeText={setInputText}
-                            placeholder={
-                                editingComment ? "Chỉnh sửa bình luận..."
-                                    : replyingTo ? `Trả lời ${replyingTo.author_id?.full_name || ""}...`
-                                        : "Viết bình luận..."
-                            }
-                            placeholderTextColor="#9ca3af"
-                            multiline
-                            maxLength={500}
-                        />
+                        <View style={{ flex: 1 }}>
+                            <TextInput
+                                ref={inputRef}
+                                style={styles.textInput}
+                                value={inputText}
+                                onChangeText={setInputText}
+                                placeholder={
+                                    editingComment ? "Chỉnh sửa bình luận..."
+                                        : replyingTo ? `Trả lời ${replyingTo.author_id?.full_name || ""}...`
+                                            : "Viết bình luận..."
+                                }
+                                placeholderTextColor="#9ca3af"
+                                multiline
+                                maxLength={50}
+                            />
+                            <Text style={{ fontSize: 11, color: "#9ca3af", textAlign: "right", marginTop: 2 }}>
+                                {inputText.length}/50
+                            </Text>
+                        </View>
                         <TouchableOpacity
                             style={[styles.sendBtn, (!inputText.trim() || sending) && styles.sendBtnDisabled]}
                             onPress={handleSend}
@@ -735,7 +740,7 @@ const styles = StyleSheet.create({
     inputArea: {
         backgroundColor: "#fff",
         borderTopWidth: 1, borderTopColor: "#f3f4f6",
-        paddingBottom: Platform.OS === "ios" ? 44 : 28,
+        paddingBottom: Platform.OS === "ios" ? 24 : 8,
     },
     contextBanner: {
         flexDirection: "row", alignItems: "center", justifyContent: "space-between",
@@ -746,15 +751,16 @@ const styles = StyleSheet.create({
     contextBannerEdit: { backgroundColor: "#fff7ed", borderBottomColor: "#fed7aa" },
     contextBannerText: { fontSize: 13, fontWeight: "600", color: "#374151", flex: 1, marginRight: 8 },
     inputRow: {
-        flexDirection: "row", alignItems: "flex-end",
+        flexDirection: "row", alignItems: "center",
         paddingHorizontal: 12, paddingTop: 10, gap: 10,
     },
     inputAvatar: {
         width: 36, height: 36, borderRadius: 18,
         borderWidth: 2, borderColor: "#f3f4f6", flexShrink: 0,
+        marginBottom: 15,
     },
     textInput: {
-        flex: 1, backgroundColor: "#f3f4f6",
+        backgroundColor: "#f3f4f6",
         borderRadius: 22, paddingHorizontal: 16,
         paddingVertical: Platform.OS === "ios" ? 10 : 8,
         fontSize: 14, color: "#111827", maxHeight: 120,
@@ -764,6 +770,7 @@ const styles = StyleSheet.create({
         width: 40, height: 40, borderRadius: 20,
         backgroundColor: "#16a34a",
         alignItems: "center", justifyContent: "center", flexShrink: 0,
+        marginBottom: 15,
     },
     sendBtnDisabled: { backgroundColor: "#d1d5db" },
 
