@@ -55,6 +55,7 @@ const getTimeAgo = (dateString) => {
   const date = new Date(dateString);
   const now = new Date();
   const seconds = Math.floor((now - date) / 1000);
+  if (seconds <= 0) return "0s";
   if (seconds < 60) return `${seconds}s`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m`;
@@ -475,6 +476,7 @@ export default function CommentModal({
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState(null);
+  const [isSending, setIsSending] = useState(false);
   const textInputRef = useRef(null);
 
   const autoResizeTextarea = (textarea) => {
@@ -617,8 +619,9 @@ export default function CommentModal({
   };
 
   const handleSendComment = async () => {
-    if (!commentText.trim() || !authUser?._id) return;
+    if (!commentText.trim() || !authUser?._id || isSending) return;
     try {
+      setIsSending(true);
       await commentAPI.createComment({
         post_id: postId,
         content: commentText.trim(),
@@ -630,6 +633,8 @@ export default function CommentModal({
     } catch (error) {
       console.error("Failed to create comment:", error);
       toast.error(t("comment_create_fail"));
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -774,6 +779,7 @@ export default function CommentModal({
                     setCommentText(e.target.value);
                     autoResizeTextarea(e.target);
                   }}
+                  maxLength={50}
                   placeholder={
                     editingComment
                       ? t("comment_placeholder_edit")
@@ -790,10 +796,13 @@ export default function CommentModal({
                     }
                   }}
                 />
+                <p className="text-xs text-gray-400 text-right mt-1">
+                  {commentText.length}/50
+                </p>
               </div>
               <button
                 onClick={editingComment ? handleSaveEdit : handleSendComment}
-                disabled={!commentText.trim()}
+                disabled={!commentText.trim() || isSending}
                 className="p-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:bg-gray-300 rounded-full transition shrink-0"
               >
                 <Send size={20} className="text-white" />
