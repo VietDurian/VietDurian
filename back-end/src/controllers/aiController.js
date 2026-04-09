@@ -3,14 +3,17 @@ import { aiService } from "@/services/aiService.js";
 const DISEASE_INFO = {
   Fruit_Rot: {
     viName: "Bệnh thối trái",
+    enName: "Fruit Rot",
     solutions: ["Bao trái", "Thu hoạch đúng thời điểm", "Thu gom trái bệnh"],
   },
   Leaf_Algal: {
     viName: "Bệnh đốm lá do tảo ký sinh",
+    enName: "Algal Leaf Spot",
     solutions: ["Tỉa cành cho ánh sáng xuyên tán"],
   },
   Leaf_Blight: {
     viName: "Bệnh cháy lá",
+    enName: "Leaf Blight",
     solutions: [
       "Tỉa cành tạo tán cho vườn thông thoáng và giảm ẩm",
       "Không bón quá nhiều đạm",
@@ -22,6 +25,7 @@ const DISEASE_INFO = {
   },
   Leaf_Colletotrichum: {
     viName: "Bệnh thán thư trên lá",
+    enName: "Leaf Anthracnose",
     solutions: [
       "Bón phân cân đối NPK + trung vi lượng",
       "Giảm độ ẩm vườn",
@@ -31,6 +35,7 @@ const DISEASE_INFO = {
   },
   Leaf_Healthy: {
     viName: "Lá khỏe mạnh",
+    enName: "Healthy Leaf",
     solutions: [
       "Tiếp tục duy trì chế độ tưới và bón phân cân đối như hiện tại",
       "Theo dõi định kỳ 3-7 ngày/lần để phát hiện sớm dấu hiệu bất thường",
@@ -40,34 +45,42 @@ const DISEASE_INFO = {
   },
   Leaf_Phomopsis: {
     viName: "Bệnh đốm lá Phomopsis",
+    enName: "Phomopsis Leaf Spot",
     solutions: ["Trồng cây giống sạch bệnh", "Tránh tưới nước lên tán lá buổi tối", "Tăng cường Kali và Canxi để tăng sức đề kháng của cây", "Thu gom lá bệnh đem đốt", "Khử trùng dụng cụ cắt tỉa"],
   },
   Leaf_Rhizoctonia: {
     viName: "Bệnh cháy lá do nấm Rhizoctonia",
+    enName: "Rhizoctonia Leaf Blight",
     solutions: ["Không trồng quá dày", "Kiểm soát độ ẩm đất", "Loại bỏ lá bệnh"],
   },
   Mealybug_Infestation: {
     viName: "Bệnh gây hại của rệp sáp",
+    enName: "Mealybug Infestation",
     solutions: ["Kiểm soát kiến", "Cắt bỏ cành bị nặng", "Rửa bằng nước áp lực cao"],
   },
   Pink_Disease: {
     viName: "Bệnh nấm hồng",
+    enName: "Pink Disease",
     solutions: ["Tỉa cành tạo thông thoáng", "Cắt bỏ cành bệnh"],
   },
   Sooty_Mold: {
     viName: "Bệnh mốc bồ hóng",
+    enName: "Sooty Mold",
     solutions: ["Kiểm soát rệp, bọ trĩ", "Rửa lá bằng nước"],
   },
   Stem_Cracking_Gummosis: {
     viName: "Bệnh nứt thân chảy nhựa",
+    enName: "Stem Cracking and Gummosis",
     solutions: ["Tránh ngập úng", "Bón phân cân đối", "Cạo sạch vết bệnh"],
   },
   Thrips_Disease: {
     viName: "Bệnh do bọ trĩ gây hại",
+    enName: "Thrips Damage",
     solutions: ["Vệ sinh vườn", "Bẫy dính xanh"],
   },
   Yellow_Leaf: {
     viName: "Bệnh vàng lá",
+    enName: "Yellow Leaf",
     solutions: [
       "Bón phân hữu cơ + vi sinh",
       "Bổ sung Mg, Zn, Fe",
@@ -75,6 +88,17 @@ const DISEASE_INFO = {
       "Tỉa cành yếu"
     ],
   },
+};
+
+const toEnglishLabel = (classKey) => {
+  const raw = String(classKey || "").trim();
+  if (!raw) return "Unknown";
+
+  return raw
+    .split("_")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 };
 
 const localizeAiResult = (aiResult) => {
@@ -89,14 +113,14 @@ const localizeAiResult = (aiResult) => {
     const itemInfo = DISEASE_INFO[classNameEn];
     return {
       ...item,
-      class_name_en: classNameEn,
+      class_name_en: itemInfo?.enName || toEnglishLabel(classNameEn),
       class_name_vi: itemInfo?.viName || classNameEn,
     };
   });
 
   return {
     ...aiResult,
-    predicted_class_en: predictedClassEn,
+    predicted_class_en: info?.enName || toEnglishLabel(predictedClassEn),
     predicted_class_vi: info?.viName || predictedClassEn,
     solutions: info?.solutions || [],
     top_k: localizedTopK,

@@ -13,13 +13,20 @@ import { aiAPI } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function ProfileAiPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [scanLoading, setScanLoading] = useState(false);
   const [scanError, setScanError] = useState(null);
   const [scanFile, setScanFile] = useState(null);
   const [scanPreviewUrl, setScanPreviewUrl] = useState(null);
   const [scanResult, setScanResult] = useState(null);
   const scanFileInputRef = useRef(null);
+
+  const humanizeDiseaseKey = (value) =>
+    String(value || "")
+      .split("_")
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
 
   useEffect(() => {
     if (!scanFile) {
@@ -68,10 +75,14 @@ export default function ProfileAiPage() {
         if (!Number.isFinite(probability)) return null;
 
         const label =
-          item?.class_name_vi ||
-          item?.class_name_en ||
-          item?.class_name ||
-          t("ai_disease_unknown");
+          language === "en"
+            ? item?.class_name_en ||
+              humanizeDiseaseKey(item?.class_name) ||
+              t("ai_disease_unknown")
+            : item?.class_name_vi ||
+              item?.class_name_en ||
+              item?.class_name ||
+              t("ai_disease_unknown");
         const aliases = [
           normalize(item?.class_name),
           normalize(item?.class_name_en),
@@ -95,7 +106,7 @@ export default function ProfileAiPage() {
       .filter(Boolean)
       .sort((a, b) => b.probability - a.probability)
       .slice(0, 4);
-  }, [scanResult, t]);
+  }, [scanResult, t, language]);
 
   const resetScan = () => {
     setScanFile(null);
@@ -288,8 +299,12 @@ export default function ProfileAiPage() {
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
                       <div className="text-sm text-gray-800">
                         <b>{t("ai_prediction_label")}</b>{" "}
-                        {scanResult.predicted_class_vi ||
-                          scanResult.predicted_class}
+                        {language === "en"
+                          ? scanResult.predicted_class_en ||
+                            humanizeDiseaseKey(scanResult.predicted_class) ||
+                            scanResult.predicted_class
+                          : scanResult.predicted_class_vi ||
+                            scanResult.predicted_class}
                       </div>
                       {scanResult.confidence && (
                         <div className="mt-2">
