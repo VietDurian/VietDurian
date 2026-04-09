@@ -150,7 +150,7 @@ const predict = async (req, res, next) => {
           success: false,
           message:
             guardError?.message ||
-            "He thong dang thieu cau hinh AI guard. Vui long kiem tra GEMINI_API_KEY.",
+            "He thong dang thieu cau hinh AI guard. Vui long kiem tra GEMINI_GUARD_API_KEY.",
           data: debugAIGuard
             ? {
               detail: guardError?.detail || null,

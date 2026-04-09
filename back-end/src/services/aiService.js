@@ -1,13 +1,14 @@
 const LOCAL_AI_SERVICE_URL = "http://127.0.0.1:8001";
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
+const GEMINI_GUARD_API_KEY = process.env.GEMINI_GUARD_API_KEY || process.env.GEMINI_API_KEY;
+const GEMINI_GUARD_MODEL =
+  process.env.GEMINI_GUARD_MODEL || process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
 
-// Keep guard model list aligned with chatbox for quota/stability consistency.
+// Dedicated model candidates for AI guard (separate from chatbox).
 const DIRECT_MODELS = [
   "gemini-3.1-flash-lite",
-  "gemini-2.5-flash-lite",
-  "gemini-2.5-flash-preview-04-17",
   "gemini-3-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-flash",
 ];
 
 
@@ -101,7 +102,7 @@ const getAiServiceUrl = () => {
 
 const requestGeminiGuard = async ({ modelName, base64, mimetype }) => {
   const normalizedModelName = (modelName || "").replace(/^models\//, "").trim() || null;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(normalizedModelName)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(normalizedModelName)}:generateContent?key=${encodeURIComponent(GEMINI_GUARD_API_KEY)}`;
 
   const resp = await fetch(url, {
     method: "POST",
@@ -135,15 +136,15 @@ const requestGeminiGuard = async ({ modelName, base64, mimetype }) => {
 };
 
 const guardWithGemini = async ({ buffer, mimetype }) => {
-  if (!GEMINI_API_KEY) {
-    const err = new Error("Chua cau hinh GEMINI_API_KEY cho bo loc hinh anh sau rieng.");
+  if (!GEMINI_GUARD_API_KEY) {
+    const err = new Error("Chua cau hinh GEMINI_GUARD_API_KEY (hoac GEMINI_API_KEY) cho bo loc hinh anh sau rieng.");
     err.status = 500;
     err.code = "GUARD_NOT_CONFIGURED";
     throw err;
   }
 
   const base64 = buffer.toString("base64");
-  const candidateModels = [...new Set([GEMINI_MODEL, ...DIRECT_MODELS].map((m) => String(m || "").trim()).filter(Boolean))];
+  const candidateModels = [...new Set([GEMINI_GUARD_MODEL, ...DIRECT_MODELS].map((m) => String(m || "").trim()).filter(Boolean))];
   let lastError = null;
   const quotaErrors = [];
 
@@ -185,7 +186,7 @@ const guardWithGemini = async ({ buffer, mimetype }) => {
         resp.status === 400 &&
         (errorReason === "API_KEY_INVALID" || errorMessage.includes("API KEY NOT VALID"))
       ) {
-        const err = new Error("GEMINI_API_KEY khong hop le hoac da het hieu luc.");
+        const err = new Error("GEMINI_GUARD_API_KEY khong hop le hoac da het hieu luc.");
         err.status = 500;
         err.code = "GUARD_NOT_CONFIGURED";
         err.detail = {
@@ -250,7 +251,7 @@ const guardWithGemini = async ({ buffer, mimetype }) => {
 
   if (quotaErrors.length > 0) {
     const err = new Error(
-      "Tat ca model Gemini kha dung deu tam het quota. Vui long thu lai sau hoac doi GEMINI_API_KEY.",
+      "Tat ca model Gemini kha dung deu tam het quota. Vui long thu lai sau hoac doi GEMINI_GUARD_API_KEY.",
     );
     err.status = 429;
     err.code = "GUARD_PROVIDER_ERROR";
