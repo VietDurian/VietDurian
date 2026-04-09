@@ -67,14 +67,21 @@ apiClient.interceptors.response.use(
 
 // AI API
 export const aiAPI = {
-  async predictDisease(imageFile) {
+  async predictDisease(imageFile, language = "vi") {
     const formData = new FormData();
     formData.append("image", imageFile);
+
+    const normalizedLanguage =
+      String(language || "vi").trim().toLowerCase().startsWith("en")
+        ? "en"
+        : "vi";
 
     // Override default JSON header for multipart.
     const response = await apiClient.post("/ai/predict", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
+        "X-Language": normalizedLanguage,
+        "Accept-Language": normalizedLanguage,
       },
     });
     return response.data;

@@ -40,7 +40,7 @@ export default function ProfileAiPage() {
 
   const isNotDurianImageError =
     typeof scanError === "string" &&
-    /chua phai anh sau rieng|chưa phải ảnh sầu riêng|liên quan đến sầu riêng/i.test(
+    /chua phai anh sau rieng|chưa phải ảnh sầu riêng|liên quan đến sầu riêng|does not appear to be a durian image|durian-related image/i.test(
       scanError,
     );
 
@@ -148,7 +148,7 @@ export default function ProfileAiPage() {
 
     setScanLoading(true);
     try {
-      const res = await aiAPI.predictDisease(file);
+      const res = await aiAPI.predictDisease(file, language);
       if (!res?.success) {
         throw new Error(res?.message || t("ai_error_ai_call"));
       }

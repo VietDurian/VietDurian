@@ -200,9 +200,18 @@ const localizeAiResult = (aiResult) => {
   };
 };
 
+const resolveRequestLanguage = (req) => {
+  const rawLanguage =
+    req?.headers?.["x-language"] || req?.headers?.["accept-language"] || "";
+
+  const language = String(rawLanguage).trim().toLowerCase();
+  return language.startsWith("en") ? "en" : "vi";
+};
+
 const predict = async (req, res, next) => {
   const debugAIGuard = String(process.env.DEBUG_AI_GUARD || "false").toLowerCase() === "true";
   const bypassOnQuota = String(process.env.AI_GUARD_BYPASS_ON_QUOTA || "false").toLowerCase() === "true";
+  const requestLanguage = resolveRequestLanguage(req);
 
   try {
     const file = req.file;
@@ -301,7 +310,10 @@ const predict = async (req, res, next) => {
       return res.status(422).json({
         code: 422,
         success: false,
-        message: "Ảnh bạn tải lên chưa phải ảnh sầu riêng. Vui lòng chọn ảnh liên quan đến sầu riêng để hệ thống chẩn đoán chính xác hơn.",
+        message:
+          requestLanguage === "en"
+            ? "The uploaded image does not appear to be a durian image. Please choose a durian-related image for a more accurate diagnosis."
+            : "Ảnh bạn tải lên chưa phải ảnh sầu riêng. Vui lòng chọn ảnh liên quan đến sầu riêng để hệ thống chẩn đoán chính xác hơn.",
         data: {
           guard: guardResult,
         },
