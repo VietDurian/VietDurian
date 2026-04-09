@@ -767,9 +767,13 @@ export default function ProfileDetails() {
                     name="full_name"
                     value={editForm.full_name}
                     onChange={handleInputChange}
+                    maxLength={40}
                     className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-gray-900"
                     placeholder={t("profile_full_name")}
                   />
+                  <p className="mt-1 text-xs text-gray-400 text-right">
+                    {editForm.full_name.length}/40
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -798,6 +802,7 @@ export default function ProfileDetails() {
                 disabled={
                   isSaving ||
                   phoneError ||
+                  editForm.full_name.length > 40 ||
                   (editForm.full_name === profileData.full_name &&
                     editForm.phone === profileData.phone &&
                     editForm.avatar === profileData.avatar) ||
