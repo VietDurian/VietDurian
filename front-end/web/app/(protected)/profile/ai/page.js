@@ -108,6 +108,24 @@ export default function ProfileAiPage() {
       .slice(0, 4);
   }, [scanResult, t, language]);
 
+  const displaySolutions = useMemo(() => {
+    if (!scanResult) return [];
+
+    if (language === "en") {
+      if (Array.isArray(scanResult?.solutions_en) && scanResult.solutions_en.length > 0) {
+        return scanResult.solutions_en;
+      }
+
+      return Array.isArray(scanResult?.solutions) ? scanResult.solutions : [];
+    }
+
+    if (Array.isArray(scanResult?.solutions_vi) && scanResult.solutions_vi.length > 0) {
+      return scanResult.solutions_vi;
+    }
+
+    return Array.isArray(scanResult?.solutions) ? scanResult.solutions : [];
+  }, [scanResult, language]);
+
   const resetScan = () => {
     setScanFile(null);
     setScanResult(null);
@@ -377,10 +395,9 @@ export default function ProfileAiPage() {
                     <div className="text-xs font-semibold text-gray-700 mb-2">
                       {t("ai_solution_title")}
                     </div>
-                    {Array.isArray(scanResult?.solutions) &&
-                    scanResult.solutions.length > 0 ? (
+                    {displaySolutions.length > 0 ? (
                       <ul className="text-xs text-gray-700 space-y-1 list-disc pl-4">
-                        {scanResult.solutions.map((s, i) => (
+                        {displaySolutions.map((s, i) => (
                           <li key={i}>{s}</li>
                         ))}
                       </ul>
