@@ -328,11 +328,18 @@ const EditModal = ({ visible, profileData, onClose, onSaved }) => {
                     <TextInput
                       style={styles.input}
                       value={editForm.full_name}
-                      onChangeText={(v) => setEditForm((p) => ({ ...p, full_name: v }))}
+                      onChangeText={(v) => {
+                        if (v.length > 40) return;
+                        setEditForm((p) => ({ ...p, full_name: v }));
+                      }}
+                      maxLength={40}
                       placeholder="Nhập họ và tên"
                       placeholderTextColor="#9ca3af"
                       returnKeyType="next"
                     />
+                    <Text style={{ fontSize: 11, color: "#9ca3af", textAlign: "right", marginTop: 4 }}>
+                      {editForm.full_name.length}/40
+                    </Text>
                   </View>
 
                   <View style={{ marginBottom: 8 }}>
