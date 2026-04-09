@@ -45,7 +45,7 @@ const createUseFertilizers = async (req, res, next) => {
 
     res.status(201).json({
       code: 201,
-      message: "Use fertilizers created successfully",
+      message: "Nhật ký sử dụng phân bón và thuốc trừ sâu được tạo thành công",
       data: created,
     });
   } catch (error) {
@@ -74,7 +74,7 @@ const updateUseFertilizers = async (req, res, next) => {
 
     res.status(200).json({
       code: 200,
-      message: "Use fertilizers updated successfully",
+      message: "Nhật kí được cập nhật thành công",
       data: updated,
     });
   } catch (error) {
@@ -95,7 +95,7 @@ const deleteUseFertilizers = async (req, res, next) => {
 
     res.status(200).json({
       code: 200,
-      message: "Use fertilizers deleted successfully",
+      message: "Nhật kí được xóa thành công ",
     });
   } catch (error) {
     next(error);
