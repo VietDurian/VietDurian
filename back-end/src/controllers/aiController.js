@@ -90,6 +90,77 @@ const DISEASE_INFO = {
   },
 };
 
+const DISEASE_SOLUTIONS_EN = {
+  Fruit_Rot: [
+    "Bag the fruits.",
+    "Harvest at the proper maturity stage.",
+    "Collect and destroy infected fruits.",
+  ],
+  Leaf_Algal: [
+    "Prune branches to improve light penetration and airflow.",
+  ],
+  Leaf_Blight: [
+    "Prune canopy to improve airflow and reduce humidity.",
+    "Avoid over-applying nitrogen fertilizer.",
+    "Remove and destroy infected leaves.",
+    "Use proper planting density.",
+    "Apply decomposed organic fertilizer with beneficial microbes.",
+    "Sanitize the orchard regularly.",
+  ],
+  Leaf_Colletotrichum: [
+    "Apply balanced NPK with secondary and micronutrients.",
+    "Reduce orchard humidity.",
+    "Prune diseased branches.",
+    "Do not leave infected leaves in the orchard.",
+  ],
+  Leaf_Healthy: [
+    "Maintain the current balanced irrigation and fertilization plan.",
+    "Monitor every 3-7 days for early abnormal signs.",
+    "Keep the orchard ventilated, clean fallen leaves, and prune old branches.",
+    "Limit spraying when no disease symptoms are present.",
+  ],
+  Leaf_Phomopsis: [
+    "Use disease-free seedlings.",
+    "Avoid wetting the canopy in the evening.",
+    "Increase potassium and calcium to improve plant resistance.",
+    "Collect and burn infected leaves.",
+    "Disinfect pruning tools.",
+  ],
+  Leaf_Rhizoctonia: [
+    "Avoid planting too densely.",
+    "Control soil moisture.",
+    "Remove diseased leaves.",
+  ],
+  Mealybug_Infestation: [
+    "Control ant populations.",
+    "Prune heavily infested branches.",
+    "Wash affected parts with high-pressure water.",
+  ],
+  Pink_Disease: [
+    "Prune branches to improve ventilation.",
+    "Remove infected branches.",
+  ],
+  Sooty_Mold: [
+    "Control aphids and thrips.",
+    "Wash leaves with clean water.",
+  ],
+  Stem_Cracking_Gummosis: [
+    "Avoid waterlogging.",
+    "Apply balanced fertilization.",
+    "Scrape and clean infected lesions.",
+  ],
+  Thrips_Disease: [
+    "Sanitize the orchard.",
+    "Use blue sticky traps.",
+  ],
+  Yellow_Leaf: [
+    "Apply organic fertilizer and beneficial microbes.",
+    "Supplement Mg, Zn, and Fe.",
+    "Improve soil drainage.",
+    "Prune weak branches.",
+  ],
+};
+
 const toEnglishLabel = (classKey) => {
   const raw = String(classKey || "").trim();
   if (!raw) return "Unknown";
@@ -122,6 +193,8 @@ const localizeAiResult = (aiResult) => {
     ...aiResult,
     predicted_class_en: info?.enName || toEnglishLabel(predictedClassEn),
     predicted_class_vi: info?.viName || predictedClassEn,
+    solutions_vi: info?.solutions || [],
+    solutions_en: DISEASE_SOLUTIONS_EN[predictedClassEn] || [],
     solutions: info?.solutions || [],
     top_k: localizedTopK,
   };
