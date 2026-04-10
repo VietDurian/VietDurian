@@ -24,13 +24,24 @@ import * as ImagePicker from "expo-image-picker";
 import { usePostStore } from "../store/usePostStore";
 import { useAppStore } from "../store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
+import { useChatStore } from "../store/useChatStore";
 
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const POST_CATEGORIES = ["Tất cả", "Dịch vụ", "Kinh nghiệm", "Sản phẩm", "Thuê dịch vụ", "Khác"];
+const POST_CATEGORIES = [
+  "Tất cả",
+  "Dịch vụ",
+  "Kinh nghiệm",
+  "Sản phẩm",
+  "Thuê dịch vụ",
+  "Khác",
+];
 
 const CATEGORY_GUIDE = [
   {
@@ -40,8 +51,10 @@ const CATEGORY_GUIDE = [
     tagLine: "Tôi cung cấp dịch vụ",
     who: "Dành cho: Nhân công",
     desc: "Nhân công đăng bài chào dịch vụ: phun thuốc, diệt sâu, thu hoạch, chăm sóc vườn...",
-    badgeBg: "#dbeafe", badgeText: "#1d4ed8",
-    activeBg: "#eff6ff", activeBorder: "#93c5fd",
+    badgeBg: "#dbeafe",
+    badgeText: "#1d4ed8",
+    activeBg: "#eff6ff",
+    activeBorder: "#93c5fd",
   },
   {
     key: "Kinh nghiệm",
@@ -50,8 +63,10 @@ const CATEGORY_GUIDE = [
     tagLine: "Chia sẻ kiến thức",
     who: "Dành cho: Tất cả mọi người",
     desc: "Chia sẻ mẹo trồng trọt, cách xử lý sâu bệnh, kinh nghiệm canh tác thực tế.",
-    badgeBg: "#fef3c7", badgeText: "#b45309",
-    activeBg: "#fffbeb", activeBorder: "#fcd34d",
+    badgeBg: "#fef3c7",
+    badgeText: "#b45309",
+    activeBg: "#fffbeb",
+    activeBorder: "#fcd34d",
   },
   {
     key: "Sản phẩm",
@@ -60,8 +75,10 @@ const CATEGORY_GUIDE = [
     tagLine: "Mua bán nông sản",
     who: "Dành cho: Người bán",
     desc: "Rao bán sầu riêng, phân bón, thuốc trừ sâu, cây giống và các nông sản khác.",
-    badgeBg: "#d1fae5", badgeText: "#065f46",
-    activeBg: "#ecfdf5", activeBorder: "#6ee7b7",
+    badgeBg: "#d1fae5",
+    badgeText: "#065f46",
+    activeBg: "#ecfdf5",
+    activeBorder: "#6ee7b7",
   },
   {
     key: "Thuê dịch vụ",
@@ -70,8 +87,10 @@ const CATEGORY_GUIDE = [
     tagLine: "Tôi cần thuê người",
     who: "Dành cho: Chủ vườn / Nông dân",
     desc: "Chủ vườn đăng tin tìm nhân công: cần người phun thuốc, hái quả, chăm sóc vườn.",
-    badgeBg: "#ede9fe", badgeText: "#5b21b6",
-    activeBg: "#f5f3ff", activeBorder: "#c4b5fd",
+    badgeBg: "#ede9fe",
+    badgeText: "#5b21b6",
+    activeBg: "#f5f3ff",
+    activeBorder: "#c4b5fd",
   },
   {
     key: "Khác",
@@ -80,8 +99,10 @@ const CATEGORY_GUIDE = [
     tagLine: "Nội dung khác",
     who: "Dành cho: Tất cả",
     desc: "Hỏi đáp, thông báo, tin tức nông nghiệp và các chủ đề chưa phân loại.",
-    badgeBg: "#f3f4f6", badgeText: "#374151",
-    activeBg: "#f9fafb", activeBorder: "#d1d5db",
+    badgeBg: "#f3f4f6",
+    badgeText: "#374151",
+    activeBg: "#f9fafb",
+    activeBorder: "#d1d5db",
   },
 ];
 
@@ -90,7 +111,7 @@ const CATEGORY_TAG_COLORS = {
   "Kinh nghiệm": { bg: "#fef3c7", text: "#b45309" },
   "Sản phẩm": { bg: "#d1fae5", text: "#065f46" },
   "Thuê dịch vụ": { bg: "#ede9fe", text: "#5b21b6" },
-  "Khác": { bg: "#f3f4f6", text: "#374151" },
+  Khác: { bg: "#f3f4f6", text: "#374151" },
 };
 
 const ICON_BY_CATEGORY = {
@@ -98,7 +119,7 @@ const ICON_BY_CATEGORY = {
   "Kinh nghiệm": "book-outline",
   "Sản phẩm": "cube-outline",
   "Thuê dịch vụ": "cash-outline",
-  "Khác": "grid-outline",
+  Khác: "grid-outline",
 };
 
 const REPORT_REASONS = [
@@ -116,7 +137,9 @@ function CategoryBadge({ category }) {
   return (
     <View style={[styles.catBadge, { backgroundColor: colors.bg }]}>
       <Ionicons name={icon} size={11} color={colors.text} />
-      <Text style={[styles.catBadgeText, { color: colors.text }]}>{category}</Text>
+      <Text style={[styles.catBadgeText, { color: colors.text }]}>
+        {category}
+      </Text>
     </View>
   );
 }
@@ -146,7 +169,8 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
 
   const handlePickImage = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert("Thông báo", "Cần cấp quyền truy cập thư viện ảnh!");
         return;
@@ -191,8 +215,8 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-        err?.message ||
-        "Không thể gửi báo cáo, vui lòng thử lại"
+          err?.message ||
+          "Không thể gửi báo cáo, vui lòng thử lại",
       );
     } finally {
       setIsSubmitting(false);
@@ -205,7 +229,12 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
     !(selectedReason === "Khác" && !customReason.trim());
 
   return (
-    <Modal visible={visible} animationType="none" transparent onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="none"
+      transparent
+      onRequestClose={onClose}
+    >
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={reportStyles.overlay}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -218,7 +247,11 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                   </View>
                   <Text style={reportStyles.headerTitle}>Báo cáo bài viết</Text>
                 </View>
-                <TouchableOpacity onPress={onClose} style={reportStyles.closeBtn} hitSlop={8}>
+                <TouchableOpacity
+                  onPress={onClose}
+                  style={reportStyles.closeBtn}
+                  hitSlop={8}
+                >
                   <Ionicons name="close" size={20} color="#6b7280" />
                 </TouchableOpacity>
               </View>
@@ -235,11 +268,18 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                     <View style={reportStyles.successIcon}>
                       <Ionicons name="checkmark" size={32} color="#f97316" />
                     </View>
-                    <Text style={reportStyles.successTitle}>Đã gửi báo cáo</Text>
-                    <Text style={reportStyles.successDesc}>
-                      Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét và xử lý sớm nhất.
+                    <Text style={reportStyles.successTitle}>
+                      Đã gửi báo cáo
                     </Text>
-                    <TouchableOpacity style={reportStyles.doneBtn} onPress={onClose} activeOpacity={0.85}>
+                    <Text style={reportStyles.successDesc}>
+                      Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét và xử lý sớm
+                      nhất.
+                    </Text>
+                    <TouchableOpacity
+                      style={reportStyles.doneBtn}
+                      onPress={onClose}
+                      activeOpacity={0.85}
+                    >
                       <Text style={reportStyles.doneBtnText}>Đóng</Text>
                     </TouchableOpacity>
                   </View>
@@ -248,7 +288,9 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                   <>
                     {/* Post title preview */}
                     {postTitle ? (
-                      <Text style={reportStyles.postPreview} numberOfLines={2}>{postTitle}</Text>
+                      <Text style={reportStyles.postPreview} numberOfLines={2}>
+                        {postTitle}
+                      </Text>
                     ) : null}
 
                     {/* Reason list */}
@@ -279,7 +321,11 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                               {reason}
                             </Text>
                             {isSelected && (
-                              <Ionicons name="checkmark-circle" size={18} color="#f97316" />
+                              <Ionicons
+                                name="checkmark-circle"
+                                size={18}
+                                color="#f97316"
+                              />
                             )}
                           </TouchableOpacity>
                         );
@@ -289,18 +335,25 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                     {/* Custom reason textarea */}
                     {selectedReason === "Khác" && (
                       <View style={{ marginTop: 12 }}>
-                        <Text style={reportStyles.sectionLabel}>Mô tả chi tiết</Text>
+                        <Text style={reportStyles.sectionLabel}>
+                          Mô tả chi tiết
+                        </Text>
                         <TextInput
                           style={reportStyles.textArea}
                           value={customReason}
-                          onChangeText={(v) => { setCustomReason(v); setError(""); }}
+                          onChangeText={(v) => {
+                            setCustomReason(v);
+                            setError("");
+                          }}
                           placeholder="Nhập lý do cụ thể..."
                           placeholderTextColor="#9ca3af"
                           multiline
                           maxLength={500}
                           textAlignVertical="top"
                         />
-                        <Text style={reportStyles.charCount}>{customReason.length}/500</Text>
+                        <Text style={reportStyles.charCount}>
+                          {customReason.length}/500
+                        </Text>
                       </View>
                     )}
 
@@ -316,9 +369,17 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                           onPress={handlePickImage}
                           activeOpacity={0.8}
                         >
-                          <Ionicons name="image-outline" size={26} color="#9ca3af" />
-                          <Text style={reportStyles.imagePickerText}>Nhấn để tải ảnh lên</Text>
-                          <Text style={reportStyles.imagePickerHint}>PNG, JPG tối đa 5MB</Text>
+                          <Ionicons
+                            name="image-outline"
+                            size={26}
+                            color="#9ca3af"
+                          />
+                          <Text style={reportStyles.imagePickerText}>
+                            Nhấn để tải ảnh lên
+                          </Text>
+                          <Text style={reportStyles.imagePickerHint}>
+                            PNG, JPG tối đa 5MB
+                          </Text>
                         </TouchableOpacity>
                       ) : (
                         <View style={reportStyles.imagePreviewWrap}>
@@ -329,7 +390,10 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                           />
                           <TouchableOpacity
                             style={reportStyles.imageRemoveBtn}
-                            onPress={() => { setImageUri(null); setImageData(null); }}
+                            onPress={() => {
+                              setImageUri(null);
+                              setImageData(null);
+                            }}
                           >
                             <Ionicons name="close" size={14} color="#fff" />
                           </TouchableOpacity>
@@ -340,14 +404,23 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                     {/* Error */}
                     {error ? (
                       <View style={reportStyles.errorRow}>
-                        <Ionicons name="alert-circle" size={16} color="#ef4444" />
-                        <Text style={reportStyles.errorText}>Lý do là bắt buộc và phải có ít nhất 10 ký tự.</Text>
+                        <Ionicons
+                          name="alert-circle"
+                          size={16}
+                          color="#ef4444"
+                        />
+                        <Text style={reportStyles.errorText}>
+                          Lý do là bắt buộc và phải có ít nhất 10 ký tự.
+                        </Text>
                       </View>
                     ) : null}
 
                     {/* Submit button */}
                     <TouchableOpacity
-                      style={[reportStyles.submitBtn, !canSubmit && reportStyles.submitBtnDisabled]}
+                      style={[
+                        reportStyles.submitBtn,
+                        !canSubmit && reportStyles.submitBtnDisabled,
+                      ]}
                       onPress={handleSubmit}
                       disabled={!canSubmit}
                       activeOpacity={0.85}
@@ -357,7 +430,9 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                       ) : (
                         <>
                           <Ionicons name="flag" size={16} color="#fff" />
-                          <Text style={reportStyles.submitBtnText}>Gửi báo cáo</Text>
+                          <Text style={reportStyles.submitBtnText}>
+                            Gửi báo cáo
+                          </Text>
                         </>
                       )}
                     </TouchableOpacity>
@@ -383,17 +458,33 @@ function CategoryGuideSection({ selectedCategory, onCategoryChange }) {
 
   return (
     <View style={styles.guideWrap}>
-      <TouchableOpacity style={styles.guideHeader} onPress={toggle} activeOpacity={0.85}>
+      <TouchableOpacity
+        style={styles.guideHeader}
+        onPress={toggle}
+        activeOpacity={0.85}
+      >
         <View style={styles.guideHeaderLeft}>
           <View style={styles.guideIconWrap}>
-            <Ionicons name="information-circle-outline" size={20} color="#fff" />
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color="#fff"
+            />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.guideHeaderTitle}>Hướng dẫn danh mục bài viết</Text>
-            <Text style={styles.guideHeaderSub}>Bấm để xem từng danh mục dùng để làm gì</Text>
+            <Text style={styles.guideHeaderTitle}>
+              Hướng dẫn danh mục bài viết
+            </Text>
+            <Text style={styles.guideHeaderSub}>
+              Bấm để xem từng danh mục dùng để làm gì
+            </Text>
           </View>
         </View>
-        <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={20} color="#6b7280" />
+        <Ionicons
+          name={expanded ? "chevron-up" : "chevron-down"}
+          size={20}
+          color="#6b7280"
+        />
       </TouchableOpacity>
 
       {expanded && (
@@ -405,35 +496,72 @@ function CategoryGuideSection({ selectedCategory, onCategoryChange }) {
                 key={cat.key}
                 style={[
                   styles.guideCard,
-                  isActive && { backgroundColor: cat.activeBg, borderColor: cat.activeBorder },
+                  isActive && {
+                    backgroundColor: cat.activeBg,
+                    borderColor: cat.activeBorder,
+                  },
                 ]}
                 onPress={() => onCategoryChange(isActive ? "Tất cả" : cat.key)}
                 activeOpacity={0.85}
               >
                 <View style={styles.guideCardTop}>
-                  <View style={[styles.guideCardIcon, { backgroundColor: cat.iconColor }]}>
+                  <View
+                    style={[
+                      styles.guideCardIcon,
+                      { backgroundColor: cat.iconColor },
+                    ]}
+                  >
                     <Ionicons name={cat.icon} size={20} color="#fff" />
                   </View>
-                  <View style={[styles.guideTagLineBadge, { backgroundColor: cat.badgeBg }]}>
-                    <Text style={[styles.guideTagLineText, { color: cat.badgeText }]} numberOfLines={1}>
+                  <View
+                    style={[
+                      styles.guideTagLineBadge,
+                      { backgroundColor: cat.badgeBg },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.guideTagLineText,
+                        { color: cat.badgeText },
+                      ]}
+                      numberOfLines={1}
+                    >
                       {cat.tagLine}
                     </Text>
                   </View>
                 </View>
 
-                <Text style={[styles.guideCardName, { color: cat.badgeText }]}>{cat.key}</Text>
+                <Text style={[styles.guideCardName, { color: cat.badgeText }]}>
+                  {cat.key}
+                </Text>
                 <Text style={styles.guideCardWho}>{cat.who}</Text>
-                <Text style={styles.guideCardDesc} numberOfLines={3}>{cat.desc}</Text>
+                <Text style={styles.guideCardDesc} numberOfLines={3}>
+                  {cat.desc}
+                </Text>
 
                 <View style={styles.guideFilterHint}>
-                  <Ionicons name="funnel-outline" size={12} color={cat.badgeText} />
-                  <Text style={[styles.guideFilterHintText, { color: cat.badgeText }]}>
+                  <Ionicons
+                    name="funnel-outline"
+                    size={12}
+                    color={cat.badgeText}
+                  />
+                  <Text
+                    style={[
+                      styles.guideFilterHintText,
+                      { color: cat.badgeText },
+                    ]}
+                  >
                     {isActive ? "Đang lọc danh mục này" : "Bấm để lọc danh mục"}
                   </Text>
                 </View>
 
                 {isActive && (
-                  <View style={[styles.guideActiveOverlay, { backgroundColor: cat.iconColor }]} />
+                  <View
+                    style={[
+                      styles.guideActiveOverlay,
+                      { backgroundColor: cat.iconColor },
+                    ]}
+                  />
                 )}
               </TouchableOpacity>
             );
@@ -445,7 +573,7 @@ function CategoryGuideSection({ selectedCategory, onCategoryChange }) {
 }
 
 // ── Post Card ──────────────────────────────────────────────────────────────────
-function PostCard({ post, onToggleLike, onComment }) {
+function PostCard({ post, onToggleLike, onComment, onContact }) {
   const { authUser } = useAuthStore();
   const currentUserId = authUser?._id || authUser?.id;
   const isOwnPost = currentUserId && post.authorId === currentUserId;
@@ -462,7 +590,9 @@ function PostCard({ post, onToggleLike, onComment }) {
         />
         <View style={styles.cardAuthorInfo}>
           <View style={styles.cardNameRow}>
-            <Text style={styles.cardAuthorName} numberOfLines={1}>{post.userName}</Text>
+            <Text style={styles.cardAuthorName} numberOfLines={1}>
+              {post.userName}
+            </Text>
             <CategoryBadge category={post.category} />
           </View>
           <Text style={styles.cardMetaText} numberOfLines={1}>
@@ -488,7 +618,9 @@ function PostCard({ post, onToggleLike, onComment }) {
       {post.title ? <Text style={styles.cardTitle}>{post.title}</Text> : null}
 
       {/* Content */}
-      <Text style={styles.cardContent} numberOfLines={4}>{post.content}</Text>
+      <Text style={styles.cardContent} numberOfLines={4}>
+        {post.content}
+      </Text>
 
       {/* Contact */}
       {post.contact ? (
@@ -501,7 +633,11 @@ function PostCard({ post, onToggleLike, onComment }) {
       {/* Image */}
       {post.image ? (
         <View style={styles.cardImageWrap}>
-          <Image source={{ uri: post.image }} style={styles.cardImage} resizeMode="cover" />
+          <Image
+            source={{ uri: post.image }}
+            style={styles.cardImage}
+            resizeMode="cover"
+          />
         </View>
       ) : null}
 
@@ -533,7 +669,11 @@ function PostCard({ post, onToggleLike, onComment }) {
         </TouchableOpacity>
 
         {/* Contact */}
-        <TouchableOpacity style={styles.contactBtn} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={styles.contactBtn}
+          onPress={() => onContact(post)}
+          activeOpacity={0.85}
+        >
           <Text style={styles.contactBtnText}>Liên Hệ</Text>
         </TouchableOpacity>
       </View>
@@ -554,7 +694,12 @@ function SearchBar({ value, onChangeText, onFilterPress, filterActive }) {
   return (
     <View style={styles.searchRow}>
       <View style={styles.searchInputWrap}>
-        <Ionicons name="search-outline" size={18} color="#9ca3af" style={{ marginRight: 8 }} />
+        <Ionicons
+          name="search-outline"
+          size={18}
+          color="#9ca3af"
+          style={{ marginRight: 8 }}
+        />
         <TextInput
           style={styles.searchInput}
           value={value}
@@ -574,7 +719,11 @@ function SearchBar({ value, onChangeText, onFilterPress, filterActive }) {
         onPress={onFilterPress}
         activeOpacity={0.85}
       >
-        <Ionicons name="options-outline" size={20} color={filterActive ? "#fff" : "#374151"} />
+        <Ionicons
+          name="options-outline"
+          size={20}
+          color={filterActive ? "#fff" : "#374151"}
+        />
       </TouchableOpacity>
     </View>
   );
@@ -596,7 +745,12 @@ function SortBar({ value, onChange }) {
           onPress={() => onChange(opt.value)}
           activeOpacity={0.8}
         >
-          <Text style={[styles.sortBtnText, value === opt.value && styles.sortBtnTextActive]}>
+          <Text
+            style={[
+              styles.sortBtnText,
+              value === opt.value && styles.sortBtnTextActive,
+            ]}
+          >
             {opt.label}
           </Text>
         </TouchableOpacity>
@@ -623,7 +777,9 @@ function CategoryTabs({ active, onSelect }) {
             onPress={() => onSelect(cat)}
             activeOpacity={0.8}
           >
-            <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{cat}</Text>
+            <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
+              {cat}
+            </Text>
           </TouchableOpacity>
         );
       })}
@@ -637,8 +793,14 @@ function EmptyState({ onClear }) {
     <View style={styles.emptyWrap}>
       <Ionicons name="image-outline" size={48} color="#d1d5db" />
       <Text style={styles.emptyTitle}>Không tìm thấy bài viết</Text>
-      <Text style={styles.emptyDesc}>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</Text>
-      <TouchableOpacity style={styles.clearBtn} onPress={onClear} activeOpacity={0.85}>
+      <Text style={styles.emptyDesc}>
+        Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm
+      </Text>
+      <TouchableOpacity
+        style={styles.clearBtn}
+        onPress={onClear}
+        activeOpacity={0.85}
+      >
         <Text style={styles.clearBtnText}>Xóa bộ lọc</Text>
       </TouchableOpacity>
     </View>
@@ -648,22 +810,57 @@ function EmptyState({ onClear }) {
 // ── HomeScreen ─────────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const {
-    posts, postsLoading, postsError,
-    selectedCategory, selectedSort, searchQuery,
-    setCategory, setSort, setSearch, clearFilters,
-    fetchPosts, toggleLikePost,
+    posts,
+    postsLoading,
+    postsError,
+    selectedCategory,
+    selectedSort,
+    searchQuery,
+    setCategory,
+    setSort,
+    setSearch,
+    clearFilters,
+    fetchPosts,
+    toggleLikePost,
   } = usePostStore();
 
   const { navigate, setSelectedPostId } = useAppStore();
+  const { setSelectedUser, addContact } = useChatStore();
+  const { authUser } = useAuthStore();
 
   const [showFilters, setShowFilters] = useState(false);
+
+  const handleContact = (post) => {
+    if (!post?.authorId) return;
+
+    const isSelf =
+      String(post.authorId) === String(authUser?._id || authUser?.id);
+    if (isSelf) {
+      Alert.alert("Thông báo", "Đây là bài viết của bạn");
+      return;
+    }
+
+    const contactUser = {
+      _id: post.authorId,
+      full_name: post.userName,
+      name: post.userName,
+      avatar: post.userAvatar,
+      email: post.userHandle,
+    };
+
+    setSelectedUser(contactUser);
+    addContact(contactUser);
+    navigate("chat-detail");
+  };
 
   useEffect(() => {
     fetchPosts();
   }, [selectedCategory, selectedSort, searchQuery]);
 
   const hasActiveFilters =
-    selectedCategory !== "Tất cả" || selectedSort !== "newest" || searchQuery.trim() !== "";
+    selectedCategory !== "Tất cả" ||
+    selectedSort !== "newest" ||
+    searchQuery.trim() !== "";
 
   const ListHeader = () => (
     <>
@@ -671,7 +868,9 @@ export default function HomeScreen() {
       <View style={styles.pageTitleRow}>
         <View style={{ flex: 1 }}>
           <Text style={styles.pageTitle}>Bài viết cộng đồng</Text>
-          <Text style={styles.pageSubtitle}>Khám phá và chia sẻ kiến thức nông nghiệp</Text>
+          <Text style={styles.pageSubtitle}>
+            Khám phá và chia sẻ kiến thức nông nghiệp
+          </Text>
         </View>
         {posts.length > 0 && (
           <View style={styles.countBadge}>
@@ -700,7 +899,11 @@ export default function HomeScreen() {
         <View style={styles.filterPanel}>
           <SortBar value={selectedSort} onChange={setSort} />
           {hasActiveFilters && (
-            <TouchableOpacity style={styles.clearFiltersBtn} onPress={clearFilters} activeOpacity={0.8}>
+            <TouchableOpacity
+              style={styles.clearFiltersBtn}
+              onPress={clearFilters}
+              activeOpacity={0.8}
+            >
               <Ionicons name="close-circle-outline" size={16} color="#ef4444" />
               <Text style={styles.clearFiltersBtnText}>Xóa bộ lọc</Text>
             </TouchableOpacity>
@@ -732,7 +935,11 @@ export default function HomeScreen() {
         <View style={styles.centerWrap}>
           <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
           <Text style={styles.errorText}>{postsError}</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={fetchPosts} activeOpacity={0.85}>
+          <TouchableOpacity
+            style={styles.retryBtn}
+            onPress={fetchPosts}
+            activeOpacity={0.85}
+          >
             <Text style={styles.retryBtnText}>Thử lại</Text>
           </TouchableOpacity>
         </View>
@@ -749,6 +956,7 @@ export default function HomeScreen() {
           <PostCard
             post={item}
             onToggleLike={toggleLikePost}
+            onContact={handleContact}
             onComment={(postId) => {
               setSelectedPostId(postId);
               navigate("comment");
@@ -756,7 +964,9 @@ export default function HomeScreen() {
           />
         )}
         ListHeaderComponent={ListHeader}
-        ListEmptyComponent={!postsLoading ? <EmptyState onClear={clearFilters} /> : null}
+        ListEmptyComponent={
+          !postsLoading ? <EmptyState onClear={clearFilters} /> : null
+        }
         contentContainerStyle={styles.feed}
         showsVerticalScrollIndicator={false}
         onRefresh={fetchPosts}
@@ -770,10 +980,21 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F9FAFB" },
 
-  centerWrap: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24 },
+  centerWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    padding: 24,
+  },
   loadingText: { fontSize: 14, color: "#6b7280" },
   errorText: { fontSize: 14, color: "#ef4444", textAlign: "center" },
-  retryBtn: { backgroundColor: "#16a34a", borderRadius: 10, paddingHorizontal: 24, paddingVertical: 10 },
+  retryBtn: {
+    backgroundColor: "#16a34a",
+    borderRadius: 10,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+  },
   retryBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
 
   // Page title
@@ -785,7 +1006,12 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
   },
-  pageTitle: { fontSize: 22, fontWeight: "800", color: "#111827", marginBottom: 2 },
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#111827",
+    marginBottom: 2,
+  },
   pageSubtitle: { fontSize: 13, color: "#6b7280" },
   countBadge: {
     backgroundColor: "#d1fae5",
@@ -817,7 +1043,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  guideHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
+  guideHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
   guideIconWrap: {
     width: 36,
     height: 36,
@@ -826,7 +1057,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  guideHeaderTitle: { fontSize: 14, fontWeight: "700", color: "#111827", marginBottom: 2 },
+  guideHeaderTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 2,
+  },
   guideHeaderSub: { fontSize: 12, color: "#6b7280" },
 
   guideGrid: { marginTop: 10, gap: 10 },
@@ -864,13 +1100,26 @@ const styles = StyleSheet.create({
   },
   guideTagLineText: { fontSize: 11, fontWeight: "700" },
   guideCardName: { fontSize: 15, fontWeight: "800", marginBottom: 2 },
-  guideCardWho: { fontSize: 11, color: "#9ca3af", fontWeight: "500", marginBottom: 6 },
-  guideCardDesc: { fontSize: 13, color: "#4b5563", lineHeight: 19, marginBottom: 10 },
+  guideCardWho: {
+    fontSize: 11,
+    color: "#9ca3af",
+    fontWeight: "500",
+    marginBottom: 6,
+  },
+  guideCardDesc: {
+    fontSize: 13,
+    color: "#4b5563",
+    lineHeight: 19,
+    marginBottom: 10,
+  },
   guideFilterHint: { flexDirection: "row", alignItems: "center", gap: 5 },
   guideFilterHintText: { fontSize: 11, fontWeight: "700" },
   guideActiveOverlay: {
     position: "absolute",
-    top: 0, left: 0, right: 0, bottom: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     opacity: 0.04,
     borderRadius: 14,
   },
@@ -915,7 +1164,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     gap: 12,
   },
-  sortRow: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
+  sortRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  },
   sortLabel: { fontSize: 13, fontWeight: "600", color: "#374151" },
   sortBtn: {
     paddingHorizontal: 14,
@@ -1045,7 +1299,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#f3f4f6",
   },
-  actionBtn: { flexDirection: "row", alignItems: "center", gap: 5, padding: 8, borderRadius: 10 },
+  actionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    padding: 8,
+    borderRadius: 10,
+  },
   actionBtnLiked: { backgroundColor: "#fff1f2" },
   actionCount: { fontSize: 13, fontWeight: "600", color: "#6b7280" },
   contactBtn: {
@@ -1064,7 +1324,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   emptyTitle: { fontSize: 16, fontWeight: "700", color: "#374151" },
-  emptyDesc: { fontSize: 13, color: "#9ca3af", textAlign: "center", lineHeight: 20 },
+  emptyDesc: {
+    fontSize: 13,
+    color: "#9ca3af",
+    textAlign: "center",
+    lineHeight: 20,
+  },
   clearBtn: {
     marginTop: 8,
     backgroundColor: "#16a34a",
@@ -1170,7 +1435,12 @@ const reportStyles = StyleSheet.create({
     backgroundColor: "#fff",
     minHeight: 90,
   },
-  charCount: { fontSize: 11, color: "#9ca3af", textAlign: "right", marginTop: 4 },
+  charCount: {
+    fontSize: 11,
+    color: "#9ca3af",
+    textAlign: "right",
+    marginTop: 4,
+  },
 
   imagePicker: {
     borderWidth: 2,
@@ -1243,7 +1513,13 @@ const reportStyles = StyleSheet.create({
     justifyContent: "center",
   },
   successTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  successDesc: { fontSize: 14, color: "#6b7280", textAlign: "center", lineHeight: 20, maxWidth: 280 },
+  successDesc: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+    lineHeight: 20,
+    maxWidth: 280,
+  },
   doneBtn: {
     marginTop: 8,
     backgroundColor: "#f97316",
