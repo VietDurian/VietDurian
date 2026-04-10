@@ -17,7 +17,12 @@ import { useAuthStore } from "../store/useAuthStore";
 
 export default function LoginScreen() {
   const { navigate } = useAppStore();
-  const { login, isLoggingIn } = useAuthStore();
+  const {
+    login,
+    isLoggingIn,
+    resendVerificationOtp,
+    setPendingVerificationEmail,
+  } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -32,7 +37,14 @@ export default function LoginScreen() {
       return;
     }
 
-    await login({ email: trimmedEmail, password });
+    const normalizedEmail = trimmedEmail.toLowerCase();
+    const result = await login({ email: normalizedEmail, password });
+
+    if (result?.requiresEmailVerification) {
+      setPendingVerificationEmail(normalizedEmail);
+      await resendVerificationOtp(normalizedEmail);
+      navigate("verify-email");
+    }
   };
 
   return (
