@@ -144,7 +144,7 @@ export default function RegisterPage() {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [email, emailError, checkEmailExists]);
+  }, [email, emailError, checkEmailExists, isVi]);
 
   useEffect(() => {
     if (!googleButtonContainerRef.current) return;
@@ -736,7 +736,7 @@ export default function RegisterPage() {
           px-6 py-5
           transition-all duration-300
           cursor-pointer
-          hover:shadow-lg hover:-translate-y-[2px]
+          hover:shadow-lg hover:-translate-y-0.5
           ${isOpen ? "border-emerald-500 shadow-md" : "border-gray-200"}
         `}
               >
