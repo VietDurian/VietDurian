@@ -9,6 +9,7 @@ import SidebarSkeleton from "./skeleton/SidebarSkeleton";
 import { Ellipsis, Search, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useLanguage } from "@/context/LanguageContext";
 
 // This component is a sidebar for the chat
 const Sidebar = () => {
@@ -22,6 +23,7 @@ const Sidebar = () => {
   } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const router = useRouter();
 
@@ -78,8 +80,10 @@ const Sidebar = () => {
   return (
     <aside className="h-full w-80 border-r border-gray-200 flex flex-col bg-white">
       <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-bold text-[#1a4d2e]">Đoạn chat</h2>
-        <p className="text-sm text-gray-500">Trao đổi và hỗ trợ người dùng</p>
+        <h2 className="text-lg font-bold text-[#1a4d2e]">
+          {t("chat_sidebar_title")}
+        </h2>
+        <p className="text-sm text-gray-500">{t("chat_sidebar_subtitle")}</p>
       </div>
 
       <div className="p-3 border-b border-gray-100">
@@ -87,7 +91,7 @@ const Sidebar = () => {
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Tìm theo tên hoặc email..."
+            placeholder={t("chat_sidebar_search_placeholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="placeholder:text-gray-400 text-black w-full rounded-full border border-gray-200 py-2 pl-9 pr-9 text-sm outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
@@ -106,7 +110,7 @@ const Sidebar = () => {
       <div className="overflow-y-auto w-full h-full p-2">
         {filteredUsers.length === 0 ? (
           <div className="p-3 text-sm text-gray-500">
-            Không có cuộc trò chuyện phù hợp.
+            {t("chat_sidebar_empty")}
           </div>
         ) : (
           filteredUsers.map((user) => (
@@ -140,7 +144,8 @@ const Sidebar = () => {
                   {user.full_name}
                 </div>
                 <div className="text-xs text-gray-500 truncate">
-                  {user.lastMessage?.text || "Bắt đầu cuộc trò chuyện"}
+                  {user.lastMessage?.text ||
+                    t("chat_sidebar_start_conversation")}
                 </div>
               </div>
 
@@ -172,7 +177,7 @@ const Sidebar = () => {
                     className="w-full items-center gap-2 hover:bg-gray-100 text-sm text-black flex text-nowrap p-2 rounded-sm cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Xóa cuộc trò chuyện
+                    {t("chat_sidebar_delete_option")}
                   </button>
                 </div>
               )}
@@ -194,12 +199,13 @@ const Sidebar = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Xóa cuộc trò chuyện?
+              {t("chat_sidebar_delete_modal_title")}
             </h3>
             <p className="text-sm text-gray-600 mb-5">
-              Bạn có chắc muốn xóa cuộc trò chuyện với{" "}
-              {deleteTargetUser.full_name}? Hành động này chỉ áp dụng cho tài
-              khoản của bạn.
+              {t("chat_sidebar_delete_modal_desc").replace(
+                "%s",
+                deleteTargetUser.full_name || "",
+              )}
             </p>
 
             <div className="flex justify-end gap-3">
@@ -208,14 +214,16 @@ const Sidebar = () => {
                 disabled={isDeletingConversation}
                 className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Hủy
+                {t("chat_sidebar_cancel")}
               </button>
               <button
                 onClick={handleConfirmDeleteConversation}
                 disabled={isDeletingConversation}
                 className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isDeletingConversation ? "Đang xóa..." : "Xóa"}
+                {isDeletingConversation
+                  ? t("chat_sidebar_deleting")
+                  : t("chat_sidebar_delete")}
               </button>
             </div>
           </div>
