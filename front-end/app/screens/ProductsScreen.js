@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
 
   // Hero
   hero: {
-    backgroundColor: "#065F46",
+    backgroundColor: "#10b981",
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 20,
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#F3F4F6",
   },
-  typeChipActive: { backgroundColor: "#059669" },
+  typeChipActive: { backgroundColor: "#10b981" },
   typeChipText: { fontSize: 12, color: "#374151", fontWeight: "500" },
   typeChipTextActive: { color: "#FFF" },
 
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  orderBtnActive: { backgroundColor: "#059669", borderColor: "#059669" },
+  orderBtnActive: { backgroundColor: "#10b981", borderColor: "#10b981" },
 
   // Sort sheet
   sheetOverlay: {
@@ -740,7 +740,7 @@ const styles = StyleSheet.create({
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   ratingText: { fontSize: 12, fontWeight: "600", color: "#6B7280" },
   contactBtn: {
-    backgroundColor: "#059669",
+    backgroundColor: "#10b981",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 30,
