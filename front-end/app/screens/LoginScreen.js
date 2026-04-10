@@ -127,19 +127,6 @@ export default function LoginScreen() {
               {isLoggingIn ? "Đang đăng nhập..." : "Đăng Nhập"}
             </Text>
           </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>HOẶC</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Google Button */}
-          <TouchableOpacity style={styles.googleBtn} activeOpacity={0.85}>
-            <Text style={styles.googleIcon}>G</Text>
-            <Text style={styles.googleBtnText}>Đăng nhập bằng Google</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Footer */}

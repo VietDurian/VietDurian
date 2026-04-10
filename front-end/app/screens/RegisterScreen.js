@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
 import { useAppStore } from "@/store/useAppStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 // ── Step Indicator ──
 function StepIndicator({ current, total }) {
@@ -63,6 +66,7 @@ function Field({
   showToggle,
   onToggle,
   keyboardType,
+  maxLength,
 }) {
   return (
     <View style={styles.fieldGroup}>
@@ -80,6 +84,7 @@ function Field({
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType || "default"}
           autoCapitalize="none"
+          maxLength={maxLength}
         />
         {showToggle !== undefined && (
           <TouchableOpacity onPress={onToggle}>
@@ -161,7 +166,16 @@ function RoleCard({ role, selected, onSelect }) {
 
 // ── Main Screen ──
 export default function RegisterScreen() {
-  const { navigate, login } = useAppStore();
+  const { navigate } = useAppStore();
+  const {
+    signup,
+    checkEmailExists,
+    verifyEmail,
+    resendVerificationOtp,
+    isSigningUp,
+    isVerifyingEmail,
+    isResendingOtp,
+  } = useAuthStore();
   const [step, setStep] = useState(1);
 
   // Step 1
@@ -178,10 +192,132 @@ export default function RegisterScreen() {
   // Step 3
   const [selectedRole, setSelectedRole] = useState(null);
 
-  const stepTitles = ["Thông tin cá nhân", "Tạo mật khẩu", "Chọn vai trò"];
+  // Step 4
+  const [otp, setOtp] = useState("");
+
+  const totalSteps = 4;
+  const stepTitles = [
+    "Thông tin cá nhân",
+    "Tạo mật khẩu",
+    "Chọn vai trò",
+    "Xác thực email",
+  ];
+
+  const normalizeRole = (role) => {
+    if (role === "service") return "serviceProvider";
+    if (role === "content") return "contentExpert";
+    return role;
+  };
+
+  const handleStep1Next = async () => {
+    const trimmedName = name.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPhone = phone.replace(/\D/g, "");
+
+    if (!trimmedName || trimmedName.length < 2) {
+      Toast.show({ type: "error", text1: "Vui lòng nhập họ tên hợp lệ" });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      Toast.show({ type: "error", text1: "Email không đúng định dạng" });
+      return;
+    }
+
+    if (
+      !normalizedPhone ||
+      normalizedPhone.length < 9 ||
+      normalizedPhone.length > 11
+    ) {
+      Toast.show({ type: "error", text1: "Số điện thoại không hợp lệ" });
+      return;
+    }
+
+    const exists = await checkEmailExists(normalizedEmail);
+    if (exists === true) {
+      Toast.show({ type: "error", text1: "Email đã được sử dụng" });
+      return;
+    }
+
+    if (exists === null) {
+      Toast.show({
+        type: "error",
+        text1: "Không thể kiểm tra email. Vui lòng thử lại",
+      });
+      return;
+    }
+
+    setName(trimmedName);
+    setEmail(normalizedEmail);
+    setPhone(normalizedPhone);
+    setStep(2);
+  };
+
+  const handleStep2Next = () => {
+    if (!password || password.length < 8) {
+      Toast.show({ type: "error", text1: "Mật khẩu phải có ít nhất 8 ký tự" });
+      return;
+    }
+
+    if (password !== confirmPass) {
+      Toast.show({ type: "error", text1: "Mật khẩu xác nhận không khớp" });
+      return;
+    }
+
+    setStep(3);
+  };
+
+  const handleRegister = async () => {
+    if (!selectedRole) {
+      Toast.show({ type: "error", text1: "Vui lòng chọn vai trò" });
+      return;
+    }
+
+    const registerPayload = {
+      full_name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      phone: phone.trim(),
+      role: normalizeRole(selectedRole),
+    };
+
+    const result = await signup(registerPayload);
+    if (result) {
+      setOtp("");
+      setStep(4);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const normalizedOtp = otp.trim();
+    if (!/^\d{6}$/.test(normalizedOtp)) {
+      Toast.show({ type: "error", text1: "OTP phải gồm đúng 6 chữ số" });
+      return;
+    }
+
+    const result = await verifyEmail({
+      email: email.trim().toLowerCase(),
+      otp: normalizedOtp,
+    });
+    if (result) {
+      Toast.show({
+        type: "success",
+        text1: "Xác thực thành công, vui lòng đăng nhập",
+      });
+      navigate("login");
+    }
+  };
+
+  const handleResendOtp = async () => {
+    await resendVerificationOtp(email.trim().toLowerCase());
+  };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
@@ -199,7 +335,7 @@ export default function RegisterScreen() {
         {/* Step 3 has its own header style */}
         <>
           <Text style={styles.heading}>Đăng Ký tài khoản</Text>
-          <StepIndicator current={step} total={3} />
+          <StepIndicator current={step} total={totalSteps} />
           <Text style={styles.stepLabel}>{stepTitles[step - 1]}</Text>
         </>
 
@@ -233,7 +369,7 @@ export default function RegisterScreen() {
               />
               <TouchableOpacity
                 style={styles.primaryBtn}
-                onPress={() => setStep(2)}
+                onPress={handleStep1Next}
                 activeOpacity={0.85}
               >
                 <Text style={styles.primaryBtnText}>Tiếp theo</Text>
@@ -276,7 +412,7 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.primaryBtn, { flex: 1 }]}
-                  onPress={() => setStep(3)}
+                  onPress={handleStep2Next}
                   activeOpacity={0.85}
                 >
                   <Text style={styles.primaryBtnText}>Tiếp theo</Text>
@@ -309,27 +445,79 @@ export default function RegisterScreen() {
                   <Text style={styles.outlineBtnText}>Quay lại</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.primaryBtn, { flex: 1 }]}
-                  onPress={() => navigate("home")}
+                  style={[
+                    styles.primaryBtn,
+                    { flex: 1 },
+                    isSigningUp && styles.primaryBtnDisabled,
+                  ]}
+                  onPress={handleRegister}
+                  disabled={isSigningUp}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.primaryBtnText}>Đăng Ký</Text>
+                  <Text style={styles.primaryBtnText}>
+                    {isSigningUp ? "Đang đăng ký..." : "Đăng Ký"}
+                  </Text>
                   <Ionicons name="arrow-forward" size={18} color="#fff" />
                 </TouchableOpacity>
               </View>
             </>
           )}
 
-          {/* Divider + Google (all steps) */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>HOẶC</Text>
-            <View style={styles.dividerLine} />
-          </View>
-          <TouchableOpacity style={styles.googleBtn} activeOpacity={0.85}>
-            <Text style={styles.googleIcon}>G</Text>
-            <Text style={styles.googleBtnText}>Đăng nhập bằng Google</Text>
-          </TouchableOpacity>
+          {/* ── STEP 4 ── */}
+          {step === 4 && (
+            <>
+              <Text style={styles.otpHint}>
+                Mã OTP đã được gửi đến email {email}. Vui lòng nhập để hoàn tất
+                đăng ký.
+              </Text>
+              <Field
+                label="Mã OTP"
+                iconName="shield-checkmark-outline"
+                placeholder="Nhập mã OTP gồm 6 chữ số"
+                value={otp}
+                onChangeText={(text) => setOtp(text.replace(/\D/g, ""))}
+                keyboardType="number-pad"
+                maxLength={6}
+              />
+
+              <View style={styles.btnRow}>
+                <TouchableOpacity
+                  style={styles.outlineBtn}
+                  onPress={() => setStep(3)}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="arrow-back" size={18} color="#16A34A" />
+                  <Text style={styles.outlineBtnText}>Quay lại</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.primaryBtn,
+                    { flex: 1 },
+                    isVerifyingEmail && styles.primaryBtnDisabled,
+                  ]}
+                  onPress={handleVerifyOtp}
+                  disabled={isVerifyingEmail}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.primaryBtnText}>
+                    {isVerifyingEmail ? "Đang xác thực..." : "Xác thực"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity
+                style={styles.resendBtn}
+                onPress={handleResendOtp}
+                disabled={isResendingOtp}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.resendBtnText}>
+                  {isResendingOtp ? "Đang gửi lại OTP..." : "Gửi lại OTP"}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {/* Footer */}
@@ -532,6 +720,20 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   outlineBtnText: { color: "#16A34A", fontSize: 15, fontWeight: "600" },
+  otpHint: {
+    color: "#4B5563",
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  resendBtn: {
+    alignSelf: "center",
+    paddingVertical: 4,
+  },
+  resendBtnText: {
+    color: "#16A34A",
+    fontSize: 14,
+    fontWeight: "600",
+  },
 
   // Divider
   dividerRow: { flexDirection: "row", alignItems: "center", gap: 10 },
