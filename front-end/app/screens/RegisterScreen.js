@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -67,6 +67,7 @@ function Field({
   onToggle,
   keyboardType,
   maxLength,
+  onFocus,
 }) {
   return (
     <View style={styles.fieldGroup}>
@@ -85,6 +86,7 @@ function Field({
           keyboardType={keyboardType || "default"}
           autoCapitalize="none"
           maxLength={maxLength}
+          onFocus={onFocus}
         />
         {showToggle !== undefined && (
           <TouchableOpacity onPress={onToggle}>
@@ -131,6 +133,38 @@ const ROLES = [
     iconColor: "#9333EA",
   },
 ];
+
+const SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>[\]\\';`~+=\-_/]/;
+const PASSWORD_RULES = [
+  {
+    id: "length",
+    test: (pwd) => pwd.length >= 12,
+    label: "Ít nhất 12 ký tự",
+  },
+  {
+    id: "uppercase",
+    test: (pwd) => /[A-Z]/.test(pwd),
+    label: "Có chữ in hoa",
+  },
+  {
+    id: "lowercase",
+    test: (pwd) => /[a-z]/.test(pwd),
+    label: "Có chữ thường",
+  },
+  {
+    id: "number",
+    test: (pwd) => /\d/.test(pwd),
+    label: "Có ít nhất một số",
+  },
+  {
+    id: "special",
+    test: (pwd) => SPECIAL_CHAR_REGEX.test(pwd),
+    label: "Có ký tự đặc biệt (ví dụ: @, #, $)",
+  },
+];
+
+const isStrongPassword = (pwd = "") =>
+  PASSWORD_RULES.every((rule) => rule.test(pwd));
 
 function RoleCard({ role, selected, onSelect }) {
   return (
@@ -194,6 +228,7 @@ export default function RegisterScreen() {
 
   // Step 4
   const [otp, setOtp] = useState("");
+  const scrollRef = useRef(null);
 
   const totalSteps = 4;
   const stepTitles = [
@@ -225,12 +260,11 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (
-      !normalizedPhone ||
-      normalizedPhone.length < 9 ||
-      normalizedPhone.length > 11
-    ) {
-      Toast.show({ type: "error", text1: "Số điện thoại không hợp lệ" });
+    if (!/^0\d{9}$/.test(normalizedPhone)) {
+      Toast.show({
+        type: "error",
+        text1: "Số điện thoại phải gồm 10 số và bắt đầu bằng số 0",
+      });
       return;
     }
 
@@ -255,8 +289,16 @@ export default function RegisterScreen() {
   };
 
   const handleStep2Next = () => {
-    if (!password || password.length < 8) {
-      Toast.show({ type: "error", text1: "Mật khẩu phải có ít nhất 8 ký tự" });
+    if (!password) {
+      Toast.show({ type: "error", text1: "Vui lòng nhập mật khẩu" });
+      return;
+    }
+
+    if (!isStrongPassword(password)) {
+      Toast.show({
+        type: "error",
+        text1: "Mật khẩu chưa đáp ứng các yêu cầu",
+      });
       return;
     }
 
@@ -313,15 +355,24 @@ export default function RegisterScreen() {
     await resendVerificationOtp(email.trim().toLowerCase());
   };
 
+  const scrollToInput = () => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 16 : 0}
     >
       <ScrollView
+        ref={scrollRef}
         style={styles.container}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         {/* Logo */}
         <View style={{ alignItems: "center", marginBottom: 12 }}>
@@ -350,6 +401,7 @@ export default function RegisterScreen() {
                 placeholder="Nhập họ và tên"
                 value={name}
                 onChangeText={setName}
+                onFocus={scrollToInput}
               />
               <Field
                 label="Email"
@@ -358,14 +410,19 @@ export default function RegisterScreen() {
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
+                onFocus={scrollToInput}
               />
               <Field
                 label="Số điện thoại"
                 iconName="call-outline"
                 placeholder="Nhập số điện thoại"
                 value={phone}
-                onChangeText={setPhone}
+                onChangeText={(text) =>
+                  setPhone(text.replace(/\D/g, "").slice(0, 10))
+                }
                 keyboardType="phone-pad"
+                maxLength={10}
+                onFocus={scrollToInput}
               />
               <TouchableOpacity
                 style={styles.primaryBtn}
@@ -390,6 +447,7 @@ export default function RegisterScreen() {
                 secureTextEntry={!showPass}
                 showToggle={showPass}
                 onToggle={() => setShowPass(!showPass)}
+                onFocus={scrollToInput}
               />
               <Field
                 label="Xác nhận mật khẩu"
@@ -400,7 +458,38 @@ export default function RegisterScreen() {
                 secureTextEntry={!showConfirm}
                 showToggle={showConfirm}
                 onToggle={() => setShowConfirm(!showConfirm)}
+                onFocus={scrollToInput}
               />
+
+              {password ? (
+                <View style={styles.passwordChecklist}>
+                  {PASSWORD_RULES.map((rule) => {
+                    const passed = rule.test(password);
+                    return (
+                      <View key={rule.id} style={styles.passwordRuleRow}>
+                        <Ionicons
+                          name={passed ? "checkmark-circle" : "close-circle"}
+                          size={16}
+                          color={passed ? "#16A34A" : "#EF4444"}
+                        />
+                        <Text
+                          style={[
+                            styles.passwordRuleText,
+                            passed
+                              ? styles.passwordRuleTextPass
+                              : styles.passwordRuleTextFail,
+                          ]}
+                        >
+                          {rule.id === "length"
+                            ? `Ít nhất 12 ký tự (hiện tại: ${password.length})`
+                            : rule.label}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              ) : null}
+
               <View style={styles.btnRow}>
                 <TouchableOpacity
                   style={styles.outlineBtn}
@@ -478,6 +567,7 @@ export default function RegisterScreen() {
                 onChangeText={(text) => setOtp(text.replace(/\D/g, ""))}
                 keyboardType="number-pad"
                 maxLength={6}
+                onFocus={scrollToInput}
               />
 
               <View style={styles.btnRow}>
@@ -733,6 +823,30 @@ const styles = StyleSheet.create({
     color: "#16A34A",
     fontSize: 14,
     fontWeight: "600",
+  },
+  passwordChecklist: {
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 6,
+    backgroundColor: "#FFFFFF",
+  },
+  passwordRuleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  passwordRuleText: {
+    fontSize: 12,
+    flex: 1,
+  },
+  passwordRuleTextPass: {
+    color: "#16A34A",
+  },
+  passwordRuleTextFail: {
+    color: "#EF4444",
   },
 
   // Divider
