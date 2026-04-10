@@ -2032,6 +2032,18 @@ const translations = {
     chat_sidebar_deleting: "Đang xóa...",
     chat_sidebar_delete: "Xóa",
 
+    // Chat Container
+    chat_container_only_image: "Chỉ hỗ trợ file ảnh",
+    chat_container_online: "Đang hoạt động",
+    chat_container_offline: "Ngoại tuyến",
+    chat_container_loading: "Đang tải tin nhắn...",
+    chat_container_empty: "Bắt đầu cuộc trò chuyện với người dùng này.",
+    chat_container_attachment_alt: "Tệp đính kèm",
+    chat_container_preview_alt: "Xem trước ảnh",
+    chat_container_input_placeholder: "Nhập tin nhắn...",
+    chat_container_attach_title: "Đính kèm ảnh",
+    chat_container_send_title: "Gửi",
+
     report_modal_title: "Báo cáo bài viết",
     report_btn_tooltip: "Báo cáo bài viết",
     report_reason_label: "Lý do báo cáo",
@@ -4075,6 +4087,18 @@ const translations = {
     chat_sidebar_cancel: "Cancel",
     chat_sidebar_deleting: "Deleting...",
     chat_sidebar_delete: "Delete",
+
+    // Chat Container
+    chat_container_only_image: "Only image files are supported",
+    chat_container_online: "Online",
+    chat_container_offline: "Offline",
+    chat_container_loading: "Loading messages...",
+    chat_container_empty: "Start a conversation with this user.",
+    chat_container_attachment_alt: "Attachment",
+    chat_container_preview_alt: "Image preview",
+    chat_container_input_placeholder: "Type a message...",
+    chat_container_attach_title: "Attach image",
+    chat_container_send_title: "Send",
 
     report_modal_title: "Report Post",
     report_btn_tooltip: "Report post",
