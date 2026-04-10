@@ -17,7 +17,12 @@ import { useAuthStore } from "../store/useAuthStore";
 
 export default function LoginScreen() {
   const { navigate } = useAppStore();
-  const { login, isLoggingIn } = useAuthStore();
+  const {
+    login,
+    isLoggingIn,
+    resendVerificationOtp,
+    setPendingVerificationEmail,
+  } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -32,7 +37,14 @@ export default function LoginScreen() {
       return;
     }
 
-    await login({ email: trimmedEmail, password });
+    const normalizedEmail = trimmedEmail.toLowerCase();
+    const result = await login({ email: normalizedEmail, password });
+
+    if (result?.requiresEmailVerification) {
+      setPendingVerificationEmail(normalizedEmail);
+      await resendVerificationOtp(normalizedEmail);
+      navigate("verify-email");
+    }
   };
 
   return (
@@ -126,19 +138,6 @@ export default function LoginScreen() {
             <Text style={styles.loginBtnText}>
               {isLoggingIn ? "Đang đăng nhập..." : "Đăng Nhập"}
             </Text>
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>HOẶC</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Google Button */}
-          <TouchableOpacity style={styles.googleBtn} activeOpacity={0.85}>
-            <Text style={styles.googleIcon}>G</Text>
-            <Text style={styles.googleBtnText}>Đăng nhập bằng Google</Text>
           </TouchableOpacity>
         </View>
 
