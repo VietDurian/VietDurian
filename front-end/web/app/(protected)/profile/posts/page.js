@@ -157,7 +157,10 @@ const StatusBadge = ({ status }) => {
 const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const { t } = useLanguage();
   const fileInputRef = useRef(null);
-  const categories = useMemo(() => getCategoriesByRole(user?.role), [user?.role]);
+  const categories = useMemo(
+    () => getCategoriesByRole(user?.role),
+    [user?.role],
+  );
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [category, setCategory] = useState(post?.category || categories[0]);
   const [title, setTitle] = useState(post?.title || "");
@@ -202,7 +205,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
       setError("");
       setDropdownOpen(false);
     }
-  }, [post]);
+  }, [post, categories]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "unset";
@@ -547,8 +550,8 @@ const Post = ({
       setIsLiked(!newState);
       toast.error(
         err?.response?.data?.message ||
-        err?.message ||
-        t("profile_posts_like_fail"),
+          err?.message ||
+          t("profile_posts_like_fail"),
       );
     } finally {
       setIsTogglingFavorite(false);
@@ -565,9 +568,9 @@ const Post = ({
 
   const cfg = post.category
     ? categoryConfig[post.category] || {
-      icon: LayoutGrid,
-      bg: "from-gray-500 to-slate-500",
-    }
+        icon: LayoutGrid,
+        bg: "from-gray-500 to-slate-500",
+      }
     : null;
 
   return (

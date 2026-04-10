@@ -8,6 +8,7 @@ import { formatMessageTime } from "../lib/utils";
 import { Image as ImageIcon, Loader2, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useLanguage } from "@/context/LanguageContext";
 
 const ChatContainer = () => {
   const {
@@ -21,6 +22,7 @@ const ChatContainer = () => {
   } = useChatStore();
 
   const { authUser, onlineUsers } = useAuthStore();
+  const { t } = useLanguage();
   const messageEndRef = useRef();
   const fileInputRef = useRef(null);
   const [text, setText] = useState("");
@@ -53,7 +55,7 @@ const ChatContainer = () => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Chỉ hỗ trợ file ảnh");
+      toast.error(t("chat_container_only_image"));
       return;
     }
 
@@ -101,14 +103,16 @@ const ChatContainer = () => {
             <p className="font-semibold text-gray-900">
               {selectedUser.full_name}
             </p>
-            <p className="text-xs text-gray-500">
+            <p
+              className={`${onlineUsers.includes(selectedUser._id) ? "text-emerald-500" : "text-gray-500"} text-xs`}
+            >
               {onlineUsers.includes(selectedUser._id) ? (
                 <>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />{" "}
-                  Đang hoạt động
+                  {t("chat_container_online")}
                 </>
               ) : (
-                "Ngoại tuyến"
+                t("chat_container_offline")
               )}
             </p>
           </div>
@@ -117,10 +121,12 @@ const ChatContainer = () => {
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
         {isMessagesLoading ? (
-          <div className="text-sm text-gray-500">Đang tải tin nhắn...</div>
+          <div className="text-sm text-gray-500">
+            {t("chat_container_loading")}
+          </div>
         ) : messages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-sm text-gray-500">
-            Bắt đầu cuộc trò chuyện với người dùng này.
+            {t("chat_container_empty")}
           </div>
         ) : (
           messages.map((message) => {
@@ -151,7 +157,7 @@ const ChatContainer = () => {
                   {message.image && (
                     <Image
                       src={message.image}
-                      alt="Attachment"
+                      alt={t("chat_container_attachment_alt")}
                       width={96}
                       height={96}
                       className="max-w-56 rounded-lg mb-2"
@@ -181,7 +187,7 @@ const ChatContainer = () => {
           <div className="mb-3 relative w-fit">
             <Image
               src={imagePreview}
-              alt="Preview"
+              alt={t("chat_container_preview_alt")}
               width={96}
               height={96}
               className="w-24 h-24 object-cover rounded-lg border border-gray-200"
@@ -200,7 +206,7 @@ const ChatContainer = () => {
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Nhập tin nhắn..."
+            placeholder={t("chat_container_input_placeholder")}
             className="placeholder:text-gray-400 text-black flex-1 border border-gray-200 rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-100 focus:border-emerald-500"
           />
 
@@ -216,7 +222,7 @@ const ChatContainer = () => {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="w-10 h-10 rounded-full border border-gray-200 hover:bg-gray-50 flex items-center justify-center"
-            title="Đính kèm ảnh"
+            title={t("chat_container_attach_title")}
           >
             <ImageIcon className="w-4 h-4 text-gray-600" />
           </button>
@@ -225,7 +231,7 @@ const ChatContainer = () => {
             type="submit"
             disabled={isSending || (!text.trim() && !imagePreview)}
             className="w-10 h-10 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            title="Gửi"
+            title={t("chat_container_send_title")}
           >
             {isSending ? (
               <Loader2 className="w-4 h-4 animate-spin" />

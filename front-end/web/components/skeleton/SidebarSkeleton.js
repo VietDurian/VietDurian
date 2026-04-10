@@ -1,35 +1,37 @@
-import { Users } from "lucide-react";
-
 const SidebarSkeleton = () => {
-  // Create 8 skeleton items
   const skeletonContacts = Array(8).fill(null);
 
   return (
-    <aside
-      className="h-full w-20 lg:w-72 border-r border-base-300 
-    flex flex-col transition-all duration-200"
-    >
-      {/* Header */}
-      <div className="border-b border-base-300 w-full p-5">
-        <div className="flex items-center gap-2">
-          <Users className="w-6 h-6" />
-          <span className="font-medium hidden lg:block">Contacts</span>
+    <aside className="h-full w-80 border-r border-gray-200 flex flex-col bg-white">
+      <div className="p-4 border-b border-gray-200">
+        <div className="skeleton h-6 w-28 mb-2" />
+        <div className="skeleton h-4 w-52" />
+      </div>
+
+      <div className="p-3 border-b border-gray-100">
+        <div className="relative">
+          <div className="skeleton h-10 w-full rounded-full" />
         </div>
       </div>
 
-      {/* Skeleton Contacts */}
-      <div className="overflow-y-auto w-full py-3">
+      <div className="overflow-y-auto w-full h-full p-2">
         {skeletonContacts.map((_, idx) => (
-          <div key={idx} className="w-full p-3 flex items-center gap-3">
-            {/* Avatar skeleton */}
-            <div className="relative mx-auto lg:mx-0">
-              <div className="skeleton size-12 rounded-full" />
+          <div
+            key={idx}
+            className="w-full p-3 flex items-center gap-3 rounded-lg border-b border-gray-100"
+          >
+            <div className="relative shrink-0">
+              <div className="skeleton w-11 h-11 rounded-full" />
+              <span className="absolute -right-0.5 -bottom-0.5 w-3 h-3 rounded-full border-2 border-white bg-gray-200" />
             </div>
 
-            {/* User info skeleton - only visible on larger screens */}
-            <div className="hidden lg:block text-left min-w-0 flex-1">
+            <div className="text-left min-w-0 flex-1">
               <div className="skeleton h-4 w-32 mb-2" />
-              <div className="skeleton h-3 w-16" />
+              <div className="skeleton h-3 w-44" />
+            </div>
+
+            <div className="hidden lg:flex items-center justify-center p-1">
+              <div className="skeleton w-5 h-5 rounded-full" />
             </div>
           </div>
         ))}
