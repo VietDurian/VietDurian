@@ -991,7 +991,7 @@ function DiaryTable({
       );
 
       if (exportDiaries.length === 0) {
-        showToast("Khong tim thay cau hinh nhat ky de xuat PDF", "error");
+        showToast(t("diary_pdf_export_no_config"), "error");
         return;
       }
 
@@ -1029,15 +1029,15 @@ function DiaryTable({
 
         doc.setFontSize(14);
         doc.setFont(pdfFontFamily, "normal");
-        doc.text(`Nhật ký ${d.id}: ${d.title}`, 40, 40);
+        doc.text(`${t("diary_label")} ${d.id}: ${d.title}`, 40, 40);
         doc.setFontSize(10);
         doc.setFont(pdfFontFamily, "normal");
-        doc.text(`Tổng số bản ghi: ${tableRows.length}`, 40, 58);
+        doc.text(`${t("diary_pdf_total_records")} ${tableRows.length}`, 40, 58);
 
         autoTable(doc, {
           startY: 72,
           head: [tableHead],
-          body: tableRows.length > 0 ? tableRows : [["Không có dữ liệu"]],
+          body: tableRows.length > 0 ? tableRows : [[t("diary_pdf_no_data")]],
           styles: {
             font: pdfFontFamily,
             fontStyle: "normal",
@@ -1074,9 +1074,9 @@ function DiaryTable({
       const datePart = new Date().toISOString().slice(0, 10);
 
       doc.save(`${safeGardenName}-${datePart}.pdf`);
-      showToast("Xuất PDF thành công");
+      showToast(t("diary_pdf_export_success"));
     } catch {
-      showToast("Xuất PDF thất bại", "error");
+      showToast(t("diary_pdf_export_failed"), "error");
     } finally {
       setIsExportingPdf(false);
     }
@@ -1365,7 +1365,9 @@ function DiaryTable({
               d="M12 4v16m8-8H4"
             />
           </svg>
-          {isExportingPdf ? "Đang xuất PDF..." : "Xuất PDF"}
+          {isExportingPdf
+            ? t("diary_pdf_export_loading")
+            : t("diary_pdf_export_btn")}
         </button>
       </div>
 
