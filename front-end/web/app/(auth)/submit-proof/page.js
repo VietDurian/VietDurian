@@ -21,6 +21,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Image from "next/image";
+import FloatingLangToggle from "@/components/FloatingLangToggle";
+import { useLanguage } from "@/context/LanguageContext";
 
 // ─── Upload Zone Component ────────────────────────────────────────────────────
 
@@ -32,6 +34,8 @@ function UploadZone({
   onFileChange,
   className,
   icon: Icon,
+  receivedLabel,
+  fileTypeHint,
 }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
@@ -68,7 +72,7 @@ function UploadZone({
         {file && (
           <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full shrink-0">
             <CheckCircle className="w-3 h-3" />
-            Đã nhận
+            {receivedLabel}
           </span>
         )}
       </div>
@@ -128,7 +132,7 @@ function UploadZone({
               <Upload className="w-[18px] h-[18px]" />
             </div>
             <p className="text-sm font-medium text-gray-600">{hint}</p>
-            <p className="text-xs text-gray-400">PNG hoặc JPG tối đa 5MB</p>
+            <p className="text-xs text-gray-400">{fileTypeHint}</p>
           </div>
         )}
 
@@ -147,6 +151,8 @@ function UploadZone({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function SubmitProofPage() {
+  const { language } = useLanguage();
+  const isVi = language === "vi";
   const [frontFile, setFrontFile] = useState(null);
   const [backFile, setBackFile] = useState(null);
   const [certificate, setCertificate] = useState(null);
@@ -159,12 +165,94 @@ export default function SubmitProofPage() {
     frontFile && backFile && certificate && !isSubmittingProof && !uploading,
   );
 
+  const texts = isVi
+    ? {
+        toastUploading: "Đang tải file lên...",
+        toastUploadError: "Lỗi khi tải file lên",
+        successTitle: "Đã gửi thành công!",
+        successDesc:
+          "CCCD của bạn đã được nhận. Chúng tôi sẽ xem xét và xác minh danh tính của bạn trong vòng 1–2 ngày làm việc.",
+        backHome: "Quay về trang chủ",
+        backHomeShort: "Quay về trang chủ",
+        pageTitle: "Xác nhận CCCD",
+        pageDesc:
+          "Vui lòng tải lên ảnh rõ nét của cả hai mặt CCCD (Căn cước công dân). Đảm bảo tất cả thông tin đều có thể đọc được và hình ảnh không bị mờ.",
+        frontHint: "Nhấn để tải ảnh mặt trước",
+        frontLabel: "Mặt trước",
+        frontDesc: "Chọn ảnh CCCD có mặt của bạn",
+        backHint: "Nhấn để tải ảnh mặt sau",
+        backLabel: "Mặt sau",
+        backDesc: "Chọn ảnh CCCD mặt sau của bạn",
+        certHint: "Nhấn để tải ảnh giấy chứng nhận",
+        certLabel: "Giấy chứng nhận",
+        certDesc: "Chọn ảnh chứng nhận của bạn",
+        receivedLabel: "Đã nhận",
+        fileTypeHint: "PNG hoặc JPG tối đa 5MB",
+        importantTitle: "Thông tin quan trọng",
+        importantItems: [
+          "Đảm bảo CCCD của bạn được đặt trên bề mặt phẳng với ánh sáng tốt.",
+          "Tất cả chữ viết phải hiển thị rõ ràng và có thể đọc được.",
+          "Hỗ trợ format ảnh: JPG hoặc PNG",
+          "Kích thước ảnh tối đa: 5MB",
+          "Mọi thông tin sẽ được mã hóa và được giữ bí mật",
+        ],
+        privacyTitle: "Quyền riêng tư & Bảo mật",
+        privacyDesc:
+          "Thông tin CCCD của bạn được mã hóa và lưu trữ an toàn. Chúng tôi chỉ sử dụng thông tin này cho mục đích xác minh danh tính và tuân thủ các quy định bảo vệ dữ liệu của Việt Nam.",
+        cancel: "Hủy",
+        submittingUpload: "Đang tải file...",
+        submitting: "Đang gửi...",
+        submit: "Gửi xác minh",
+        supportPrefix: "Gặp vấn đề? Liên hệ",
+        supportSuffix: "để được hỗ trợ",
+      }
+    : {
+        toastUploading: "Uploading files...",
+        toastUploadError: "Error while uploading files",
+        successTitle: "Submitted successfully!",
+        successDesc:
+          "Your ID documents have been received. We will review and verify your identity within 1-2 business days.",
+        backHome: "Back to homepage",
+        backHomeShort: "Back to homepage",
+        pageTitle: "Identity verification",
+        pageDesc:
+          "Please upload clear photos of both sides of your ID card. Make sure all information is readable and images are not blurry.",
+        frontHint: "Click to upload front side",
+        frontLabel: "Front side",
+        frontDesc: "Choose front ID image with your portrait",
+        backHint: "Click to upload back side",
+        backLabel: "Back side",
+        backDesc: "Choose back ID image",
+        certHint: "Click to upload certificate",
+        certLabel: "Certificate",
+        certDesc: "Choose your certificate image",
+        receivedLabel: "Received",
+        fileTypeHint: "PNG or JPG up to 5MB",
+        importantTitle: "Important information",
+        importantItems: [
+          "Place your ID card on a flat surface with good lighting.",
+          "All text must be clearly visible and readable.",
+          "Supported formats: JPG or PNG",
+          "Maximum image size: 5MB",
+          "All data is encrypted and kept confidential",
+        ],
+        privacyTitle: "Privacy & Security",
+        privacyDesc:
+          "Your identity information is encrypted and securely stored. We only use this data for identity verification and compliance purposes.",
+        cancel: "Cancel",
+        submittingUpload: "Uploading files...",
+        submitting: "Submitting...",
+        submit: "Submit verification",
+        supportPrefix: "Having issues? Contact",
+        supportSuffix: "for support",
+      };
+
   const handleSubmit = async () => {
     if (!canSubmit) return;
 
     try {
       setUploading(true);
-      toast.loading("Đang tải file lên...");
+      toast.loading(texts.toastUploading);
 
       // Upload files to Cloudinary via backend
       const [frontProof, backProof, certProof] = await Promise.all([
@@ -184,7 +272,7 @@ export default function SubmitProofPage() {
         setSubmitted(true);
       }
     } catch (error) {
-      toast.error(error?.message || "Lỗi khi tải file lên");
+      toast.error(error?.message || texts.toastUploadError);
       console.error("Upload error:", error);
     } finally {
       setUploading(false);
@@ -203,22 +291,22 @@ export default function SubmitProofPage() {
   if (submitted) {
     return (
       <div className="min-h-screen flex justify-center items-center px-4 bg-gray-50 font-sans p-5 lg:pt-0 w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
+        <FloatingLangToggle />
         <div className="bg-white rounded-3xl shadow-lg p-10 max-w-md w-full flex flex-col items-center text-center gap-4">
           <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-200">
             <CheckCircle className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-xl font-bold text-gray-800">
-            Đã gửi thành công!
+            {texts.successTitle}
           </h2>
           <p className="text-sm text-gray-500 leading-relaxed">
-            CCCD của bạn đã được nhận. Chúng tôi sẽ xem xét và xác minh danh
-            tính của bạn trong vòng 1–2 ngày làm việc.
+            {texts.successDesc}
           </p>
           <button
             onClick={() => router.push("/")}
             className="cursor-pointer mt-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl py-3 transition-all"
           >
-            Quay về trang chủ
+            {texts.backHome}
           </button>
         </div>
       </div>
@@ -228,55 +316,60 @@ export default function SubmitProofPage() {
   // ── Main form ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col items-center px-4 bg-gray-50 font-sans p-5 lg:pt-0 w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
+      <FloatingLangToggle />
       <Link
         className="absolute top-5 left-5 flex items-center hover:text-emerald-500 transition-colors duration-300"
         href={"/"}
       >
-        <ChevronLeft /> Quay về trang chủ
+        <ChevronLeft /> {texts.backHomeShort}
       </Link>
       <div className="w-full max-w-4xl flex flex-col gap-4">
         {/* Header */}
         <div className="flex flex-col items-center text-center gap-3 pb-2 pt-10 lg:pt-5">
           <h1 className="text-[22px] font-bold text-gray-800 tracking-tight">
-            Xác nhận CCCD
+            {texts.pageTitle}
           </h1>
           <p className="text-[13.5px] text-gray-500 leading-relaxed max-w-md">
-            Vui lòng tải lên ảnh rõ nét của cả hai mặt CCCD (Căn cước công dân).
-            Đảm bảo tất cả thông tin đều có thể đọc được và hình ảnh không bị
-            mờ.
+            {texts.pageDesc}
           </p>
         </div>
 
         {/* Front Side Upload */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <UploadZone
-            hint="Nhấn để tải ảnh mặt trước"
-            label="Mặt trước"
-            description="Chọn ảnh CCCD có mặt của bạn"
+            hint={texts.frontHint}
+            label={texts.frontLabel}
+            description={texts.frontDesc}
             icon={IdCard}
             file={frontFile}
             onFileChange={setFrontFile}
+            receivedLabel={texts.receivedLabel}
+            fileTypeHint={texts.fileTypeHint}
           />
 
           {/* Back Side Upload */}
           <UploadZone
-            hint="Nhấn để tải ảnh mặt sau"
-            label="Mặt sau"
-            description="Chọn ảnh CCCD mặt sau của bạn"
+            hint={texts.backHint}
+            label={texts.backLabel}
+            description={texts.backDesc}
             icon={CreditCard}
             file={backFile}
             onFileChange={setBackFile}
+            receivedLabel={texts.receivedLabel}
+            fileTypeHint={texts.fileTypeHint}
           />
 
           {/* Certificate Upload */}
           <UploadZone
-            hint="Nhấn để tải ảnh giấy chứng nhận"
-            label="Giấy chứng nhận"
-            description="Chọn ảnh chứng nhận của bạn"
+            hint={texts.certHint}
+            label={texts.certLabel}
+            description={texts.certDesc}
             file={certificate}
             icon={Scroll}
             onFileChange={setCertificate}
             className={"col-span-1 lg:col-span-2"}
+            receivedLabel={texts.receivedLabel}
+            fileTypeHint={texts.fileTypeHint}
           />
         </div>
 
@@ -284,16 +377,10 @@ export default function SubmitProofPage() {
         <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
           <div className="flex items-center gap-2 text-blue-600 font-semibold text-[13px] mb-3">
             <Info className="w-4 h-4" />
-            Thông tin quan trọng
+            {texts.importantTitle}
           </div>
           <ul className="space-y-1.5">
-            {[
-              "Đảm bảo CCCD của bạn được đặt trên bề mặt phẳng với ánh sáng tốt.",
-              "Tất cả chữ viết phải hiển thị rõ ràng và có thể đọc được.",
-              "Hỗ trợ format ảnh: JPG hoặc PNG",
-              "Kích thước ảnh tối đa: 5MB",
-              "Mọi thông tin sẽ được mã hóa và được giữ bí mật",
-            ].map((item, i) => (
+            {texts.importantItems.map((item, i) => (
               <li
                 key={i}
                 className="flex items-start gap-2 text-xs text-blue-700"
@@ -309,12 +396,10 @@ export default function SubmitProofPage() {
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4">
           <div className="flex items-center gap-2 text-gray-500 font-semibold text-[13px] mb-2">
             <ShieldCheck className="w-4 h-4 text-gray-400" />
-            Quyền riêng tư &amp; Bảo mật
+            {texts.privacyTitle}
           </div>
           <p className="text-xs text-gray-400 leading-relaxed">
-            Thông tin CCCD của bạn được mã hóa và lưu trữ an toàn. Chúng tôi chỉ
-            sử dụng thông tin này cho mục đích xác minh danh tính và tuân thủ
-            các quy định bảo vệ dữ liệu của Việt Nam.
+            {texts.privacyDesc}
           </p>
         </div>
 
@@ -324,7 +409,7 @@ export default function SubmitProofPage() {
             onClick={() => router.push("/")}
             className="cursor-pointer px-6 py-2.5 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-700 transition-colors"
           >
-            Hủy
+            {texts.cancel}
           </button>
 
           <button
@@ -340,11 +425,11 @@ export default function SubmitProofPage() {
             {uploading || isSubmittingProof ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                {uploading ? "Đang tải file..." : "Đang gửi..."}
+                {uploading ? texts.submittingUpload : texts.submitting}
               </>
             ) : (
               <>
-                Gửi xác minh
+                {texts.submit}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -353,7 +438,7 @@ export default function SubmitProofPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-400 pb-4">
-          Gặp vấn để? Liên hệ{" "}
+          {texts.supportPrefix}{" "}
           <a
             href="https://zalo.me/0328718050"
             target="_blank"
@@ -361,7 +446,7 @@ export default function SubmitProofPage() {
           >
             Customer Support
           </a>{" "}
-          để được hỗ trợ
+          {texts.supportSuffix}
         </p>
       </div>
     </div>

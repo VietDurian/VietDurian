@@ -6,12 +6,64 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import FloatingLangToggle from "@/components/FloatingLangToggle";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ForgotPasswordContent() {
   const router = useRouter();
+  const { language } = useLanguage();
+  const isVi = language === "vi";
   const { forgotPassword, isRequestingResetOtp } = useAuthStore();
   const [email, setEmail] = useState("");
   const [activeRole, setActiveRole] = useState(0);
+
+  const steps = isVi
+    ? [
+        {
+          title: "Bước 1",
+          desc: "Nhập Email",
+          icon: Mail,
+          detail:
+            "Nhập Email mà bạn đã quên mật khẩu, chúng tôi sẽ gửi mã OTP vào email bạn.",
+        },
+        {
+          title: "Bước 2",
+          desc: "Nhập mã OTP",
+          icon: Shield,
+          detail:
+            "Kiểm tra mail cho mã OTP và nhập vào khung để tiến hành bước thay đổi mật khẩu",
+        },
+        {
+          title: "Bước 3",
+          desc: "Đổi mật khẩu mới",
+          icon: Lock,
+          detail:
+            "Nhập mật khẩu mới và xác nhận mật khẩu mới, cần phải tuân theo luật mật khẩu!",
+        },
+      ]
+    : [
+        {
+          title: "Step 1",
+          desc: "Enter your email",
+          icon: Mail,
+          detail:
+            "Enter the email linked to your account and we will send an OTP to that address.",
+        },
+        {
+          title: "Step 2",
+          desc: "Enter OTP code",
+          icon: Shield,
+          detail:
+            "Check your inbox for the OTP and enter it to continue resetting your password.",
+        },
+        {
+          title: "Step 3",
+          desc: "Set a new password",
+          icon: Lock,
+          detail:
+            "Enter and confirm your new password, and make sure it follows the password policy.",
+        },
+      ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,6 +83,7 @@ export default function ForgotPasswordContent() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-screen bg-gray-50 font-sans p-5 pt-15 lg:pt-0 w-full overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
+      <FloatingLangToggle />
       {/* Logo */}
       <Link href="/" className="absolute top-6 left-6">
         <Image
@@ -44,11 +97,13 @@ export default function ForgotPasswordContent() {
       {/* Left Section */}
       <div className="w-full flex flex-col items-center justify-center">
         <h1 className="text-3xl font-semibold text-emerald-500 mb-3 text-center text-shadow-md text-shadow-emerald-100">
-          Quên mật khẩu
+          {isVi ? "Quên mật khẩu" : "Forgot password"}
         </h1>
 
         <p className="text-gray-500 text-sm mb-10 leading-relaxed text-center text-shadow-md text-shadow-gray-200">
-          Nhập email đã đăng ký để nhận mã OTP đặt lại mật khẩu
+          {isVi
+            ? "Nhập email đã đăng ký để nhận mã OTP đặt lại mật khẩu"
+            : "Enter your registered email to receive an OTP for password reset"}
         </p>
 
         <form
@@ -99,22 +154,24 @@ export default function ForgotPasswordContent() {
             {isRequestingResetOtp ? (
               <>
                 <span className="h-5 w-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
-                Đang gửi OTP...
+                {isVi ? "Đang gửi OTP..." : "Sending OTP..."}
               </>
-            ) : (
+            ) : isVi ? (
               "Nhận mã OTP"
+            ) : (
+              "Get OTP code"
             )}
           </button>
         </form>
 
         {/* Back login */}
         <p className="text-center text-sm text-gray-500 mt-6">
-          Nhớ mật khẩu?{" "}
+          {isVi ? "Nhớ mật khẩu?" : "Remember your password?"}{" "}
           <Link
             href="/login"
             className="text-emerald-600 font-semibold hover:underline"
           >
-            Đăng nhập
+            {isVi ? "Đăng nhập" : "Sign in"}
           </Link>
         </p>
       </div>
@@ -122,36 +179,16 @@ export default function ForgotPasswordContent() {
       {/* RIGHT SECTION */}
       <div className="flex flex-col items-center justify-center w-full lg:max-w-2xl">
         <p className="text-3xl font-bold text-center text-emerald-500 text-shadow-md text-shadow-emerald-100">
-          Đừng lo lắng!
+          {isVi ? "Đừng lo lắng!" : "Don't worry!"}
         </p>
         <p className="text-1xl text-center text-gray-500 text-shadow-md text-shadow-gray-200">
-          Chỉ cần làm theo các bước sao đây bạn sẽ có thể đổi mật khẩu của mình
+          {isVi
+            ? "Chỉ cần làm theo các bước sau đây bạn sẽ có thể đổi mật khẩu của mình"
+            : "Just follow these steps and you will be able to reset your password"}
         </p>
 
         <div className="grid grid-cols-1 w-full max-w-xl gap-4 mt-6">
-          {[
-            {
-              title: "Bước 1",
-              desc: "Nhập Email",
-              icon: Mail,
-              detail:
-                "Nhập Email mà bạn đã quên mật khẩu, chúng tôi sẽ gửi mã OTP vào email bạn.",
-            },
-            {
-              title: "Bước 2",
-              desc: "Nhập mã OTP",
-              icon: Shield,
-              detail:
-                "Kiểm tra mail cho mã OTP và nhập vào khung để tiến hành bước thay đổi mật khẩu",
-            },
-            {
-              title: "Bước 3",
-              desc: "Đổi mật khẩu mới",
-              icon: Lock,
-              detail:
-                "Nhập mật khẩu mới và xác nhận mật khẩu mới, cần phải tuân theo luật mật khẩu!",
-            },
-          ].map((item, index) => {
+          {steps.map((item, index) => {
             const Icon = item.icon;
             const isOpen = activeRole === index;
 

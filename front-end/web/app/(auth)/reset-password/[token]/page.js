@@ -18,6 +18,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { toast } from "sonner";
+import FloatingLangToggle from "@/components/FloatingLangToggle";
+import { useLanguage } from "@/context/LanguageContext";
 
 function isValidPassword(pwd) {
   const minLength = pwd.length >= 12;
@@ -31,34 +33,12 @@ function isValidPassword(pwd) {
   );
 }
 
-const passwordRules = [
-  { id: "length", test: (pwd) => pwd.length >= 12, label: "Ít nhất 12 ký tự" },
-  {
-    id: "uppercase",
-    test: (pwd) => /[A-Z]/.test(pwd),
-    label: "Có chữ in hoa",
-  },
-  {
-    id: "lowercase",
-    test: (pwd) => /[a-z]/.test(pwd),
-    label: "Có chữ thường",
-  },
-  {
-    id: "number",
-    test: (pwd) => /\d/.test(pwd),
-    label: "Có ít nhất một số",
-  },
-  {
-    id: "special",
-    test: (pwd) => /[!@#$%^&*(),.?":{}|<>[\]\\';`~+=\-_/]/.test(pwd),
-    label: "Có ký tự đặc biệt (ví dụ: @, #, $)",
-  },
-];
-
 export default function ResetPasswordPage() {
   const params = useParams();
   const token = params.token;
   const router = useRouter();
+  const { language } = useLanguage();
+  const isVi = language === "vi";
   const { resetPassword, isResettingPassword } = useAuthStore();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -66,17 +46,103 @@ export default function ResetPasswordPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeRole, setActiveRole] = useState(2);
 
+  const passwordRules = [
+    {
+      id: "length",
+      test: (pwd) => pwd.length >= 12,
+      label: isVi ? "Ít nhất 12 ký tự" : "At least 12 characters",
+    },
+    {
+      id: "uppercase",
+      test: (pwd) => /[A-Z]/.test(pwd),
+      label: isVi ? "Có chữ in hoa" : "Contains uppercase letter",
+    },
+    {
+      id: "lowercase",
+      test: (pwd) => /[a-z]/.test(pwd),
+      label: isVi ? "Có chữ thường" : "Contains lowercase letter",
+    },
+    {
+      id: "number",
+      test: (pwd) => /\d/.test(pwd),
+      label: isVi ? "Có ít nhất một số" : "Contains at least one number",
+    },
+    {
+      id: "special",
+      test: (pwd) => /[!@#$%^&*(),.?":{}|<>[\]\\';`~+=\-_/]/.test(pwd),
+      label: isVi
+        ? "Có ký tự đặc biệt (ví dụ: @, #, $)"
+        : "Contains a special character (e.g. @, #, $)",
+    },
+  ];
+
+  const steps = isVi
+    ? [
+        {
+          title: "Bước 1",
+          desc: "Nhập Email",
+          icon: Mail,
+          detail:
+            "Nhập Email mà bạn đã quên mật khẩu, chúng tôi sẽ gửi mã OTP vào email bạn.",
+        },
+        {
+          title: "Bước 2",
+          desc: "Nhập mã OTP",
+          icon: Shield,
+          detail:
+            "Kiểm tra mail cho mã OTP và nhập vào khung để tiến hành bước thay đổi mật khẩu",
+        },
+        {
+          title: "Bước 3",
+          desc: "Đổi mật khẩu mới",
+          icon: Lock,
+          detail:
+            "Nhập mật khẩu mới và xác nhận mật khẩu mới, cần phải tuân theo luật mật khẩu!",
+        },
+      ]
+    : [
+        {
+          title: "Step 1",
+          desc: "Enter your email",
+          icon: Mail,
+          detail:
+            "Enter the email you forgot your password for, and we will send an OTP to your inbox.",
+        },
+        {
+          title: "Step 2",
+          desc: "Enter OTP code",
+          icon: Shield,
+          detail:
+            "Check your email for the OTP and enter it to continue with password reset.",
+        },
+        {
+          title: "Step 3",
+          desc: "Set new password",
+          icon: Lock,
+          detail:
+            "Enter and confirm your new password. It must satisfy the password rules.",
+        },
+      ];
+
   // Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isResettingPassword) return;
     if (!isValidPassword(newPassword)) {
-      toast.error("Mật khẩu mới chưa đúng định dạng");
+      toast.error(
+        isVi
+          ? "Mật khẩu mới chưa đúng định dạng"
+          : "New password format is invalid",
+      );
       return;
     }
 
     if (!token) {
-      toast.error("Token đổi mật khẩu không hợp lệ");
+      toast.error(
+        isVi
+          ? "Token đổi mật khẩu không hợp lệ"
+          : "Invalid password reset token",
+      );
       return;
     }
 
@@ -95,6 +161,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-screen bg-gray-50 font-sans p-5 pt-15 lg:pt-0 w-full overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
+      <FloatingLangToggle />
       {/* Logo */}
       <Link
         href={"/"}
@@ -111,10 +178,12 @@ export default function ResetPasswordPage() {
       <div className="w-full flex flex-col items-center justify-center">
         <div className="max-w-md w-full mx-auto lg:mx-0">
           <h1 className="text-3xl font-semibold text-emerald-500 mb-3 text-center text-shadow-md text-shadow-emerald-100">
-            Đổi mật khẩu
+            {isVi ? "Đổi mật khẩu" : "Reset password"}
           </h1>
           <p className="text-gray-500 text-sm mb-10 leading-relaxed text-center text-shadow-md text-shadow-gray-200">
-            Nhập mật khẩu mới và xác nhận mật khẩu mới
+            {isVi
+              ? "Nhập mật khẩu mới và xác nhận mật khẩu mới"
+              : "Enter your new password and confirm it"}
           </p>
 
           <form
@@ -124,7 +193,7 @@ export default function ResetPasswordPage() {
             {/* New Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Mật khẩu mới
+                {isVi ? "Mật khẩu mới" : "New password"}
               </label>
               <div className="relative">
                 <Lock
@@ -133,7 +202,9 @@ export default function ResetPasswordPage() {
                 />
                 <input
                   type={showNewPassword ? "text" : "password"}
-                  placeholder="Nhập mật khẩu mới"
+                  placeholder={
+                    isVi ? "Nhập mật khẩu mới" : "Enter new password"
+                  }
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
@@ -142,7 +213,13 @@ export default function ResetPasswordPage() {
                 <button
                   type="button"
                   aria-label={
-                    showNewPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"
+                    showNewPassword
+                      ? isVi
+                        ? "Ẩn mật khẩu"
+                        : "Hide password"
+                      : isVi
+                        ? "Hiển thị mật khẩu"
+                        : "Show password"
                   }
                   onClick={() => setShowNewPassword((prev) => !prev)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
@@ -158,7 +235,9 @@ export default function ResetPasswordPage() {
 
                       // Speical handling for length rule
                       if (rule.id === "length") {
-                        displayLabel = `Ít nhất 12 ký tự (hiện tại: ${newPassword.length})`;
+                        displayLabel = isVi
+                          ? `Ít nhất 12 ký tự (hiện tại: ${newPassword.length})`
+                          : `At least 12 characters (current: ${newPassword.length})`;
                       }
                       return (
                         <div key={rule.id} className="flex items-center gap-2">
@@ -190,7 +269,7 @@ export default function ResetPasswordPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Xác nhận mật khẩu mới
+                {isVi ? "Xác nhận mật khẩu mới" : "Confirm new password"}
               </label>
               <div className="relative">
                 <Lock
@@ -199,7 +278,11 @@ export default function ResetPasswordPage() {
                 />
                 <input
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Nhập xác nhận mật khẩu mới"
+                  placeholder={
+                    isVi
+                      ? "Nhập xác nhận mật khẩu mới"
+                      : "Enter password confirmation"
+                  }
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full border border-teal-800/30 rounded-lg pl-10 pr-4 py-3 text-sm focus:ring-1 focus:ring-teal-800 outline-none transition-all placeholder:text-gray-400 text-black"
@@ -208,7 +291,13 @@ export default function ResetPasswordPage() {
                 <button
                   type="button"
                   aria-label={
-                    showConfirmPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"
+                    showConfirmPassword
+                      ? isVi
+                        ? "Ẩn mật khẩu"
+                        : "Hide password"
+                      : isVi
+                        ? "Hiển thị mật khẩu"
+                        : "Show password"
                   }
                   onClick={() => setShowConfirmPassword((prev) => !prev)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
@@ -233,10 +322,14 @@ export default function ResetPasswordPage() {
                 {isResettingPassword ? (
                   <>
                     <span className="inline-block h-5 w-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
-                    <span>Đang đổi mật khẩu...</span>
+                    <span>
+                      {isVi ? "Đang đổi mật khẩu..." : "Resetting password..."}
+                    </span>
                   </>
-                ) : (
+                ) : isVi ? (
                   "Đổi mật khẩu"
+                ) : (
+                  "Reset password"
                 )}
               </button>
             </div>
@@ -247,36 +340,16 @@ export default function ResetPasswordPage() {
       {/* RIGHT SECTION */}
       <div className="flex flex-col items-center justify-center w-full lg:max-w-2xl">
         <p className="text-3xl font-bold text-center text-emerald-500 text-shadow-md text-shadow-emerald-100">
-          Đừng lo lắng!
+          {isVi ? "Đừng lo lắng!" : "Don't worry!"}
         </p>
         <p className="text-1xl text-center text-gray-500 text-shadow-md text-shadow-gray-200">
-          Chỉ cần làm theo các bước sao đây bạn sẽ có thể đổi mật khẩu của mình
+          {isVi
+            ? "Chỉ cần làm theo các bước sau đây bạn sẽ có thể đổi mật khẩu của mình"
+            : "Just follow these steps and you will be able to reset your password"}
         </p>
 
         <div className="grid grid-cols-1 w-full max-w-xl gap-4 mt-6">
-          {[
-            {
-              title: "Bước 1",
-              desc: "Nhập Email",
-              icon: Mail,
-              detail:
-                "Nhập Email mà bạn đã quên mật khẩu, chúng tôi sẽ gửi mã OTP vào email bạn.",
-            },
-            {
-              title: "Bước 2",
-              desc: "Nhập mã OTP",
-              icon: Shield,
-              detail:
-                "Kiểm tra mail cho mã OTP và nhập vào khung để tiến hành bước thay đổi mật khẩu",
-            },
-            {
-              title: "Bước 3",
-              desc: "Đổi mật khẩu mới",
-              icon: Lock,
-              detail:
-                "Nhập mật khẩu mới và xác nhận mật khẩu mới, cần phải tuân theo luật mật khẩu!",
-            },
-          ].map((item, index) => {
+          {steps.map((item, index) => {
             const Icon = item.icon;
             const isOpen = activeRole === index;
 

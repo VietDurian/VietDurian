@@ -25,6 +25,8 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useValidatorStore } from "@/store/useValidatorStore";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/context/AuthContext";
+import FloatingLangToggle from "@/components/FloatingLangToggle";
+import { useLanguage } from "@/context/LanguageContext";
 
 const OTP_RESEND_DELAY_MS = 10 * 60 * 1000;
 
@@ -57,12 +59,22 @@ export default function RegisterPage() {
   const googleButtonContainerRef = useRef(null);
   const [googleButtonWidth, setGoogleButtonWidth] = useState(0);
   const { loginWithGoogle } = useAuth();
+  const { language } = useLanguage();
+  const isVi = language === "vi";
 
   const ROLES = [
-    { key: "trader", label: "Trader", icon: Briefcase },
-    { key: "farmer", label: "Farmer", icon: Leaf },
-    { key: "serviceProvider", label: "Service Provider", icon: Wrench },
-    { key: "contentExpert", label: "Content Expert", icon: PenSquare },
+    { key: "trader", label: isVi ? "Thương lái" : "Trader", icon: Briefcase },
+    { key: "farmer", label: isVi ? "Nông dân" : "Farmer", icon: Leaf },
+    {
+      key: "serviceProvider",
+      label: isVi ? "Nhà cung cấp dịch vụ" : "Service Provider",
+      icon: Wrench,
+    },
+    {
+      key: "contentExpert",
+      label: isVi ? "Chuyên gia nội dung" : "Content Expert",
+      icon: PenSquare,
+    },
   ];
 
   const fullNameError = validateField("fullName", fullName);
@@ -70,17 +82,29 @@ export default function RegisterPage() {
   const combinedEmailError = emailError || emailExistsError;
   const passwordError = validateField("password", password);
   const confirmPasswordError = !confirmPassword.trim()
-    ? "Vui lòng xác nhận mật khẩu"
+    ? isVi
+      ? "Vui lòng xác nhận mật khẩu"
+      : "Please confirm your password"
     : confirmPassword !== password
-      ? "Mật khẩu xác nhận không khớp"
+      ? isVi
+        ? "Mật khẩu xác nhận không khớp"
+        : "Password confirmation does not match"
       : "";
   const phoneError =
     phone.length > 0 && !phone.startsWith("0")
-      ? "Số điện thoại phải bắt đầu bằng 0"
+      ? isVi
+        ? "Số điện thoại phải bắt đầu bằng 0"
+        : "Phone number must start with 0"
       : phone.length > 0 && phone.length < 10
-        ? "Số điện thoại phải có 10 chữ số"
+        ? isVi
+          ? "Số điện thoại phải có 10 chữ số"
+          : "Phone number must have 10 digits"
         : "";
-  const roleError = !selectedRole ? "Vui lòng chọn vai trò" : "";
+  const roleError = !selectedRole
+    ? isVi
+      ? "Vui lòng chọn vai trò"
+      : "Please select a role"
+    : "";
 
   const stepOneValid =
     !fullNameError &&
@@ -113,7 +137,7 @@ export default function RegisterPage() {
       }
 
       if (exists === true) {
-        setEmailExistsError("Email đã tồn tại");
+        setEmailExistsError(isVi ? "Email đã tồn tại" : "Email already exists");
       } else {
         setEmailExistsError("");
       }
@@ -127,7 +151,9 @@ export default function RegisterPage() {
 
     const updateWidth = () => {
       const containerWidth = googleButtonContainerRef.current?.offsetWidth ?? 0;
-      setGoogleButtonWidth(Math.min(400, Math.max(200, Math.floor(containerWidth))));
+      setGoogleButtonWidth(
+        Math.min(400, Math.max(200, Math.floor(containerWidth))),
+      );
     };
 
     updateWidth();
@@ -161,7 +187,7 @@ export default function RegisterPage() {
 
     if (!selectedRole) {
       setTouched((prev) => ({ ...prev, role: true }));
-      toast.error("Vui lòng chọn vai trò");
+      toast.error(isVi ? "Vui lòng chọn vai trò" : "Please select a role");
       return;
     }
 
@@ -237,6 +263,7 @@ export default function RegisterPage() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-screen bg-gray-50 font-sans p-5 pt-15 lg:pt-0 w-full overflow-hidden bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
+      <FloatingLangToggle />
       {/* Logo */}
       <Link
         href={"/"}
@@ -253,7 +280,7 @@ export default function RegisterPage() {
       <div className="w-full flex flex-col items-center justify-center">
         <div className="max-w-xl w-full mx-auto lg:mx-0">
           <h1 className="text-3xl font-semibold text-emerald-500 mb-3 text-center text-shadow-md text-shadow-emerald-100">
-            Đăng Ký tài khoản
+            {isVi ? "Đăng ký tài khoản" : "Create account"}
           </h1>
 
           <form
@@ -265,7 +292,8 @@ export default function RegisterPage() {
                 {/* Fullname */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Họ Tên <span className="text-red-500">*</span>
+                    {isVi ? "Họ tên" : "Full name"}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <User
@@ -274,7 +302,7 @@ export default function RegisterPage() {
                     />
                     <input
                       type="text"
-                      placeholder="Nhập họ và tên"
+                      placeholder={isVi ? "Nhập họ và tên" : "Enter full name"}
                       className={`w-full border rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
                         touched.fullName && fullNameError
                           ? "border-red-400 focus:ring-red-300"
@@ -303,7 +331,7 @@ export default function RegisterPage() {
                     />
                     <input
                       type="email"
-                      placeholder="Nhập email"
+                      placeholder={isVi ? "Nhập email" : "Enter email"}
                       className={`w-full border rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
                         touched.email && combinedEmailError
                           ? "border-red-400 focus:ring-red-300"
@@ -325,7 +353,7 @@ export default function RegisterPage() {
                   )}
                   {touched.email && !combinedEmailError && isCheckingEmail && (
                     <p className="mt-1 text-xs text-gray-500">
-                      Đang kiểm tra email...
+                      {isVi ? "Đang kiểm tra email..." : "Checking email..."}
                     </p>
                   )}
                 </div>
@@ -333,7 +361,8 @@ export default function RegisterPage() {
                 {/* Password */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Mật Khẩu <span className="text-red-500">*</span>
+                    {isVi ? "Mật khẩu" : "Password"}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Lock
@@ -342,7 +371,7 @@ export default function RegisterPage() {
                     />
                     <input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Nhập mật khẩu"
+                      placeholder={isVi ? "Nhập mật khẩu" : "Enter password"}
                       className={`w-full border rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
                         touched.password && passwordError
                           ? "border-red-400 focus:ring-red-300"
@@ -358,7 +387,13 @@ export default function RegisterPage() {
                       type="button"
                       tabIndex={-1}
                       aria-label={
-                        showPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu"
+                        showPassword
+                          ? isVi
+                            ? "Ẩn mật khẩu"
+                            : "Hide password"
+                          : isVi
+                            ? "Hiển thị mật khẩu"
+                            : "Show password"
                       }
                       onClick={() => setShowPassword((prev) => !prev)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
@@ -413,7 +448,8 @@ export default function RegisterPage() {
                 {/* Confirm Password */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Xác nhận mật khẩu <span className="text-red-500">*</span>
+                    {isVi ? "Xác nhận mật khẩu" : "Confirm password"}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Lock
@@ -422,7 +458,9 @@ export default function RegisterPage() {
                     />
                     <input
                       type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Nhập lại mật khẩu"
+                      placeholder={
+                        isVi ? "Nhập lại mật khẩu" : "Re-enter password"
+                      }
                       className={`w-full border rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
                         touched.confirmPassword && confirmPasswordError
                           ? "border-red-400 focus:ring-red-300"
@@ -441,8 +479,12 @@ export default function RegisterPage() {
                       tabIndex={-1}
                       aria-label={
                         showConfirmPassword
-                          ? "Ẩn mật khẩu"
-                          : "Hiển thị mật khẩu"
+                          ? isVi
+                            ? "Ẩn mật khẩu"
+                            : "Hide password"
+                          : isVi
+                            ? "Hiển thị mật khẩu"
+                            : "Show password"
                       }
                       onClick={() => setShowConfirmPassword((prev) => !prev)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
@@ -463,7 +505,8 @@ export default function RegisterPage() {
                 {/* Phone Number */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Số điện thoại <span className="text-red-500">*</span>
+                    {isVi ? "Số điện thoại" : "Phone number"}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Phone
@@ -472,7 +515,9 @@ export default function RegisterPage() {
                     />
                     <input
                       type="text"
-                      placeholder="Nhập số điện thoại"
+                      placeholder={
+                        isVi ? "Nhập số điện thoại" : "Enter phone number"
+                      }
                       className={`w-full border rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 outline-none transition-all placeholder:text-gray-400 text-black ${
                         touched.phone && phoneError
                           ? "border-red-400 focus:ring-red-300"
@@ -500,7 +545,7 @@ export default function RegisterPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-semibold text-gray-900">
-                    Chọn vai trò
+                    {isVi ? "Chọn vai trò" : "Choose a role"}
                   </h3>
                   <button
                     type="button"
@@ -508,7 +553,7 @@ export default function RegisterPage() {
                     className="flex items-center text-sm text-teal-800 font-medium hover:underline cursor-pointer"
                   >
                     <ChevronLeft size={24} />
-                    Trở lại
+                    {isVi ? "Trở lại" : "Back"}
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -575,12 +620,18 @@ export default function RegisterPage() {
                 {isSigningUp ? (
                   <>
                     <span className="inline-block h-5 w-5 border-2 border-white/60 border-t-white rounded-full animate-spin" />
-                    <span>Đang đăng ký...</span>
+                    <span>{isVi ? "Đang đăng ký..." : "Registering..."}</span>
                   </>
                 ) : step === 1 ? (
-                  "Tiếp tục"
+                  isVi ? (
+                    "Tiếp tục"
+                  ) : (
+                    "Continue"
+                  )
+                ) : isVi ? (
+                  "Đăng ký"
                 ) : (
-                  "Đăng Ký"
+                  "Register"
                 )}
               </button>
             </div>
@@ -592,7 +643,7 @@ export default function RegisterPage() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-white px-3 text-gray-400 font-medium">
-                  Hoặc
+                  {isVi ? "Hoặc" : "Or"}
                 </span>
               </div>
             </div>
@@ -605,18 +656,20 @@ export default function RegisterPage() {
               <GoogleLogin
                 onSuccess={handleSuccess}
                 onError={() => console.log("Login Failed")}
-                width={googleButtonWidth ? String(googleButtonWidth) : undefined}
+                width={
+                  googleButtonWidth ? String(googleButtonWidth) : undefined
+                }
               />
             </div>
           </form>
 
           <p className="mt-5 text-center text-sm text-gray-600">
-            Đã có tài khoản?{" "}
+            {isVi ? "Đã có tài khoản?" : "Already have an account?"}{" "}
             <Link
               href={"/login"}
               className="text-emerald-600 font-bold hover:underline"
             >
-              Đăng nhập
+              {isVi ? "Đăng nhập" : "Sign in"}
             </Link>
           </p>
         </div>
@@ -625,42 +678,47 @@ export default function RegisterPage() {
       {/* RIGHT SECTION: Branding & Testimonial */}
       <div className="flex flex-col items-center justify-center w-full lg:max-w-2xl">
         <p className="text-3xl font-bold text-center text-emerald-500 text-shadow-md text-shadow-emerald-100">
-          Vai trò của chúng tôi
+          {isVi ? "Vai trò của chúng tôi" : "Our roles"}
         </p>
         <p className="text-1xl text-center text-gray-500 text-shadow-md text-shadow-gray-200">
-          Kết nối người trồng, thương lái và chuyên gia sầu riêng trên một nền
-          tảng
+          {isVi
+            ? "Kết nối người trồng, thương lái và chuyên gia sầu riêng trên một nền tảng"
+            : "Connecting farmers, traders, and durian experts on one platform"}
         </p>
 
         <div className="grid grid-cols-1 w-full max-w-xl gap-4 mt-6">
           {[
             {
               title: "Trader",
-              desc: "Người thương lái",
+              desc: isVi ? "Người thương lái" : "Buyer and trader",
               icon: Briefcase,
-              detail:
-                "Tìm kiếm vườn sầu riêng, kết nối trực tiếp với nông dân và quản lý nguồn hàng hiệu quả.",
+              detail: isVi
+                ? "Tìm kiếm vườn sầu riêng, kết nối trực tiếp với nông dân và quản lý nguồn hàng hiệu quả."
+                : "Find durian farms, connect directly with farmers, and manage supply effectively.",
             },
             {
               title: "Farmer",
-              desc: "Tạo vườn & sản phẩm",
+              desc: isVi ? "Tạo vườn & sản phẩm" : "Create farms & products",
               icon: Leaf,
-              detail:
-                "Quản lý thông tin vườn, đăng bán sầu riêng và theo dõi quy trình canh tác VietGAP.",
+              detail: isVi
+                ? "Quản lý thông tin vườn, đăng bán sầu riêng và theo dõi quy trình canh tác VietGAP."
+                : "Manage farm information, list durian products, and track VietGAP cultivation processes.",
             },
             {
               title: "Service Provider",
-              desc: "Dịch vụ nông nghiệp",
+              desc: isVi ? "Dịch vụ nông nghiệp" : "Agriculture services",
               icon: Wrench,
-              detail:
-                "Cung cấp phân bón, kỹ thuật, vận chuyển và các dịch vụ hỗ trợ sản xuất.",
+              detail: isVi
+                ? "Cung cấp phân bón, kỹ thuật, vận chuyển và các dịch vụ hỗ trợ sản xuất."
+                : "Provide fertilizers, techniques, transportation, and other production support services.",
             },
             {
               title: "Content Expert",
-              desc: "Chuyên gia nội dung",
+              desc: isVi ? "Chuyên gia nội dung" : "Content specialist",
               icon: PenSquare,
-              detail:
-                "Chia sẻ kiến thức, hướng dẫn kỹ thuật và phát triển cộng đồng sầu riêng.",
+              detail: isVi
+                ? "Chia sẻ kiến thức, hướng dẫn kỹ thuật và phát triển cộng đồng sầu riêng."
+                : "Share knowledge, technical guidance, and help grow the durian community.",
             },
           ].map((item, index) => {
             const Icon = item.icon;
