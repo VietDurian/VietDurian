@@ -215,8 +215,8 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          err?.message ||
-          "Không thể gửi báo cáo, vui lòng thử lại",
+        err?.message ||
+        "Không thể gửi báo cáo, vui lòng thử lại",
       );
     } finally {
       setIsSubmitting(false);
@@ -921,7 +921,7 @@ export default function HomeScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.centerWrap}>
-          <ActivityIndicator size="large" color="#16a34a" />
+          <ActivityIndicator size="large" color="#10b981" />
           <Text style={styles.loadingText}>Đang tải bài viết...</Text>
         </View>
       </View>
@@ -990,7 +990,7 @@ const styles = StyleSheet.create({
   loadingText: { fontSize: 14, color: "#6b7280" },
   errorText: { fontSize: 14, color: "#ef4444", textAlign: "center" },
   retryBtn: {
-    backgroundColor: "#16a34a",
+    backgroundColor: "#10b981",
     borderRadius: 10,
     paddingHorizontal: 24,
     paddingVertical: 10,
@@ -1151,7 +1151,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e5e7eb",
   },
-  filterBtnActive: { backgroundColor: "#16a34a", borderColor: "#16a34a" },
+  filterBtnActive: { backgroundColor: "#10b981", borderColor: "#10b981" },
 
   // Filter panel
   filterPanel: {
@@ -1179,7 +1179,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e5e7eb",
   },
-  sortBtnActive: { backgroundColor: "#16a34a", borderColor: "#16a34a" },
+  sortBtnActive: { backgroundColor: "#10b981", borderColor: "#10b981" },
   sortBtnText: { fontSize: 13, fontWeight: "500", color: "#374151" },
   sortBtnTextActive: { color: "#fff", fontWeight: "700" },
   clearFiltersBtn: { flexDirection: "row", alignItems: "center", gap: 6 },
@@ -1194,7 +1194,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#f3f4f6",
   },
-  tabActive: { backgroundColor: "#16a34a" },
+  tabActive: { backgroundColor: "#10b981" },
   tabText: { fontSize: 13, fontWeight: "500", color: "#6b7280" },
   tabTextActive: { color: "#fff", fontWeight: "700" },
 
@@ -1309,12 +1309,12 @@ const styles = StyleSheet.create({
   actionBtnLiked: { backgroundColor: "#fff1f2" },
   actionCount: { fontSize: 13, fontWeight: "600", color: "#6b7280" },
   contactBtn: {
-    backgroundColor: "#16a34a",
+    backgroundColor: "#10b981",
     borderRadius: 20,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  contactBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" },
+  contactBtnText: { color: "#fff", fontSize: 12, fontWeight: "700" },
 
   // Empty
   emptyWrap: {
@@ -1332,7 +1332,7 @@ const styles = StyleSheet.create({
   },
   clearBtn: {
     marginTop: 8,
-    backgroundColor: "#16a34a",
+    backgroundColor: "#10b981",
     borderRadius: 10,
     paddingHorizontal: 24,
     paddingVertical: 10,

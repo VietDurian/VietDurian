@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
 
   // Hero
   heroBanner: {
-    backgroundColor: "#065f46",
+    backgroundColor: "#10b981",
     paddingHorizontal: 20, paddingTop: 18, paddingBottom: 22,
   },
   heroTitle: { fontSize: 22, fontWeight: "800", color: "#fff", textAlign: "center", marginBottom: 6 },
