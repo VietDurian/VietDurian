@@ -9,13 +9,25 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ChatHeader from "../components/ChatHeader";
 import ChatInput from "../components/ChatInput";
-import { useChatStore } from "../store/useChatStore";
+import { parseProductChatText, useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useAppStore } from "../store/useAppStore";
+
+const getSenderId = (senderId) => {
+  if (typeof senderId === "object" && senderId?._id) return senderId._id;
+  return senderId;
+};
+
+const formatPrice = (price) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(Number.isFinite(Number(price)) ? Number(price) : 0);
 
 const formatTime = (value) => {
   if (!value) return "";
@@ -29,8 +41,9 @@ const formatTime = (value) => {
 };
 
 // ── Message Bubble ──
-function MessageBubble({ msg, avatar, authUserId }) {
-  const isMe = String(msg?.senderId) === String(authUserId);
+function MessageBubble({ msg, avatar, authUserId, onOpenProduct }) {
+  const isMe = String(getSenderId(msg?.senderId)) === String(authUserId);
+  const productCard = parseProductChatText(msg?.text);
 
   return (
     <View style={[styles.row, isMe ? styles.rowMe : styles.rowThem]}>
@@ -39,10 +52,50 @@ function MessageBubble({ msg, avatar, authUserId }) {
         <View
           style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}
         >
-          {!!msg?.image && (
+          {!!productCard ? (
+            <View style={[styles.productCard, isMe && styles.productCardMe]}>
+              {!!productCard?.thumbnail && (
+                <Image
+                  source={{ uri: productCard.thumbnail }}
+                  style={styles.productCardImage}
+                />
+              )}
+              <Text
+                style={[
+                  styles.productCardName,
+                  isMe && styles.productCardNameMe,
+                ]}
+                numberOfLines={2}
+              >
+                {productCard.name}
+              </Text>
+              <Text
+                style={[
+                  styles.productCardPrice,
+                  isMe && styles.productCardPriceMe,
+                ]}
+              >
+                {formatPrice(productCard.price)}
+              </Text>
+              <Pressable
+                style={[styles.productCardBtn, isMe && styles.productCardBtnMe]}
+                onPress={() => onOpenProduct(productCard.productId)}
+              >
+                <Text
+                  style={[
+                    styles.productCardBtnText,
+                    isMe && styles.productCardBtnTextMe,
+                  ]}
+                >
+                  Xem sản phẩm
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
+          {!!msg?.image && !productCard && (
             <Image source={{ uri: msg.image }} style={styles.messageImage} />
           )}
-          {!!msg?.text && (
+          {!!msg?.text && !productCard && (
             <Text style={[styles.bubbleText, isMe && styles.bubbleTextMe]}>
               {msg.text}
             </Text>
@@ -59,7 +112,7 @@ function MessageBubble({ msg, avatar, authUserId }) {
 // ── Main Screen ──
 export default function ChatDetailScreen() {
   const flatListRef = useRef(null);
-  const { navigate } = useAppStore();
+  const { navigate, setSelectedProduct } = useAppStore();
   const { authUser, onlineUsers } = useAuthStore();
   const {
     selectedUser,
@@ -104,8 +157,14 @@ export default function ChatDetailScreen() {
   const contactAvatar =
     selectedUser?.avatar || "https://i.pravatar.cc/100?img=1";
 
-  const handleSend = async (text) => {
-    await sendMessage({ text });
+  const handleSend = async (messageData) => {
+    await sendMessage(messageData);
+  };
+
+  const handleOpenProduct = (productId) => {
+    if (!productId) return;
+    setSelectedProduct({ _id: productId });
+    navigate("product-detail");
   };
 
   if (!selectedUser?._id) {
@@ -155,6 +214,7 @@ export default function ChatDetailScreen() {
                 msg={item}
                 avatar={contactAvatar}
                 authUserId={authUser?._id}
+                onOpenProduct={handleOpenProduct}
               />
             )}
             contentContainerStyle={styles.messageList}
@@ -239,6 +299,59 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 12,
     marginBottom: 8,
+  },
+  productCard: {
+    width: 230,
+    borderRadius: 12,
+    backgroundColor: "#F9FAFB",
+    overflow: "hidden",
+    paddingBottom: 10,
+  },
+  productCardMe: {
+    backgroundColor: "#15803D",
+  },
+  productCardImage: {
+    width: "100%",
+    height: 120,
+    marginBottom: 8,
+  },
+  productCardName: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#111827",
+    paddingHorizontal: 10,
+  },
+  productCardNameMe: {
+    color: "#FFFFFF",
+  },
+  productCardPrice: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#059669",
+    paddingHorizontal: 10,
+    marginTop: 6,
+    marginBottom: 8,
+  },
+  productCardPriceMe: {
+    color: "#D1FAE5",
+  },
+  productCardBtn: {
+    marginHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: "#16A34A",
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  productCardBtnMe: {
+    backgroundColor: "#FFFFFF",
+  },
+  productCardBtnText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  productCardBtnTextMe: {
+    color: "#166534",
   },
   msgTime: { fontSize: 11, color: "#9CA3AF", marginTop: 4, marginLeft: 4 },
   msgTimeMe: { textAlign: "right", marginRight: 4 },

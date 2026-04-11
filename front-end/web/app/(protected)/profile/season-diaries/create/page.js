@@ -42,12 +42,63 @@ const INITIAL_FORM = {
 
 // ── Mã tỉnh/thành viết tắt 2 ký tự ─────────────────────────────────────────
 const PROVINCE_CODES = new Set([
-  "AG", "BL", "BK", "BG", "BN", "BR", "BD", "BP", "BT", "CM",
-  "CT", "CB", "DN", "DL", "DK", "DB", "DT", "GL", "HG", "HN",
-  "HA", "HT", "HD", "HP", "HB", "HU", "HY", "KH", "KG", "KT",
-  "LC", "LD", "LS", "LA", "ND", "NA", "NB", "NT", "PT", "PY",
-  "QB", "QN", "QG", "QT", "ST", "SL", "TN", "TB", "TH", "TT",
-  "TG", "TV", "TQ", "VL", "VP", "YB", "SG",
+  "AG",
+  "BL",
+  "BK",
+  "BG",
+  "BN",
+  "BR",
+  "BD",
+  "BP",
+  "BT",
+  "CM",
+  "CT",
+  "CB",
+  "DN",
+  "DL",
+  "DK",
+  "DB",
+  "DT",
+  "GL",
+  "HG",
+  "HN",
+  "HA",
+  "HT",
+  "HD",
+  "HP",
+  "HB",
+  "HU",
+  "HY",
+  "KH",
+  "KG",
+  "KT",
+  "LC",
+  "LD",
+  "LS",
+  "LA",
+  "ND",
+  "NA",
+  "NB",
+  "NT",
+  "PT",
+  "PY",
+  "QB",
+  "QN",
+  "QG",
+  "QT",
+  "ST",
+  "SL",
+  "TN",
+  "TB",
+  "TH",
+  "TT",
+  "TG",
+  "TV",
+  "TQ",
+  "VL",
+  "VP",
+  "YB",
+  "SG",
 ]);
 
 // ── Label + optional hint ────────────────────────────────────────────────────
@@ -187,9 +238,9 @@ export default function CreateSeasonDiary() {
     if (!val) return;
     const current = formData.members
       ? formData.members
-        .split(",")
-        .map((m) => m.trim())
-        .filter(Boolean)
+          .split(",")
+          .map((m) => m.trim())
+          .filter(Boolean)
       : [];
     if (current.includes(val)) {
       toast.error(t("create_member_duplicate"));
@@ -347,10 +398,11 @@ export default function CreateSeasonDiary() {
                 placeholder={t("create_planting_code_placeholder")}
                 maxLength={13}
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 outline-none transition-colors text-sm
-      ${plantingAreaCodeError && formData.planting_area_code
-                    ? "border-red-400 focus:ring-red-400 focus:border-red-400"
-                    : "border-gray-300 focus:ring-emerald-500 focus:border-emerald-500"
-                  }`}
+      ${
+        plantingAreaCodeError && formData.planting_area_code
+          ? "border-red-400 focus:ring-red-400 focus:border-red-400"
+          : "border-gray-300 focus:ring-emerald-500 focus:border-emerald-500"
+      }`}
               />
               {/* hint luôn hiện */}
               <p className="text-xs text-gray-400 mt-1">
@@ -377,7 +429,9 @@ export default function CreateSeasonDiary() {
 
             {/* Members */}
             <div>
-              <FieldLabel htmlFor="member_input">{t("create_members")}</FieldLabel>
+              <FieldLabel htmlFor="member_input">
+                {t("create_members")}
+              </FieldLabel>
               <div className="flex gap-2">
                 <input
                   id="member_input"
@@ -492,6 +546,7 @@ export default function CreateSeasonDiary() {
                   onChange={handleChange}
                   min="1"
                   step="any"
+                  onWheel={(e) => e.target.blur()}
                   placeholder={t("create_area_placeholder")}
                   suffix={t("create_area_unit")}
                   onKeyDown={(e) => {
@@ -516,6 +571,8 @@ export default function CreateSeasonDiary() {
                   value={formData.row_bed_count}
                   onChange={handleChange}
                   min="1"
+                  step="any"
+                  onWheel={(e) => e.target.blur()}
                   placeholder={t("create_area_placeholder")}
                   suffix={t("create_rowbed_unit")}
                   onKeyDown={(e) => {

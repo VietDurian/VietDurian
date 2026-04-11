@@ -36,8 +36,7 @@ export default function AddStepModal({
 
     if (!newStep.step_name?.trim()) {
       nextErrors.step_name = "Vui lòng nhập tên bước";
-    }
-    else if (newStep.step_name.trim().length > 50) {
+    } else if (newStep.step_name.trim().length > 50) {
       nextErrors.step_name = "Tên bước không được vượt quá 50 ký tự";
     }
 
@@ -171,7 +170,9 @@ export default function AddStepModal({
               }`}
             />
             {fieldErrors.step_name && (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.step_name}</p>
+              <p className="mt-1 text-xs text-red-600">
+                {fieldErrors.step_name}
+              </p>
             )}
           </div>
 
@@ -196,11 +197,15 @@ export default function AddStepModal({
                   placeholder="VD: Vôi bột nông nghiệp"
                   required={actionType === "Vật tư"}
                   className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all bg-white text-sm ${
-                    fieldErrors.item_name ? "border-red-300" : "border-orange-200"
+                    fieldErrors.item_name
+                      ? "border-red-300"
+                      : "border-orange-200"
                   }`}
                 />
                 {fieldErrors.item_name && (
-                  <p className="mt-1 text-xs text-red-600">{fieldErrors.item_name}</p>
+                  <p className="mt-1 text-xs text-red-600">
+                    {fieldErrors.item_name}
+                  </p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -218,11 +223,15 @@ export default function AddStepModal({
                     }}
                     placeholder="VD: 2kg/gốc"
                     className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all bg-white text-sm ${
-                      fieldErrors.dosage ? "border-red-300" : "border-orange-200"
+                      fieldErrors.dosage
+                        ? "border-red-300"
+                        : "border-orange-200"
                     }`}
                   />
                   {fieldErrors.dosage && (
-                    <p className="mt-1 text-xs text-red-600">{fieldErrors.dosage}</p>
+                    <p className="mt-1 text-xs text-red-600">
+                      {fieldErrors.dosage}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -239,11 +248,15 @@ export default function AddStepModal({
                     }}
                     placeholder="VD: Đại lý VTNN Hòa Bình"
                     className={`w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none transition-all bg-white text-sm ${
-                      fieldErrors.supplier ? "border-red-300" : "border-orange-200"
+                      fieldErrors.supplier
+                        ? "border-red-300"
+                        : "border-orange-200"
                     }`}
                   />
                   {fieldErrors.supplier && (
-                    <p className="mt-1 text-xs text-red-600">{fieldErrors.supplier}</p>
+                    <p className="mt-1 text-xs text-red-600">
+                      {fieldErrors.supplier}
+                    </p>
                   )}
                 </div>
               </div>
@@ -274,7 +287,9 @@ export default function AddStepModal({
               }`}
             />
             {fieldErrors.description && (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.description}</p>
+              <p className="mt-1 text-xs text-red-600">
+                {fieldErrors.description}
+              </p>
             )}
           </div>
 
@@ -307,6 +322,7 @@ export default function AddStepModal({
                 required={actionType !== "Chỉ số"}
                 min="0"
                 step="any"
+                onWheel={(e) => e.target.blur()}
                 className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-gray-50 focus:bg-white ${
                   fieldErrors.cost ? "border-red-300" : "border-gray-200"
                 }`}

@@ -3,6 +3,62 @@ import { axiosInstance } from "../lib/axios";
 import { toast } from "sonner";
 import { useAuthStore } from "./useAuthStore";
 
+const PRODUCT_CHAT_PREFIXES = {
+  vi: "Ảnh Sản Phẩm",
+  en: "Product Card",
+};
+const LEGACY_PRODUCT_CHAT_PREFIX = "__PRODUCT_CHAT_CARD__";
+
+const resolveLanguageCode = (language) => {
+  if (typeof language !== "string" || !language.trim()) return "vi";
+  const normalized = language.toLowerCase();
+  if (normalized.startsWith("en")) return "en";
+  return "vi";
+};
+
+const getProductPriceValue = (price) => {
+  if (typeof price === "object" && price?.$numberDecimal)
+    return parseFloat(price.$numberDecimal);
+  const parsed = parseFloat(price);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+export const createProductChatText = (product, language = "vi") => {
+  const langCode = resolveLanguageCode(language);
+  const prefix = PRODUCT_CHAT_PREFIXES[langCode] || PRODUCT_CHAT_PREFIXES.vi;
+  const payload = {
+    productId: product?._id,
+    name: product?.name || "Sản phẩm",
+    price: getProductPriceValue(product?.price),
+    thumbnail: product?.images?.[0]?.url || "/images/Durian1.jpg",
+  };
+
+  return `${prefix}${JSON.stringify(payload)}`;
+};
+
+export const parseProductChatText = (text) => {
+  if (typeof text !== "string") return null;
+
+  const supportedPrefixes = [
+    PRODUCT_CHAT_PREFIXES.vi,
+    PRODUCT_CHAT_PREFIXES.en,
+    LEGACY_PRODUCT_CHAT_PREFIX,
+  ];
+
+  const matchedPrefix = supportedPrefixes.find((prefix) =>
+    text.startsWith(prefix),
+  );
+  if (!matchedPrefix) return null;
+
+  try {
+    const parsed = JSON.parse(text.slice(matchedPrefix.length));
+    if (!parsed?.productId) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
@@ -94,7 +150,9 @@ export const useChatStore = create((set, get) => ({
               ? {
                   ...u,
                   lastMessage: {
-                    text: newMsg.text,
+                    text: parseProductChatText(newMsg.text)
+                      ? "Đã gửi một sản phẩm"
+                      : newMsg.text,
                     createdAt: newMsg.createdAt,
                   },
                 }
@@ -106,16 +164,26 @@ export const useChatStore = create((set, get) => ({
       }
 
       const ws = useAuthStore.getState().ws;
+      const authUser = useAuthStore.getState().authUser;
+      const roomId = ["chat", authUser?._id, selectedUser._id].sort().join(":");
       ws?.send(
         JSON.stringify({
           type: "message",
-          roomId: `user:${selectedUser._id}`,
+          roomId,
           payload: newMsg,
         }),
       );
     } catch (error) {
       toast.error(error.response?.data?.message);
     }
+  },
+
+  sendProductCardMessage: async (product, language = "vi") => {
+    if (!product?._id) return;
+
+    return get().sendMessage({
+      text: createProductChatText(product, language),
+    });
   },
 
   subscribeToMessages: () => {

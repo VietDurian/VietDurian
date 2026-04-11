@@ -30,14 +30,11 @@ export default function ChatHeader({ name, avatar, isOnline }) {
       </View>
 
       {/* Actions */}
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionBtn}>
-          <Ionicons name="call-outline" size={22} color="#374151" />
-        </TouchableOpacity>
+      {/* <View style={styles.actions}>
         <TouchableOpacity style={styles.actionBtn}>
           <Ionicons name="ellipsis-vertical" size={22} color="#374151" />
         </TouchableOpacity>
-      </View>
+      </View> */}
     </View>
   );
 }

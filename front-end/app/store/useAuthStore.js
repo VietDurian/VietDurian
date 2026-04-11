@@ -3,7 +3,12 @@ import { axiosInstance } from "../lib/axios";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppStore } from "./useAppStore";
-import { useChatStore } from "./useChatStore";
+import { parseProductChatText, useChatStore } from "./useChatStore";
+
+const normalizeUserId = (value) => {
+  if (typeof value === "object" && value?._id) return value._id;
+  return value;
+};
 
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:8080/api/v1";
@@ -344,7 +349,7 @@ export const useAuthStore = create((set, get) => ({
 
           if (msg.type === "message") {
             const authUser = get().authUser;
-            const senderId = msg.payload?.senderId;
+            const senderId = normalizeUserId(msg.payload?.senderId);
             const chatStore = useChatStore.getState();
             const users = chatStore.users || [];
             const isExisting = users.some((u) => u._id === senderId);
@@ -356,7 +361,9 @@ export const useAuthStore = create((set, get) => ({
                     ? {
                         ...u,
                         lastMessage: {
-                          text: msg.payload?.text,
+                          text: parseProductChatText(msg.payload?.text)
+                            ? "Đã gửi một sản phẩm"
+                            : msg.payload?.text,
                           createdAt: msg.payload?.createdAt,
                         },
                       }
@@ -368,7 +375,8 @@ export const useAuthStore = create((set, get) => ({
             }
 
             const { selectedUser, messages } = useChatStore.getState();
-            if (selectedUser?._id === senderId && senderId !== authUser?._id) {
+            const authUserId = normalizeUserId(authUser?._id);
+            if (selectedUser?._id === senderId && senderId !== authUserId) {
               const alreadyExists = (messages || []).some(
                 (m) => m._id === msg.payload?._id,
               );

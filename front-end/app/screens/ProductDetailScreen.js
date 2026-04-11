@@ -74,7 +74,8 @@ function StarRow({ rating, size = 18 }) {
 
 export default function ProductDetailScreen() {
   const { selectedProduct, navigate } = useAppStore();
-  const { setSelectedUser, addContact } = useChatStore();
+  const { setSelectedUser, addContact, sendProductCardMessage } =
+    useChatStore();
 
   const {
     productDetail,
@@ -122,7 +123,7 @@ export default function ProductDetailScreen() {
       : product.season_diary_id;
   };
 
-  const handleStartChat = () => {
+  const handleStartChat = async () => {
     const seller = product?.user_id;
     const sellerId = seller?._id;
     if (!sellerId) {
@@ -146,6 +147,7 @@ export default function ProductDetailScreen() {
 
     setSelectedUser(contactUser);
     addContact(contactUser);
+    await sendProductCardMessage(product);
     navigate("chat-detail");
   };
 
