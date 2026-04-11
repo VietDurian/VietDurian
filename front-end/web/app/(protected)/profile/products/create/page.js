@@ -43,7 +43,8 @@ export default function CreateProduct() {
 
   useEffect(() => {
     if (authUser?._id) {
-      getSeasonDiaries(authUser._id);
+      // Only load completed seasons so users can create products from finished crops.
+      getSeasonDiaries(authUser._id, "Completed");
     }
   }, [authUser?._id, getSeasonDiaries]);
 
@@ -97,6 +98,7 @@ export default function CreateProduct() {
 
     const payload = {
       ...formData,
+      // Keep both key styles for backend compatibility.
       seasonDiaryId: formData.seasonDiaryId,
       season_diary_id: formData.seasonDiaryId,
       price: Number(formData.price) || 0,
