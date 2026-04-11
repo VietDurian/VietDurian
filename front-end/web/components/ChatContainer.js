@@ -4,11 +4,19 @@ import React, { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
+import { parseProductChatText } from "../store/useChatStore";
 import { formatMessageTime } from "../lib/utils";
 import { Image as ImageIcon, Loader2, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
+
+const formatPrice = (price) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(Number.isFinite(Number(price)) ? Number(price) : 0);
 
 const ChatContainer = () => {
   const {
@@ -131,6 +139,7 @@ const ChatContainer = () => {
         ) : (
           messages.map((message) => {
             const isMine = message.senderId === authUser?._id;
+            const productChat = parseProductChatText(message.text);
 
             return (
               <div
@@ -154,7 +163,41 @@ const ChatContainer = () => {
                       : "bg-white text-gray-900 border border-gray-100 rounded-bl-sm"
                   }`}
                 >
-                  {message.image && (
+                  {productChat ? (
+                    <div
+                      className={`w-72 rounded-xl overflow-hidden ${isMine ? "bg-emerald-700" : "bg-gray-50"}`}
+                    >
+                      <div className="relative h-36 w-full">
+                        <Image
+                          src={productChat.thumbnail || "/images/Durian1.jpg"}
+                          alt={productChat.name || "Product"}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="p-3">
+                        <p className="text-sm font-semibold line-clamp-2 mb-1">
+                          {productChat.name}
+                        </p>
+                        <p
+                          className={`text-sm font-bold mb-3 ${isMine ? "text-emerald-100" : "text-emerald-700"}`}
+                        >
+                          {formatPrice(productChat.price)}
+                        </p>
+                        <Link
+                          href={`/products/${productChat.productId}`}
+                          className={`inline-flex items-center justify-center px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                            isMine
+                              ? "bg-white text-emerald-700 hover:bg-emerald-50"
+                              : "bg-emerald-600 text-white hover:bg-emerald-700"
+                          }`}
+                        >
+                          Xem sản phẩm
+                        </Link>
+                      </div>
+                    </div>
+                  ) : message.image ? (
                     <Image
                       src={message.image}
                       alt={t("chat_container_attachment_alt")}
@@ -162,8 +205,8 @@ const ChatContainer = () => {
                       height={96}
                       className="max-w-56 rounded-lg mb-2"
                     />
-                  )}
-                  {message.text && (
+                  ) : null}
+                  {message.text && !productChat && (
                     <p className="text-sm whitespace-pre-wrap">
                       {message.text}
                     </p>

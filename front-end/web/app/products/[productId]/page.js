@@ -76,7 +76,8 @@ export default function ProductDetailPage() {
   const [userId] = useState(() => getUserId());
   const [liveRating, setLiveRating] = useState(null);
   const { authUser } = useAuthStore();
-  const { setSelectedUser, addContact } = useChatStore();
+  const { setSelectedUser, addContact, sendProductCardMessage } =
+    useChatStore();
   const router = useRouter();
   const hasFetched = useRef(false);
 
@@ -84,7 +85,7 @@ export default function ProductDetailPage() {
     setImageError(true);
   };
 
-  const handleContact = (event, product) => {
+  const handleContact = async (event, product) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -106,6 +107,8 @@ export default function ProductDetailPage() {
 
     addContact(chatUser);
     setSelectedUser(chatUser);
+
+    await sendProductCardMessage(product);
 
     router.push(`/chat?chatId=${receiverId}`);
   };
@@ -167,7 +170,6 @@ export default function ProductDetailPage() {
       year: "numeric",
     });
   };
-
 
   const getDiaryId = () => {
     if (!product?.season_diary_id) return null;
@@ -289,10 +291,11 @@ export default function ProductDetailPage() {
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star
                             key={star}
-                            className={`w-5 h-5 ${star <= Math.floor(rating)
-                              ? "text-yellow-400 fill-yellow-400"
-                              : "text-gray-300"
-                              }`}
+                            className={`w-5 h-5 ${
+                              star <= Math.floor(rating)
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-gray-300"
+                            }`}
                           />
                         ))}
                       </div>
@@ -456,28 +459,31 @@ export default function ProductDetailPage() {
               <div className="flex border-b border-gray-200">
                 <button
                   onClick={() => setActiveTab("description")}
-                  className={`px-8 py-4 font-semibold transition-colors ${activeTab === "description"
-                    ? "text-emerald-600 border-b-2 border-emerald-600"
-                    : "text-gray-600 hover:text-gray-900"
-                    }`}
+                  className={`px-8 py-4 font-semibold transition-colors ${
+                    activeTab === "description"
+                      ? "text-emerald-600 border-b-2 border-emerald-600"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
                 >
                   {t("product_detail_tab_description")}
                 </button>
                 <button
                   onClick={() => setActiveTab("specifications")}
-                  className={`px-8 py-4 font-semibold transition-colors ${activeTab === "specifications"
-                    ? "text-emerald-600 border-b-2 border-emerald-600"
-                    : "text-gray-600 hover:text-gray-900"
-                    }`}
+                  className={`px-8 py-4 font-semibold transition-colors ${
+                    activeTab === "specifications"
+                      ? "text-emerald-600 border-b-2 border-emerald-600"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
                 >
                   {t("product_detail_tab_specs")}
                 </button>
                 <button
                   onClick={() => setActiveTab("diary")}
-                  className={`px-8 py-4 font-semibold transition-colors ${activeTab === "diary"
-                    ? "text-emerald-600 border-b-2 border-emerald-600"
-                    : "text-gray-600 hover:text-gray-900"
-                    }`}
+                  className={`px-8 py-4 font-semibold transition-colors ${
+                    activeTab === "diary"
+                      ? "text-emerald-600 border-b-2 border-emerald-600"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
                 >
                   {t("product_detail_tab_diary")}
                 </button>

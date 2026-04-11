@@ -3,6 +3,39 @@ import { axiosInstance } from "../lib/axios";
 import { toast } from "sonner";
 import { useAuthStore } from "./useAuthStore";
 
+export const PRODUCT_CHAT_PREFIX = "__PRODUCT_CHAT_CARD__";
+
+const getProductPriceValue = (price) => {
+  if (typeof price === "object" && price?.$numberDecimal)
+    return parseFloat(price.$numberDecimal);
+  const parsed = parseFloat(price);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+export const createProductChatText = (product) => {
+  const payload = {
+    productId: product?._id,
+    name: product?.name || "Sản phẩm",
+    price: getProductPriceValue(product?.price),
+    thumbnail: product?.images?.[0]?.url || "/images/Durian1.jpg",
+  };
+
+  return `${PRODUCT_CHAT_PREFIX}${JSON.stringify(payload)}`;
+};
+
+export const parseProductChatText = (text) => {
+  if (typeof text !== "string" || !text.startsWith(PRODUCT_CHAT_PREFIX))
+    return null;
+
+  try {
+    const parsed = JSON.parse(text.slice(PRODUCT_CHAT_PREFIX.length));
+    if (!parsed?.productId) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
@@ -94,7 +127,9 @@ export const useChatStore = create((set, get) => ({
               ? {
                   ...u,
                   lastMessage: {
-                    text: newMsg.text,
+                    text: parseProductChatText(newMsg.text)
+                      ? "Đã gửi một sản phẩm"
+                      : newMsg.text,
                     createdAt: newMsg.createdAt,
                   },
                 }
@@ -106,16 +141,26 @@ export const useChatStore = create((set, get) => ({
       }
 
       const ws = useAuthStore.getState().ws;
+      const authUser = useAuthStore.getState().authUser;
+      const roomId = ["chat", authUser?._id, selectedUser._id].sort().join(":");
       ws?.send(
         JSON.stringify({
           type: "message",
-          roomId: `user:${selectedUser._id}`,
+          roomId,
           payload: newMsg,
         }),
       );
     } catch (error) {
       toast.error(error.response?.data?.message);
     }
+  },
+
+  sendProductCardMessage: async (product) => {
+    if (!product?._id) return;
+
+    return get().sendMessage({
+      text: createProductChatText(product),
+    });
   },
 
   subscribeToMessages: () => {
