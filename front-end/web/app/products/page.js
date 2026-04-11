@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 
 export default function ProductsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [products, setProducts] = useState([]);
   const [productTypes, setProductTypes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +75,7 @@ export default function ProductsPage() {
     };
     addContact(chatUser);
     setSelectedUser(chatUser);
-    await sendProductCardMessage(product);
+    await sendProductCardMessage(product, language);
     router.push(`/chat?chatId=${receiverId}`);
   };
 

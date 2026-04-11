@@ -63,7 +63,7 @@ const getUserId = () => {
 };
 
 export default function ProductDetailPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const params = useParams();
   const productId = params?.productId;
 
@@ -108,7 +108,7 @@ export default function ProductDetailPage() {
     addContact(chatUser);
     setSelectedUser(chatUser);
 
-    await sendProductCardMessage(product);
+    await sendProductCardMessage(product, language);
 
     router.push(`/chat?chatId=${receiverId}`);
   };
