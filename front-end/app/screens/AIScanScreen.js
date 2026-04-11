@@ -18,11 +18,19 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImageManipulator from "expo-image-manipulator";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
-import { axiosInstance } from "@/lib/axios";
 
 const AI_REQUEST_TIMEOUT_MS = 10000;
 const MAX_UPLOAD_DIMENSION = 1280;
 const AI_BASE_URL_CACHE_KEY = "last_success_ai_base_url";
+const DEFAULT_LOCAL_API_BASE_URL = "http://10.0.2.2:8080/api/v1";
+const APP_API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL || DEFAULT_LOCAL_API_BASE_URL;
+const AI_LOCAL_BASE_URL =
+  process.env.EXPO_PUBLIC_AI_LOCAL_URL || APP_API_BASE_URL;
+const AI_REMOTE_BASE_URL = process.env.EXPO_PUBLIC_AI_REMOTE_URL || "";
+const AI_SCAN_BASE_URL =
+  process.env.EXPO_PUBLIC_AI_SCAN_BASE_URL ||
+  (__DEV__ ? AI_LOCAL_BASE_URL : (AI_REMOTE_BASE_URL || APP_API_BASE_URL));
 
 const EXT_TO_MIME = {
   jpg: "image/jpeg",
@@ -87,6 +95,8 @@ const parseBaseUrl = (raw) => {
   };
 };
 
+const normalizeBaseUrl = (raw) => String(raw || "").replace(/\/$/, "");
+
 const normalizeAssetForUpload = async (asset) => {
   const originalFilename = asset?.fileName || asset?.uri?.split("/").pop() || "scan.jpg";
   const safeBaseName = originalFilename.replace(/\.[^/.]+$/, "") || "scan";
@@ -108,26 +118,72 @@ const normalizeAssetForUpload = async (asset) => {
 };
 
 const getAiBaseUrls = async () => {
-  const parsed = parseBaseUrl(axiosInstance.defaults.baseURL || "");
-  const cachedBase = String((await AsyncStorage.getItem(AI_BASE_URL_CACHE_KEY)) || "").replace(/\/$/, "");
+  const parsedPreferred = parseBaseUrl(AI_SCAN_BASE_URL);
+  const parsedApp = parseBaseUrl(APP_API_BASE_URL);
+  const cachedBase = normalizeBaseUrl(await AsyncStorage.getItem(AI_BASE_URL_CACHE_KEY));
+
+  if (!__DEV__) {
+    return [
+      ...new Set(
+        [
+          cachedBase,
+          normalizeBaseUrl(parsedPreferred.base),
+          normalizeBaseUrl(AI_REMOTE_BASE_URL),
+          normalizeBaseUrl(parsedApp.base),
+        ].filter(Boolean),
+      ),
+    ];
+  }
+
   const expoHost = getExpoDevHost();
 
-  const hosts = [parsed.host, expoHost, "10.0.2.2", "127.0.0.1", "localhost"].filter(
+  const hosts = [
+    parsedPreferred.host,
+    parsedApp.host,
+    expoHost,
+    "10.0.2.2",
+    "127.0.0.1",
+    "localhost",
+  ].filter(
     (v, i, arr) => v && arr.indexOf(v) === i,
   );
 
-  const fallbackPorts = [parsed.port, 8080, 8081, 8082, 8083].filter(
+  const fallbackPorts = [
+    parsedPreferred.port,
+    parsedApp.port,
+    8080,
+    8081,
+    8082,
+    8083,
+  ].filter(
     (p, i, arr) => Number.isFinite(p) && arr.indexOf(p) === i,
   );
+
+  const fallbackPaths = [
+    parsedPreferred.path,
+    parsedApp.path,
+    "/api/v1",
+  ].filter((v, i, arr) => v && arr.indexOf(v) === i);
 
   const generated = [];
   for (const host of hosts) {
     for (const port of fallbackPorts) {
-      generated.push(`${parsed.protocol}${host}:${port}${parsed.path}`);
+      for (const path of fallbackPaths) {
+        generated.push(`${parsedPreferred.protocol}${host}:${port}${path}`);
+      }
     }
   }
 
-  return [...new Set([cachedBase, parsed.base, ...generated].filter(Boolean))];
+  return [
+    ...new Set(
+      [
+        cachedBase,
+        normalizeBaseUrl(parsedPreferred.base),
+        normalizeBaseUrl(parsedApp.base),
+        ...generated,
+      ].filter(Boolean),
+    ),
+  ];
 };
 
 const postAiPredict = async ({ baseUrl, formData, token }) => {
@@ -316,10 +372,9 @@ export default function AIScanScreen() {
           successBaseUrl = baseUrl;
           break;
         } catch (err) {
-          // Any HTTP status means this endpoint is reachable; cache it.
+          // Any HTTP status means this endpoint is reachable; cache it for next scan.
           if (err?.response?.status) {
             successBaseUrl = baseUrl;
-            axiosInstance.defaults.baseURL = baseUrl;
             await AsyncStorage.setItem(AI_BASE_URL_CACHE_KEY, baseUrl);
           }
 
@@ -342,7 +397,6 @@ export default function AIScanScreen() {
       }
 
       if (successBaseUrl) {
-        axiosInstance.defaults.baseURL = successBaseUrl;
         await AsyncStorage.setItem(AI_BASE_URL_CACHE_KEY, successBaseUrl);
       }
 
@@ -352,12 +406,15 @@ export default function AIScanScreen() {
       const status = error?.response?.status;
       const detail = error?.response?.data;
       const isNetworkError = !status && !isTimeoutError;
+      const networkHint = __DEV__
+        ? "Khong the ket noi may chu AI local. Vui long kiem tra backend va dien thoai cung Wi-Fi, backend dang mo cong 8080-8083."
+        : "Khong the ket noi may chu AI. Vui long kiem tra cau hinh EXPO_PUBLIC_AI_REMOTE_URL hoac EXPO_PUBLIC_AI_SCAN_BASE_URL.";
       const message =
         (isTimeoutError
           ? "He thong AI phan hoi cham. Vui long thu lai voi anh ro net hon."
           : null) ||
         (isNetworkError
-          ? "Khong the ket noi may chu AI. Vui long kiem tra backend va dien thoai cung Wi-Fi, backend dang mo cong 8080-8083."
+          ? networkHint
           : null) ||
         (status === 422
           ? "Ảnh tải lên chưa được xác định là liên quan đến sầu riêng. Vui lòng chụp rõ lá, thân hoặc trái sầu riêng."
