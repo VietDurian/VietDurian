@@ -264,8 +264,8 @@ export default function ProductDetailScreen() {
                     color="#059669"
                   />
                 }
-                label="Trọng lượng:"
-                value={`${product.weight}kg / trái`}
+                label="Tổng khối lượng:"
+                value={`${product.weight}kg`}
               />
               <MetaRow
                 icon={
