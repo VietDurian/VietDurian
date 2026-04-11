@@ -580,6 +580,7 @@ export default function EditSeasonDiary() {
                   onChange={handleChange}
                   min="1"
                   step="any"
+                  onWheel={(e) => e.target.blur()}
                   placeholder={t("edit_season_area_placeholder")}
                   suffix={t("edit_season_area_suffix")}
                   onKeyDown={(e) => {
@@ -606,6 +607,8 @@ export default function EditSeasonDiary() {
                   value={formData.row_bed_count}
                   onChange={handleChange}
                   min="1"
+                  step="any"
+                  onWheel={(e) => e.target.blur()}
                   placeholder={t("edit_season_row_placeholder")}
                   suffix={t("edit_season_row_suffix")}
                   onKeyDown={(e) => {

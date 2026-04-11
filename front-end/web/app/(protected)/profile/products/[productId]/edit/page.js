@@ -230,6 +230,15 @@ export default function EditProduct() {
     reader.readAsDataURL(file);
   };
 
+  const isActiveStatus = formData.status === "active";
+
+  const toggleStatus = () => {
+    setFormData((prev) => ({
+      ...prev,
+      status: prev.status === "active" ? "inactive" : "active",
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-emerald-50/30">
       {/* Header */}
@@ -356,6 +365,8 @@ export default function EditProduct() {
                   value={formData.price}
                   onChange={handleChange}
                   min={0}
+                  step="any"
+                  onWheel={(e) => e.target.blur()}
                   required
                   placeholder={t("edit_product_price_placeholder")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
@@ -378,6 +389,8 @@ export default function EditProduct() {
                   value={formData.weight}
                   onChange={handleChange}
                   min={0}
+                  step="any"
+                  onWheel={(e) => e.target.blur()}
                   required
                   placeholder={t("edit_product_weight_placeholder")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
@@ -483,6 +496,34 @@ export default function EditProduct() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
                 />
               </div>
+            </div>
+
+            <div className="mt-5 mb-4">
+              <p className="block text-sm font-medium text-gray-900 mb-2">
+                Trạng thái
+              </p>
+              <button
+                type="button"
+                onClick={toggleStatus}
+                role="switch"
+                aria-checked={isActiveStatus}
+                className="inline-flex items-center gap-3"
+              >
+                <span
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                    isActiveStatus ? "bg-emerald-600" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                      isActiveStatus ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </span>
+                <span className="text-sm font-semibold text-gray-800">
+                  {isActiveStatus ? "active" : "inactive"}
+                </span>
+              </button>
             </div>
           </div>
 
