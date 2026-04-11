@@ -184,7 +184,8 @@ function ProductCard({ product, onPress, onContact }) {
 
 export default function ProductsScreen() {
   const { navigate, setSelectedProduct } = useAppStore();
-  const { setSelectedUser, addContact } = useChatStore();
+  const { setSelectedUser, addContact, sendProductCardMessage } =
+    useChatStore();
   const { authUser } = useAuthStore();
 
   const {
@@ -247,7 +248,7 @@ export default function ProductsScreen() {
   const getCurrentSortLabel = () =>
     SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? "Sắp xếp";
 
-  const handleContact = (product) => {
+  const handleContact = async (product) => {
     const seller = product?.user_id;
     const sellerId = seller?._id;
     if (!sellerId) {
@@ -271,6 +272,7 @@ export default function ProductsScreen() {
 
     setSelectedUser(contactUser);
     addContact(contactUser);
+    await sendProductCardMessage(product);
     navigate("chat-detail");
   };
 

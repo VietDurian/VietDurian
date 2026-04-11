@@ -3,6 +3,50 @@ import { axiosInstance } from "../lib/axios";
 import Toast from "react-native-toast-message";
 import { useAuthStore } from "./useAuthStore";
 
+const PRODUCT_CHAT_PREFIX_VI = "Ảnh Sản Phẩm";
+const PRODUCT_CHAT_PREFIX_EN = "Product Card";
+const LEGACY_PRODUCT_CHAT_PREFIX = "__PRODUCT_CHAT_CARD__";
+
+const getProductPriceValue = (price) => {
+  if (typeof price === "object" && price?.$numberDecimal)
+    return parseFloat(price.$numberDecimal);
+  const parsed = parseFloat(price);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+export const createProductChatText = (product) => {
+  const payload = {
+    productId: product?._id,
+    name: product?.name || "Sản phẩm",
+    price: getProductPriceValue(product?.price),
+    thumbnail: product?.images?.[0]?.url || "",
+  };
+
+  return `${PRODUCT_CHAT_PREFIX_VI}${JSON.stringify(payload)}`;
+};
+
+export const parseProductChatText = (text) => {
+  if (typeof text !== "string") return null;
+
+  const supportedPrefixes = [
+    PRODUCT_CHAT_PREFIX_VI,
+    PRODUCT_CHAT_PREFIX_EN,
+    LEGACY_PRODUCT_CHAT_PREFIX,
+  ];
+  const matchedPrefix = supportedPrefixes.find((prefix) =>
+    text.startsWith(prefix),
+  );
+  if (!matchedPrefix) return null;
+
+  try {
+    const parsed = JSON.parse(text.slice(matchedPrefix.length));
+    if (!parsed?.productId) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 const getErrorMessage = (error, fallback) =>
   error?.response?.data?.message || error?.response?.data?.error || fallback;
 
@@ -114,7 +158,9 @@ export const useChatStore = create((set, get) => ({
               ? {
                   ...u,
                   lastMessage: {
-                    text: newMsg?.text,
+                    text: parseProductChatText(newMsg?.text)
+                      ? "Đã gửi một sản phẩm"
+                      : newMsg?.text,
                     createdAt: newMsg?.createdAt,
                   },
                 }
@@ -126,11 +172,13 @@ export const useChatStore = create((set, get) => ({
       }
 
       const ws = useAuthStore.getState().ws;
+      const authUser = useAuthStore.getState().authUser;
+      const roomId = ["chat", authUser?._id, selectedUser._id].sort().join(":");
       if (ws?.readyState === WebSocket.OPEN) {
         ws.send(
           JSON.stringify({
             type: "message",
-            roomId: `user:${selectedUser._id}`,
+            roomId,
             payload: newMsg,
           }),
         );
@@ -142,6 +190,14 @@ export const useChatStore = create((set, get) => ({
       });
       throw error;
     }
+  },
+
+  sendProductCardMessage: async (product) => {
+    if (!product?._id) return;
+
+    return get().sendMessage({
+      text: createProductChatText(product),
+    });
   },
 
   subscribeToMessages: () => {
