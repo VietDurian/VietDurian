@@ -157,8 +157,8 @@ export default function ChatDetailScreen() {
   const contactAvatar =
     selectedUser?.avatar || "https://i.pravatar.cc/100?img=1";
 
-  const handleSend = async (text) => {
-    await sendMessage({ text });
+  const handleSend = async (messageData) => {
+    await sendMessage(messageData);
   };
 
   const handleOpenProduct = (productId) => {
