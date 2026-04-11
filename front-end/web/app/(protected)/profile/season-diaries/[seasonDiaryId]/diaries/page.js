@@ -72,9 +72,27 @@ const sanitizeFileNamePart = (value) =>
     .replace(/\s+/g, " ")
     .trim();
 
+const normalizeDateInputValue = (value) => {
+  if (!value) return "";
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    // Keep original calendar day from common API date string formats.
+    const matchedDate = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (matchedDate) return matchedDate[1];
+    const parsed = new Date(trimmed);
+    return Number.isNaN(parsed.getTime())
+      ? ""
+      : parsed.toISOString().slice(0, 10);
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? ""
+    : parsed.toISOString().slice(0, 10);
+};
+
 const normalizeBuyingSeed = (item) => ({
   id: item?._id,
-  purchase_date: item?.purchase_date || "",
+  purchase_date: normalizeDateInputValue(item?.purchase_date),
   seed_name: item?.seed_name || "",
   quantity: item?.quantity ?? "",
   total_price: item?.total_price ?? "",
@@ -94,7 +112,7 @@ const buildBuyingSeedPayload = (form, seasonDiaryId) => ({
 
 const normalizeBuyingFertilizer = (item) => ({
   id: item?._id,
-  purchase_date: item?.purchase_date || "",
+  purchase_date: normalizeDateInputValue(item?.purchase_date),
   material_name: item?.material_name || "",
   quantity: item?.quantity ?? "",
   unit: item?.unit || "",
@@ -116,7 +134,7 @@ const buildBuyingFertilizerPayload = (form, seasonDiaryId) => ({
 
 const normalizeUseFertilizer = (item) => ({
   id: item?._id,
-  usage_date: item?.usage_date || "",
+  usage_date: normalizeDateInputValue(item?.usage_date),
   fertilizer_name: item?.fertilizer_name || "",
   fertilizer_amount: item?.fertilizer_amount || "",
   pesticide_name: item?.pesticide_name || "",
@@ -138,7 +156,7 @@ const buildUseFertilizerPayload = (form, seasonDiaryId) => ({
 
 const normalizePackagingHandling = (item) => ({
   id: item?._id || item?.id,
-  handling_date: item?.handling_date || "",
+  handling_date: normalizeDateInputValue(item?.handling_date),
   packaging_type: item?.packaging_type || "",
   storage_location: item?.storage_location || "",
   treatment_method: item?.treatment_method || "",
@@ -154,9 +172,9 @@ const buildPackagingHandlingPayload = (form, seasonDiaryId) => ({
 
 const normalizeHarvestConsumption = (item) => ({
   id: item?._id || item?.id,
-  harvest_date: item?.harvest_date || "",
+  harvest_date: normalizeDateInputValue(item?.harvest_date),
   harvest_quantity_kg: item?.harvest_quantity_kg ?? "",
-  sale_date: item?.sale_date || "",
+  sale_date: normalizeDateInputValue(item?.sale_date),
   buyer_or_consumption_address: item?.buyer_or_consumption_address || "",
   consumed_weight_kg: item?.consumed_weight_kg ?? "",
   sale_unit_price_vnd: item?.sale_unit_price_vnd ?? "",
@@ -182,7 +200,7 @@ const buildHarvestConsumptionPayload = (form, seasonDiaryId) => ({
 
 const normalizeIrrigationCost = (item) => ({
   id: item?._id || item?.id,
-  execution_date: item?.execution_date || "",
+  execution_date: normalizeDateInputValue(item?.execution_date),
   irrigation_item: item?.irrigation_item || "",
   irrigation_method: item?.irrigation_method || "",
   irrigation_duration_hours: item?.irrigation_duration?.hours ?? "",
@@ -219,7 +237,7 @@ const buildIrrigationCostPayload = (form, seasonDiaryId) => ({
 
 const normalizeLaborCost = (item) => ({
   id: item?._id || item?.id,
-  labor_hire_date: item?.labor_hire_date || "",
+  labor_hire_date: normalizeDateInputValue(item?.labor_hire_date),
   work_description: item?.work_description || "",
   worker_quantity: item?.worker_quantity ?? "",
   working_time_hours: item?.working_time?.hours ?? "",
@@ -256,7 +274,7 @@ const buildLaborCostPayload = (form, seasonDiaryId) => ({
 });
 
 const SEED_DATA = {
-  1.4: [
+  1: [
     {
       id: "681111111111111111111101",
       purchase_date: "2026-01-05",
@@ -276,7 +294,7 @@ const SEED_DATA = {
       supplier_address: "Cái Mơn, Bến Tre",
     },
   ],
-  1.5: [
+  2: [
     {
       id: "683111111111111111111101",
       purchase_date: "2026-01-20",
@@ -298,7 +316,7 @@ const SEED_DATA = {
       supplier_address: "Cái Mơn, Bến Tre",
     },
   ],
-  1.6: [
+  3: [
     {
       id: "684111111111111111111101",
       usage_date: "2026-02-10",
@@ -318,7 +336,7 @@ const SEED_DATA = {
       preharvest_interval: "14 ngày",
     },
   ],
-  1.7: [
+  4: [
     {
       id: "685111111111111111111101",
       handling_date: "2026-02-15",
@@ -334,7 +352,7 @@ const SEED_DATA = {
       treatment_method: "Khử trùng và đóng gói hút ẩm",
     },
   ],
-  1.8: [
+  5: [
     {
       id: "69e111111111111111111102",
       harvest_date: "2026-03-28",
@@ -354,7 +372,7 @@ const SEED_DATA = {
       sale_unit_price_vnd: "",
     },
   ],
-  1.9: [
+  6: [
     {
       id: "69c111111111111111111102",
       execution_date: "2026-03-18",
@@ -378,7 +396,7 @@ const SEED_DATA = {
       performed_by: "Nguyễn Văn A",
     },
   ],
-  "1.10": [
+  7: [
     {
       id: "69d111111111111111111102",
       labor_hire_date: "2026-03-12",
@@ -652,13 +670,13 @@ function DiaryTable({
 }) {
   const { t } = useLanguage();
   const cols = flatCols(diary);
-  const isBuyingSeedDiary = diary.id === "1.4";
-  const isBuyingFertilizerDiary = diary.id === "1.5";
-  const isUseFertilizerDiary = diary.id === "1.6";
-  const isPackagingHandlingDiary = diary.id === "1.7";
-  const isHarvestConsumptionDiary = diary.id === "1.8";
-  const isIrrigationCostDiary = diary.id === "1.9";
-  const isLaborCostsDiary = diary.id === "1.10";
+  const isBuyingSeedDiary = diary.id === "1";
+  const isBuyingFertilizerDiary = diary.id === "2";
+  const isUseFertilizerDiary = diary.id === "3";
+  const isPackagingHandlingDiary = diary.id === "4";
+  const isHarvestConsumptionDiary = diary.id === "5";
+  const isIrrigationCostDiary = diary.id === "6";
+  const isLaborCostsDiary = diary.id === "7";
 
   const {
     buyingSeeds,
@@ -945,35 +963,35 @@ function DiaryTable({
       ]);
 
       const rowsByDiaryId = {
-        1.4: (useBuyingSeedStore.getState().buyingSeeds || [])
+        1: (useBuyingSeedStore.getState().buyingSeeds || [])
           .map(normalizeBuyingSeed)
           .filter((r) => r.id),
-        1.5: (useBuyingFertilizerStore.getState().buyingFertilizers || [])
+        2: (useBuyingFertilizerStore.getState().buyingFertilizers || [])
           .map(normalizeBuyingFertilizer)
           .filter((r) => r.id),
-        1.6: (useUseFertilizerStore.getState().useFertilizers || [])
+        3: (useUseFertilizerStore.getState().useFertilizers || [])
           .map(normalizeUseFertilizer)
           .filter((r) => r.id),
-        1.7: (usePackagingHandlingStore.getState().packagingHandlings || [])
+        4: (usePackagingHandlingStore.getState().packagingHandlings || [])
           .map(normalizePackagingHandling)
           .filter((r) => r.id),
-        1.8: (useHarvestConsumptionStore.getState().harvestConsumptions || [])
+        5: (useHarvestConsumptionStore.getState().harvestConsumptions || [])
           .map(normalizeHarvestConsumption)
           .filter((r) => r.id),
-        1.9: (useIrrigationCostStore.getState().irrigationCosts || [])
+        6: (useIrrigationCostStore.getState().irrigationCosts || [])
           .map(normalizeIrrigationCost)
           .filter((r) => r.id),
-        "1.10": (useLaborCostsStore.getState().laborCosts || [])
+        7: (useLaborCostsStore.getState().laborCosts || [])
           .map(normalizeLaborCost)
           .filter((r) => r.id),
       };
 
       const exportDiaries = (diaries || []).filter((d) =>
-        ["1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "1.10"].includes(d.id),
+        ["1", "2", "3", "4", "5", "6", "7"].includes(d.id),
       );
 
       if (exportDiaries.length === 0) {
-        showToast("Khong tim thay cau hinh nhat ky de xuat PDF", "error");
+        showToast(t("diary_pdf_export_no_config"), "error");
         return;
       }
 
@@ -1011,15 +1029,15 @@ function DiaryTable({
 
         doc.setFontSize(14);
         doc.setFont(pdfFontFamily, "normal");
-        doc.text(`Nhật ký ${d.id}: ${d.title}`, 40, 40);
+        doc.text(`${t("diary_label")} ${d.id}: ${d.title}`, 40, 40);
         doc.setFontSize(10);
         doc.setFont(pdfFontFamily, "normal");
-        doc.text(`Tổng số bản ghi: ${tableRows.length}`, 40, 58);
+        doc.text(`${t("diary_pdf_total_records")} ${tableRows.length}`, 40, 58);
 
         autoTable(doc, {
           startY: 72,
           head: [tableHead],
-          body: tableRows.length > 0 ? tableRows : [["Không có dữ liệu"]],
+          body: tableRows.length > 0 ? tableRows : [[t("diary_pdf_no_data")]],
           styles: {
             font: pdfFontFamily,
             fontStyle: "normal",
@@ -1056,9 +1074,9 @@ function DiaryTable({
       const datePart = new Date().toISOString().slice(0, 10);
 
       doc.save(`${safeGardenName}-${datePart}.pdf`);
-      showToast("Xuất PDF thành công");
+      showToast(t("diary_pdf_export_success"));
     } catch {
-      showToast("Xuất PDF thất bại", "error");
+      showToast(t("diary_pdf_export_failed"), "error");
     } finally {
       setIsExportingPdf(false);
     }
@@ -1347,7 +1365,9 @@ function DiaryTable({
               d="M12 4v16m8-8H4"
             />
           </svg>
-          {isExportingPdf ? "Đang xuất PDF..." : "Xuất PDF"}
+          {isExportingPdf
+            ? t("diary_pdf_export_loading")
+            : t("diary_pdf_export_btn")}
         </button>
       </div>
 
@@ -1633,7 +1653,7 @@ export default function DiaryPage() {
   const DIARIES = useMemo(
     () => [
       {
-        id: "1.4",
+        id: "1",
         required: true,
         title: t("diary_1_4_title"),
         icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
@@ -1687,7 +1707,7 @@ export default function DiaryPage() {
         ],
       },
       {
-        id: "1.5",
+        id: "2",
         required: true,
         title: t("diary_1_5_title"),
         icon: "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z",
@@ -1747,7 +1767,7 @@ export default function DiaryPage() {
         ],
       },
       {
-        id: "1.6",
+        id: "3",
         required: false,
         title: t("diary_1_6_title"),
         icon: "M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1v1a1 1 0 002 0v-1h6v1a1 1 0 002 0v-1h1a1 1 0 001-1V5a1 1 0 00-1-1H3zm2 3h10v2H5V7zm0 4h4v2H5v-2zm7 0h3v2h-3v-2z",
@@ -1807,7 +1827,7 @@ export default function DiaryPage() {
         ],
       },
       {
-        id: "1.7",
+        id: "4",
         required: true,
         title: t("diary_1_7_title"),
         icon: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16",
@@ -1844,7 +1864,7 @@ export default function DiaryPage() {
         ],
       },
       {
-        id: "1.8",
+        id: "5",
         title: t("diary_1_8_title"),
         icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z",
         groups: [
@@ -1899,7 +1919,7 @@ export default function DiaryPage() {
         ],
       },
       {
-        id: "1.9",
+        id: "6",
         required: true,
         title: t("diary_1_9_title"),
         icon: "M12 3v1m0 16v1m8.66-13l-.87.5M4.21 8.5l-.87-.5M19.78 15.5l-.87-.5M4.21 15.5l-.87.5M21 12h-1M4 12H3m15.36-6.36l-.7.7M6.34 17.66l-.7.7M17.66 17.66l.7.7M6.34 6.34l.7.7",
@@ -1965,7 +1985,7 @@ export default function DiaryPage() {
         ],
       },
       {
-        id: "1.10",
+        id: "7",
         required: true,
         title: t("diary_1_10_title"),
         icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",

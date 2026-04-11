@@ -27,24 +27,6 @@ export default function Header() {
             size={22}
             color={activeTab === "chat-list" ? "#16A34A" : "#374151"}
           />
-          <View style={styles.notifDot} />
-        </TouchableOpacity>
-
-        {/* Notifications */}
-        <TouchableOpacity
-          style={styles.notifBtn}
-          onPress={() => setTab("notifications")}
-        >
-          <Ionicons
-            name={
-              activeTab === "notifications"
-                ? "notifications"
-                : "notifications-outline"
-            }
-            size={22}
-            color={activeTab === "notifications" ? "#16A34A" : "#374151"}
-          />
-          <View style={styles.notifDot} />
         </TouchableOpacity>
       </View>
     </View>
@@ -73,17 +55,6 @@ const styles = StyleSheet.create({
   logoEmoji: { fontSize: 16 },
   logoText: { fontSize: 17, fontWeight: "700", color: "#1B6B3A" },
   notifBtn: { position: "relative", padding: 4 },
-  notifDot: {
-    position: "absolute",
-    top: 4,
-    right: 4,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#EF4444",
-    borderWidth: 1.5,
-    borderColor: "#FFFFFF",
-  },
   headerActions: {
     flexDirection: "row",
     gap: 5,

@@ -289,7 +289,6 @@ const styles = StyleSheet.create({
     },
     tocOverlay: {
         position: "absolute",
-        // 60 = chiều cao topBar (paddingVertical 12*2 + icon 36) + thêm 8px margin
         top: 68,
         right: 16,
         zIndex: 999,
@@ -330,7 +329,7 @@ const styles = StyleSheet.create({
 
     // Hero
     heroBanner: {
-        backgroundColor: "#065f46",
+        backgroundColor: "#10b981",
         paddingHorizontal: 20, paddingTop: 20, paddingBottom: 28,
     },
     heroTitle: {
@@ -377,7 +376,7 @@ const styles = StyleSheet.create({
     blockHeader: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 12 },
     blockIndex: {
         width: 32, height: 32, borderRadius: 16,
-        backgroundColor: "#059669", alignItems: "center", justifyContent: "center", marginTop: 2,
+        backgroundColor: "#10b981", alignItems: "center", justifyContent: "center", marginTop: 2,
     },
     blockIndexText: { fontSize: 14, fontWeight: "700", color: "#fff" },
     blockTitle: { flex: 1, fontSize: 17, fontWeight: "700", color: "#111827", lineHeight: 24 },
@@ -397,7 +396,7 @@ const styles = StyleSheet.create({
     btnTop: {
         flexDirection: "row", alignItems: "center", gap: 6,
         flex: 1, justifyContent: "center",
-        paddingVertical: 12, backgroundColor: "#059669", borderRadius: 24,
+        paddingVertical: 12, backgroundColor: "#10b981", borderRadius: 24,
     },
     btnTopText: { fontSize: 14, fontWeight: "600", color: "#fff" },
 

@@ -27,9 +27,13 @@ export const useAuthStore = create((set, get) => ({
   isSigningUp: false,
   isUpdatingProfile: false,
   isCheckingAuth: true,
+  pendingVerificationEmail: "",
   onlineUsers: [],
   ws: null,
   _cancelReconnect: null,
+
+  setPendingVerificationEmail: (email) =>
+    set({ pendingVerificationEmail: email?.trim().toLowerCase() || "" }),
 
   checkAuth: async () => {
     const { navigate } = useAppStore.getState();
