@@ -51,13 +51,14 @@ export default function ProductsPage() {
   });
   const router = useRouter();
   const { authUser } = useAuthStore();
-  const { setSelectedUser, addContact } = useChatStore();
+  const { setSelectedUser, addContact, sendProductCardMessage } =
+    useChatStore();
 
   const handleImageError = (productId) => {
     setImageErrors((prev) => ({ ...prev, [productId]: true }));
   };
 
-  const handleContact = (event, product) => {
+  const handleContact = async (event, product) => {
     event.preventDefault();
     event.stopPropagation();
     if (!authUser) {
@@ -74,6 +75,7 @@ export default function ProductsPage() {
     };
     addContact(chatUser);
     setSelectedUser(chatUser);
+    await sendProductCardMessage(product);
     router.push(`/chat?chatId=${receiverId}`);
   };
 
