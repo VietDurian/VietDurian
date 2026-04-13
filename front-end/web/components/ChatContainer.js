@@ -4,7 +4,7 @@ import React, { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { parseProductChatText } from "../store/useChatStore";
+import { parseProductChatText, parsePostChatText } from "../store/useChatStore";
 import { formatMessageTime } from "../lib/utils";
 import { Image as ImageIcon, Loader2, Send, X } from "lucide-react";
 import { toast } from "sonner";
@@ -140,6 +140,7 @@ const ChatContainer = () => {
           messages.map((message) => {
             const isMine = message.senderId === authUser?._id;
             const productChat = parseProductChatText(message.text);
+            const postChat = parsePostChatText(message.text);
 
             return (
               <div
@@ -197,6 +198,38 @@ const ChatContainer = () => {
                         </Link>
                       </div>
                     </div>
+                  ) : postChat ? (
+                    <div
+                      className={`w-72 rounded-xl overflow-hidden ${isMine ? "bg-emerald-700" : "bg-gray-50"}`}
+                    >
+                      {!!postChat.image && (
+                        <div className="relative h-36 w-full">
+                          <Image
+                            src={postChat.image}
+                            alt={postChat.title || "Post"}
+                            fill
+                            unoptimized
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="p-3">
+                        <p className="text-sm font-semibold line-clamp-2 mb-1">
+                          {postChat.title || "Bài viết"}
+                        </p>
+                        {!!postChat.category && (
+                          <p
+                            className={`text-xs mb-2 ${isMine ? "text-emerald-100" : "text-emerald-700"}`}
+                          >
+                            {postChat.category}
+                          </p>
+                        )}
+                        <p className="text-xs line-clamp-2 opacity-90 mb-3">
+                          {postChat.content ||
+                            "Xem bài viết để biết thêm chi tiết."}
+                        </p>
+                      </div>
+                    </div>
                   ) : message.image ? (
                     <Image
                       src={message.image}
@@ -206,7 +239,7 @@ const ChatContainer = () => {
                       className="max-w-56 rounded-lg mb-2"
                     />
                   ) : null}
-                  {message.text && !productChat && (
+                  {message.text && !productChat && !postChat && (
                     <p className="text-sm whitespace-pre-wrap">
                       {message.text}
                     </p>

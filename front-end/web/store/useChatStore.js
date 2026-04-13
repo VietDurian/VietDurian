@@ -7,7 +7,12 @@ const PRODUCT_CHAT_PREFIXES = {
   vi: "Ảnh Sản Phẩm",
   en: "Product Card",
 };
+const POST_CHAT_PREFIXES = {
+  vi: "Ảnh Bài Viết",
+  en: "Post Card",
+};
 const LEGACY_PRODUCT_CHAT_PREFIX = "__PRODUCT_CHAT_CARD__";
+const LEGACY_POST_CHAT_PREFIX = "__POST_CHAT_CARD__";
 
 const resolveLanguageCode = (language) => {
   if (typeof language !== "string" || !language.trim()) return "vi";
@@ -53,6 +58,43 @@ export const parseProductChatText = (text) => {
   try {
     const parsed = JSON.parse(text.slice(matchedPrefix.length));
     if (!parsed?.productId) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+export const createPostChatText = (post, language = "vi") => {
+  const langCode = resolveLanguageCode(language);
+  const prefix = POST_CHAT_PREFIXES[langCode] || POST_CHAT_PREFIXES.vi;
+  const payload = {
+    postId: post?.id || post?._id,
+    title: post?.title || "Bài viết",
+    content: post?.content || "",
+    image: post?.image || "",
+    category: post?.category || "",
+  };
+
+  return `${prefix}${JSON.stringify(payload)}`;
+};
+
+export const parsePostChatText = (text) => {
+  if (typeof text !== "string") return null;
+
+  const supportedPrefixes = [
+    POST_CHAT_PREFIXES.vi,
+    POST_CHAT_PREFIXES.en,
+    LEGACY_POST_CHAT_PREFIX,
+  ];
+
+  const matchedPrefix = supportedPrefixes.find((prefix) =>
+    text.startsWith(prefix),
+  );
+  if (!matchedPrefix) return null;
+
+  try {
+    const parsed = JSON.parse(text.slice(matchedPrefix.length));
+    if (!parsed?.postId) return null;
     return parsed;
   } catch {
     return null;
@@ -152,7 +194,9 @@ export const useChatStore = create((set, get) => ({
                   lastMessage: {
                     text: parseProductChatText(newMsg.text)
                       ? "Đã gửi một sản phẩm"
-                      : newMsg.text,
+                      : parsePostChatText(newMsg.text)
+                        ? "Đã gửi một bài viết"
+                        : newMsg.text,
                     createdAt: newMsg.createdAt,
                   },
                 }
@@ -183,6 +227,15 @@ export const useChatStore = create((set, get) => ({
 
     return get().sendMessage({
       text: createProductChatText(product, language),
+    });
+  },
+
+  sendPostCardMessage: async (post, language = "vi") => {
+    const postId = post?.id || post?._id;
+    if (!postId) return;
+
+    return get().sendMessage({
+      text: createPostChatText(post, language),
     });
   },
 
