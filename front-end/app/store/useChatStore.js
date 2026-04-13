@@ -6,6 +6,9 @@ import { useAuthStore } from "./useAuthStore";
 const PRODUCT_CHAT_PREFIX_VI = "Ảnh Sản Phẩm";
 const PRODUCT_CHAT_PREFIX_EN = "Product Card";
 const LEGACY_PRODUCT_CHAT_PREFIX = "__PRODUCT_CHAT_CARD__";
+const POST_CHAT_PREFIX_VI = "Ảnh Bài Viết";
+const POST_CHAT_PREFIX_EN = "Post Card";
+const LEGACY_POST_CHAT_PREFIX = "__POST_CHAT_CARD__";
 
 const getProductPriceValue = (price) => {
   if (typeof price === "object" && price?.$numberDecimal)
@@ -41,6 +44,40 @@ export const parseProductChatText = (text) => {
   try {
     const parsed = JSON.parse(text.slice(matchedPrefix.length));
     if (!parsed?.productId) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+export const createPostChatText = (post) => {
+  const payload = {
+    postId: post?.id || post?._id,
+    title: post?.title || "Bài viết",
+    content: post?.content || "",
+    image: post?.image || "",
+    category: post?.category || "",
+  };
+
+  return `${POST_CHAT_PREFIX_VI}${JSON.stringify(payload)}`;
+};
+
+export const parsePostChatText = (text) => {
+  if (typeof text !== "string") return null;
+
+  const supportedPrefixes = [
+    POST_CHAT_PREFIX_VI,
+    POST_CHAT_PREFIX_EN,
+    LEGACY_POST_CHAT_PREFIX,
+  ];
+  const matchedPrefix = supportedPrefixes.find((prefix) =>
+    text.startsWith(prefix),
+  );
+  if (!matchedPrefix) return null;
+
+  try {
+    const parsed = JSON.parse(text.slice(matchedPrefix.length));
+    if (!parsed?.postId) return null;
     return parsed;
   } catch {
     return null;
@@ -160,7 +197,9 @@ export const useChatStore = create((set, get) => ({
                   lastMessage: {
                     text: parseProductChatText(newMsg?.text)
                       ? "Đã gửi một sản phẩm"
-                      : newMsg?.text,
+                      : parsePostChatText(newMsg?.text)
+                        ? "Đã gửi một bài viết"
+                        : newMsg?.text,
                     createdAt: newMsg?.createdAt,
                   },
                 }
@@ -197,6 +236,15 @@ export const useChatStore = create((set, get) => ({
 
     return get().sendMessage({
       text: createProductChatText(product),
+    });
+  },
+
+  sendPostCardMessage: async (post) => {
+    const postId = post?.id || post?._id;
+    if (!postId) return;
+
+    return get().sendMessage({
+      text: createPostChatText(post),
     });
   },
 
