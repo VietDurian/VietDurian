@@ -14,6 +14,7 @@ const escapeRegex = (text = '') =>
 	text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const normalizeGardenName = (name = '') => name.trim();
+const normalizeImage = (image = '') => image.trim();
 
 const ensureValidObjectId = (id, fieldName = 'id') => {
 	if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -118,6 +119,7 @@ const createSeasonDiary = async ({ userId, data }) => {
 		const newDiary = new SeasonDiaryModel({
 			...data,
 			garden_name: normalizeGardenName(data.garden_name),
+			image: typeof data.image === 'string' ? normalizeImage(data.image) : data.image,
 			user_id: userId,
 		});
 
@@ -146,6 +148,10 @@ const updateSeasonDiary = async ({ seasonDiaryId, data }) => {
 				excludeId: seasonDiaryId,
 			});
 			data.garden_name = normalizeGardenName(data.garden_name);
+		}
+
+		if (typeof data.image === 'string') {
+			data.image = normalizeImage(data.image);
 		}
 
 		Object.assign(diary, data);

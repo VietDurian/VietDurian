@@ -49,6 +49,7 @@ const Router = express.Router();
  *               - latitude
  *               - crop_variety
  *               - area
+ *               - image
  *             properties:
  *               garden_name:
  *                 type: string
@@ -85,6 +86,9 @@ const Router = express.Router();
  *               area:
  *                 type: number
  *                 example: 5000
+ *               image:
+ *                 type: string
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NDI5ZWVlMjFlZWJhOTZjZDFjM2Y3MSIsImlhdCI6MTc3NjMzMjEwMywiZXhwIjoxNzc2OTM2OTAzfQ.5so9rXEGTccL-wDYlKg5lqP58CIwvfgRKnwdpTUdBRQ"
  *               land_use_history:
  *                 type: string
  *                 example: "Đất trồng cây ăn trái 5 năm"
@@ -151,6 +155,9 @@ const Router = express.Router();
  *                 type: number
  *               area:
  *                 type: number
+ *               image:
+ *                 type: string
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NDI5ZWVlMjFlZWJhOTZjZDFjM2Y3MSIsImlhdCI6MTc3NjMzMjEwMywiZXhwIjoxNzc2OTM2OTAzfQ.5so9rXEGTccL-wDYlKg5lqP58CIwvfgRKnwdpTUdBRQ"
  *               land_use_history:
  *                 type: string
  *     responses:

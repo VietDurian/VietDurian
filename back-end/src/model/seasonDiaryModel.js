@@ -73,9 +73,13 @@ const SeasonDiarySchema = new mongoose.Schema(
 			trim: true,
 			default: '',
 		},
+		image: {
+			type: String,
+			required: true,
+		},
 		status: {
 			type: String,
-			enum: ['In progressing', 'Completed'],
+			enum: ['Stopped','In progressing', 'Completed'],
 			default: 'In progressing',
 		},
 		end_date: {
