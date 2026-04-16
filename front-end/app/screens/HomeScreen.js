@@ -215,8 +215,8 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-        err?.message ||
-        "Không thể gửi báo cáo, vui lòng thử lại",
+          err?.message ||
+          "Không thể gửi báo cáo, vui lòng thử lại",
       );
     } finally {
       setIsSubmitting(false);
@@ -825,12 +825,12 @@ export default function HomeScreen() {
   } = usePostStore();
 
   const { navigate, setSelectedPostId } = useAppStore();
-  const { setSelectedUser, addContact } = useChatStore();
+  const { setSelectedUser, addContact, sendPostCardMessage } = useChatStore();
   const { authUser } = useAuthStore();
 
   const [showFilters, setShowFilters] = useState(false);
 
-  const handleContact = (post) => {
+  const handleContact = async (post) => {
     if (!post?.authorId) return;
 
     const isSelf =
@@ -850,6 +850,7 @@ export default function HomeScreen() {
 
     setSelectedUser(contactUser);
     addContact(contactUser);
+    await sendPostCardMessage(post);
     navigate("chat-detail");
   };
 

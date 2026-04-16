@@ -112,8 +112,8 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-        err?.message ||
-        t("report_error_submit_fail")
+          err?.message ||
+          t("report_error_submit_fail"),
       );
     } finally {
       setIsSubmitting(false);
@@ -131,7 +131,9 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
             <div className="p-1.5 bg-orange-100 rounded-full">
               <Flag size={16} className="text-orange-500" />
             </div>
-            <h2 className="text-lg font-bold text-gray-900">{t("report_modal_title")}</h2>
+            <h2 className="text-lg font-bold text-gray-900">
+              {t("report_modal_title")}
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -145,12 +147,26 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
           /* Success state */
           <div className="p-8 text-center">
             <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-8 h-8 text-orange-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">{t("report_success_title")}</h3>
-            <p className="text-gray-500 text-sm mb-6">{t("report_success_desc")}</p>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              {t("report_success_title")}
+            </h3>
+            <p className="text-gray-500 text-sm mb-6">
+              {t("report_success_desc")}
+            </p>
             <button
               onClick={onClose}
               className="px-6 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition text-sm"
@@ -181,12 +197,14 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                       onClick={() => {
                         setSelectedReason(reason);
                         setError("");
-                        if (reason !== t("report_reason_other")) setCustomReason("");
+                        if (reason !== t("report_reason_other"))
+                          setCustomReason("");
                       }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${selectedReason === reason
-                        ? "border-orange-400 bg-orange-50 text-orange-700"
-                        : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${
+                        selectedReason === reason
+                          ? "border-orange-400 bg-orange-50 text-orange-700"
+                          : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                      }`}
                     >
                       {reason}
                     </button>
@@ -220,18 +238,25 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {t("report_image_label")}{" "}
-                  <span className="text-gray-400 font-normal">({t("report_image_optional")})</span>
+                  <span className="text-gray-400 font-normal">
+                    ({t("report_image_optional")})
+                  </span>
                 </label>
                 {!imagePreview ? (
                   <div
                     onClick={() => fileInputRef.current?.click()}
                     className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all"
                   >
-                    <ImageIcon className="mx-auto text-gray-400 mb-2" size={26} />
+                    <ImageIcon
+                      className="mx-auto text-gray-400 mb-2"
+                      size={26}
+                    />
                     <p className="text-sm font-medium text-gray-600">
                       {t("report_image_click")}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">{t("report_image_hint")}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {t("report_image_hint")}
+                    </p>
                   </div>
                 ) : (
                   <div className="relative rounded-lg overflow-hidden border border-gray-200">
@@ -247,7 +272,8 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                       onClick={() => {
                         setImagePreview("");
                         setImageData("");
-                        if (fileInputRef.current) fileInputRef.current.value = "";
+                        if (fileInputRef.current)
+                          fileInputRef.current.value = "";
                       }}
                       className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full"
                     >
@@ -278,7 +304,8 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                   disabled={
                     isSubmitting ||
                     !selectedReason ||
-                    (selectedReason === t("report_reason_other") && !customReason.trim())
+                    (selectedReason === t("report_reason_other") &&
+                      !customReason.trim())
                   }
                   className="w-full px-4 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-medium transition text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
@@ -395,7 +422,9 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
             </p>
           </div>
         </div>
-        <div className={`text-gray-400 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}>
+        <div
+          className={`text-gray-400 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}
+        >
           <ChevronDown size={22} />
         </div>
       </button>
@@ -411,24 +440,38 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
                 className={`group relative flex flex-col gap-3 p-4 rounded-2xl border-2 transition-all text-left shadow-sm hover:shadow-md ${isActive ? `${cat.bgLight} ${cat.borderColor} ring-2 ${cat.ringColor}` : "bg-white border-gray-200"}`}
               >
                 <div className="flex items-start justify-between">
-                  <div className={`w-11 h-11 rounded-xl bg-linear-to-br ${cat.gradient} flex items-center justify-center shadow-md`}>
+                  <div
+                    className={`w-11 h-11 rounded-xl bg-linear-to-br ${cat.gradient} flex items-center justify-center shadow-md`}
+                  >
                     <Icon size={22} className="text-white" />
                   </div>
-                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${cat.tagBg}`}>
+                  <span
+                    className={`text-xs font-semibold px-2 py-1 rounded-full ${cat.tagBg}`}
+                  >
                     {cat.tagLine}
                   </span>
                 </div>
                 <div>
-                  <h4 className={`font-bold text-base ${cat.textColor} mb-0.5`}>{cat.key}</h4>
+                  <h4 className={`font-bold text-base ${cat.textColor} mb-0.5`}>
+                    {cat.key}
+                  </h4>
                   <p className="text-xs font-medium text-gray-400">{cat.who}</p>
                 </div>
-                <p className="text-sm text-gray-600 leading-relaxed">{cat.desc}</p>
-                <div className={`flex items-center gap-1.5 text-xs font-semibold ${cat.textColor} mt-auto`}>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {cat.desc}
+                </p>
+                <div
+                  className={`flex items-center gap-1.5 text-xs font-semibold ${cat.textColor} mt-auto`}
+                >
                   <Filter size={13} />
-                  {isActive ? t("posts_filter_active") : t("posts_filter_click")}
+                  {isActive
+                    ? t("posts_filter_active")
+                    : t("posts_filter_click")}
                 </div>
                 {isActive && (
-                  <div className={`absolute inset-0 rounded-2xl pointer-events-none bg-linear-to-br ${cat.gradient} opacity-5`} />
+                  <div
+                    className={`absolute inset-0 rounded-2xl pointer-events-none bg-linear-to-br ${cat.gradient} opacity-5`}
+                  />
                 )}
               </button>
             );
@@ -487,7 +530,10 @@ const FilterBar = ({
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-6">
       <div className="flex gap-3 mb-0">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={20}
+          />
           <input
             type="text"
             value={searchQuery}
@@ -503,14 +549,19 @@ const FilterBar = ({
             className="min-w-35 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
           >
             <span>{selectedSortLabel}</span>
-            <ChevronDown className={`w-4 h-4 text-gray-500 transition-all duration-200 ${showSortDropdown ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`w-4 h-4 text-gray-500 transition-all duration-200 ${showSortDropdown ? "rotate-180" : ""}`}
+            />
           </button>
           {showSortDropdown && (
             <div className="absolute top-full right-0 mt-2 w-full bg-white border-2 border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
               {SORT_OPTIONS.map((option, index) => (
                 <button
                   key={option.value}
-                  onClick={() => { onSortChange(option.value); setShowSortDropdown(false); }}
+                  onClick={() => {
+                    onSortChange(option.value);
+                    setShowSortDropdown(false);
+                  }}
                   className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${selectedSort === option.value ? "bg-emerald-50 text-emerald-700 font-semibold" : "text-gray-700 hover:bg-gray-50"} ${index !== SORT_OPTIONS.length - 1 ? "border-b border-gray-100" : ""}`}
                 >
                   {option.label}
@@ -573,8 +624,12 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
 
   const isOwnPost = currentUserId && post.authorId === currentUserId;
 
-  useEffect(() => { setIsLiked(post.isLiked || false); }, [post.isLiked]);
-  useEffect(() => { setCommentCount(post.comments || 0); }, [post.comments]);
+  useEffect(() => {
+    setIsLiked(post.isLiked || false);
+  }, [post.isLiked]);
+  useEffect(() => {
+    setCommentCount(post.comments || 0);
+  }, [post.comments]);
 
   const handleLike = async () => {
     if (isTogglingFavorite) return;
@@ -588,14 +643,21 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
       onLikeUpdate?.(post.id, newLikedState);
     } catch (error) {
       setIsLiked(previousLikedState);
-      alert(error?.response?.data?.message || error?.message || "Không thể cập nhật yêu thích");
+      alert(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Không thể cập nhật yêu thích",
+      );
     } finally {
       setIsTogglingFavorite(false);
     }
   };
 
   const cfg = post.category
-    ? categoryConfig[post.category] || { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" }
+    ? categoryConfig[post.category] || {
+        icon: LayoutGrid,
+        bg: "from-gray-500 to-slate-500",
+      }
     : null;
 
   return (
@@ -617,16 +679,21 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h4 className="font-bold text-gray-900 text-base">{post.userName}</h4>
-                {cfg && (() => {
-                  const Icon = cfg.icon;
-                  return (
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${cfg.bg} text-white shadow-sm shrink-0`}>
-                      <Icon size={11} />
-                      {post.category}
-                    </span>
-                  );
-                })()}
+                <h4 className="font-bold text-gray-900 text-base">
+                  {post.userName}
+                </h4>
+                {cfg &&
+                  (() => {
+                    const Icon = cfg.icon;
+                    return (
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${cfg.bg} text-white shadow-sm shrink-0`}
+                      >
+                        <Icon size={11} />
+                        {post.category}
+                      </span>
+                    );
+                  })()}
               </div>
               <p className="text-gray-500 text-sm truncate">
                 {post.userHandle && post.userHandle}
@@ -649,7 +716,9 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
         </div>
 
         {post.title && (
-          <h3 className="font-bold text-gray-900 text-lg leading-snug mb-2">{post.title}</h3>
+          <h3 className="font-bold text-gray-900 text-lg leading-snug mb-2">
+            {post.title}
+          </h3>
         )}
 
         <div className="text-base text-gray-600 leading-relaxed mb-4">
@@ -658,14 +727,24 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
 
         {post.contact && (
           <div className="mb-4">
-            <span className="text-sm font-semibold text-gray-500">{t("posts_contact_label")}</span>
-            <span className="text-sm font-semibold text-emerald-700">{post.contact}</span>
+            <span className="text-sm font-semibold text-gray-500">
+              {t("posts_contact_label")}
+            </span>
+            <span className="text-sm font-semibold text-emerald-700">
+              {post.contact}
+            </span>
           </div>
         )}
 
         {post.image && (
           <div className="rounded-xl overflow-hidden mb-4 border border-gray-200">
-            <Image src={post.image} alt="Post content" width={96} height={96} className="w-full h-auto object-cover" />
+            <Image
+              src={post.image}
+              alt="Post content"
+              width={96}
+              height={96}
+              className="w-full h-auto object-cover"
+            />
           </div>
         )}
 
@@ -680,14 +759,18 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
             ) : (
               <Heart size={20} className={`${isLiked ? "fill-current" : ""}`} />
             )}
-            {likeCount > 0 && <span className="text-sm font-medium">{likeCount}</span>}
+            {likeCount > 0 && (
+              <span className="text-sm font-medium">{likeCount}</span>
+            )}
           </button>
           <button
             onClick={() => setIsCommentModalOpen(true)}
             className="flex items-center gap-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition px-3 py-1.5 rounded-lg"
           >
             <MessageCircle size={20} />
-            {commentCount > 0 && <span className="text-sm font-medium">{commentCount}</span>}
+            {commentCount > 0 && (
+              <span className="text-sm font-medium">{commentCount}</span>
+            )}
           </button>
           <button
             onClick={() => onContact?.(post)}
@@ -717,11 +800,11 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function PostsContent() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const router = useRouter();
   const { authUser } = useAuthStore();
-  const { setSelectedUser, addContact } = useChatStore();
+  const { setSelectedUser, addContact, sendPostCardMessage } = useChatStore();
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState(null);
@@ -750,17 +833,23 @@ export default function PostsContent() {
         const favoritePostIds = new Set(
           (favoritesResponse.data || [])
             .map((fav) => fav.post_id?._id || fav.post_id)
-            .filter(Boolean)
+            .filter(Boolean),
         );
         const normalizedPosts = (postsData || []).map((post) => {
           const author = post.author || {};
           return {
             id: post._id,
             authorId: author._id || author.id,
-            userName: author.full_name || author.name || author.username || "Người dùng",
+            userName:
+              author.full_name ||
+              author.name ||
+              author.username ||
+              "Người dùng",
             userHandle: author.email || "",
             userAvatar: author.avatar || "/images/avatar.jpg",
-            timestamp: post.created_at ? new Date(post.created_at).toLocaleString("vi-VN") : "Vừa xong",
+            timestamp: post.created_at
+              ? new Date(post.created_at).toLocaleString("vi-VN")
+              : "Vừa xong",
             title: post.title || "",
             content: post.content,
             contact: post.contact,
@@ -780,31 +869,42 @@ export default function PostsContent() {
               const res = await commentAPI.getCommentsByPost(post.id, "all");
               const countComments = (list) => {
                 let count = list.length;
-                list.forEach((c) => { if (c.children?.length) count += countComments(c.children); });
+                list.forEach((c) => {
+                  if (c.children?.length) count += countComments(c.children);
+                });
                 return count;
               };
               return { ...post, comments: countComments(res.data || []) };
-            } catch { return post; }
-          })
+            } catch {
+              return post;
+            }
+          }),
         );
         if (!isCancelled) setPosts(postsWithComments);
       } catch (error) {
-        if (!isCancelled) setPostsError(error?.message || "Không thể tải bài viết");
+        if (!isCancelled)
+          setPostsError(error?.message || "Không thể tải bài viết");
       } finally {
         if (!isCancelled) setLoadingPosts(false);
       }
     };
     loadPostsWithFavorites();
-    return () => { isCancelled = true; };
+    return () => {
+      isCancelled = true;
+    };
   }, [selectedCategory, selectedSort, searchQuery]);
 
   const handleLikeUpdate = (postId, isLiked) => {
     setPosts((prev) =>
       prev.map((post) =>
         post.id === postId
-          ? { ...post, isLiked, likes: isLiked ? post.likes + 1 : post.likes - 1 }
-          : post
-      )
+          ? {
+              ...post,
+              isLiked,
+              likes: isLiked ? post.likes + 1 : post.likes - 1,
+            }
+          : post,
+      ),
     );
   };
 
@@ -814,8 +914,11 @@ export default function PostsContent() {
     setSearchQuery("");
   };
 
-  const handleContact = (post) => {
-    if (!authUser) { router.push("/login"); return; }
+  const handleContact = async (post) => {
+    if (!authUser) {
+      router.push("/login");
+      return;
+    }
     const receiverId = post.authorId;
     if (!receiverId) return;
     const chatUser = {
@@ -825,6 +928,7 @@ export default function PostsContent() {
     };
     addContact(chatUser);
     setSelectedUser(chatUser);
+    await sendPostCardMessage(post, language);
     router.push(`/chat?chatId=${receiverId}`);
   };
 
@@ -835,7 +939,9 @@ export default function PostsContent() {
         <div className="w-full max-w-4xl">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("posts_page_title")}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {t("posts_page_title")}
+              </h1>
               <p className="text-gray-600">{t("posts_page_subtitle")}</p>
             </div>
             {posts.length > 0 && (
@@ -846,7 +952,10 @@ export default function PostsContent() {
             )}
           </div>
 
-          <CategoryGuideSection selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
+          <CategoryGuideSection
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+          />
           <FilterBar
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
@@ -866,17 +975,37 @@ export default function PostsContent() {
           {postsError && (
             <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-emerald-100">
               <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                <svg
+                  className="w-8 h-8 text-emerald-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{t("posts_login_required_title")}</h3>
-              <p className="text-gray-500 text-sm mb-6">{t("posts_login_required_desc")}</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {t("posts_login_required_title")}
+              </h3>
+              <p className="text-gray-500 text-sm mb-6">
+                {t("posts_login_required_desc")}
+              </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link href="/login" className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">
+                <Link
+                  href="/login"
+                  className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm"
+                >
                   {t("posts_login_btn")}
                 </Link>
-                <Link href="/register" className="px-6 py-2.5 border border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors text-sm">
+                <Link
+                  href="/register"
+                  className="px-6 py-2.5 border border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors text-sm"
+                >
                   {t("posts_register_btn")}
                 </Link>
               </div>
@@ -887,7 +1016,9 @@ export default function PostsContent() {
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <ImageIcon className="text-gray-400" size={28} />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">{t("posts_not_found_title")}</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">
+                {t("posts_not_found_title")}
+              </h3>
               <p className="text-gray-500 mb-4">{t("posts_not_found_desc")}</p>
               <button
                 onClick={handleClearFilters}

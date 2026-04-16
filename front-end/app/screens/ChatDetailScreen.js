@@ -14,7 +14,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import ChatHeader from "../components/ChatHeader";
 import ChatInput from "../components/ChatInput";
-import { parseProductChatText, useChatStore } from "../store/useChatStore";
+import {
+  parseProductChatText,
+  parsePostChatText,
+  useChatStore,
+} from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useAppStore } from "../store/useAppStore";
 
@@ -41,9 +45,10 @@ const formatTime = (value) => {
 };
 
 // ── Message Bubble ──
-function MessageBubble({ msg, avatar, authUserId, onOpenProduct }) {
+function MessageBubble({ msg, avatar, authUserId, onOpenProduct, onOpenPost }) {
   const isMe = String(getSenderId(msg?.senderId)) === String(authUserId);
   const productCard = parseProductChatText(msg?.text);
+  const postCard = parsePostChatText(msg?.text);
 
   return (
     <View style={[styles.row, isMe ? styles.rowMe : styles.rowThem]}>
@@ -91,11 +96,61 @@ function MessageBubble({ msg, avatar, authUserId, onOpenProduct }) {
                 </Text>
               </Pressable>
             </View>
+          ) : !!postCard ? (
+            <View style={[styles.productCard, isMe && styles.productCardMe]}>
+              {!!postCard?.image && (
+                <Image
+                  source={{ uri: postCard.image }}
+                  style={styles.productCardImage}
+                />
+              )}
+              <Text
+                style={[
+                  styles.productCardName,
+                  isMe && styles.productCardNameMe,
+                ]}
+                numberOfLines={2}
+              >
+                {postCard.title || "Bài viết"}
+              </Text>
+              {!!postCard?.category && (
+                <Text
+                  style={[
+                    styles.postCardCategory,
+                    isMe && styles.postCardCategoryMe,
+                  ]}
+                >
+                  {postCard.category}
+                </Text>
+              )}
+              <Text
+                style={[
+                  styles.postCardPreview,
+                  isMe && styles.postCardPreviewMe,
+                ]}
+                numberOfLines={2}
+              >
+                {postCard.content || "Xem bài viết để biết thêm chi tiết."}
+              </Text>
+              <Pressable
+                style={[styles.productCardBtn, isMe && styles.productCardBtnMe]}
+                onPress={() => onOpenPost(postCard.postId)}
+              >
+                <Text
+                  style={[
+                    styles.productCardBtnText,
+                    isMe && styles.productCardBtnTextMe,
+                  ]}
+                >
+                  Xem bài viết
+                </Text>
+              </Pressable>
+            </View>
           ) : null}
-          {!!msg?.image && !productCard && (
+          {!!msg?.image && !productCard && !postCard && (
             <Image source={{ uri: msg.image }} style={styles.messageImage} />
           )}
-          {!!msg?.text && !productCard && (
+          {!!msg?.text && !productCard && !postCard && (
             <Text style={[styles.bubbleText, isMe && styles.bubbleTextMe]}>
               {msg.text}
             </Text>
@@ -112,7 +167,7 @@ function MessageBubble({ msg, avatar, authUserId, onOpenProduct }) {
 // ── Main Screen ──
 export default function ChatDetailScreen() {
   const flatListRef = useRef(null);
-  const { navigate, setSelectedProduct } = useAppStore();
+  const { navigate, setSelectedProduct, setSelectedPostId } = useAppStore();
   const { authUser, onlineUsers } = useAuthStore();
   const {
     selectedUser,
@@ -167,6 +222,12 @@ export default function ChatDetailScreen() {
     navigate("product-detail");
   };
 
+  const handleOpenPost = (postId) => {
+    if (!postId) return;
+    setSelectedPostId(postId);
+    navigate("comment");
+  };
+
   if (!selectedUser?._id) {
     return (
       <SafeAreaView style={styles.container}>
@@ -215,6 +276,7 @@ export default function ChatDetailScreen() {
                 avatar={contactAvatar}
                 authUserId={authUser?._id}
                 onOpenProduct={handleOpenProduct}
+                onOpenPost={handleOpenPost}
               />
             )}
             contentContainerStyle={styles.messageList}
@@ -352,6 +414,26 @@ const styles = StyleSheet.create({
   },
   productCardBtnTextMe: {
     color: "#166534",
+  },
+  postCardCategory: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#065F46",
+    paddingHorizontal: 10,
+    marginTop: 4,
+  },
+  postCardCategoryMe: {
+    color: "#D1FAE5",
+  },
+  postCardPreview: {
+    fontSize: 12,
+    color: "#374151",
+    paddingHorizontal: 10,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  postCardPreviewMe: {
+    color: "#ECFDF5",
   },
   msgTime: { fontSize: 11, color: "#9CA3AF", marginTop: 4, marginLeft: 4 },
   msgTimeMe: { textAlign: "right", marginRight: 4 },
