@@ -125,7 +125,7 @@ const translations = {
     aside_info: "Thông tin",
     aside_posts: "Bài viết",
     aside_ai: "Phân Tích Sâu Bệnh",
-    aside_garden: "Vườn",
+    aside_garden: "Mùa vụ canh tác",
     aside_products: "Sản Phẩm",
     aside_statistics: "Thống Kê",
     aside_blog: "Blog",
@@ -1728,7 +1728,7 @@ const translations = {
     season_detail_diary_id: "ID nhật ký",
 
     // vi
-    season_title: "Nhật ký mùa vụ",
+    season_title: "Mùa vụ canh tác",
     season_subtitle: "Theo dõi toàn bộ nhật ký canh tác sầu riêng của bạn",
     season_create_btn: "Tạo mùa vụ mới",
     season_stat_total: "Tổng nhật ký",
@@ -1744,7 +1744,7 @@ const translations = {
     season_showing: "Hiển thị",
     season_showing_unit: "nhật ký",
     season_showing_for: "cho",
-    season_empty_title: "Chưa có nhật ký nào",
+    season_empty_title: "Chưa có mùa vụ canh tác nào",
     season_empty_notfound: "Không tìm thấy nhật ký",
     season_empty_desc:
       "Tạo nhật ký đầu tiên để bắt đầu ghi lại hành trình canh tác",

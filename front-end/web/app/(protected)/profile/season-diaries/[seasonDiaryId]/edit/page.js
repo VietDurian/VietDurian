@@ -584,8 +584,7 @@ export default function EditSeasonDiary() {
                   placeholder={t("edit_season_area_placeholder")}
                   suffix={t("edit_season_area_suffix")}
                   onKeyDown={(e) => {
-                    if (e.key === "-" || e.key === "e" || e.key === "0")
-                      e.preventDefault();
+                    if (e.key === "-" || e.key === "e") e.preventDefault();
                   }}
                 />
                 {formData.area && (
@@ -612,8 +611,7 @@ export default function EditSeasonDiary() {
                   placeholder={t("edit_season_row_placeholder")}
                   suffix={t("edit_season_row_suffix")}
                   onKeyDown={(e) => {
-                    if (e.key === "-" || e.key === "e" || e.key === "0")
-                      e.preventDefault();
+                    if (e.key === "-" || e.key === "e") e.preventDefault();
                   }}
                 />
               </div>
