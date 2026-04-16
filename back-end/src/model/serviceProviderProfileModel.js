@@ -14,11 +14,20 @@ const serviceProviderProfileSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
-        services: {
-            type: String,
-            default: "",
-            trim: true,
-        },
+        services: [
+            {
+                name: {
+                    type: String,
+                    required: true,
+                    trim: true,
+                },
+                image: {
+                    type: String,
+                    required: true,
+                    trim: true,
+                },
+            },
+        ],
         service_areas: {
             type: String,
             default: "",

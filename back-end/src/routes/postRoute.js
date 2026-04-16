@@ -43,6 +43,37 @@ const Router = express.Router();
  *         schema:
  *           type: string
  *         description: Filter by author ID
+ *       - in: query
+ *         name: service
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *             enum:
+ *               - Chuẩn bị đất & trồng mới
+ *               - Cung cấp cây giống
+ *               - Tưới nước
+ *               - Bón phân
+ *               - Phun thuốc
+ *               - Tỉa cành, tạo tán
+ *               - Làm cỏ
+ *               - Xử lý ra hoa
+ *               - Thụ phấn bổ sung
+ *               - Tỉa trái
+ *               - Theo dõi sâu bệnh
+ *               - Chẩn đoán & xử lý bệnh
+ *               - Thu hoạch
+ *               - Phân loại & đóng gói
+ *               - Vận chuyển
+ *               - Nhân công tổng hợp
+ *               - Dịch vụ chăm sóc trọn gói
+ *               - Tư vấn kỹ thuật
+ *               - Đào tạo kỹ thuật
+ *               - Lắp đặt hệ thống tưới
+ *               - Dịch vụ AI / công nghệ
+ *         style: form
+ *         explode: true
+ *         description: Filter by post `type_service` values. Supports repeated query params (`?service=Phun thuốc&service=Tưới nước`) or comma-separated values (`?service=Phun thuốc,Tưới nước`).
  *     responses:
  *       200:
  *         description: A list of general blogs

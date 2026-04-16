@@ -31,9 +31,19 @@ const Router = express.Router();
  *                 description: Business name
  *                 example: "Number One"
  *               services:
- *                 type: string
- *                 description: Services provided
- *                 example: "Phun thuốc, diệt côn trùng, thu hoạch sầu riêng"
+ *                 type: array
+ *                 description: List of services
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       description: Service name
+ *                       example: "Phun thuốc"
+ *                     image:
+ *                       type: string
+ *                       description: Service image URL
+ *                       example: "https://example.com/service-image.jpg"
  *               service_areas:
  *                 type: string
  *                 description: Service areas
@@ -65,8 +75,15 @@ const Router = express.Router();
  *                   type: string
  *                   description: Business name
  *                 services:
- *                   type: string
- *                   description: Services provided
+ *                   type: array
+ *                   description: List of services
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                       image:
+ *                         type: string
  *                 service_areas:
  *                   type: string
  *                   description: Service areas
@@ -115,8 +132,15 @@ const Router = express.Router();
  *                 type: string
  *                 description: Business name
  *               services:
- *                 type: string
- *                 description: Services provided
+ *                 type: array
+ *                 description: List of services
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     image:
+ *                       type: string
  *               service_areas:
  *                 type: string
  *                 description: Service areas
@@ -152,9 +176,19 @@ const Router = express.Router();
  *                 description: Business name
  *                 example: "Number One"
  *               services:
- *                 type: string
- *                 description: Services provided
- *                 example: "Phun thuốc, diệt côn trùng, thu hoạch sầu riêng"
+ *                 type: array
+ *                 description: List of services
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       description: Service name
+ *                       example: "Phun thuốc"
+ *                     image:
+ *                       type: string
+ *                       description: Service image URL
+ *                       example: "https://example.com/service-image.jpg"
  *               service_areas:
  *                 type: string
  *                 description: Service areas
@@ -187,8 +221,15 @@ const Router = express.Router();
  *                   type: string
  *                   description: Business name
  *                 services:
- *                   type: string
- *                   description: Services provided
+ *                   type: array
+ *                   description: List of services
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                       image:
+ *                         type: string
  *                 service_areas:
  *                   type: string
  *                   description: Service areas

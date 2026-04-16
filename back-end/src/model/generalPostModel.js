@@ -20,6 +20,10 @@ const generalPostSchema = new mongoose.Schema(
 			type: String,
 			required: true,
 		},
+		type_service: {
+			type: [String],
+			default: [],
+		},
         image: {
             type: String,
             default: '',

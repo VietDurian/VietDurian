@@ -4,13 +4,59 @@ import { notificationService } from '@/services/notificationService';
 import { favoriteService } from '@/services/favoriteService';
 import User from '@/model/userModel';
 
+
 const TWO_DAYS_IN_MS = 2 * 24 * 60 * 60 * 1000;
+
+const ALLOWED_SERVICE_NAMES = [
+	'Chuẩn bị đất & trồng mới',
+	'Cung cấp cây giống',
+	'Tưới nước',
+	'Bón phân',
+	'Phun thuốc',
+	'Tỉa cành, tạo tán',
+	'Làm cỏ',
+	'Xử lý ra hoa',
+	'Thụ phấn bổ sung',
+	'Tỉa trái',
+	'Theo dõi sâu bệnh',
+	'Chẩn đoán & xử lý bệnh',
+	'Thu hoạch',
+	'Phân loại & đóng gói',
+	'Vận chuyển',
+	'Nhân công tổng hợp',
+	'Dịch vụ chăm sóc trọn gói',
+	'Tư vấn kỹ thuật',
+	'Đào tạo kỹ thuật',
+	'Lắp đặt hệ thống tưới',
+	'Dịch vụ AI / công nghệ',
+];
 
 const normalizeText = (text = '') =>
 	text
 		.normalize('NFD')
 		.replace(/[\u0300-\u036f]/g, '')
 		.toLowerCase();
+
+const ALLOWED_SERVICE_NAME_MAP = new Map(
+	ALLOWED_SERVICE_NAMES.map((name) => [normalizeText(name), name]),
+);
+
+const parseServiceFilter = (filterService) => {
+	if (!filterService) return [];
+
+	const values = Array.isArray(filterService)
+		? filterService
+		: String(filterService)
+				.split(',')
+				.map((item) => item.trim())
+				.filter(Boolean);
+
+	const normalized = values
+		.map((item) => normalizeText(item))
+		.filter((item) => ALLOWED_SERVICE_NAME_MAP.has(item));
+
+	return [...new Set(normalized)];
+};
 
 // Create a new general post
 const createGeneralPost = async ({
@@ -56,11 +102,14 @@ const getGeneralPost = async ({
 	search,
 	sort,
 	author_id,
+	filter_service,
 }) => {
 	try {
 		const query = {};
 		const sortOption = {};
 		const shouldFilterBySearch = Boolean(search);
+		const requestedServiceFilters = parseServiceFilter(filter_service);
+		const shouldFilterByService = requestedServiceFilters.length > 0;
 		const normalizedSearch = normalizeText(search || '');
 
 		if (status) {
@@ -111,13 +160,29 @@ const getGeneralPost = async ({
 				};
 			});
 
-		if (!shouldFilterBySearch) {
-			return postsWithAuthor;
+		let filteredPosts = postsWithAuthor;
+
+		if (shouldFilterByService) {
+			filteredPosts = filteredPosts.filter((post) => {
+				const postServiceSet = new Set(
+					(Array.isArray(post.type_service) ? post.type_service : [])
+						.map((serviceName) => normalizeText(serviceName || ''))
+						.filter(Boolean),
+				);
+
+				if (postServiceSet.size === 0) return false;
+
+				return requestedServiceFilters.some((serviceName) =>
+					postServiceSet.has(serviceName),
+				);
+			});
 		}
 
-		const filteredPosts = postsWithAuthor.filter((post) =>
-			normalizeText(post.title || '').includes(normalizedSearch),
-		);
+		if (shouldFilterBySearch) {
+			filteredPosts = filteredPosts.filter((post) =>
+				normalizeText(post.title || '').includes(normalizedSearch),
+			);
+		}
 
 		return filteredPosts;
 	} catch (error) {
