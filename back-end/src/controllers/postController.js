@@ -3,10 +3,11 @@ import { postService } from '@/services/postService';
 // Get blogs general
 const getGeneralPost = async (req, res, next) => {
 	try {
-		const { status, category, search, sort, author_id } = req.query;
+		const { status, category, service, search, sort, author_id } = req.query;
 		const posts = await postService.getGeneralPost({
 			status,
 			category,
+			filter_service: service,
 			search,
 			sort,
 			author_id,
