@@ -550,8 +550,7 @@ export default function CreateSeasonDiary() {
                   placeholder={t("create_area_placeholder")}
                   suffix={t("create_area_unit")}
                   onKeyDown={(e) => {
-                    if (e.key === "-" || e.key === "e" || e.key === "0")
-                      e.preventDefault();
+                    if (e.key === "-" || e.key === "e") e.preventDefault();
                   }}
                 />
                 {formData.area && (
@@ -576,8 +575,7 @@ export default function CreateSeasonDiary() {
                   placeholder={t("create_area_placeholder")}
                   suffix={t("create_rowbed_unit")}
                   onKeyDown={(e) => {
-                    if (e.key === "-" || e.key === "e" || e.key === "0")
-                      e.preventDefault();
+                    if (e.key === "-" || e.key === "e") e.preventDefault();
                   }}
                 />
               </div>
