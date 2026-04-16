@@ -45,6 +45,7 @@ const createSeasonDiary = async (req, res, next) => {
 			latitude,
 			crop_variety,
 			area,
+			image,
 		} = req.body;
 
 		if (
@@ -54,12 +55,13 @@ const createSeasonDiary = async (req, res, next) => {
 			!longitude ||
 			!latitude ||
 			!crop_variety ||
-			!area
+			!area ||
+			!image
 		) {
 			return res.status(400).json({
 				code: 400,
 				message:
-					'Thiếu dữ liệu bắt buộc: garden_name, farmer_name, location, longitude, latitude, crop_variety, area',
+					'Thiếu dữ liệu bắt buộc: garden_name, farmer_name, location, longitude, latitude, crop_variety, area, image',
 			});
 		}
 
