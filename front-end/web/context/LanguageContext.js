@@ -124,7 +124,7 @@ const translations = {
     // AsideBar
     aside_info: "Thông tin",
     aside_posts: "Bài viết",
-    aside_ai: "AI",
+    aside_ai: "Phân Tích Sâu Bệnh",
     aside_garden: "Vườn",
     aside_products: "Sản Phẩm",
     aside_statistics: "Thống Kê",
@@ -2200,7 +2200,7 @@ const translations = {
     // AsideBar
     aside_info: "Info",
     aside_posts: "Posts",
-    aside_ai: "AI",
+    aside_ai: "Analyze Disease",
     aside_garden: "Garden",
     aside_products: "Products",
     aside_statistics: "Statistics",
