@@ -322,48 +322,53 @@ export default function SeasonDiaryDetailPage() {
             </p>
           </div>
 
-          <div className="flex gap-3 flex-wrap">
+          <div className="w-full lg:w-auto lg:min-w-90 space-y-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              {[
+                {
+                  label: t("season_detail_area_label"),
+                  value: `${fmt(data.area)} ${t("season_detail_area_unit")}`,
+                },
+                {
+                  label: t("season_detail_row_label"),
+                  value: `${fmt(data.row_bed_count)} ${t("season_detail_row_unit")}`,
+                },
+              ].map((c) => (
+                <div
+                  key={c.label}
+                  className="bg-white/15 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-center"
+                >
+                  <p className="text-emerald-100 text-xs truncate">{c.label}</p>
+                  <p className="text-white font-bold text-sm mt-0.5 truncate">
+                    {c.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
             {!isFinalStatus && (
-              <button
-                onClick={() => setShowFinishSeasonDiary(true)}
-                disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
-                className="cursor-pointer flex items-center gap-1.5 border border-emerald-200 bg-white text-sm font-medium text-emerald-500 px-4 py-2 rounded-xl hover:bg-emerald-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <Check size={13} />
-                {isSeasonDiaryFinishing
-                  ? t("season_detail_marking")
-                  : t("season_detail_mark_done_btn")}
-              </button>
-            )}
-            {[
-              {
-                label: t("season_detail_area_label"),
-                value: `${fmt(data.area)} ${t("season_detail_area_unit")}`,
-              },
-              {
-                label: t("season_detail_row_label"),
-                value: `${fmt(data.row_bed_count)} ${t("season_detail_row_unit")}`,
-              },
-            ].map((c) => (
-              <div
-                key={c.label}
-                className="bg-white/15 rounded-xl px-4 py-3 text-center min-w-27.5"
-              >
-                <p className="text-emerald-100 text-xs">{c.label}</p>
-                <p className="text-white font-bold text-sm mt-0.5">{c.value}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                <button
+                  onClick={() => setShowFinishSeasonDiary(true)}
+                  disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
+                  className="cursor-pointer inline-flex w-full items-center justify-center gap-2 border border-emerald-200 bg-white text-sm font-semibold text-emerald-600 px-4 py-2.5 rounded-xl hover:bg-emerald-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Check size={14} />
+                  {isSeasonDiaryFinishing
+                    ? t("season_detail_marking")
+                    : t("season_detail_mark_done_btn")}
+                </button>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
+                  className="cursor-pointer inline-flex w-full items-center justify-center gap-2 border border-red-200 bg-white text-sm font-semibold text-red-600 px-4 py-2.5 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Trash2 size={14} />
+                  {isSeasonDiaryDeleting
+                    ? t("season_detail_deleting")
+                    : t("season_detail_delete_btn")}
+                </button>
               </div>
-            ))}
-            {!isFinalStatus && (
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
-                className="cursor-pointer flex items-center gap-1.5 border border-red-200 bg-white text-sm font-medium text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <Trash2 size={13} />
-                {isSeasonDiaryDeleting
-                  ? t("season_detail_deleting")
-                  : t("season_detail_delete_btn")}
-              </button>
             )}
           </div>
         </div>

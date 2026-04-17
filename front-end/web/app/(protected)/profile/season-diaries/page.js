@@ -336,12 +336,12 @@ function SeasonDiaryCard({ diary, statusConfig, t }) {
   };
 
   return (
-    <div className="h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300 group flex flex-col">
+    <div
+      onClick={handleDetail}
+      className="h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300 group flex flex-col cursor-pointer hover:-translate-y-1.5"
+    >
       {/* Card header – colored band */}
-      <div
-        className="relative p-4 bg-linear-to-br from-emerald-600 to-teal-700 cursor-pointer shrink-0"
-        onClick={handleDetail}
-      >
+      <div className="relative p-4 bg-linear-to-br from-emerald-600 to-teal-700  shrink-0">
         {/* Planting area code */}
         <div className="flex items-center justify-between mb-3">
           <span className="flex items-center gap-1 bg-black/30 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md font-mono text-nowrap">
