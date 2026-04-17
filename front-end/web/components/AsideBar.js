@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { usePermissionStore } from "@/store/usePermissionStore";
+import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 
 const SidebarItem = ({
   icon: Icon,
@@ -105,6 +106,7 @@ const SidebarItem = ({
 
 export default function AsideBar({ role }) {
   const { verifyCCCDStatus, getVerifyCCCDStatus } = usePermissionStore();
+  const seasonDiaryDetail = useSeasonDiaryStore((s) => s.seasonDiaryDetail);
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useLanguage();
@@ -128,6 +130,9 @@ export default function AsideBar({ role }) {
 
   const isFarmerSeasonDiarySubRoute =
     role === "farmer" && !!seasonDiaryId && seasonDiaryId !== "create";
+  const isSeasonDiaryCompleted =
+    seasonDiaryDetail?._id === seasonDiaryId &&
+    seasonDiaryDetail?.status === "Completed";
   const isFarmerProductsSubRoute =
     role === "farmer" && !!productId && productId !== "create";
   const shouldShowVerification =
@@ -175,6 +180,7 @@ export default function AsideBar({ role }) {
               icon: Edit,
               label: t("aside_edit"),
               href: `/profile/season-diaries/${seasonDiaryId}/edit`,
+              disabled: isSeasonDiaryCompleted,
             },
           ];
         } else if (isFarmerProductsSubRoute) {
