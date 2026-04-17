@@ -32,29 +32,98 @@ function UploadZone({
   description,
   file,
   onFileChange,
+  files,
+  onFilesChange,
+  multiple = false,
+  maxFiles = 1,
   className,
   icon: Icon,
   receivedLabel,
   fileTypeHint,
+  maxFileSizeMB = 5,
+  fileTooLargeText,
 }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
 
+  const selectedFiles = multiple ? files || [] : file ? [file] : [];
+  const hasFiles = selectedFiles.length > 0;
+  const canAddMore = !multiple || selectedFiles.length < maxFiles;
+  const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
+
+  const getValidFiles = (incomingFiles) => {
+    const oversizedFiles = incomingFiles.filter(
+      (incoming) => incoming.size > maxFileSizeBytes,
+    );
+
+    if (oversizedFiles.length > 0) {
+      toast.error(
+        fileTooLargeText || `Each image must be up to ${maxFileSizeMB}MB`,
+      );
+    }
+
+    return incomingFiles.filter(
+      (incoming) => incoming.size <= maxFileSizeBytes,
+    );
+  };
+
+  const applyFiles = (incomingFiles) => {
+    const validFiles = getValidFiles(incomingFiles);
+
+    if (validFiles.length === 0) {
+      return;
+    }
+
+    if (!multiple) {
+      onFileChange?.(validFiles[0] || null);
+      return;
+    }
+
+    const nextFiles = [...selectedFiles];
+    for (const incoming of validFiles) {
+      if (nextFiles.length >= maxFiles) break;
+
+      const duplicated = nextFiles.some(
+        (f) =>
+          f.name === incoming.name &&
+          f.size === incoming.size &&
+          f.lastModified === incoming.lastModified,
+      );
+
+      if (!duplicated) {
+        nextFiles.push(incoming);
+      }
+    }
+
+    onFilesChange?.(nextFiles);
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     setDragging(false);
-    const dropped = e.dataTransfer.files[0];
-    if (dropped) onFileChange(dropped);
+
+    if (!canAddMore) return;
+
+    const droppedFiles = Array.from(e.dataTransfer.files || []);
+    if (droppedFiles.length > 0) {
+      applyFiles(droppedFiles);
+    }
   };
 
-  const handleRemove = (e) => {
+  const handleRemove = (e, removeIndex = 0) => {
     e.stopPropagation();
-    onFileChange(null);
+
+    if (!multiple) {
+      onFileChange?.(null);
+    } else {
+      const nextFiles = selectedFiles.filter(
+        (_, index) => index !== removeIndex,
+      );
+      onFilesChange?.(nextFiles);
+    }
+
     if (inputRef.current) inputRef.current.value = "";
   };
-
-  const previewUrl =
-    file && file.type?.startsWith("image/") ? URL.createObjectURL(file) : null;
 
   return (
     <div
@@ -69,62 +138,129 @@ function UploadZone({
           <p className="text-sm font-semibold text-gray-800">{label}</p>
           <p className="text-xs text-gray-400 mt-0.5">{description}</p>
         </div>
-        {file && (
+        {hasFiles && (
           <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full shrink-0">
             <CheckCircle className="w-3 h-3" />
-            {receivedLabel}
+            {multiple
+              ? `${receivedLabel} (${selectedFiles.length}/${maxFiles})`
+              : receivedLabel}
           </span>
         )}
       </div>
 
       {/* Drop zone */}
       <div
-        onClick={() => !file && inputRef.current?.click()}
+        onClick={() => canAddMore && inputRef.current?.click()}
         onDragOver={(e) => {
           e.preventDefault();
-          setDragging(true);
+          if (canAddMore) setDragging(true);
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         className={[
           "relative rounded-xl border-2 border-dashed transition-all duration-200 overflow-hidden",
-          file
+          hasFiles
             ? "border-emerald-200 bg-emerald-50/40 cursor-default"
             : dragging
               ? "border-emerald-400 bg-emerald-50 cursor-pointer scale-[1.01]"
               : "border-gray-200 bg-gray-50/60 hover:border-emerald-300 hover:bg-emerald-50/30 cursor-pointer",
         ].join(" ")}
       >
-        {file ? (
+        {hasFiles ? (
           /* File preview */
-          <div className="flex items-center gap-3 p-4">
-            {previewUrl ? (
-              <Image
-                src={previewUrl}
-                alt={`${hint} preview`}
-                width={96}
-                height={96}
-                className="w-50 h-full max-h-33 object-cover rounded-lg border border-emerald-100 shrink-0"
-              />
-            ) : (
-              <div className="w-16 h-11 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                <span className="text-[10px] font-bold text-emerald-600 tracking-widest">
-                  {file.name.split(".").pop().toUpperCase()}
-                </span>
+          multiple ? (
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {selectedFiles.map((selected, index) => {
+                  const previewUrl = selected.type?.startsWith("image/")
+                    ? URL.createObjectURL(selected)
+                    : null;
+
+                  return (
+                    <div
+                      key={`${selected.name}-${selected.lastModified}-${index}`}
+                      className="relative rounded-lg border border-emerald-100 bg-white overflow-hidden"
+                    >
+                      {previewUrl ? (
+                        <Image
+                          src={previewUrl}
+                          alt={`${hint} preview ${index + 1}`}
+                          width={160}
+                          height={96}
+                          className="w-full h-24 object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-24 bg-emerald-100 flex items-center justify-center">
+                          <span className="text-[10px] font-bold text-emerald-600 tracking-widest">
+                            {selected.name.split(".").pop().toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={(e) => handleRemove(e, index)}
+                        className="absolute top-2 right-2 w-6 h-6 rounded-md border border-gray-200 bg-white/95 flex items-center justify-center text-gray-500 hover:text-red-500 hover:border-red-200 transition-colors cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+
+                      <div className="px-2 py-1.5 bg-white/95">
+                        <p className="text-[11px] text-gray-500 truncate">
+                          {(selected.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {canAddMore && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      inputRef.current?.click();
+                    }}
+                    className="h-24 rounded-lg border border-dashed border-emerald-300 bg-emerald-50/50 text-emerald-600 text-xs font-medium hover:bg-emerald-50 transition-colors cursor-pointer"
+                  >
+                    + {hint}
+                  </button>
+                )}
               </div>
-            )}
-            <div className="absolute bottom-3 right-3 flex-1 min-w-0">
-              <p className="text-xs text-gray-400 mt-0.5">
-                {(file.size / 1024 / 1024).toFixed(2)} MB
+
+              <p className="text-xs text-gray-500">
+                {selectedFiles.length}/{maxFiles} files selected
               </p>
             </div>
-            <button
-              onClick={handleRemove}
-              className="absolute top-3 right-3 w-7 h-7 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors shrink-0 cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          ) : (
+            <div className="flex items-center gap-3 p-4">
+              {selectedFiles[0]?.type?.startsWith("image/") ? (
+                <Image
+                  src={URL.createObjectURL(selectedFiles[0])}
+                  alt={`${hint} preview`}
+                  width={96}
+                  height={96}
+                  className="w-50 h-full max-h-33 object-cover rounded-lg border border-emerald-100 shrink-0"
+                />
+              ) : (
+                <div className="w-16 h-11 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                  <span className="text-[10px] font-bold text-emerald-600 tracking-widest">
+                    {selectedFiles[0]?.name.split(".").pop().toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div className="absolute bottom-3 right-3 flex-1 min-w-0">
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {(selectedFiles[0]?.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+              <button
+                onClick={handleRemove}
+                className="absolute top-3 right-3 w-7 h-7 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors shrink-0 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )
         ) : (
           /* Empty upload state */
           <div className="flex flex-col items-center justify-center py-9 px-4 gap-2">
@@ -140,8 +276,15 @@ function UploadZone({
           ref={inputRef}
           type="file"
           accept=".jpg,.jpeg,.png,.heic"
+          multiple={multiple}
           className="hidden"
-          onChange={(e) => onFileChange(e.target.files[0] || null)}
+          onChange={(e) => {
+            const incomingFiles = Array.from(e.target.files || []);
+            if (incomingFiles.length > 0) {
+              applyFiles(incomingFiles);
+            }
+            e.target.value = "";
+          }}
         />
       </div>
     </div>
@@ -155,14 +298,18 @@ export default function SubmitProofPage() {
   const isVi = language === "vi";
   const [frontFile, setFrontFile] = useState(null);
   const [backFile, setBackFile] = useState(null);
-  const [certificate, setCertificate] = useState(null);
+  const [certificateFiles, setCertificateFiles] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
   const { submitProof, isSubmittingProof } = usePermissionStore();
   const router = useRouter();
 
   const canSubmit = Boolean(
-    frontFile && backFile && certificate && !isSubmittingProof && !uploading,
+    frontFile &&
+    backFile &&
+    certificateFiles.length > 0 &&
+    !isSubmittingProof &&
+    !uploading,
   );
 
   const texts = isVi
@@ -184,10 +331,11 @@ export default function SubmitProofPage() {
         backLabel: "Mặt sau",
         backDesc: "Chọn ảnh CCCD mặt sau của bạn",
         certHint: "Nhấn để tải ảnh giấy chứng nhận",
-        certLabel: "Giấy chứng nhận",
-        certDesc: "Chọn ảnh chứng nhận của bạn",
+        certLabel: "Các chứng nhận liên quan",
+        certDesc: "Chọn tối đa 5 ảnh chứng nhận của bạn",
         receivedLabel: "Đã nhận",
         fileTypeHint: "PNG hoặc JPG tối đa 5MB",
+        fileTooLargeText: "Mỗi ảnh chỉ được tối đa 5MB",
         importantTitle: "Thông tin quan trọng",
         importantItems: [
           "Đảm bảo CCCD của bạn được đặt trên bề mặt phẳng với ánh sáng tốt.",
@@ -224,10 +372,11 @@ export default function SubmitProofPage() {
         backLabel: "Back side",
         backDesc: "Choose back ID image",
         certHint: "Click to upload certificate",
-        certLabel: "Certificate",
-        certDesc: "Choose your certificate image",
+        certLabel: "Other Certificates",
+        certDesc: "Choose up to 5 certificate images",
         receivedLabel: "Received",
         fileTypeHint: "PNG or JPG up to 5MB",
+        fileTooLargeText: "Each image must be up to 5MB",
         importantTitle: "Important information",
         importantItems: [
           "Place your ID card on a flat surface with good lighting.",
@@ -255,16 +404,23 @@ export default function SubmitProofPage() {
       toast.loading(texts.toastUploading);
 
       // Upload files to Cloudinary via backend
-      const [frontProof, backProof, certProof] = await Promise.all([
+      const [frontProof, backProof, certProofs] = await Promise.all([
         cloudinaryService.uploadProofToCloudinary(frontFile, "cccd_front"),
         cloudinaryService.uploadProofToCloudinary(backFile, "cccd_back"),
-        cloudinaryService.uploadProofToCloudinary(certificate, "certificate"),
+        Promise.all(
+          certificateFiles.map((certificateFile) =>
+            cloudinaryService.uploadProofToCloudinary(
+              certificateFile,
+              "certificate",
+            ),
+          ),
+        ),
       ]);
 
       toast.dismiss();
 
       const payload = {
-        proofs: [frontProof, backProof, certProof],
+        proofs: [frontProof, backProof, ...certProofs],
       };
 
       const result = await submitProof(payload);
@@ -283,7 +439,7 @@ export default function SubmitProofPage() {
   const handleReset = () => {
     setFrontFile(null);
     setBackFile(null);
-    setCertificate(null);
+    setCertificateFiles([]);
     setSubmitted(false);
   };
 
@@ -345,6 +501,7 @@ export default function SubmitProofPage() {
             onFileChange={setFrontFile}
             receivedLabel={texts.receivedLabel}
             fileTypeHint={texts.fileTypeHint}
+            fileTooLargeText={texts.fileTooLargeText}
           />
 
           {/* Back Side Upload */}
@@ -357,6 +514,7 @@ export default function SubmitProofPage() {
             onFileChange={setBackFile}
             receivedLabel={texts.receivedLabel}
             fileTypeHint={texts.fileTypeHint}
+            fileTooLargeText={texts.fileTooLargeText}
           />
 
           {/* Certificate Upload */}
@@ -364,12 +522,15 @@ export default function SubmitProofPage() {
             hint={texts.certHint}
             label={texts.certLabel}
             description={texts.certDesc}
-            file={certificate}
+            files={certificateFiles}
             icon={Scroll}
-            onFileChange={setCertificate}
+            onFilesChange={setCertificateFiles}
+            multiple
+            maxFiles={5}
             className={"col-span-1 lg:col-span-2"}
             receivedLabel={texts.receivedLabel}
             fileTypeHint={texts.fileTypeHint}
+            fileTooLargeText={texts.fileTooLargeText}
           />
         </div>
 
