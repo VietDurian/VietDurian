@@ -173,6 +173,8 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+
+
   const validateContact = (type, value) => {
     if (!value.trim()) return t("edit_post_contact_required");
     if (type === "phone") {
@@ -282,6 +284,8 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   };
 
   if (!isOpen || !post) return null;
+
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -530,6 +534,22 @@ const Post = ({
   const [showMenu, setShowMenu] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
+  const TypeServiceChips = ({ typeService }) => {
+    if (!typeService || typeService.length === 0) return null;
+    return (
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {typeService.map((name) => (
+          <span
+            key={name}
+            className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold"
+          >
+            {name}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   useEffect(() => {
     setIsLiked(post.isLiked || false);
   }, [post.isLiked]);
@@ -550,8 +570,8 @@ const Post = ({
       setIsLiked(!newState);
       toast.error(
         err?.response?.data?.message ||
-          err?.message ||
-          t("profile_posts_like_fail"),
+        err?.message ||
+        t("profile_posts_like_fail"),
       );
     } finally {
       setIsTogglingFavorite(false);
@@ -568,9 +588,9 @@ const Post = ({
 
   const cfg = post.category
     ? categoryConfig[post.category] || {
-        icon: LayoutGrid,
-        bg: "from-gray-500 to-slate-500",
-      }
+      icon: LayoutGrid,
+      bg: "from-gray-500 to-slate-500",
+    }
     : null;
 
   return (
@@ -682,9 +702,13 @@ const Post = ({
             {post.title}
           </h3>
         )}
+
+
         <p className="text-base text-gray-600 leading-relaxed mb-4 whitespace-pre-wrap">
           {post.content}
         </p>
+
+        <TypeServiceChips typeService={post.type_service} />
 
         {post.link && (
           <div className="mb-4">
@@ -823,6 +847,7 @@ export default function PostsPage() {
             comments: post.comments_count || 0,
             status: post.status || "progressing",
             isLiked: favoritePostIds.has(post._id),
+            type_service: post.type_service || [],
           }));
         setPosts(normalized);
         const withComments = await Promise.all(

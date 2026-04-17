@@ -162,8 +162,8 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          err?.message ||
-          t("report_error_submit_fail"),
+        err?.message ||
+        t("report_error_submit_fail"),
       );
     } finally {
       setIsSubmitting(false);
@@ -248,11 +248,10 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                         if (reason !== t("report_reason_other"))
                           setCustomReason("");
                       }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${
-                        selectedReason === reason
-                          ? "border-orange-400 bg-orange-50 text-orange-700"
-                          : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-                      }`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${selectedReason === reason
+                        ? "border-orange-400 bg-orange-50 text-orange-700"
+                        : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                        }`}
                     >
                       {reason}
                     </button>
@@ -833,7 +832,22 @@ const FavoritePostCard = ({
   const [showMenu, setShowMenu] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const { user } = useAuth();
-
+  // Component hiện chips dịch vụ trong post card
+  const TypeServiceChips = ({ typeService }) => {
+    if (!typeService || typeService.length === 0) return null;
+    return (
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {typeService.map((name) => (
+          <span
+            key={name}
+            className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold"
+          >
+            {name}
+          </span>
+        ))}
+      </div>
+    );
+  };
   useEffect(() => {
     setCommentCount(post.post_id?.comments_count || 0);
   }, [post.post_id?.comments_count]);
@@ -906,9 +920,9 @@ const FavoritePostCard = ({
   const canEditDelete = isOwnPost();
   const cfg = post.post_id?.category
     ? categoryConfig[post.post_id.category] || {
-        icon: LayoutGrid,
-        bg: "from-gray-500 to-slate-500",
-      }
+      icon: LayoutGrid,
+      bg: "from-gray-500 to-slate-500",
+    }
     : null;
 
   return (
@@ -1044,10 +1058,13 @@ const FavoritePostCard = ({
             {post.post_id.title}
           </h3>
         )}
+
+
+
         <div className="text-base text-gray-600 leading-relaxed mb-4">
           <p className="whitespace-pre-wrap">{post.post_id?.content}</p>
         </div>
-
+        <TypeServiceChips typeService={post.post_id?.type_service} />
         {post.post_id?.contact && (
           <div className="mb-4">
             <span className="text-sm font-semibold text-gray-500">
@@ -1174,8 +1191,8 @@ export default function FavoritePostsModal() {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          err?.message ||
-          t("fav_posts_load_fail"),
+        err?.message ||
+        t("fav_posts_load_fail"),
       );
     } finally {
       setLoading(false);
@@ -1218,7 +1235,7 @@ export default function FavoritePostsModal() {
     try {
       try {
         await favoriteAPI.removeFavorite(deletingPostId);
-      } catch {}
+      } catch { }
       await deletePost(deletingPostId);
       setFavorites((prev) =>
         prev.filter((fav) => {
