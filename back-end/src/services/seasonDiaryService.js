@@ -8,7 +8,7 @@ import { Product } from '@/model/productModel.js';
 import createError from 'http-errors';
 import mongoose from 'mongoose';
 
-const VALID_STATUSES = ['In progressing', 'Completed'];
+const VALID_STATUSES = ['Stopped', 'In progressing', 'Completed'];
 
 const escapeRegex = (text = '') =>
 	text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -139,7 +139,12 @@ const updateSeasonDiary = async ({ seasonDiaryId, data }) => {
 			throw createError(404, 'Không tìm thấy nhật ký mùa vụ');
 		}
 
-		delete data.status;
+		if (Object.prototype.hasOwnProperty.call(data, 'status')) {
+			if (!VALID_STATUSES.includes(data.status)) {
+				throw createError(400, 'Giá trị trạng thái không hợp lệ');
+			}
+		}
+
 		delete data.end_date;
 
 		if (typeof data.garden_name === 'string') {
