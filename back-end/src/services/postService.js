@@ -64,6 +64,7 @@ const createGeneralPost = async ({
 	category,
 	title,
 	content,
+	type_service,
 	image,
 	contact,
 }) => {
@@ -80,14 +81,20 @@ const createGeneralPost = async ({
 			}
 		}
 
-		const newPost = new GeneralPostModel({
+		const newPostData = {
 			author_id,
 			category,
 			title,
 			content,
 			image: imageUrl,
 			contact,
-		});
+		};
+
+		if (Array.isArray(type_service)) {
+			newPostData.type_service = type_service;
+		}
+
+		const newPost = new GeneralPostModel(newPostData);
 		const savedPost = await newPost.save();
 		return savedPost;
 	} catch (error) {
@@ -193,6 +200,10 @@ const getGeneralPost = async ({
 // Update a general post
 const updateGeneralPost = async (post_id, data) => {
 	try {
+		if (!Array.isArray(data.type_service)) {
+			delete data.type_service;
+		}
+
 		if (data.image) {
 			try {
 				const result = await cloudinary.uploader.upload(data.image, {
