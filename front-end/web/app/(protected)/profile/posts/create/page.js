@@ -16,26 +16,45 @@ import Image from "next/image";
 // Thay getCategoriesByRole
 const getCategoriesByRole = (role) => {
   switch (role) {
-    case "trader": return ["Sản phẩm"];
-    case "farmer": return ["Thuê dịch vụ", "Sản phẩm"];
+    case "trader": return ["Thu mua sầu riêng"];
+    case "farmer": return ["Thuê dịch vụ lao động"];
     case "serviceProvider": return ["Dịch vụ"];
     case "contentExpert": return ["Kinh nghiệm"];
     default: return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
   }
 };
+
+const CATEGORY_LABEL_TO_VALUE = {
+  "Thu mua sầu riêng": "Sản phẩm",
+  "Thuê dịch vụ lao động": "Thuê dịch vụ",
+};
 const TITLE_PLACEHOLDERS = {
   "Dịch vụ": "VD: Dọn cỏ, làm vườn, phun thuốc, cắt tỉa cành...",
-  "Sản phẩm": "VD: Bán sầu riêng Ri6, phân bón hữu cơ, cây giống...",
-  "Kinh nghiệm": "VD: Kỹ thuật bón phân, cách xử lý sâu bệnh...",
+  "Thu mua sầu riêng": "VD: Thu mua sầu riêng Ri6, Monthong, giá tốt...",
+  "Thuê dịch vụ lao động": "VD: Cần thuê người hái quả, chăm vườn...",
   "Thuê dịch vụ": "VD: Cần thuê người phun thuốc, hái quả, chăm vườn...",
   "Khác": "VD: Thông báo, hỏi đáp, tin tức nông nghiệp...",
 };
 
+// ─── Danh sách 10 loại dịch vụ cố định ───────────────────────────────────────
+const SERVICE_OPTIONS = [
+  { name: "Chuẩn bị đất & cây giống", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/1_q5ex4r.jpg" },
+  { name: "Tưới nước", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/2_b2vbpy.jpg" },
+  { name: "Bón phân", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/3_cf0zcj.jpg" },
+  { name: "Phun thuốc", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/4_noshkk.jpg" },
+  { name: "Tỉa cành, tạo tán", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/5_lkgztf.jpg" },
+  { name: "Làm cỏ", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/6_cnbn3r.jpg" },
+  { name: "Xử lý ra hoa", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/7_q3beeu.jpg" },
+  { name: "Thụ phấn bổ sung", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/8_kmkqs3.jpg" },
+  { name: "Tỉa trái", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/9_k3pvls.jpg" },
+  { name: "Thu hoạch", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/10_b9jovt.jpg" },
+];
+
 const PHONE_REGEX = /^(0[3|5|7|8|9])+([0-9]{8})$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// ─── Service Selector (chỉ hiện services từ profile) ─────────────────────────
-const ProfileServiceSelector = ({ availableServices, selectedServices, onChange }) => {
+// ─── Service Selector dùng chung (chip toggle) ────────────────────────────────
+const ServiceChipSelector = ({ availableServices, selectedServices, onChange }) => {
   const toggleService = (svc) => {
     const exists = selectedServices.some((s) => s.name === svc.name);
     if (exists) onChange(selectedServices.filter((s) => s.name !== svc.name));
@@ -93,7 +112,8 @@ export default function CreatePostPage() {
 
   // ── Service Provider extras ───────────────────────────
   const isServiceProvider = user?.role === "serviceProvider";
-  const [profileServices, setProfileServices] = useState([]); // từ resume
+  const isFarmer = user?.role === "farmer";
+  const [profileServices, setProfileServices] = useState([]); // từ resume (serviceProvider)
   const [selectedTypeServices, setSelectedTypeServices] = useState([]);
 
   useEffect(() => {
@@ -134,10 +154,16 @@ export default function CreatePostPage() {
   const handleCategoryChange = (cat) => {
     setCategory(cat);
     setDropdownOpen(false);
-    if (cat !== "Dịch vụ") setSelectedTypeServices([]);
+    setSelectedTypeServices([]);
   };
 
-  const showServiceSelector = isServiceProvider && category === "Dịch vụ";
+  // Hiện service selector cho serviceProvider (category Dịch vụ) hoặc farmer (category Thuê dịch vụ lao động)
+  const showServiceSelectorForProvider = isServiceProvider && category === "Dịch vụ";
+  const showServiceSelectorForFarmer = isFarmer && category === "Thuê dịch vụ lao động";
+  const showServiceSelector = showServiceSelectorForProvider || showServiceSelectorForFarmer;
+
+  // Nguồn dịch vụ: serviceProvider lấy từ profile, farmer lấy toàn bộ SERVICE_OPTIONS
+  const availableServices = showServiceSelectorForFarmer ? SERVICE_OPTIONS : profileServices;
 
   const canSubmit =
     Boolean(category) &&
@@ -173,13 +199,13 @@ export default function CreatePostPage() {
     setIsSubmitting(true);
     try {
       const payload = {
-        category,
+        category: CATEGORY_LABEL_TO_VALUE[category] || category,
         title: title.trim(),
         content: content.trim(),
         image: imageData,
         contact: contact.trim(),
       };
-      // Chỉ gửi type_service nếu là serviceProvider + category Dịch vụ + có chọn
+      // Gửi type_service nếu có chọn dịch vụ (serviceProvider hoặc farmer)
       if (showServiceSelector && selectedTypeServices.length > 0) {
         payload.type_service = selectedTypeServices.map((s) => s.name);
       }
@@ -270,18 +296,20 @@ export default function CreatePostPage() {
               </div>
             </div>
 
-            {/* ── Dịch vụ cung cấp (chỉ serviceProvider + category Dịch vụ) ── */}
+            {/* ── Dịch vụ (serviceProvider: từ profile | farmer: toàn bộ SERVICE_OPTIONS) ── */}
             {showServiceSelector && (
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <Wrench size={15} className="text-emerald-600" />
-                  Dịch vụ cung cấp
+                  {showServiceSelectorForFarmer ? "Dịch vụ cần thuê" : "Dịch vụ cung cấp"}
                 </label>
                 <p className="text-xs text-gray-500">
-                  Chọn dịch vụ bạn muốn giới thiệu trong bài đăng này
+                  {showServiceSelectorForFarmer
+                    ? "Chọn loại dịch vụ bạn muốn thuê trong bài đăng này"
+                    : "Chọn dịch vụ bạn muốn giới thiệu trong bài đăng này"}
                 </p>
-                <ProfileServiceSelector
-                  availableServices={profileServices}
+                <ServiceChipSelector
+                  availableServices={availableServices}
                   selectedServices={selectedTypeServices}
                   onChange={setSelectedTypeServices}
                 />

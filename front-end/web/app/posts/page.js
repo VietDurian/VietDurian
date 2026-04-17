@@ -16,6 +16,7 @@ import {
   ChevronDown,
   Info,
   Flag,
+  CheckCircle,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -36,6 +37,41 @@ const categoryConfig = {
   "Thuê dịch vụ": { icon: HandCoins, bg: "from-purple-500 to-violet-500" },
   Khác: { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" },
 };
+
+const CATEGORY_DISPLAY_LABEL = {
+  "Sản phẩm": "Thu mua sầu riêng",
+  "Thuê dịch vụ": "Thuê dịch vụ lao động",
+};
+
+// ─── Danh sách tag service để filter ────────────────────────────────────────
+const SERVICE_FILTER_OPTIONS = [
+  "Chuẩn bị đất & cây giống",
+  "Tưới nước",
+  "Bón phân",
+  "Phun thuốc",
+  "Tỉa cành, tạo tán",
+  "Làm cỏ",
+  "Xử lý ra hoa",
+  "Thụ phấn bổ sung",
+  "Tỉa trái",
+  "Thu hoạch",
+];
+
+const SERVICE_OPTIONS = [
+  { name: "Chuẩn bị đất & cây giống", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/1_q5ex4r.jpg" },
+  { name: "Tưới nước", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/2_b2vbpy.jpg" },
+  { name: "Bón phân", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/3_cf0zcj.jpg" },
+  { name: "Phun thuốc", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/4_noshkk.jpg" },
+  { name: "Tỉa cành, tạo tán", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/5_lkgztf.jpg" },
+  { name: "Làm cỏ", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/6_cnbn3r.jpg" },
+  { name: "Xử lý ra hoa", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/7_q3beeu.jpg" },
+  { name: "Thụ phấn bổ sung", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/8_kmkqs3.jpg" },
+  { name: "Tỉa trái", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/9_k3pvls.jpg" },
+  { name: "Thu hoạch", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/10_b9jovt.jpg" },
+];
+
+// Danh mục có hỗ trợ filter service tag
+const CATEGORIES_WITH_SERVICE_FILTER = ["Dịch vụ", "Thuê dịch vụ"];
 
 // ─── Report Post Modal ────────────────────────────────────────────────────────
 const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
@@ -125,7 +161,6 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[calc(100vh-80px)] mt-16">
-        {/* Header */}
         <div className="relative flex items-center justify-center p-4 border-b border-gray-200 shrink-0">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-orange-100 rounded-full">
@@ -144,38 +179,19 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
         </div>
 
         {submitted ? (
-          /* Success state */
           <div className="p-8 text-center">
             <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-orange-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
+              <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
-              {t("report_success_title")}
-            </h3>
-            <p className="text-gray-500 text-sm mb-6">
-              {t("report_success_desc")}
-            </p>
-            <button
-              onClick={onClose}
-              className="px-6 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition text-sm"
-            >
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{t("report_success_title")}</h3>
+            <p className="text-gray-500 text-sm mb-6">{t("report_success_desc")}</p>
+            <button onClick={onClose} className="px-6 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition text-sm">
               {t("report_success_close")}
             </button>
           </div>
         ) : (
-          /* Form state — scrollable */
           <div className="overflow-y-auto flex-1">
             <div className="p-5 space-y-4">
               {postTitle && (
@@ -183,12 +199,8 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                   {postTitle}
                 </p>
               )}
-
-              {/* Reason buttons */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  {t("report_reason_label")}
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">{t("report_reason_label")}</label>
                 <div className="space-y-2">
                   {REPORT_REASONS.map((reason) => (
                     <button
@@ -197,127 +209,65 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                       onClick={() => {
                         setSelectedReason(reason);
                         setError("");
-                        if (reason !== t("report_reason_other"))
-                          setCustomReason("");
+                        if (reason !== t("report_reason_other")) setCustomReason("");
                       }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${selectedReason === reason
-                        ? "border-orange-400 bg-orange-50 text-orange-700"
-                        : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-                        }`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${selectedReason === reason ? "border-orange-400 bg-orange-50 text-orange-700" : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"}`}
                     >
                       {reason}
                     </button>
                   ))}
                 </div>
               </div>
-
-              {/* Custom reason textarea — only when "Khác/Other" selected */}
               {selectedReason === t("report_reason_other") && (
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t("report_custom_reason_label")}
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">{t("report_custom_reason_label")}</label>
                   <textarea
                     value={customReason}
-                    onChange={(e) => {
-                      setCustomReason(e.target.value);
-                      setError("");
-                    }}
+                    onChange={(e) => { setCustomReason(e.target.value); setError(""); }}
                     placeholder={t("report_custom_reason_placeholder")}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none min-h-20"
                     maxLength={500}
                   />
-                  <div className="text-xs text-gray-400 text-right mt-1">
-                    {customReason.length}/500
-                  </div>
+                  <div className="text-xs text-gray-400 text-right mt-1">{customReason.length}/500</div>
                 </div>
               )}
-
-              {/* Image upload */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {t("report_image_label")}{" "}
-                  <span className="text-gray-400 font-normal">
-                    ({t("report_image_optional")})
-                  </span>
+                  <span className="text-gray-400 font-normal">({t("report_image_optional")})</span>
                 </label>
                 {!imagePreview ? (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all"
-                  >
-                    <ImageIcon
-                      className="mx-auto text-gray-400 mb-2"
-                      size={26}
-                    />
-                    <p className="text-sm font-medium text-gray-600">
-                      {t("report_image_click")}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {t("report_image_hint")}
-                    </p>
+                  <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-300 rounded-lg p-5 text-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all">
+                    <ImageIcon className="mx-auto text-gray-400 mb-2" size={26} />
+                    <p className="text-sm font-medium text-gray-600">{t("report_image_click")}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{t("report_image_hint")}</p>
                   </div>
                 ) : (
                   <div className="relative rounded-lg overflow-hidden border border-gray-200">
-                    <Image
-                      src={imagePreview}
-                      alt="Preview"
-                      width={400}
-                      height={200}
-                      className="w-full h-auto object-contain bg-gray-50 max-h-48"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImagePreview("");
-                        setImageData("");
-                        if (fileInputRef.current)
-                          fileInputRef.current.value = "";
-                      }}
-                      className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full"
-                    >
+                    <Image src={imagePreview} alt="Preview" width={400} height={200} className="w-full h-auto object-contain bg-gray-50 max-h-48" />
+                    <button type="button" onClick={() => { setImagePreview(""); setImageData(""); if (fileInputRef.current) fileInputRef.current.value = ""; }} className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full">
                       <X size={14} />
                     </button>
                   </div>
                 )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
               </div>
-
               {error && (
                 <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                   <AlertCircle size={16} />
                   <span>{t("error_reason_min_length")}</span>
                 </div>
               )}
-
-              {/* Buttons */}
               <div className="pt-1 pb-1">
                 <button
                   onClick={handleSubmit}
-                  disabled={
-                    isSubmitting ||
-                    !selectedReason ||
-                    (selectedReason === t("report_reason_other") &&
-                      !customReason.trim())
-                  }
+                  disabled={isSubmitting || !selectedReason || (selectedReason === t("report_reason_other") && !customReason.trim())}
                   className="w-full px-4 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-medium transition text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      {t("report_submitting")}
-                    </>
+                    <><Loader2 size={16} className="animate-spin" />{t("report_submitting")}</>
                   ) : (
-                    <>
-                      <Flag size={16} />
-                      {t("report_submit_btn")}
-                    </>
+                    <><Flag size={16} />{t("report_submit_btn")}</>
                   )}
                 </button>
               </div>
@@ -413,17 +363,11 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
             <Info size={18} className="text-white" />
           </div>
           <div className="text-left">
-            <p className="font-bold text-gray-900 text-base">
-              {t("posts_category_guide_title")}
-            </p>
-            <p className="text-gray-500 text-sm">
-              {t("posts_category_guide_subtitle")}
-            </p>
+            <p className="font-bold text-gray-900 text-base">{t("posts_category_guide_title")}</p>
+            <p className="text-gray-500 text-sm">{t("posts_category_guide_subtitle")}</p>
           </div>
         </div>
-        <div
-          className={`text-gray-400 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}
-        >
+        <div className={`text-gray-400 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}>
           <ChevronDown size={22} />
         </div>
       </button>
@@ -439,38 +383,25 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
                 className={`group relative flex flex-col gap-3 p-4 rounded-2xl border-2 transition-all text-left shadow-sm hover:shadow-md ${isActive ? `${cat.bgLight} ${cat.borderColor} ring-2 ${cat.ringColor}` : "bg-white border-gray-200"}`}
               >
                 <div className="flex items-start justify-between">
-                  <div
-                    className={`w-11 h-11 rounded-xl bg-linear-to-br ${cat.gradient} flex items-center justify-center shadow-md`}
-                  >
+                  <div className={`w-11 h-11 rounded-xl bg-linear-to-br ${cat.gradient} flex items-center justify-center shadow-md`}>
                     <Icon size={22} className="text-white" />
                   </div>
-                  <span
-                    className={`text-xs font-semibold px-2 py-1 rounded-full ${cat.tagBg}`}
-                  >
-                    {cat.tagLine}
-                  </span>
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${cat.tagBg}`}>{cat.tagLine}</span>
                 </div>
                 <div>
+                  {/* Hiện tên hiển thị thân thiện cho user */}
                   <h4 className={`font-bold text-base ${cat.textColor} mb-0.5`}>
-                    {cat.key}
+                    {CATEGORY_DISPLAY_LABEL[cat.key] || cat.key}
                   </h4>
                   <p className="text-xs font-medium text-gray-400">{cat.who}</p>
                 </div>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  {cat.desc}
-                </p>
-                <div
-                  className={`flex items-center gap-1.5 text-xs font-semibold ${cat.textColor} mt-auto`}
-                >
+                <p className="text-sm text-gray-600 leading-relaxed">{cat.desc}</p>
+                <div className={`flex items-center gap-1.5 text-xs font-semibold ${cat.textColor} mt-auto`}>
                   <Filter size={13} />
-                  {isActive
-                    ? t("posts_filter_active")
-                    : t("posts_filter_click")}
+                  {isActive ? t("posts_filter_active") : t("posts_filter_click")}
                 </div>
                 {isActive && (
-                  <div
-                    className={`absolute inset-0 rounded-2xl pointer-events-none bg-linear-to-br ${cat.gradient} opacity-5`}
-                  />
+                  <div className={`absolute inset-0 rounded-2xl pointer-events-none bg-linear-to-br ${cat.gradient} opacity-5`} />
                 )}
               </button>
             );
@@ -490,19 +421,25 @@ const FilterBar = ({
   searchQuery,
   onSearchChange,
   onClearFilters,
+  selectedServices,
+  onServicesChange,
 }) => {
   const { t } = useLanguage();
   const [showFilters, setShowFilters] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
+  // ── Đổi label hiển thị cho user ──────────────────────────────────────────
   const POST_CATEGORIES_MAP = [
     { label: t("posts_cat_all"), value: "Tất cả" },
     { label: t("posts_cat_service"), value: "Dịch vụ" },
     { label: t("posts_cat_experience"), value: "Kinh nghiệm" },
-    { label: t("posts_cat_product"), value: "Sản phẩm" },
-    { label: t("posts_cat_hire"), value: "Thuê dịch vụ" },
+    // Đổi "Sản phẩm" → "Thu mua sầu riêng"
+    { label: "Thu mua sầu riêng", value: "Sản phẩm" },
+    // Đổi "Thuê dịch vụ" → "Thuê dịch vụ lao động"
+    { label: "Thuê dịch vụ lao động", value: "Thuê dịch vụ" },
     { label: t("posts_cat_other"), value: "Khác" },
   ];
+
   const SORT_OPTIONS = [
     { value: "newest", label: t("posts_sort_newest") },
     { value: "oldest", label: t("posts_sort_oldest") },
@@ -511,28 +448,36 @@ const FilterBar = ({
   const hasActiveFilters =
     selectedCategory !== "Tất cả" ||
     selectedSort !== "newest" ||
-    searchQuery.trim() !== "";
-  const selectedSortLabel =
-    SORT_OPTIONS.find((opt) => opt.value === selectedSort)?.label ||
-    t("posts_sort_newest");
+    searchQuery.trim() !== "" ||
+    selectedServices.length > 0;
+
+  const selectedSortLabel = SORT_OPTIONS.find((opt) => opt.value === selectedSort)?.label || t("posts_sort_newest");
+
+  // Hiện service tag filter khi chọn danh mục có hỗ trợ
+  const showServiceFilter = CATEGORIES_WITH_SERVICE_FILTER.includes(selectedCategory);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (showSortDropdown && !e.target.closest(".sort-dropdown"))
-        setShowSortDropdown(false);
+      if (showSortDropdown && !e.target.closest(".sort-dropdown")) setShowSortDropdown(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showSortDropdown]);
 
+  const toggleService = (svc) => {
+    if (selectedServices.includes(svc)) {
+      onServicesChange(selectedServices.filter((s) => s !== svc));
+    } else {
+      onServicesChange([...selectedServices, svc]);
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-6">
+      {/* ── Search + Sort + Filter toggle ── */}
       <div className="flex gap-3 mb-0">
         <div className="flex-1 relative">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={20}
-          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
             value={searchQuery}
@@ -548,19 +493,14 @@ const FilterBar = ({
             className="min-w-35 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium hover:border-emerald-500 transition-all duration-200 flex items-center justify-between gap-2 text-sm"
           >
             <span>{selectedSortLabel}</span>
-            <ChevronDown
-              className={`w-4 h-4 text-gray-500 transition-all duration-200 ${showSortDropdown ? "rotate-180" : ""}`}
-            />
+            <ChevronDown className={`w-4 h-4 text-gray-500 transition-all duration-200 ${showSortDropdown ? "rotate-180" : ""}`} />
           </button>
           {showSortDropdown && (
             <div className="absolute top-full right-0 mt-2 w-full bg-white border-2 border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
               {SORT_OPTIONS.map((option, index) => (
                 <button
                   key={option.value}
-                  onClick={() => {
-                    onSortChange(option.value);
-                    setShowSortDropdown(false);
-                  }}
+                  onClick={() => { onSortChange(option.value); setShowSortDropdown(false); }}
                   className={`w-full px-4 py-2.5 text-left text-sm transition-all duration-150 ${selectedSort === option.value ? "bg-emerald-50 text-emerald-700 font-semibold" : "text-gray-700 hover:bg-gray-50"} ${index !== SORT_OPTIONS.length - 1 ? "border-b border-gray-100" : ""}`}
                 >
                   {option.label}
@@ -577,8 +517,11 @@ const FilterBar = ({
           <span className="hidden sm:inline">{t("posts_filter_btn")}</span>
         </button>
       </div>
+
+      {/* ── Expanded filter panel ── */}
       {showFilters && (
         <div className="pt-4 mt-4 border-t border-gray-200 space-y-4">
+          {/* Danh mục */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-3">
               {t("posts_filter_category_label")}
@@ -587,7 +530,11 @@ const FilterBar = ({
               {POST_CATEGORIES_MAP.map((category) => (
                 <button
                   key={category.value}
-                  onClick={() => onCategoryChange(category.value)}
+                  onClick={() => {
+                    onCategoryChange(category.value);
+                    // Khi đổi danh mục, xoá service filter cũ
+                    onServicesChange([]);
+                  }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedCategory === category.value ? "bg-emerald-600 text-white shadow-md" : "bg-gray-100 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 border border-transparent"}`}
                 >
                   {category.label}
@@ -595,6 +542,41 @@ const FilterBar = ({
               ))}
             </div>
           </div>
+
+          {/* ── Service tag filter — chỉ hiện khi chọn Dịch vụ hoặc Thuê dịch vụ ── */}
+          {showServiceFilter && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <Wrench size={14} className="text-emerald-600" />
+                Lọc theo loại dịch vụ
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {SERVICE_FILTER_OPTIONS.map((svc) => {
+                  const isSelected = selectedServices.includes(svc);
+                  return (
+                    <button
+                      key={svc}
+                      type="button"
+                      onClick={() => toggleService(svc)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-xs font-semibold transition-all duration-200 focus:outline-none ${isSelected
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200 shadow-sm"
+                        : "border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50"
+                        }`}
+                    >
+                      {isSelected && <CheckCircle size={12} strokeWidth={2.5} className="text-emerald-500" />}
+                      {svc}
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedServices.length > 0 && (
+                <p className="text-xs text-emerald-600 mt-2 font-medium">
+                  Đang lọc: {selectedServices.join(", ")}
+                </p>
+              )}
+            </div>
+          )}
+
           {hasActiveFilters && (
             <button
               onClick={onClearFilters}
@@ -623,29 +605,40 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
 
   const isOwnPost = currentUserId && post.authorId === currentUserId;
 
-  // Component hiện chips dịch vụ trong post card
   const TypeServiceChips = ({ typeService }) => {
     if (!typeService || typeService.length === 0) return null;
+
+    const getServiceImage = (name) => {
+      const found = SERVICE_OPTIONS.find((s) => s.name === name);
+      return found?.image || null;
+    };
+
     return (
-      <div className="flex flex-wrap gap-1.5 mb-3">
-        {typeService.map((name) => (
-          <span
-            key={name}
-            className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold"
-          >
-            {name}
-          </span>
-        ))}
+      <div className="flex flex-wrap gap-2 mb-3">
+        {typeService.map((name) => {
+          const img = getServiceImage(name);
+          return (
+            <div
+              key={name}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 shadow-sm"
+            >
+              {img && (
+                <img
+                  src={img}
+                  alt={name}
+                  className="w-9 h-9 rounded-lg object-cover border border-emerald-100 shrink-0"
+                />
+              )}
+              <span className="text-sm font-semibold text-emerald-700">{name}</span>
+            </div>
+          );
+        })}
       </div>
     );
   };
 
-  useEffect(() => {
-    setIsLiked(post.isLiked || false);
-  }, [post.isLiked]);
-  useEffect(() => {
-    setCommentCount(post.comments || 0);
-  }, [post.comments]);
+  useEffect(() => { setIsLiked(post.isLiked || false); }, [post.isLiked]);
+  useEffect(() => { setCommentCount(post.comments || 0); }, [post.comments]);
 
   const handleLike = async () => {
     if (isTogglingFavorite) return;
@@ -659,57 +652,34 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
       onLikeUpdate?.(post.id, newLikedState);
     } catch (error) {
       setIsLiked(previousLikedState);
-      alert(
-        error?.response?.data?.message ||
-        error?.message ||
-        "Không thể cập nhật yêu thích",
-      );
+      alert(error?.response?.data?.message || error?.message || "Không thể cập nhật yêu thích");
     } finally {
       setIsTogglingFavorite(false);
     }
   };
 
-  const cfg = post.category
-    ? categoryConfig[post.category] || {
-      icon: LayoutGrid,
-      bg: "from-gray-500 to-slate-500",
-    }
-    : null;
+  const cfg = post.category ? categoryConfig[post.category] || { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" } : null;
 
   return (
     <>
       <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-all w-full">
         <div className="flex justify-between items-start mb-4">
           <div className="flex gap-3 flex-1 min-w-0">
-            <div
-              className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100 cursor-pointer"
-              onClick={() => router.push(`/profile/${post.authorId}`)}
-            >
-              <Image
-                src={post.userAvatar || "/images/avatar.jpg"}
-                alt={post.userName}
-                width={96}
-                height={96}
-                className="w-full h-full object-cover"
-              />
+            <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100 cursor-pointer" onClick={() => router.push(`/profile/${post.authorId}`)}>
+              <Image src={post.userAvatar || "/images/avatar.jpg"} alt={post.userName} width={96} height={96} className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h4 className="font-bold text-gray-900 text-base">
-                  {post.userName}
-                </h4>
-                {cfg &&
-                  (() => {
-                    const Icon = cfg.icon;
-                    return (
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${cfg.bg} text-white shadow-sm shrink-0`}
-                      >
-                        <Icon size={11} />
-                        {post.category}
-                      </span>
-                    );
-                  })()}
+                <h4 className="font-bold text-gray-900 text-base">{post.userName}</h4>
+                {cfg && (() => {
+                  const Icon = cfg.icon;
+                  return (
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${cfg.bg} text-white shadow-sm shrink-0`}>
+                      <Icon size={11} />
+                      {CATEGORY_DISPLAY_LABEL[post.category] || post.category}
+                    </span>
+                  );
+                })()}
               </div>
               <p className="text-gray-500 text-sm truncate">
                 {post.userHandle && post.userHandle}
@@ -718,51 +688,27 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
               </p>
             </div>
           </div>
-
-          {/* Report button — chỉ hiện với post của người khác */}
           {!isOwnPost && (
-            <button
-              onClick={() => setIsReportModalOpen(true)}
-              className="shrink-0 p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-full transition-all ml-2"
-              title={t("report_btn_tooltip")}
-            >
+            <button onClick={() => setIsReportModalOpen(true)} className="shrink-0 p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-full transition-all ml-2" title={t("report_btn_tooltip")}>
               <Flag size={18} />
             </button>
           )}
         </div>
 
-        {post.title && (
-          <h3 className="font-bold text-gray-900 text-lg leading-snug mb-2">
-            {post.title}
-          </h3>
-        )}
-
-
+        {post.title && <h3 className="font-bold text-gray-900 text-lg leading-snug mb-2">{post.title}</h3>}
         <div className="text-base text-gray-600 leading-relaxed mb-4">
           <p className="whitespace-pre-wrap">{post.content}</p>
         </div>
-
         <TypeServiceChips typeService={post.type_service} />
         {post.contact && (
           <div className="mb-4">
-            <span className="text-sm font-semibold text-gray-500">
-              {t("posts_contact_label")}
-            </span>
-            <span className="text-sm font-semibold text-emerald-700">
-              {post.contact}
-            </span>
+            <span className="text-sm font-semibold text-gray-500">{t("posts_contact_label")}</span>
+            <span className="text-sm font-semibold text-emerald-700">{post.contact}</span>
           </div>
         )}
-
         {post.image && (
           <div className="rounded-xl overflow-hidden mb-4 border border-gray-200">
-            <Image
-              src={post.image}
-              alt="Post content"
-              width={96}
-              height={96}
-              className="w-full h-auto object-cover"
-            />
+            <Image src={post.image} alt="Post content" width={96} height={96} className="w-full h-auto object-cover" />
           </div>
         )}
 
@@ -772,46 +718,21 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
             disabled={isTogglingFavorite}
             className={`flex items-center gap-2 transition px-3 py-1.5 rounded-lg ${isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500 hover:bg-red-50"} ${isTogglingFavorite ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            {isTogglingFavorite ? (
-              <Loader2 size={20} className="animate-spin" />
-            ) : (
-              <Heart size={20} className={`${isLiked ? "fill-current" : ""}`} />
-            )}
-            {likeCount > 0 && (
-              <span className="text-sm font-medium">{likeCount}</span>
-            )}
+            {isTogglingFavorite ? <Loader2 size={20} className="animate-spin" /> : <Heart size={20} className={`${isLiked ? "fill-current" : ""}`} />}
+            {likeCount > 0 && <span className="text-sm font-medium">{likeCount}</span>}
           </button>
-          <button
-            onClick={() => setIsCommentModalOpen(true)}
-            className="flex items-center gap-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition px-3 py-1.5 rounded-lg"
-          >
+          <button onClick={() => setIsCommentModalOpen(true)} className="flex items-center gap-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition px-3 py-1.5 rounded-lg">
             <MessageCircle size={20} />
-            {commentCount > 0 && (
-              <span className="text-sm font-medium">{commentCount}</span>
-            )}
+            {commentCount > 0 && <span className="text-sm font-medium">{commentCount}</span>}
           </button>
-          <button
-            onClick={() => onContact?.(post)}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm"
-          >
+          <button onClick={() => onContact?.(post)} className="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">
             {t("posts_contact_btn")}
           </button>
         </div>
       </article>
 
-      <CommentModal
-        isOpen={isCommentModalOpen}
-        onClose={() => setIsCommentModalOpen(false)}
-        postId={post.id}
-        onCommentCountChange={setCommentCount}
-      />
-
-      <ReportPostModal
-        isOpen={isReportModalOpen}
-        onClose={() => setIsReportModalOpen(false)}
-        postId={post.id}
-        postTitle={post.title || post.content?.slice(0, 80)}
-      />
+      <CommentModal isOpen={isCommentModalOpen} onClose={() => setIsCommentModalOpen(false)} postId={post.id} onCommentCountChange={setCommentCount} />
+      <ReportPostModal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} postId={post.id} postTitle={post.title || post.content?.slice(0, 80)} />
     </>
   );
 };
@@ -829,6 +750,8 @@ export default function PostsContent() {
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [selectedSort, setSelectedSort] = useState("newest");
   const [searchQuery, setSearchQuery] = useState("");
+  // ── Service tag filter state ──────────────────────────
+  const [selectedServices, setSelectedServices] = useState([]);
 
   const currentUserId = user?._id || user?.id;
 
@@ -841,6 +764,8 @@ export default function PostsContent() {
         const filters = { status: "active", sort: selectedSort };
         if (selectedCategory !== "Tất cả") filters.category = selectedCategory;
         if (searchQuery.trim()) filters.search = searchQuery.trim();
+        // Truyền service filter vào API
+        if (selectedServices.length > 0) filters.service = selectedServices;
 
         const [postsData, favoritesResponse] = await Promise.all([
           getOwnPosts(filters),
@@ -849,25 +774,17 @@ export default function PostsContent() {
         if (isCancelled) return;
 
         const favoritePostIds = new Set(
-          (favoritesResponse.data || [])
-            .map((fav) => fav.post_id?._id || fav.post_id)
-            .filter(Boolean),
+          (favoritesResponse.data || []).map((fav) => fav.post_id?._id || fav.post_id).filter(Boolean),
         );
         const normalizedPosts = (postsData || []).map((post) => {
           const author = post.author || {};
           return {
             id: post._id,
             authorId: author._id || author.id,
-            userName:
-              author.full_name ||
-              author.name ||
-              author.username ||
-              "Người dùng",
+            userName: author.full_name || author.name || author.username || "Người dùng",
             userHandle: author.email || "",
             userAvatar: author.avatar || "/images/avatar.jpg",
-            timestamp: post.created_at
-              ? new Date(post.created_at).toLocaleString("vi-VN")
-              : "Vừa xong",
+            timestamp: post.created_at ? new Date(post.created_at).toLocaleString("vi-VN") : "Vừa xong",
             title: post.title || "",
             content: post.content,
             contact: post.contact,
@@ -888,9 +805,7 @@ export default function PostsContent() {
               const res = await commentAPI.getCommentsByPost(post.id, "all");
               const countComments = (list) => {
                 let count = list.length;
-                list.forEach((c) => {
-                  if (c.children?.length) count += countComments(c.children);
-                });
+                list.forEach((c) => { if (c.children?.length) count += countComments(c.children); });
                 return count;
               };
               return { ...post, comments: countComments(res.data || []) };
@@ -901,28 +816,19 @@ export default function PostsContent() {
         );
         if (!isCancelled) setPosts(postsWithComments);
       } catch (error) {
-        if (!isCancelled)
-          setPostsError(error?.message || "Không thể tải bài viết");
+        if (!isCancelled) setPostsError(error?.message || "Không thể tải bài viết");
       } finally {
         if (!isCancelled) setLoadingPosts(false);
       }
     };
     loadPostsWithFavorites();
-    return () => {
-      isCancelled = true;
-    };
-  }, [selectedCategory, selectedSort, searchQuery]);
+    return () => { isCancelled = true; };
+  }, [selectedCategory, selectedSort, searchQuery, selectedServices]);
 
   const handleLikeUpdate = (postId, isLiked) => {
     setPosts((prev) =>
       prev.map((post) =>
-        post.id === postId
-          ? {
-            ...post,
-            isLiked,
-            likes: isLiked ? post.likes + 1 : post.likes - 1,
-          }
-          : post,
+        post.id === postId ? { ...post, isLiked, likes: isLiked ? post.likes + 1 : post.likes - 1 } : post,
       ),
     );
   };
@@ -931,13 +837,17 @@ export default function PostsContent() {
     setSelectedCategory("Tất cả");
     setSelectedSort("newest");
     setSearchQuery("");
+    setSelectedServices([]);
+  };
+
+  // Khi đổi category từ CategoryGuideSection, reset service filter
+  const handleCategoryChange = (cat) => {
+    setSelectedCategory(cat);
+    setSelectedServices([]);
   };
 
   const handleContact = async (post) => {
-    if (!authUser) {
-      router.push("/login");
-      return;
-    }
+    if (!authUser) { router.push("/login"); return; }
     const receiverId = post.authorId;
     if (!receiverId) return;
     const chatUser = {
@@ -958,9 +868,7 @@ export default function PostsContent() {
         <div className="w-full max-w-4xl">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {t("posts_page_title")}
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("posts_page_title")}</h1>
               <p className="text-gray-600">{t("posts_page_subtitle")}</p>
             </div>
             {posts.length > 0 && (
@@ -971,18 +879,17 @@ export default function PostsContent() {
             )}
           </div>
 
-          <CategoryGuideSection
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
+          <CategoryGuideSection selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} />
           <FilterBar
             selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
+            onCategoryChange={handleCategoryChange}
             selectedSort={selectedSort}
             onSortChange={setSelectedSort}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onClearFilters={handleClearFilters}
+            selectedServices={selectedServices}
+            onServicesChange={setSelectedServices}
           />
 
           {loadingPosts && (
@@ -994,39 +901,15 @@ export default function PostsContent() {
           {postsError && (
             <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-emerald-100">
               <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-emerald-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
+                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {t("posts_login_required_title")}
-              </h3>
-              <p className="text-gray-500 text-sm mb-6">
-                {t("posts_login_required_desc")}
-              </p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">{t("posts_login_required_title")}</h3>
+              <p className="text-gray-500 text-sm mb-6">{t("posts_login_required_desc")}</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link
-                  href="/login"
-                  className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm"
-                >
-                  {t("posts_login_btn")}
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-6 py-2.5 border border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors text-sm"
-                >
-                  {t("posts_register_btn")}
-                </Link>
+                <Link href="/login" className="px-6 py-2.5 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm">{t("posts_login_btn")}</Link>
+                <Link href="/register" className="px-6 py-2.5 border border-emerald-600 text-emerald-600 rounded-full font-medium hover:bg-emerald-50 transition-colors text-sm">{t("posts_register_btn")}</Link>
               </div>
             </div>
           )}
@@ -1035,26 +918,15 @@ export default function PostsContent() {
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <ImageIcon className="text-gray-400" size={28} />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">
-                {t("posts_not_found_title")}
-              </h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">{t("posts_not_found_title")}</h3>
               <p className="text-gray-500 mb-4">{t("posts_not_found_desc")}</p>
-              <button
-                onClick={handleClearFilters}
-                className="bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-800 transition"
-              >
+              <button onClick={handleClearFilters} className="bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-emerald-800 transition">
                 {t("posts_not_found_clear")}
               </button>
             </div>
           )}
           {posts.map((post) => (
-            <Post
-              key={post.id}
-              post={post}
-              onLikeUpdate={handleLikeUpdate}
-              onContact={handleContact}
-              currentUserId={currentUserId}
-            />
+            <Post key={post.id} post={post} onLikeUpdate={handleLikeUpdate} onContact={handleContact} currentUserId={currentUserId} />
           ))}
         </div>
       </main>

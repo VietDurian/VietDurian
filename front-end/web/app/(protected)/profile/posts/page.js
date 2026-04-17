@@ -29,6 +29,7 @@ import {
   deletePost,
   favoriteAPI,
   commentAPI,
+  capabilityProfileAPI,
 } from "@/lib/api";
 import CommentModal from "@/components/CommentModal";
 import { useRouter } from "next/navigation";
@@ -38,19 +39,41 @@ import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
 import Image from "next/image";
 
+// ─── Danh sách 10 loại dịch vụ cố định ───────────────────────────────────────
+const SERVICE_OPTIONS = [
+  { name: "Chuẩn bị đất & cây giống", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/1_q5ex4r.jpg" },
+  { name: "Tưới nước", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/2_b2vbpy.jpg" },
+  { name: "Bón phân", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/3_cf0zcj.jpg" },
+  { name: "Phun thuốc", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/4_noshkk.jpg" },
+  { name: "Tỉa cành, tạo tán", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/5_lkgztf.jpg" },
+  { name: "Làm cỏ", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/6_cnbn3r.jpg" },
+  { name: "Xử lý ra hoa", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/7_q3beeu.jpg" },
+  { name: "Thụ phấn bổ sung", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/8_kmkqs3.jpg" },
+  { name: "Tỉa trái", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/9_k3pvls.jpg" },
+  { name: "Thu hoạch", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/10_b9jovt.jpg" },
+];
+
 const getCategoriesByRole = (role) => {
   switch (role) {
-    case "trader":
-      return ["Sản phẩm", "Kinh nghiệm", "Thuê dịch vụ", "Khác"];
-    case "farmer":
-      return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
-    case "serviceProvider":
-      return ["Dịch vụ", "Sản phẩm", "Kinh nghiệm", "Khác"];
-    case "contentExpert":
-      return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
-    default:
-      return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
+    case "trader": return ["Thu mua sầu riêng"];
+    case "farmer": return ["Thuê dịch vụ lao động"];
+    case "serviceProvider": return ["Dịch vụ"];
+    case "contentExpert": return ["Kinh nghiệm"];
+    default: return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
   }
+};
+
+const CATEGORY_LABEL_TO_VALUE = {
+  "Thu mua sầu riêng": "Sản phẩm",
+  "Thuê dịch vụ lao động": "Thuê dịch vụ",
+};
+const CATEGORY_VALUE_TO_LABEL = {
+  "Sản phẩm": "Thu mua sầu riêng",
+  "Thuê dịch vụ": "Thuê dịch vụ lao động",
+};
+const CATEGORY_DISPLAY_LABEL = {
+  "Sản phẩm": "Thu mua sầu riêng",
+  "Thuê dịch vụ": "Thuê dịch vụ lao động",
 };
 
 const TITLE_PLACEHOLDERS = {
@@ -75,6 +98,44 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const detectContactType = (val) => {
   if (!val) return "phone";
   return EMAIL_REGEX.test(val) ? "email" : "phone";
+};
+
+// ─── Service Chip Selector (dùng chung) ──────────────────────────────────────
+const ServiceChipSelector = ({ availableServices, selectedServices, onChange }) => {
+  const toggleService = (svc) => {
+    const exists = selectedServices.some((s) => s.name === svc.name);
+    if (exists) onChange(selectedServices.filter((s) => s.name !== svc.name));
+    else onChange([...selectedServices, svc]);
+  };
+
+  if (!availableServices || availableServices.length === 0) return (
+    <p className="text-sm text-gray-500 italic">
+      Bạn chưa đăng ký dịch vụ nào trong hồ sơ. Hãy cập nhật hồ sơ trước.
+    </p>
+  );
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {availableServices.map((svc) => {
+        const selected = selectedServices.some((s) => s.name === svc.name);
+        return (
+          <button
+            key={svc.name}
+            type="button"
+            onClick={() => toggleService(svc)}
+            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full border-2 text-sm font-semibold transition-all duration-200 focus:outline-none
+              ${selected
+                ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200 shadow-sm"
+                : "border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50"
+              }`}
+          >
+            {selected && <CheckCircle size={14} strokeWidth={2.5} className="text-emerald-500" />}
+            {svc.name}
+          </button>
+        );
+      })}
+    </div>
+  );
 };
 
 // ── Confirm Modal ─────────────────────────────────────────
@@ -173,7 +234,23 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ── Service selector state ──────────────────────────────
+  const isServiceProvider = user?.role === "serviceProvider";
+  const isFarmer = user?.role === "farmer";
+  const [profileServices, setProfileServices] = useState([]);
+  const [selectedTypeServices, setSelectedTypeServices] = useState([]);
 
+  // Load profile services for serviceProvider
+  useEffect(() => {
+    if (!isServiceProvider) return;
+    capabilityProfileAPI.get()
+      .then((res) => {
+        if (res.code === 200 && res.data?.services) {
+          setProfileServices(res.data.services);
+        }
+      })
+      .catch(() => { });
+  }, [isServiceProvider]);
 
   const validateContact = (type, value) => {
     if (!value.trim()) return t("edit_post_contact_required");
@@ -195,7 +272,11 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
 
   useEffect(() => {
     if (post) {
-      setCategory(post.category || categories[0]);
+      const roleCategories = getCategoriesByRole(user?.role);
+      const displayCat = roleCategories.includes(post.category)
+        ? post.category
+        : (CATEGORY_VALUE_TO_LABEL[post.category] || post.category);
+      setCategory(displayCat);
       setTitle(post.title || "");
       setContent(post.content || "");
       const ct = detectContactType(post.link);
@@ -206,8 +287,18 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
       setImageData(post.image || "");
       setError("");
       setDropdownOpen(false);
+      // Khôi phục type_service đã chọn từ post
+      if (post.type_service && post.type_service.length > 0) {
+        const allOptions = isServiceProvider ? profileServices : SERVICE_OPTIONS;
+        const restored = post.type_service
+          .map((name) => allOptions.find((s) => s.name === name))
+          .filter(Boolean);
+        setSelectedTypeServices(restored);
+      } else {
+        setSelectedTypeServices([]);
+      }
     }
-  }, [post, categories]);
+  }, [post, categories, isServiceProvider, profileServices]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "unset";
@@ -245,6 +336,12 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
     reader.readAsDataURL(file);
   };
 
+  // Xác định có hiện service selector không
+  const showServiceSelectorForProvider = isServiceProvider && (category === "Dịch vụ" || post?.category === "Dịch vụ");
+  const showServiceSelectorForFarmer = isFarmer && (category === "Thuê dịch vụ lao động" || post?.category === "Thuê dịch vụ");
+  const showServiceSelector = showServiceSelectorForProvider || showServiceSelectorForFarmer;
+  const availableServices = showServiceSelectorForFarmer ? SERVICE_OPTIONS : profileServices;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -259,13 +356,17 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
     }
     setIsSubmitting(true);
     try {
-      const updated = await updatePost(post.id, {
-        category,
+      const payload = {
+        category: CATEGORY_LABEL_TO_VALUE[category] || category,
         title: title.trim(),
         content: content.trim(),
         image: imageData,
         contact: contact.trim(),
-      });
+      };
+      if (showServiceSelector && selectedTypeServices.length > 0) {
+        payload.type_service = selectedTypeServices.map((s) => s.name);
+      }
+      const updated = await updatePost(post.id, payload);
       onPostUpdated?.({
         ...post,
         title: updated?.title || title.trim(),
@@ -274,6 +375,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
         image: updated?.image || imagePreview,
         category: updated?.category || category,
         status: updated?.status || post.status,
+        type_service: payload.type_service || post.type_service || [],
       });
       onClose();
     } catch (err) {
@@ -284,8 +386,6 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   };
 
   if (!isOpen || !post) return null;
-
-
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -355,6 +455,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
                       onClick={() => {
                         setCategory(item);
                         setDropdownOpen(false);
+                        setSelectedTypeServices([]);
                       }}
                       className={`px-3 py-2 cursor-pointer transition-colors text-sm ${category === item ? "bg-emerald-500 text-white font-medium" : "text-gray-900 hover:bg-emerald-500 hover:text-white"}`}
                     >
@@ -365,6 +466,26 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
               )}
             </div>
           </div>
+
+          {/* ── Service selector (farmer hoặc serviceProvider) ── */}
+          {showServiceSelector && (
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <Wrench size={15} className="text-emerald-600" />
+                {showServiceSelectorForFarmer ? "Dịch vụ cần thuê" : "Dịch vụ cung cấp"}
+              </label>
+              <p className="text-xs text-gray-500">
+                {showServiceSelectorForFarmer
+                  ? "Chọn loại dịch vụ bạn muốn thuê trong bài đăng này"
+                  : "Chọn dịch vụ bạn muốn giới thiệu trong bài đăng này"}
+              </p>
+              <ServiceChipSelector
+                availableServices={availableServices}
+                selectedServices={selectedTypeServices}
+                onChange={setSelectedTypeServices}
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <label className="text-sm font-semibold text-gray-700">
@@ -536,20 +657,35 @@ const Post = ({
 
   const TypeServiceChips = ({ typeService }) => {
     if (!typeService || typeService.length === 0) return null;
+
+    const getServiceImage = (name) => {
+      const found = SERVICE_OPTIONS.find((s) => s.name === name);
+      return found?.image || null;
+    };
+
     return (
-      <div className="flex flex-wrap gap-1.5 mb-3">
-        {typeService.map((name) => (
-          <span
-            key={name}
-            className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold"
-          >
-            {name}
-          </span>
-        ))}
+      <div className="flex flex-wrap gap-2 mb-3">
+        {typeService.map((name) => {
+          const img = getServiceImage(name);
+          return (
+            <div
+              key={name}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 shadow-sm"
+            >
+              {img && (
+                <img
+                  src={img}
+                  alt={name}
+                  className="w-9 h-9 rounded-lg object-cover border border-emerald-100 shrink-0"
+                />
+              )}
+              <span className="text-sm font-semibold text-emerald-700">{name}</span>
+            </div>
+          );
+        })}
       </div>
     );
   };
-
   useEffect(() => {
     setIsLiked(post.isLiked || false);
   }, [post.isLiked]);
@@ -623,7 +759,7 @@ const Post = ({
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${cfg.bg} text-white shadow-sm shrink-0`}
                       >
                         <Icon size={11} />
-                        {post.category}
+                        {CATEGORY_DISPLAY_LABEL[post.category] || post.category}
                       </span>
                     );
                   })()}
@@ -702,7 +838,6 @@ const Post = ({
             {post.title}
           </h3>
         )}
-
 
         <p className="text-base text-gray-600 leading-relaxed mb-4 whitespace-pre-wrap">
           {post.content}
