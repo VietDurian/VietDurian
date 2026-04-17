@@ -137,6 +137,7 @@ const translations = {
     aside_back_diary: "Trở lại nhật ký mùa vụ",
     aside_back_garden: "Trở lại mùa vụ canh tác",
     aside_brand_sub: "Trang Cá Nhân",
+    aside_diaries: "Nhật ký canh tác",
 
     // Footer
     footer_quick_links: "Liên kết nhanh",
@@ -2201,18 +2202,19 @@ const translations = {
     aside_info: "Info",
     aside_posts: "Posts",
     aside_ai: "Analyze Disease",
-    aside_garden: "Garden",
+    aside_garden: "Season Diaries",
     aside_products: "Products",
     aside_statistics: "Statistics",
     aside_blog: "Blog",
     aside_resume: "Resume",
     aside_detail: "Detail",
-    aside_diary: "Diary",
+    aside_diary: "Diaries",
     aside_edit: "Edit",
     aside_back_products: "Back to products",
     aside_back_diary: "Back to season diary",
     aside_back_garden: "Back to garden",
     aside_brand_sub: "My Profile",
+    aside_diaries: "Diaries",
 
     // Footer
     footer_quick_links: "Quick Links",

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Check, Trash2 } from "lucide-react";
+import { Check, Trash2, X } from "lucide-react";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useLanguage } from "@/context/LanguageContext";
 import Image from "next/image";
@@ -18,9 +18,11 @@ const parseCoordinate = (value) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-function InfoCard({ title, iconPath, children }) {
+function InfoCard({ title, iconPath, children, className }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div
+      className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ${className}`}
+    >
       <div className="flex items-center gap-2.5 px-5 py-4 border-b border-gray-50">
         <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
           <svg
@@ -65,6 +67,7 @@ export default function SeasonDiaryDetailPage() {
   const { seasonDiaryId } = useParams();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showFinishSeasonDiary, setShowFinishSeasonDiary] = useState(false);
+  const [showImageDetail, setShowImageDetail] = useState(false);
   const [confirmName, setConfirmName] = useState("");
   const [failedSeasonImageUrl, setFailedSeasonImageUrl] = useState("");
 
@@ -87,6 +90,23 @@ export default function SeasonDiaryDetailPage() {
   useEffect(() => {
     if (seasonDiaryId) getSeasonDiaryDetail(seasonDiaryId);
   }, [seasonDiaryId, getSeasonDiaryDetail]);
+
+  useEffect(() => {
+    if (!showImageDetail) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleEscape = (event) => {
+      if (event.key === "Escape") setShowImageDetail(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [showImageDetail]);
 
   const data = seasonDiaryDetail || {};
   const owner = data.user_id || {};
@@ -119,6 +139,11 @@ export default function SeasonDiaryDetailPage() {
       label: t("season_detail_status_completed"),
       dot: "bg-gray-400",
       badge: "bg-gray-100 text-gray-500",
+    },
+    Stopped: {
+      label: "Ngưng hoạt động",
+      dot: "bg-amber-400",
+      badge: "bg-amber-100 text-amber-700",
     },
   };
 
@@ -153,6 +178,8 @@ export default function SeasonDiaryDetailPage() {
 
   const statusMeta = STATUS[data.status] ?? STATUS["Completed"];
   const isCompleted = data.status === "Completed";
+  const isStopped = data.status === "Stopped";
+  const isFinalStatus = isCompleted || isStopped;
 
   return (
     <div className="space-y-5 p-5">
@@ -201,7 +228,7 @@ export default function SeasonDiaryDetailPage() {
       )}
 
       {/* ── Finish Modal ── */}
-      {showFinishSeasonDiary && !isCompleted && (
+      {showFinishSeasonDiary && !isFinalStatus && (
         <div className="h-screen fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
             <h2 className="text-xl font-bold text-gray-900 mb-5">
@@ -223,6 +250,35 @@ export default function SeasonDiaryDetailPage() {
                   ? t("season_detail_finishing")
                   : t("season_detail_finish_confirm_btn")}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Image Detail Modal ── */}
+      {showImageDetail && hasSeasonImage && (
+        <div
+          className="fixed inset-0 z-1002 bg-black/80 backdrop-blur-xs p-4 md:p-8 h-full"
+          onClick={() => setShowImageDetail(false)}
+        >
+          <div
+            className="relative mx-auto h-full max-w-6xl bg-black/40 rounded-2xl border border-white/15 overflow-hidden"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowImageDetail(false)}
+              className="cursor-pointer absolute right-3 top-3 z-10 rounded-lg bg-black/65 text-white text-xs px-3 py-1.5 hover:bg-black/80"
+            >
+              <X />
+            </button>
+            <div className="h-full w-full flex items-center justify-center p-3 md:p-5">
+              <Image
+                src={seasonImageUrl}
+                alt={data.garden_name || "Season diary image"}
+                width={1600}
+                height={1200}
+                className="w-full h-full object-contain rounded-lg"
+              />
             </div>
           </div>
         </div>
@@ -267,7 +323,7 @@ export default function SeasonDiaryDetailPage() {
           </div>
 
           <div className="flex gap-3 flex-wrap">
-            {!isCompleted && (
+            {!isFinalStatus && (
               <button
                 onClick={() => setShowFinishSeasonDiary(true)}
                 disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
@@ -297,7 +353,7 @@ export default function SeasonDiaryDetailPage() {
                 <p className="text-white font-bold text-sm mt-0.5">{c.value}</p>
               </div>
             ))}
-            {!isCompleted && (
+            {!isFinalStatus && (
               <button
                 onClick={() => setShowDeleteModal(true)}
                 disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
@@ -315,141 +371,9 @@ export default function SeasonDiaryDetailPage() {
 
       {/* ── Cards Grid ── */}
       <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-        {/* Card 1 — Chủ vườn & thành viên */}
-        <InfoCard
-          title={t("season_detail_card_owner_title")}
-          iconPath="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-        >
-          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-50">
-            {/* Card 1 owner avatar */}
-            {owner?.avatar ? (
-              <Image
-                src={owner.avatar}
-                alt={owner?.full_name || ""}
-                width={96}
-                height={96}
-                className="w-10 h-10 rounded-xl object-cover shrink-0 bg-gray-100"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-xl bg-gray-100 shrink-0" />
-            )}
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-800 truncate">
-                {owner?.full_name || "—"}
-              </p>
-              <p className="text-xs text-gray-400 truncate">
-                {owner?.email || "—"}
-              </p>
-              <p className="text-xs text-gray-300 font-mono mt-0.5 truncate">
-                {owner?._id || "—"}
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-            <InfoRow
-              label={t("season_detail_farmer_name")}
-              value={data.farmer_name}
-            />
-            <InfoRow
-              label={t("season_detail_farmer_code")}
-              value={data.farmer_code}
-            />
-            <InfoRow
-              label={t("season_detail_members")}
-              value={data.members}
-              fullWidth
-            />
-          </div>
-        </InfoCard>
-
-        {/* Card 2 — Thông tin vườn */}
-        <InfoCard
-          title={t("season_detail_card_garden_title")}
-          iconPath="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-        >
-          <div className="mb-4 rounded-xl overflow-hidden border border-emerald-100 bg-emerald-50">
-            {hasSeasonImage ? (
-              <div className="relative aspect-video">
-                <Image
-                  src={seasonImageUrl}
-                  alt={data.garden_name || "Season diary image"}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover"
-                  unoptimized
-                  onError={() => setFailedSeasonImageUrl(seasonImageUrl)}
-                />
-              </div>
-            ) : (
-              <div className="h-44 flex items-center justify-center bg-linear-to-br from-emerald-50 to-teal-50">
-                <svg
-                  className="w-8 h-8 text-emerald-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.7}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-            <InfoRow
-              label={t("season_detail_garden_name")}
-              value={data.garden_name}
-              fullWidth
-            />
-            <InfoRow
-              label={t("season_detail_area")}
-              value={`${fmt(data.area)} ${t("season_detail_area_unit")}`}
-            />
-            <InfoRow
-              label={t("season_detail_rows")}
-              value={`${fmt(data.row_bed_count)} ${t("season_detail_row_unit")}`}
-            />
-            <InfoRow
-              label={t("season_detail_planting_code")}
-              value={data.planting_area_code}
-            />
-            <InfoRow label={t("season_detail_status")}>
-              <span
-                className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full mt-0.5 ${statusMeta.badge}`}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}
-                />
-                {statusMeta.label}
-              </span>
-            </InfoRow>
-            <InfoRow label={t("season_detail_variety")} fullWidth>
-              <div className="flex flex-wrap gap-1.5 mt-0.5">
-                {cropVariety.map((v) => (
-                  <span
-                    key={v}
-                    className="text-xs bg-emerald-50 text-emerald-700 font-semibold px-2.5 py-0.5 rounded-lg"
-                  >
-                    {v}
-                  </span>
-                ))}
-                {cropVariety.length === 0 && (
-                  <span className="text-sm text-gray-500">—</span>
-                )}
-              </div>
-            </InfoRow>
-          </div>
-        </InfoCard>
-
         {/* Card 3 — Vị trí địa lý */}
         <InfoCard
+          className={"col-span-4 row-end-1"}
           title={t("season_detail_card_location_title")}
           iconPath="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z"
         >
@@ -519,9 +443,151 @@ export default function SeasonDiaryDetailPage() {
             </div>
           )}
         </InfoCard>
+        {/* Card 1 — Chủ vườn & thành viên */}
+        <InfoCard
+          className={"col-span-2 row-end-3"}
+          title={t("season_detail_card_owner_title")}
+          iconPath="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+        >
+          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-50">
+            {/* Card 1 owner avatar */}
+            {owner?.avatar ? (
+              <Image
+                src={owner.avatar}
+                alt={owner?.full_name || ""}
+                width={96}
+                height={96}
+                className="w-10 h-10 rounded-xl object-cover shrink-0 bg-gray-100"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-gray-100 shrink-0" />
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-800 truncate">
+                {owner?.full_name || "—"}
+              </p>
+              <p className="text-xs text-gray-400 truncate">
+                {owner?.email || "—"}
+              </p>
+              <p className="text-xs text-gray-300 font-mono mt-0.5 truncate">
+                {owner?._id || "—"}
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+            <InfoRow
+              label={t("season_detail_farmer_name")}
+              value={data.farmer_name}
+            />
+            <InfoRow
+              label={t("season_detail_farmer_code")}
+              value={data.farmer_code}
+            />
+            <InfoRow
+              label={t("season_detail_members")}
+              value={data.members}
+              fullWidth
+            />
+          </div>
+        </InfoCard>
+
+        {/* Card 2 — Thông tin vườn */}
+        <InfoCard
+          className={"col-span-4 row-end-2"}
+          title={t("season_detail_card_garden_title")}
+          iconPath="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+        >
+          <div className="flex flex-col lg:flex-row gap-5">
+            <div className="lg:w-64 lg:shrink-0">
+              <div className="rounded-xl overflow-hidden border border-emerald-100 bg-emerald-50 h-44 lg:h-full lg:min-h-64">
+                {hasSeasonImage ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowImageDetail(true)}
+                    className="group cursor-zoom-in relative h-full w-full"
+                  >
+                    <Image
+                      src={seasonImageUrl}
+                      alt={data.garden_name || "Season diary image"}
+                      width={400}
+                      height={320}
+                      className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                      onError={() => setFailedSeasonImageUrl(seasonImageUrl)}
+                    />
+                  </button>
+                ) : (
+                  <div className="h-full flex items-center justify-center bg-linear-to-br from-emerald-50 to-teal-50">
+                    <svg
+                      className="w-8 h-8 text-emerald-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.7}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-4">
+              <InfoRow
+                label={t("season_detail_garden_name")}
+                value={data.garden_name}
+                fullWidth
+              />
+              <InfoRow
+                label={t("season_detail_area")}
+                value={`${fmt(data.area)} ${t("season_detail_area_unit")}`}
+              />
+              <InfoRow
+                label={t("season_detail_rows")}
+                value={`${fmt(data.row_bed_count)} ${t("season_detail_row_unit")}`}
+              />
+              <InfoRow
+                label={t("season_detail_planting_code")}
+                value={data.planting_area_code}
+              />
+              <InfoRow label={t("season_detail_status")}>
+                <span
+                  className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full mt-0.5 ${statusMeta.badge}`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}
+                  />
+                  {statusMeta.label}
+                </span>
+              </InfoRow>
+              <InfoRow label={t("season_detail_variety")} fullWidth>
+                <div className="flex flex-wrap gap-1.5 mt-0.5">
+                  {cropVariety.map((v) => (
+                    <span
+                      key={v}
+                      className="text-xs bg-emerald-50 text-emerald-700 font-semibold px-2.5 py-0.5 rounded-lg"
+                    >
+                      {v}
+                    </span>
+                  ))}
+                  {cropVariety.length === 0 && (
+                    <span className="text-sm text-gray-500">—</span>
+                  )}
+                </div>
+              </InfoRow>
+            </div>
+          </div>
+        </InfoCard>
 
         {/* Card 4 — Lịch sử đất & timestamps */}
         <InfoCard
+          className={"col-span-2 row-end-3"}
           title={t("season_detail_card_history_title")}
           iconPath="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
         >
