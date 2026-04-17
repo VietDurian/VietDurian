@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Check, Trash2, X } from "lucide-react";
+import { Check, Pause, Play, Trash2, X } from "lucide-react";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useLanguage } from "@/context/LanguageContext";
 import Image from "next/image";
@@ -81,11 +81,15 @@ export default function SeasonDiaryDetailPage() {
   const isSeasonDiaryFinishing = useSeasonDiaryStore(
     (s) => s.isSeasonDiaryFinishing,
   );
+  const isSeasonDiaryUpdating = useSeasonDiaryStore(
+    (s) => s.isSeasonDiaryUpdating,
+  );
   const getSeasonDiaryDetail = useSeasonDiaryStore(
     (s) => s.getSeasonDiaryDetail,
   );
   const deleteSeasonDiary = useSeasonDiaryStore((s) => s.deleteSeasonDiary);
   const finishSeasonDiary = useSeasonDiaryStore((s) => s.finishSeasonDiary);
+  const updateSeasonDiary = useSeasonDiaryStore((s) => s.updateSeasonDiary);
 
   useEffect(() => {
     if (seasonDiaryId) getSeasonDiaryDetail(seasonDiaryId);
@@ -141,7 +145,7 @@ export default function SeasonDiaryDetailPage() {
       badge: "bg-gray-100 text-gray-500",
     },
     Stopped: {
-      label: "Ngưng hoạt động",
+      label: t("season_detail_status_stopped"),
       dot: "bg-amber-400",
       badge: "bg-amber-100 text-amber-700",
     },
@@ -158,6 +162,13 @@ export default function SeasonDiaryDetailPage() {
     const finished = await finishSeasonDiary(seasonDiaryId);
     if (!finished) return;
     setShowFinishSeasonDiary(false);
+  };
+
+  const handleToggleStatus = async () => {
+    if (!seasonDiaryId || isCompleted) return;
+
+    const nextStatus = isStopped ? "In progressing" : "Stopped";
+    await updateSeasonDiary(seasonDiaryId, { status: nextStatus });
   };
 
   if (isSeasonDiaryDetailLoading && !data._id) {
@@ -179,7 +190,13 @@ export default function SeasonDiaryDetailPage() {
   const statusMeta = STATUS[data.status] ?? STATUS["Completed"];
   const isCompleted = data.status === "Completed";
   const isStopped = data.status === "Stopped";
-  const isFinalStatus = isCompleted || isStopped;
+  const isFinalStatus = isCompleted;
+  const toggleStatusLabel = isStopped
+    ? t("season_detail_toggle_to_in_progress")
+    : t("season_detail_toggle_to_stopped");
+  const toggleStatusLoadingLabel = isStopped
+    ? t("season_detail_toggling_to_in_progress")
+    : t("season_detail_toggling_to_stopped");
 
   return (
     <div className="space-y-5 p-5">
@@ -347,10 +364,30 @@ export default function SeasonDiaryDetailPage() {
             </div>
 
             {!isFinalStatus && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                <button
+                  onClick={handleToggleStatus}
+                  disabled={
+                    isSeasonDiaryDeleting ||
+                    isSeasonDiaryFinishing ||
+                    isSeasonDiaryUpdating
+                  }
+                  className="cursor-pointer inline-flex w-full items-center justify-center gap-2 border border-amber-200 bg-white text-sm font-semibold text-amber-700 px-4 py-2.5 rounded-xl hover:bg-amber-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isStopped ? <Play size={14} /> : <Pause size={14} />}
+                  {isSeasonDiaryUpdating
+                    ? toggleStatusLoadingLabel
+                    : toggleStatusLabel}
+                </button>
+
                 <button
                   onClick={() => setShowFinishSeasonDiary(true)}
-                  disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
+                  disabled={
+                    isSeasonDiaryDeleting ||
+                    isSeasonDiaryFinishing ||
+                    isSeasonDiaryUpdating ||
+                    isStopped
+                  }
                   className="cursor-pointer inline-flex w-full items-center justify-center gap-2 border border-emerald-200 bg-white text-sm font-semibold text-emerald-600 px-4 py-2.5 rounded-xl hover:bg-emerald-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <Check size={14} />
@@ -360,7 +397,12 @@ export default function SeasonDiaryDetailPage() {
                 </button>
                 <button
                   onClick={() => setShowDeleteModal(true)}
-                  disabled={isSeasonDiaryDeleting || isSeasonDiaryFinishing}
+                  disabled={
+                    isSeasonDiaryDeleting ||
+                    isSeasonDiaryFinishing ||
+                    isSeasonDiaryUpdating ||
+                    isStopped
+                  }
                   className="cursor-pointer inline-flex w-full items-center justify-center gap-2 border border-red-200 bg-white text-sm font-semibold text-red-600 px-4 py-2.5 rounded-xl hover:bg-red-50 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <Trash2 size={14} />
