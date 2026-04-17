@@ -100,6 +100,15 @@ const INITIAL_FORM = {
   land_use_history: "",
 };
 
+const formatThousandNumber = (value) => {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  return new Intl.NumberFormat("vi-VN").format(Number(digits));
+};
+
+const parseThousandNumber = (value) =>
+  Number(String(value ?? "").replace(/\D/g, ""));
+
 const FieldLabel = ({ htmlFor, children, hint, required }) => (
   <label
     htmlFor={htmlFor}
@@ -246,7 +255,9 @@ export default function EditSeasonDiary() {
           row_bed_count: seasonDiaryDetail.row_bed_count
             ? String(seasonDiaryDetail.row_bed_count)
             : "",
-          area: seasonDiaryDetail.area ? String(seasonDiaryDetail.area) : "",
+          area: seasonDiaryDetail.area
+            ? formatThousandNumber(seasonDiaryDetail.area)
+            : "",
           land_use_history: seasonDiaryDetail.land_use_history || "",
         });
       }
@@ -350,7 +361,7 @@ export default function EditSeasonDiary() {
         formData.planting_area_code,
       ),
       row_bed_count: Number(formData.row_bed_count),
-      area: Number(formData.area),
+      area: parseThousandNumber(formData.area),
     };
     const updated = await updateSeasonDiary(seasonDiaryId, payload);
     if (updated) {
@@ -593,25 +604,30 @@ export default function EditSeasonDiary() {
                 <FieldLabel htmlFor="area" required>
                   {t("edit_season_area_label")}
                 </FieldLabel>
-                <Input
-                  type="number"
-                  id="area"
-                  name="area"
-                  value={formData.area}
-                  onChange={handleChange}
-                  min="1"
-                  step="any"
-                  onWheel={(e) => e.target.blur()}
-                  placeholder={t("edit_season_area_placeholder")}
-                  suffix={t("edit_season_area_suffix")}
-                  onKeyDown={(e) => {
-                    if (e.key === "-" || e.key === "e") e.preventDefault();
-                  }}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="area"
+                    name="area"
+                    value={formData.area}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        area: formatThousandNumber(e.target.value),
+                      }))
+                    }
+                    inputMode="numeric"
+                    placeholder={t("edit_season_area_placeholder")}
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors text-sm"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
+                    {t("edit_season_area_suffix")}
+                  </span>
+                </div>
                 {formData.area && (
                   <p className="text-xs text-gray-400 mt-1">
                     {t("edit_season_area_hint_prefix")}{" "}
-                    {(parseFloat(formData.area) / 10000).toFixed(4)}{" "}
+                    {(parseThousandNumber(formData.area) / 10000).toFixed(4)}{" "}
                     {t("edit_season_area_hint_suffix")}
                   </p>
                 )}

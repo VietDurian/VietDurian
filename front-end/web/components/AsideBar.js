@@ -22,9 +22,11 @@ import {
   Edit,
   Shield,
   Layers,
+  DollarSign,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { usePermissionStore } from "@/store/usePermissionStore";
+import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 
 const SidebarItem = ({
   icon: Icon,
@@ -104,6 +106,7 @@ const SidebarItem = ({
 
 export default function AsideBar({ role }) {
   const { verifyCCCDStatus, getVerifyCCCDStatus } = usePermissionStore();
+  const seasonDiaryDetail = useSeasonDiaryStore((s) => s.seasonDiaryDetail);
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useLanguage();
@@ -127,6 +130,9 @@ export default function AsideBar({ role }) {
 
   const isFarmerSeasonDiarySubRoute =
     role === "farmer" && !!seasonDiaryId && seasonDiaryId !== "create";
+  const isSeasonDiaryCompleted =
+    seasonDiaryDetail?._id === seasonDiaryId &&
+    seasonDiaryDetail?.status === "Completed";
   const isFarmerProductsSubRoute =
     role === "farmer" && !!productId && productId !== "create";
   const shouldShowVerification =
@@ -136,7 +142,7 @@ export default function AsideBar({ role }) {
   const verificationMenuItem = {
     icon: Shield,
     label: isVerificationPending ? "Đã gửi xác thực" : "Xác Thực Thông Tin",
-    href: "/submit-proof",
+    href: "/profile/submit-proof",
     disabled: isVerificationPending,
   };
 
@@ -145,8 +151,12 @@ export default function AsideBar({ role }) {
       case "trader":
         return [
           { icon: User, label: t("aside_info"), href: "/profile/details" },
-          { icon: FileText, label: t("aside_posts"), href: "/profile/posts" },
           { icon: Bot, label: t("aside_ai"), href: "/profile/ai" },
+          {
+            icon: FileText,
+            label: t("aside_posts_trader"),
+            href: "/profile/posts",
+          },
         ];
       case "farmer":
         if (isFarmerSeasonDiarySubRoute) {
@@ -170,6 +180,7 @@ export default function AsideBar({ role }) {
               icon: Edit,
               label: t("aside_edit"),
               href: `/profile/season-diaries/${seasonDiaryId}/edit`,
+              disabled: isSeasonDiaryCompleted,
             },
           ];
         } else if (isFarmerProductsSubRoute) {
@@ -189,8 +200,6 @@ export default function AsideBar({ role }) {
         if (shouldShowVerification) {
           return [
             { icon: User, label: t("aside_info"), href: "/profile/details" },
-            { icon: FileText, label: t("aside_posts"), href: "/profile/posts" },
-            { icon: Bot, label: t("aside_ai"), href: "/profile/ai" },
             verificationMenuItem,
           ];
         }
@@ -208,6 +217,11 @@ export default function AsideBar({ role }) {
             href: "/profile/diaries",
           },
           {
+            icon: DollarSign,
+            label: t("aside_harvest"),
+            href: "/profile/harvest",
+          },
+          {
             icon: Package,
             label: t("aside_products"),
             href: "/profile/products",
@@ -218,27 +232,45 @@ export default function AsideBar({ role }) {
             href: "/profile/statistics",
           },
           { icon: Bot, label: t("aside_ai"), href: "/profile/ai" },
-          { icon: FileText, label: t("aside_posts"), href: "/profile/posts" },
+          {
+            icon: FileText,
+            label: t("aside_posts_farmer"),
+            href: "/profile/posts",
+          },
         ];
       case "contentExpert":
         if (shouldShowVerification) {
-          return [verificationMenuItem];
+          return [
+            { icon: User, label: t("aside_info"), href: "/profile/details" },
+            verificationMenuItem,
+          ];
         }
         return [
           { icon: User, label: t("aside_info"), href: "/profile/details" },
-          { icon: FileText, label: t("aside_posts"), href: "/profile/posts" },
           { icon: PenTool, label: t("aside_blog"), href: "/profile/blogs" },
           { icon: Bot, label: t("aside_ai"), href: "/profile/ai" },
+          {
+            icon: FileText,
+            label: t("aside_posts_content"),
+            href: "/profile/posts",
+          },
         ];
       case "serviceProvider":
         if (shouldShowVerification) {
-          return [verificationMenuItem];
+          return [
+            { icon: User, label: t("aside_info"), href: "/profile/details" },
+            verificationMenuItem,
+          ];
         }
         return [
           { icon: User, label: t("aside_info"), href: "/profile/details" },
-          { icon: FileText, label: t("aside_posts"), href: "/profile/posts" },
           { icon: FileEdit, label: t("aside_resume"), href: "/profile/resume" },
           { icon: Bot, label: t("aside_ai"), href: "/profile/ai" },
+          {
+            icon: FileText,
+            label: t("aside_posts_service"),
+            href: "/profile/posts",
+          },
         ];
       default:
         return [];

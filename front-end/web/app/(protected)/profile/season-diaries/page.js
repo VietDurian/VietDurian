@@ -414,17 +414,12 @@ function SeasonDiaryCard({ diary, statusConfig, t }) {
           <span className="text-xs line-clamp-1">
             {diary.farmer_name}
             {memberList.length > 1 && (
-              <span className="text-gray-400 ml-1">
+              <span className="text-gray-400 ml-1 mb-4">
                 +{memberList.length - 1} {t("season_card_members")}
               </span>
             )}
           </span>
         </div>
-
-        {/* Land use history */}
-        <p className="text-xs text-gray-500 line-clamp-2 mb-4 flex-1 leading-relaxed">
-          {diary.land_use_history || t("season_card_noland")}
-        </p>
 
         {/* Stats row */}
         <div className="flex items-center gap-3 py-3 border-t border-b border-gray-100 mb-3">
