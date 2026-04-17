@@ -25,7 +25,7 @@ const getGeneralPost = async (req, res, next) => {
 // Create a new general post
 const createGeneralPost = async (req, res, next) => {
 	try {
-		const { category, title, content, image, contact } = req.body;
+		const { category, title, content, image, contact, type_service } = req.body;
 		// Validate input
 		if (!category || !title || !content || !contact) {
 			return res.status(400).json({
@@ -39,6 +39,7 @@ const createGeneralPost = async (req, res, next) => {
 			category,
 			title,
 			content,
+			type_service,
 			image,
 			contact,
 		});
@@ -56,7 +57,8 @@ const createGeneralPost = async (req, res, next) => {
 const updateGeneralPost = async (req, res, next) => {
 	try {
 		const { post_id } = req.params;
-		const { category, title, content, image, contact, status } = req.body;
+		const { category, title, content, image, contact, status, type_service } =
+			req.body;
 		const updatedPost = await postService.updateGeneralPost(post_id, {
 			category,
 			title,
@@ -64,6 +66,7 @@ const updateGeneralPost = async (req, res, next) => {
 			image,
 			contact,
 			status,
+			type_service,
 		});
 		res.status(200).json({
 			code: 200,
