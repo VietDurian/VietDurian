@@ -112,8 +112,8 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          err?.message ||
-          t("report_error_submit_fail"),
+        err?.message ||
+        t("report_error_submit_fail"),
       );
     } finally {
       setIsSubmitting(false);
@@ -200,11 +200,10 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                         if (reason !== t("report_reason_other"))
                           setCustomReason("");
                       }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${
-                        selectedReason === reason
-                          ? "border-orange-400 bg-orange-50 text-orange-700"
-                          : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-                      }`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${selectedReason === reason
+                        ? "border-orange-400 bg-orange-50 text-orange-700"
+                        : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                        }`}
                     >
                       {reason}
                     </button>
@@ -624,178 +623,198 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
 
   const isOwnPost = currentUserId && post.authorId === currentUserId;
 
-  useEffect(() => {
-    setIsLiked(post.isLiked || false);
-  }, [post.isLiked]);
-  useEffect(() => {
-    setCommentCount(post.comments || 0);
-  }, [post.comments]);
-
-  const handleLike = async () => {
-    if (isTogglingFavorite) return;
-    const newLikedState = !isLiked;
-    const previousLikedState = isLiked;
-    setIsLiked(newLikedState);
-    setIsTogglingFavorite(true);
-    try {
-      if (newLikedState) await favoriteAPI.addFavorite(post.id);
-      else await favoriteAPI.removeFavorite(post.id);
-      onLikeUpdate?.(post.id, newLikedState);
-    } catch (error) {
-      setIsLiked(previousLikedState);
-      alert(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Không thể cập nhật yêu thích",
-      );
-    } finally {
-      setIsTogglingFavorite(false);
-    }
+  // Component hiện chips dịch vụ trong post card
+  const TypeServiceChips = ({ typeService }) => {
+    if (!typeService || typeService.length === 0) return null;
+    return (
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {typeService.map((name) => (
+          <span
+            key={name}
+            className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold"
+          >
+            {name}
+          </span>
+        ))}
+      </div>
+    );
   };
+};
 
-  const cfg = post.category
-    ? categoryConfig[post.category] || {
-        icon: LayoutGrid,
-        bg: "from-gray-500 to-slate-500",
-      }
-    : null;
+useEffect(() => {
+  setIsLiked(post.isLiked || false);
+}, [post.isLiked]);
+useEffect(() => {
+  setCommentCount(post.comments || 0);
+}, [post.comments]);
 
-  return (
-    <>
-      <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-all w-full">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex gap-3 flex-1 min-w-0">
-            <div
-              className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100 cursor-pointer"
-              onClick={() => router.push(`/profile/${post.authorId}`)}
-            >
-              <Image
-                src={post.userAvatar || "/images/avatar.jpg"}
-                alt={post.userName}
-                width={96}
-                height={96}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h4 className="font-bold text-gray-900 text-base">
-                  {post.userName}
-                </h4>
-                {cfg &&
-                  (() => {
-                    const Icon = cfg.icon;
-                    return (
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${cfg.bg} text-white shadow-sm shrink-0`}
-                      >
-                        <Icon size={11} />
-                        {post.category}
-                      </span>
-                    );
-                  })()}
-              </div>
-              <p className="text-gray-500 text-sm truncate">
-                {post.userHandle && post.userHandle}
-                {post.userHandle && post.timestamp && " • "}
-                {post.timestamp}
-              </p>
-            </div>
-          </div>
+const handleLike = async () => {
+  if (isTogglingFavorite) return;
+  const newLikedState = !isLiked;
+  const previousLikedState = isLiked;
+  setIsLiked(newLikedState);
+  setIsTogglingFavorite(true);
+  try {
+    if (newLikedState) await favoriteAPI.addFavorite(post.id);
+    else await favoriteAPI.removeFavorite(post.id);
+    onLikeUpdate?.(post.id, newLikedState);
+  } catch (error) {
+    setIsLiked(previousLikedState);
+    alert(
+      error?.response?.data?.message ||
+      error?.message ||
+      "Không thể cập nhật yêu thích",
+    );
+  } finally {
+    setIsTogglingFavorite(false);
+  }
+};
 
-          {/* Report button — chỉ hiện với post của người khác */}
-          {!isOwnPost && (
-            <button
-              onClick={() => setIsReportModalOpen(true)}
-              className="shrink-0 p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-full transition-all ml-2"
-              title={t("report_btn_tooltip")}
-            >
-              <Flag size={18} />
-            </button>
-          )}
-        </div>
+const cfg = post.category
+  ? categoryConfig[post.category] || {
+    icon: LayoutGrid,
+    bg: "from-gray-500 to-slate-500",
+  }
+  : null;
 
-        {post.title && (
-          <h3 className="font-bold text-gray-900 text-lg leading-snug mb-2">
-            {post.title}
-          </h3>
-        )}
-
-        <div className="text-base text-gray-600 leading-relaxed mb-4">
-          <p className="whitespace-pre-wrap">{post.content}</p>
-        </div>
-
-        {post.contact && (
-          <div className="mb-4">
-            <span className="text-sm font-semibold text-gray-500">
-              {t("posts_contact_label")}
-            </span>
-            <span className="text-sm font-semibold text-emerald-700">
-              {post.contact}
-            </span>
-          </div>
-        )}
-
-        {post.image && (
-          <div className="rounded-xl overflow-hidden mb-4 border border-gray-200">
+return (
+  <>
+    <article className="bg-white border border-gray-200 rounded-2xl p-5 mb-5 shadow-sm hover:shadow-md transition-all w-full">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex gap-3 flex-1 min-w-0">
+          <div
+            className="w-11 h-11 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-100 cursor-pointer"
+            onClick={() => router.push(`/profile/${post.authorId}`)}
+          >
             <Image
-              src={post.image}
-              alt="Post content"
+              src={post.userAvatar || "/images/avatar.jpg"}
+              alt={post.userName}
               width={96}
               height={96}
-              className="w-full h-auto object-cover"
+              className="w-full h-full object-cover"
             />
           </div>
-        )}
-
-        <div className="pt-3 border-t border-gray-200 flex items-center justify-between px-1">
-          <button
-            onClick={handleLike}
-            disabled={isTogglingFavorite}
-            className={`flex items-center gap-2 transition px-3 py-1.5 rounded-lg ${isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500 hover:bg-red-50"} ${isTogglingFavorite ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            {isTogglingFavorite ? (
-              <Loader2 size={20} className="animate-spin" />
-            ) : (
-              <Heart size={20} className={`${isLiked ? "fill-current" : ""}`} />
-            )}
-            {likeCount > 0 && (
-              <span className="text-sm font-medium">{likeCount}</span>
-            )}
-          </button>
-          <button
-            onClick={() => setIsCommentModalOpen(true)}
-            className="flex items-center gap-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition px-3 py-1.5 rounded-lg"
-          >
-            <MessageCircle size={20} />
-            {commentCount > 0 && (
-              <span className="text-sm font-medium">{commentCount}</span>
-            )}
-          </button>
-          <button
-            onClick={() => onContact?.(post)}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm"
-          >
-            {t("posts_contact_btn")}
-          </button>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h4 className="font-bold text-gray-900 text-base">
+                {post.userName}
+              </h4>
+              {cfg &&
+                (() => {
+                  const Icon = cfg.icon;
+                  return (
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-linear-to-r ${cfg.bg} text-white shadow-sm shrink-0`}
+                    >
+                      <Icon size={11} />
+                      {post.category}
+                    </span>
+                  );
+                })()}
+            </div>
+            <p className="text-gray-500 text-sm truncate">
+              {post.userHandle && post.userHandle}
+              {post.userHandle && post.timestamp && " • "}
+              {post.timestamp}
+            </p>
+          </div>
         </div>
-      </article>
 
-      <CommentModal
-        isOpen={isCommentModalOpen}
-        onClose={() => setIsCommentModalOpen(false)}
-        postId={post.id}
-        onCommentCountChange={setCommentCount}
-      />
+        {/* Report button — chỉ hiện với post của người khác */}
+        {!isOwnPost && (
+          <button
+            onClick={() => setIsReportModalOpen(true)}
+            className="shrink-0 p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-full transition-all ml-2"
+            title={t("report_btn_tooltip")}
+          >
+            <Flag size={18} />
+          </button>
+        )}
+      </div>
 
-      <ReportPostModal
-        isOpen={isReportModalOpen}
-        onClose={() => setIsReportModalOpen(false)}
-        postId={post.id}
-        postTitle={post.title || post.content?.slice(0, 80)}
-      />
-    </>
-  );
+      {post.title && (
+        <h3 className="font-bold text-gray-900 text-lg leading-snug mb-2">
+          {post.title}
+        </h3>
+      )}
+
+
+      <div className="text-base text-gray-600 leading-relaxed mb-4">
+        <p className="whitespace-pre-wrap">{post.content}</p>
+      </div>
+
+      <TypeServiceChips typeService={post.type_service} />
+      {post.contact && (
+        <div className="mb-4">
+          <span className="text-sm font-semibold text-gray-500">
+            {t("posts_contact_label")}
+          </span>
+          <span className="text-sm font-semibold text-emerald-700">
+            {post.contact}
+          </span>
+        </div>
+      )}
+
+      {post.image && (
+        <div className="rounded-xl overflow-hidden mb-4 border border-gray-200">
+          <Image
+            src={post.image}
+            alt="Post content"
+            width={96}
+            height={96}
+            className="w-full h-auto object-cover"
+          />
+        </div>
+      )}
+
+      <div className="pt-3 border-t border-gray-200 flex items-center justify-between px-1">
+        <button
+          onClick={handleLike}
+          disabled={isTogglingFavorite}
+          className={`flex items-center gap-2 transition px-3 py-1.5 rounded-lg ${isLiked ? "text-red-500" : "text-gray-500 hover:text-red-500 hover:bg-red-50"} ${isTogglingFavorite ? "opacity-50 cursor-not-allowed" : ""}`}
+        >
+          {isTogglingFavorite ? (
+            <Loader2 size={20} className="animate-spin" />
+          ) : (
+            <Heart size={20} className={`${isLiked ? "fill-current" : ""}`} />
+          )}
+          {likeCount > 0 && (
+            <span className="text-sm font-medium">{likeCount}</span>
+          )}
+        </button>
+        <button
+          onClick={() => setIsCommentModalOpen(true)}
+          className="flex items-center gap-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition px-3 py-1.5 rounded-lg"
+        >
+          <MessageCircle size={20} />
+          {commentCount > 0 && (
+            <span className="text-sm font-medium">{commentCount}</span>
+          )}
+        </button>
+        <button
+          onClick={() => onContact?.(post)}
+          className="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium hover:bg-emerald-700 transition-colors text-sm"
+        >
+          {t("posts_contact_btn")}
+        </button>
+      </div>
+    </article>
+
+    <CommentModal
+      isOpen={isCommentModalOpen}
+      onClose={() => setIsCommentModalOpen(false)}
+      postId={post.id}
+      onCommentCountChange={setCommentCount}
+    />
+
+    <ReportPostModal
+      isOpen={isReportModalOpen}
+      onClose={() => setIsReportModalOpen(false)}
+      postId={post.id}
+      postTitle={post.title || post.content?.slice(0, 80)}
+    />
+  </>
+);
 };
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -859,6 +878,7 @@ export default function PostsContent() {
             comments: post.comments_count || 0,
             status: post.status || "active",
             isLiked: favoritePostIds.has(post._id),
+            type_service: post.type_service || [],
           };
         });
 
@@ -899,10 +919,10 @@ export default function PostsContent() {
       prev.map((post) =>
         post.id === postId
           ? {
-              ...post,
-              isLiked,
-              likes: isLiked ? post.likes + 1 : post.likes - 1,
-            }
+            ...post,
+            isLiked,
+            likes: isLiked ? post.likes + 1 : post.likes - 1,
+          }
           : post,
       ),
     );

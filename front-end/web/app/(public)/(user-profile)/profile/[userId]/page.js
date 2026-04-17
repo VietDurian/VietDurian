@@ -305,90 +305,91 @@ export default function PublicProfilePage() {
             </h2>
 
             <div className="space-y-4">
-              <div className="bg-linear-to-br from-emerald-50 to-white rounded-2xl p-6 border-2 border-emerald-100">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-emerald-500 rounded-xl">
-                    <Building2
-                      size={22}
-                      className="text-white"
-                      strokeWidth={2.5}
-                    />
+              {/* Row 1: Tên doanh nghiệp + Khu vực ngang nhau */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-linear-to-br from-emerald-50 to-white rounded-2xl p-6 border-2 border-emerald-100">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-emerald-500 rounded-xl">
+                      <Building2 size={22} className="text-white" strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                        {t("public_profile_business_name")}
+                      </p>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        {resumeData.business_name}
+                      </h3>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                      {t("public_profile_business_name")}
-                    </p>
-                    <h3 className="text-xl font-bold text-gray-900">
-                      {resumeData.business_name}
-                    </h3>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-emerald-50 rounded-xl">
+                      <MapPin size={20} className="text-emerald-600" strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                        {t("public_profile_areas")}
+                      </p>
+                      <p className="font-semibold text-gray-900">{resumeData.service_areas}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-emerald-50 rounded-xl">
-                      <Wrench
-                        size={20}
-                        className="text-emerald-600"
-                        strokeWidth={2.5}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                        {t("public_profile_services")}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {resumeData.services.split(",").map((s, i) => (
+              {/* Row 2: Dịch vụ full width */}
+              <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-emerald-50 rounded-xl shrink-0">
+                    <Wrench size={20} className="text-emerald-600" strokeWidth={2.5} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                      {t("public_profile_services")}
+                    </p>
+                    <div className="flex flex-wrap gap-3 mt-3">
+                      {Array.isArray(resumeData.services)
+                        ? resumeData.services.map((svc, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 shadow-sm"
+                          >
+                            <img
+                              src={svc.image}
+                              alt={svc.name}
+                              className="w-16 h-16 rounded-lg object-cover border border-emerald-200 shrink-0"
+                            />
+                            <span className="text-base font-semibold text-emerald-700">{svc.name}</span>
+                          </div>
+                        ))
+                        : resumeData.services.split(",").map((s, i) => (
                           <span
                             key={i}
                             className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium border border-emerald-200"
                           >
                             {s.trim()}
                           </span>
-                        ))}
-                      </div>
+                        ))
+                      }
                     </div>
                   </div>
                 </div>
+              </div>
 
+              {/* Row 3: Kinh nghiệm + Liên hệ (giữ nguyên) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white rounded-2xl p-6 border border-gray-200">
                   <div className="flex items-start gap-4">
                     <div className="p-3 bg-emerald-50 rounded-xl">
-                      <MapPin
-                        size={20}
-                        className="text-emerald-600"
-                        strokeWidth={2.5}
-                      />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                        {t("public_profile_areas")}
-                      </p>
-                      <p className="font-semibold text-gray-900">
-                        {resumeData.service_areas}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-emerald-50 rounded-xl">
-                      <Award
-                        size={20}
-                        className="text-emerald-600"
-                        strokeWidth={2.5}
-                      />
+                      <Award size={20} className="text-emerald-600" strokeWidth={2.5} />
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
                         {t("public_profile_experience")}
                       </p>
                       <p className="font-semibold text-gray-900">
-                        {resumeData.experience_year}{" "}
-                        {t("public_profile_experience_unit")}
+                        {resumeData.experience_year} {t("public_profile_experience_unit")}
                       </p>
                     </div>
                   </div>
@@ -397,40 +398,29 @@ export default function PublicProfilePage() {
                 <div className="bg-white rounded-2xl p-6 border border-gray-200">
                   <div className="flex items-start gap-4">
                     <div className="p-3 bg-emerald-50 rounded-xl">
-                      <Phone
-                        size={20}
-                        className="text-emerald-600"
-                        strokeWidth={2.5}
-                      />
+                      <Phone size={20} className="text-emerald-600" strokeWidth={2.5} />
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
                         {t("public_profile_contact")}
                       </p>
-                      <p className="font-semibold text-gray-900">
-                        {resumeData.contact_phone}
-                      </p>
+                      <p className="font-semibold text-gray-900">{resumeData.contact_phone}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
+              {/* Row 4: Mô tả (giữ nguyên) */}
               <div className="bg-white rounded-2xl p-6 border border-gray-200">
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-emerald-50 rounded-xl">
-                    <FileText
-                      size={20}
-                      className="text-emerald-600"
-                      strokeWidth={2.5}
-                    />
+                    <FileText size={20} className="text-emerald-600" strokeWidth={2.5} />
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                       {t("public_profile_description")}
                     </p>
-                    <p className="text-gray-700 leading-relaxed">
-                      {resumeData.description}
-                    </p>
+                    <p className="text-gray-700 leading-relaxed">{resumeData.description}</p>
                   </div>
                 </div>
               </div>
