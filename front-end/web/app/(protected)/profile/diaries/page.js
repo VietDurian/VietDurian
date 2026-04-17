@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
 import Image from "next/image";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useBuyingSeedStore } from "@/store/useBuyingSeedStore";
 import { useBuyingFertilizerStore } from "@/store/useBuyingFertilizerStore";
 import { useUseFertilizerStore } from "@/store/useUseFertilizerStore";
@@ -424,6 +424,10 @@ const SEED_DATA = {
 };
 
 const PAGE_SIZE = 8;
+const fmtDate = (iso) =>
+  iso ? new Date(iso).toLocaleDateString("vi-VN") : null;
+const fmtNumber = (value) =>
+  new Intl.NumberFormat("vi-VN").format(Number(value) || 0);
 
 const isFieldRequired = (diary, col) => {
   if (typeof col.required === "boolean") return col.required;
@@ -657,6 +661,119 @@ function DeleteModal({ count, onConfirm, onClose }) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function GardenDropdown({ gardens, selectedId, onSelect, t }) {
+  const [open, setOpen] = useState(false);
+
+  const statusLabel = (status) =>
+    status === "In progressing"
+      ? t("stats_status_inprogress")
+      : t("stats_status_ended");
+
+  const statusStyle = (status) =>
+    status === "In progressing"
+      ? "bg-emerald-100 text-emerald-700"
+      : "bg-gray-100 text-gray-500";
+
+  const selectedGarden = gardens.find((g) => g.diary.id === selectedId);
+
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-2 group"
+      >
+        <h2 className="text-white text-xl font-bold leading-tight group-hover:text-emerald-100 transition-colors">
+          {selectedGarden?.diary.garden_name || t("stats_dropdown_label")}
+        </h2>
+        <svg
+          className={`w-5 h-5 text-emerald-200 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2.5}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 mt-3 w-80 bg-white rounded-2xl border border-gray-100 shadow-2xl shadow-emerald-900/20 py-2 z-50">
+          <p className="text-xs text-gray-400 font-semibold uppercase tracking-widest px-4 pt-1 pb-2">
+            {t("stats_dropdown_label")}
+          </p>
+          {gardens.map((g) => {
+            const isActive = g.diary.id === selectedId;
+            return (
+              <button
+                key={g.diary.id}
+                onClick={() => {
+                  onSelect(g.diary.id);
+                  setOpen(false);
+                }}
+                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-emerald-50 ${isActive ? "bg-emerald-50" : ""}`}
+              >
+                <div
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${isActive ? "bg-emerald-600" : "bg-gray-100"}`}
+                >
+                  <svg
+                    className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-400"}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.8}
+                      d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className={`text-sm font-semibold truncate ${isActive ? "text-emerald-800" : "text-gray-700"}`}
+                  >
+                    {g.diary.garden_name}
+                  </p>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span
+                      className={`text-xs px-1.5 py-0.5 rounded-md font-medium ${statusStyle(g.diary.status)}`}
+                    >
+                      {statusLabel(g.diary.status)}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {fmtNumber(g.diary.area)} {t("stats_area_unit")}
+                    </span>
+                  </div>
+                </div>
+                {isActive && (
+                  <svg
+                    className="w-4 h-4 text-emerald-500 shrink-0 mt-1.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1647,7 +1764,12 @@ function DiaryTable({
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function DiaryPage() {
   const { t } = useLanguage();
-  const { seasonDiaryId } = useParams();
+  const { authUser } = useAuthStore();
+  const seasonDiaries = useSeasonDiaryStore((s) => s.seasonDiaries);
+  const isSeasonDiariesLoading = useSeasonDiaryStore(
+    (s) => s.isSeasonDiariesLoading,
+  );
+  const getSeasonDiaries = useSeasonDiaryStore((s) => s.getSeasonDiaries);
   const seasonDiaryDetail = useSeasonDiaryStore((s) => s.seasonDiaryDetail);
   const isSeasonDiaryDetailLoading = useSeasonDiaryStore(
     (s) => s.isSeasonDiaryDetailLoading,
@@ -1655,23 +1777,70 @@ export default function DiaryPage() {
   const getSeasonDiaryDetail = useSeasonDiaryStore(
     (s) => s.getSeasonDiaryDetail,
   );
+  const [selectedId, setSelectedId] = useState(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
-    if (!seasonDiaryId) return;
-    if (seasonDiaryDetail?._id === seasonDiaryId) return;
-    getSeasonDiaryDetail(seasonDiaryId);
-  }, [seasonDiaryId, seasonDiaryDetail?._id, getSeasonDiaryDetail]);
+    if (authUser?._id) getSeasonDiaries(authUser._id);
+  }, [authUser?._id, getSeasonDiaries]);
+
+  const gardens = useMemo(
+    () =>
+      seasonDiaries.map((d) => ({
+        diary: {
+          id: d._id,
+          garden_name: d.garden_name,
+          status: d.status,
+          area: Number(d.area) || 0,
+          start_date: d.created_at || null,
+          end_date: d.end_date || null,
+          location: d.location || "",
+        },
+      })),
+    [seasonDiaries],
+  );
+
+  useEffect(() => {
+    if (!gardens.length) {
+      setSelectedId(null);
+      return;
+    }
+    setSelectedId((prev) => {
+      if (prev && gardens.some((g) => g.diary.id === prev)) return prev;
+      return gardens[0].diary.id;
+    });
+  }, [gardens]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    if (seasonDiaryDetail?._id === selectedId) return;
+    getSeasonDiaryDetail(selectedId);
+  }, [selectedId, seasonDiaryDetail?._id, getSeasonDiaryDetail]);
+
+  const selectedGarden =
+    gardens.find((g) => g.diary.id === selectedId) ?? gardens[0] ?? null;
+
+  const data =
+    seasonDiaryDetail?._id === selectedId
+      ? seasonDiaryDetail
+      : selectedGarden?.diary || {};
 
   const gardenName = (
-    seasonDiaryDetail?.garden_name ||
-    seasonDiaryDetail?.gardenName ||
-    seasonDiaryDetail?.name ||
+    data?.garden_name ||
+    data?.gardenName ||
+    data?.name ||
     ""
   ).trim();
-  const data = seasonDiaryDetail || {};
   const owner = data.user_id || {};
+  const startDateValue =
+    data.start_date ||
+    data.created_at ||
+    data.startDate ||
+    selectedGarden?.diary?.start_date ||
+    null;
+  const endDateValue =
+    data.end_date || data.endDate || selectedGarden?.diary?.end_date || null;
 
   const STATUS = {
     "In progressing": {
@@ -2100,48 +2269,52 @@ export default function DiaryPage() {
 
   const diary = DIARIES[activeIdx];
 
+  if (isSeasonDiariesLoading && !gardens.length) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-gray-500">
+          <span className="animate-spin w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full" />
+          {t("stats_loading")}
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSeasonDiariesLoading && !gardens.length) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <p className="text-sm text-gray-500">{t("stats_empty")}</p>
+      </div>
+    );
+  }
+
   return (
     <div
       className="space-y-4 min-h-screen p-5"
       onClick={() => setDropdownOpen(false)}
     >
-      {/* Season header (same style as detail page, without action buttons) */}
-      <div className="bg-linear-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5">
-        <div className="flex items-start gap-4 flex-wrap">
-          {owner?.avatar ? (
-            <Image
-              src={owner.avatar}
-              alt={owner?.full_name || ""}
-              width={96}
-              height={96}
-              className="w-14 h-14 rounded-2xl object-cover ring-2 ring-white/30 shrink-0 bg-emerald-600"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          ) : (
-            <div className="w-14 h-14 rounded-2xl bg-emerald-600 shrink-0" />
-          )}
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 text-nowrap">
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}
-                />
-                {statusMeta.label}
-              </span>
-              <span className="bg-white/10 text-emerald-100 text-xs font-mono px-2.5 py-0.5 rounded-full text-nowrap">
-                {data.farmer_code || "-"}
-              </span>
-            </div>
-            <h1 className="text-xl font-bold text-white leading-snug">
-              {gardenName || "-"}
-            </h1>
-            <p className="text-emerald-100 text-sm mt-0.5">
-              {data.location || "-"}
-            </p>
+      <div className="bg-linear-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">
+              {data.status === "In progressing"
+                ? t("stats_status_inprogress")
+                : t("stats_status_ended")}
+            </span>
           </div>
+          <GardenDropdown
+            gardens={gardens}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            t={t}
+          />
+          <p className="text-emerald-100 text-sm mt-2">
+            {t("stats_start")} {fmtDate(startDateValue) || "-"}
+            {fmtDate(endDateValue)
+              ? ` · ${t("stats_end")} ${fmtDate(endDateValue)}`
+              : ""}{" "}
+            · {fmtNumber(data.area)} {t("stats_area_unit")}
+          </p>
         </div>
       </div>
 
@@ -2235,10 +2408,10 @@ export default function DiaryPage() {
 
       {/* Table — re-mounts on switch to reset state */}
       <DiaryTable
-        key={diary.id}
+        key={`${selectedId || "none"}-${diary.id}`}
         diary={diary}
         diaries={DIARIES}
-        seasonDiaryId={seasonDiaryId}
+        seasonDiaryId={selectedId}
       />
     </div>
   );
