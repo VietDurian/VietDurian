@@ -447,7 +447,6 @@ export default function SubmitProofPage() {
   if (submitted) {
     return (
       <div className="min-h-screen flex justify-center items-center px-4 bg-gray-50 font-sans p-5 lg:pt-0 w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
-        <FloatingLangToggle />
         <div className="bg-white rounded-3xl shadow-lg p-10 max-w-md w-full flex flex-col items-center text-center gap-4">
           <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-200">
             <CheckCircle className="w-8 h-8 text-white" />
@@ -472,7 +471,6 @@ export default function SubmitProofPage() {
   // ── Main form ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col items-center px-4 bg-gray-50 font-sans p-5 lg:pt-0 w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
-      <FloatingLangToggle />
       <Link
         className="absolute top-5 left-5 flex items-center hover:text-emerald-500 transition-colors duration-300"
         href={"/"}

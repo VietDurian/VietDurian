@@ -22,9 +22,11 @@ import {
   Edit,
   Shield,
   Layers,
+  DollarSign,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { usePermissionStore } from "@/store/usePermissionStore";
+import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 
 const SidebarItem = ({
   icon: Icon,
@@ -34,32 +36,35 @@ const SidebarItem = ({
   onClick,
   disabled,
 }) => {
-  const itemClass = `relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${disabled
-    ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-    : active
-      ? "bg-emerald-500 text-white scale-105"
-      : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
-    }`;
+  const itemClass = `relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-500 group overflow-hidden ${
+    disabled
+      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+      : active
+        ? "bg-emerald-500 text-white scale-105"
+        : "text-gray-600 hover:bg-white hover:shadow-lg hover:scale-[1.02]"
+  }`;
 
   const content = (
     <>
       {active && <div className="absolute inset-0 bg-white/10 rounded-2xl" />}
       <div
-        className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${disabled
-          ? "bg-gray-200"
-          : active
-            ? "bg-white/20 backdrop-blur-sm"
-            : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
-          }`}
+        className={`relative z-10 p-2 rounded-xl transition-all duration-300 ${
+          disabled
+            ? "bg-gray-200"
+            : active
+              ? "bg-white/20 backdrop-blur-sm"
+              : "bg-gradient-to-br from-gray-100 to-gray-50 group-hover:from-emerald-50 group-hover:to-teal-50"
+        }`}
       >
         <Icon
           size={20}
-          className={`${disabled
-            ? "text-gray-400"
-            : active
-              ? "text-white"
-              : "text-emerald-500 group-hover:text-emerald-600 group-hover:scale-110"
-            } transition-all duration-300`}
+          className={`${
+            disabled
+              ? "text-gray-400"
+              : active
+                ? "text-white"
+                : "text-emerald-500 group-hover:text-emerald-600 group-hover:scale-110"
+          } transition-all duration-300`}
           strokeWidth={2.5}
         />
       </div>
@@ -101,6 +106,7 @@ const SidebarItem = ({
 
 export default function AsideBar({ role }) {
   const { verifyCCCDStatus, getVerifyCCCDStatus } = usePermissionStore();
+  const seasonDiaryDetail = useSeasonDiaryStore((s) => s.seasonDiaryDetail);
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useLanguage();
@@ -124,6 +130,9 @@ export default function AsideBar({ role }) {
 
   const isFarmerSeasonDiarySubRoute =
     role === "farmer" && !!seasonDiaryId && seasonDiaryId !== "create";
+  const isSeasonDiaryCompleted =
+    seasonDiaryDetail?._id === seasonDiaryId &&
+    seasonDiaryDetail?.status === "Completed";
   const isFarmerProductsSubRoute =
     role === "farmer" && !!productId && productId !== "create";
   const shouldShowVerification =
@@ -143,7 +152,11 @@ export default function AsideBar({ role }) {
         return [
           { icon: User, label: t("aside_info"), href: "/profile/details" },
           { icon: Bot, label: t("aside_ai"), href: "/profile/ai" },
-          { icon: FileText, label: t("aside_posts_trader"), href: "/profile/posts" },
+          {
+            icon: FileText,
+            label: t("aside_posts_trader"),
+            href: "/profile/posts",
+          },
         ];
       case "farmer":
         if (isFarmerSeasonDiarySubRoute) {
@@ -167,6 +180,7 @@ export default function AsideBar({ role }) {
               icon: Edit,
               label: t("aside_edit"),
               href: `/profile/season-diaries/${seasonDiaryId}/edit`,
+              disabled: isSeasonDiaryCompleted,
             },
           ];
         } else if (isFarmerProductsSubRoute) {
@@ -203,6 +217,11 @@ export default function AsideBar({ role }) {
             href: "/profile/diaries",
           },
           {
+            icon: DollarSign,
+            label: t("aside_harvest"),
+            href: "/profile/harvest",
+          },
+          {
             icon: Package,
             label: t("aside_products"),
             href: "/profile/products",
@@ -213,27 +232,45 @@ export default function AsideBar({ role }) {
             href: "/profile/statistics",
           },
           { icon: Bot, label: t("aside_ai"), href: "/profile/ai" },
-          { icon: FileText, label: t("aside_posts_farmer"), href: "/profile/posts" },
+          {
+            icon: FileText,
+            label: t("aside_posts_farmer"),
+            href: "/profile/posts",
+          },
         ];
       case "contentExpert":
         if (shouldShowVerification) {
-          return [verificationMenuItem];
+          return [
+            { icon: User, label: t("aside_info"), href: "/profile/details" },
+            verificationMenuItem,
+          ];
         }
         return [
           { icon: User, label: t("aside_info"), href: "/profile/details" },
           { icon: PenTool, label: t("aside_blog"), href: "/profile/blogs" },
           { icon: Bot, label: t("aside_ai"), href: "/profile/ai" },
-          { icon: FileText, label: t("aside_posts_content"), href: "/profile/posts" },
+          {
+            icon: FileText,
+            label: t("aside_posts_content"),
+            href: "/profile/posts",
+          },
         ];
       case "serviceProvider":
         if (shouldShowVerification) {
-          return [verificationMenuItem];
+          return [
+            { icon: User, label: t("aside_info"), href: "/profile/details" },
+            verificationMenuItem,
+          ];
         }
         return [
           { icon: User, label: t("aside_info"), href: "/profile/details" },
           { icon: FileEdit, label: t("aside_resume"), href: "/profile/resume" },
           { icon: Bot, label: t("aside_ai"), href: "/profile/ai" },
-          { icon: FileText, label: t("aside_posts_service"), href: "/profile/posts" },
+          {
+            icon: FileText,
+            label: t("aside_posts_service"),
+            href: "/profile/posts",
+          },
         ];
       default:
         return [];

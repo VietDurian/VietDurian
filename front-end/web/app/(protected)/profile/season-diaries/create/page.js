@@ -42,6 +42,15 @@ const INITIAL_FORM = {
   land_use_history: "",
 };
 
+const formatThousandNumber = (value) => {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  return new Intl.NumberFormat("vi-VN").format(Number(digits));
+};
+
+const parseThousandNumber = (value) =>
+  Number(String(value ?? "").replace(/\D/g, ""));
+
 // ── Mã tỉnh/thành viết tắt 2 ký tự ─────────────────────────────────────────
 const PROVINCE_CODES = new Set([
   "AG",
@@ -304,7 +313,7 @@ export default function CreateSeasonDiary() {
         formData.planting_area_code,
       ),
       row_bed_count: Number(formData.row_bed_count),
-      area: Number(formData.area),
+      area: parseThousandNumber(formData.area),
     };
 
     // TODO: thay bằng Zustand action
@@ -559,24 +568,30 @@ export default function CreateSeasonDiary() {
                 <FieldLabel htmlFor="area" required>
                   {t("create_area")}
                 </FieldLabel>
-                <Input
-                  type="number"
-                  id="area"
-                  name="area"
-                  value={formData.area}
-                  onChange={handleChange}
-                  min="1"
-                  step="any"
-                  onWheel={(e) => e.target.blur()}
-                  placeholder={t("create_area_placeholder")}
-                  suffix={t("create_area_unit")}
-                  onKeyDown={(e) => {
-                    if (e.key === "-" || e.key === "e") e.preventDefault();
-                  }}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="area"
+                    name="area"
+                    value={formData.area}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        area: formatThousandNumber(e.target.value),
+                      }))
+                    }
+                    inputMode="numeric"
+                    placeholder={t("create_area_placeholder")}
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors text-sm"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
+                    {t("create_area_unit")}
+                  </span>
+                </div>
                 {formData.area && (
                   <p className="text-xs text-gray-400 mt-1">
-                    ≈ {(parseFloat(formData.area) / 10000).toFixed(4)} ha
+                    ≈ {(parseThousandNumber(formData.area) / 10000).toFixed(4)}{" "}
+                    ha
                   </p>
                 )}
               </div>
