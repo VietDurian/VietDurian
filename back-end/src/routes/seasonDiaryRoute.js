@@ -158,6 +158,9 @@ const Router = express.Router();
  *               image:
  *                 type: string
  *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NDI5ZWVlMjFlZWJhOTZjZDFjM2Y3MSIsImlhdCI6MTc3NjMzMjEwMywiZXhwIjoxNzc2OTM2OTAzfQ.5so9rXEGTccL-wDYlKg5lqP58CIwvfgRKnwdpTUdBRQ"
+ *               status:
+ *                 type: string
+ *                 enum: ['Stopped', 'In progressing', 'Completed']
  *               land_use_history:
  *                 type: string
  *     responses:
