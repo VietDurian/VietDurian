@@ -112,8 +112,8 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          err?.message ||
-          t("report_error_submit_fail"),
+        err?.message ||
+        t("report_error_submit_fail"),
       );
     } finally {
       setIsSubmitting(false);
@@ -200,11 +200,10 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                         if (reason !== t("report_reason_other"))
                           setCustomReason("");
                       }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${
-                        selectedReason === reason
-                          ? "border-orange-400 bg-orange-50 text-orange-700"
-                          : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
-                      }`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${selectedReason === reason
+                        ? "border-orange-400 bg-orange-50 text-orange-700"
+                        : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                        }`}
                     >
                       {reason}
                     </button>
@@ -624,6 +623,23 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
 
   const isOwnPost = currentUserId && post.authorId === currentUserId;
 
+  // Component hiện chips dịch vụ trong post card
+  const TypeServiceChips = ({ typeService }) => {
+    if (!typeService || typeService.length === 0) return null;
+    return (
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {typeService.map((name) => (
+          <span
+            key={name}
+            className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold"
+          >
+            {name}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   useEffect(() => {
     setIsLiked(post.isLiked || false);
   }, [post.isLiked]);
@@ -645,8 +661,8 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
       setIsLiked(previousLikedState);
       alert(
         error?.response?.data?.message ||
-          error?.message ||
-          "Không thể cập nhật yêu thích",
+        error?.message ||
+        "Không thể cập nhật yêu thích",
       );
     } finally {
       setIsTogglingFavorite(false);
@@ -655,9 +671,9 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
 
   const cfg = post.category
     ? categoryConfig[post.category] || {
-        icon: LayoutGrid,
-        bg: "from-gray-500 to-slate-500",
-      }
+      icon: LayoutGrid,
+      bg: "from-gray-500 to-slate-500",
+    }
     : null;
 
   return (
@@ -721,10 +737,12 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
           </h3>
         )}
 
+
         <div className="text-base text-gray-600 leading-relaxed mb-4">
           <p className="whitespace-pre-wrap">{post.content}</p>
         </div>
 
+        <TypeServiceChips typeService={post.type_service} />
         {post.contact && (
           <div className="mb-4">
             <span className="text-sm font-semibold text-gray-500">
@@ -859,6 +877,7 @@ export default function PostsContent() {
             comments: post.comments_count || 0,
             status: post.status || "active",
             isLiked: favoritePostIds.has(post._id),
+            type_service: post.type_service || [],
           };
         });
 
@@ -899,10 +918,10 @@ export default function PostsContent() {
       prev.map((post) =>
         post.id === postId
           ? {
-              ...post,
-              isLiked,
-              likes: isLiked ? post.likes + 1 : post.likes - 1,
-            }
+            ...post,
+            isLiked,
+            likes: isLiked ? post.likes + 1 : post.likes - 1,
+          }
           : post,
       ),
     );

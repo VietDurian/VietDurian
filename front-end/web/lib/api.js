@@ -552,46 +552,37 @@ export const ratingAPI = {
   },
 };
 
-// Get own posts
+// getOwnPosts
 export async function getOwnPosts(filters = {}) {
-  const { status, category, search, sort, author_id } = filters;
-
-  // Build query string safely
+  const { status, category, search, sort, author_id, service } = filters;
   const params = new URLSearchParams();
-
   if (status && status !== "--") params.append("status", status);
   if (category && category !== "--") params.append("category", category);
   if (search) params.append("search", search);
   if (sort) params.append("sort", sort);
   if (author_id) params.append("author_id", author_id);
-
-  const url = `/post/general${params.toString() ? `?${params.toString()}` : ""
-    }`;
-
+  // service là array
+  if (service && service.length > 0) {
+    service.forEach(s => params.append("service", s));
+  }
+  const url = `/post/general${params.toString() ? `?${params.toString()}` : ""}`;
   try {
     const response = await apiClient.get(url);
     return response?.data?.data || [];
   } catch (error) {
-    const message =
-      error?.response?.data?.message ||
-      error.message ||
-      "Failed to fetch posts";
-    throw new Error(message);
+    throw new Error(error?.response?.data?.message || error.message || "Failed to fetch posts");
   }
 }
 
-// Create new post
-export async function createPost({ category, title, content, image, contact }) {
+// createPost 
+export async function createPost({ category, title, content, image, contact, type_service }) {
   const params = { category, title, content, image, contact };
+  if (type_service && type_service.length > 0) params.type_service = type_service;
   try {
     const response = await apiClient.post("/post/general", params);
     return response?.data?.data;
   } catch (error) {
-    const message =
-      error?.response?.data?.message ||
-      error?.message ||
-      "Failed to create post";
-    throw new Error(message);
+    throw new Error(error?.response?.data?.message || error?.message || "Failed to create post");
   }
 }
 
@@ -609,18 +600,15 @@ export async function deletePost(postId) {
   }
 }
 
-// Update post
-export async function updatePost(postId, { category, title, content, image, contact }) {
+// updatePost
+export async function updatePost(postId, { category, title, content, image, contact, type_service }) {
+  const params = { category, title, content, image, contact };
+  if (type_service !== undefined) params.type_service = type_service;
   try {
-    const params = { category, title, content, image, contact };
     const response = await apiClient.patch(`/post/${postId}/general`, params);
     return response?.data?.data;
   } catch (error) {
-    const message =
-      error?.response?.data?.message ||
-      error?.message ||
-      "Failed to update post";
-    throw new Error(message);
+    throw new Error(error?.response?.data?.message || error?.message || "Failed to update post");
   }
 }
 
