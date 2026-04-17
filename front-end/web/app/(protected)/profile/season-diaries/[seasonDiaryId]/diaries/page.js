@@ -1296,7 +1296,28 @@ function DiaryTable({
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex flex-wrap gap-2 items-center">
-        <div className="relative flex-1 min-w-48">
+        {/* Create new record button */}
+        <button
+          onClick={openCreate}
+          disabled={isActionBusy || isCrudDisabled}
+          className="cursor-pointer flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-emerald-200 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          {t("diary_add_btn")}
+        </button>
+        <div className="relative min-w-48">
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
             fill="none"
@@ -1331,27 +1352,7 @@ function DiaryTable({
             {t("diary_delete_selected_suffix")}
           </button>
         )}
-        {/* Create new record button */}
-        <button
-          onClick={openCreate}
-          disabled={isActionBusy || isCrudDisabled}
-          className="cursor-pointer flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-emerald-200 disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          {t("diary_add_btn")}
-        </button>
+
         {/* Export PDF file button */}
         <button
           onClick={handleExportPDF}
