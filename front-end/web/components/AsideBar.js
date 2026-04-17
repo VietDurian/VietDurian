@@ -136,7 +136,7 @@ export default function AsideBar({ role }) {
   const verificationMenuItem = {
     icon: Shield,
     label: isVerificationPending ? "Đã gửi xác thực" : "Xác Thực Thông Tin",
-    href: "/submit-proof",
+    href: "/profile/submit-proof",
     disabled: isVerificationPending,
   };
 
@@ -189,8 +189,6 @@ export default function AsideBar({ role }) {
         if (shouldShowVerification) {
           return [
             { icon: User, label: t("aside_info"), href: "/profile/details" },
-            { icon: FileText, label: t("aside_posts"), href: "/profile/posts" },
-            { icon: Bot, label: t("aside_ai"), href: "/profile/ai" },
             verificationMenuItem,
           ];
         }

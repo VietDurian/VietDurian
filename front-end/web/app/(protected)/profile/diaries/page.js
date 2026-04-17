@@ -2301,7 +2301,7 @@ export default function DiaryPage() {
 
   if (!isSeasonDiariesLoading && !gardens.length) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-sm text-gray-500">{t("stats_empty")}</p>
       </div>
     );

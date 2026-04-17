@@ -123,10 +123,10 @@ const translations = {
 
     // AsideBar
     aside_info: "Thông tin",
-    aside_posts: "Bài viết",
+    aside_posts: "Đăng bài",
     aside_ai: "Phân Tích Sâu Bệnh",
     aside_garden: "Mùa vụ canh tác",
-    aside_products: "Sản Phẩm",
+    aside_products: "Thu hoạch",
     aside_statistics: "Thống Kê",
     aside_blog: "Blog",
     aside_resume: "Hồ sơ",
@@ -134,7 +134,7 @@ const translations = {
     aside_diary: "Nhật Ký",
     aside_edit: "Chỉnh Sửa",
     aside_back_products: "Trở lại sản phẩm",
-    aside_back_diary: "Trở lại nhật ký mùa vụ",
+    aside_back_diary: "Trở lại mùa vụ",
     aside_back_garden: "Trở lại mùa vụ canh tác",
     aside_brand_sub: "Trang Cá Nhân",
     aside_diaries: "Nhật ký canh tác",
@@ -1752,10 +1752,9 @@ const translations = {
     season_showing_for: "cho",
     season_empty_title: "Chưa có mùa vụ canh tác nào",
     season_empty_notfound: "Không tìm thấy nhật ký",
-    season_empty_desc:
-      "Tạo nhật ký đầu tiên để bắt đầu ghi lại hành trình canh tác",
+    season_empty_desc: "Tạo mùa vụ để bắt đầu ghi lại hành trình canh tác",
     season_empty_search_desc: "Thử thay đổi từ khóa tìm kiếm của bạn",
-    season_create_first_btn: "Tạo nhật ký đầu tiên",
+    season_create_first_btn: "Tạo mùa vụ mới",
     season_status_inprogress: "Đang canh tác",
     season_status_completed: "Đã hoàn thành",
     season_card_area: "Diện tích",
@@ -1767,7 +1766,7 @@ const translations = {
     season_card_stats: "Thống kê",
 
     // vi
-    create_season_title: "Tạo nhật ký mùa vụ mới",
+    create_season_title: "Tạo mùa vụ canh tác mới",
     create_season_subtitle:
       "Ghi lại thông tin canh tác cho mùa vụ sầu riêng của bạn",
     create_section_basic: "Thông tin cơ bản",
@@ -1811,7 +1810,7 @@ const translations = {
     create_address: "Địa chỉ:",
     create_not_selected: "Chưa chọn",
     create_not_selected_map: "Chưa chọn trên bản đồ",
-    create_submit: "Tạo nhật ký",
+    create_submit: "Tạo mùa vụ",
     create_submitting: "Đang tạo...",
     create_cancel: "Hủy",
     create_member_duplicate: "Thành viên này đã được thêm",
