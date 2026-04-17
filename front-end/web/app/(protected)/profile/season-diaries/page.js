@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Plus,
   MapPin,
@@ -16,7 +17,6 @@ import {
   Users,
   Layers,
   BarChart2,
-  Trash2,
 } from "lucide-react";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -49,6 +49,11 @@ export default function SeasonDiariesPage() {
       className: "bg-gray-100 text-gray-600 border border-gray-200",
       icon: CheckCircle2,
     },
+    Stopped: {
+      label: "Ngưng hoạt động",
+      className: "bg-amber-50 text-amber-700 border border-amber-200",
+      icon: CheckCircle2,
+    },
   };
 
   const totalArea = useMemo(
@@ -58,6 +63,16 @@ export default function SeasonDiariesPage() {
 
   const inProgressCount = useMemo(
     () => seasonDiaries.filter((d) => d.status === "In progressing").length,
+    [seasonDiaries],
+  );
+
+  const completedCount = useMemo(
+    () => seasonDiaries.filter((d) => d.status === "Completed").length,
+    [seasonDiaries],
+  );
+
+  const stoppedCount = useMemo(
+    () => seasonDiaries.filter((d) => d.status === "Stopped").length,
     [seasonDiaries],
   );
 
@@ -75,6 +90,8 @@ export default function SeasonDiariesPage() {
       list = list.filter((d) => d.status === "In progressing");
     else if (activeFilter === "completed")
       list = list.filter((d) => d.status === "Completed");
+    else if (activeFilter === "stopped")
+      list = list.filter((d) => d.status === "Stopped");
 
     const q = searchQuery.toLowerCase().trim();
     if (!q) return list;
@@ -102,7 +119,11 @@ export default function SeasonDiariesPage() {
     },
     {
       key: "completed",
-      label: `${t("season_filter_completed")} (${seasonDiaries.length - inProgressCount})`,
+      label: `${t("season_filter_completed")} (${completedCount})`,
+    },
+    {
+      key: "stopped",
+      label: `Ngưng hoạt động (${stoppedCount})`,
     },
   ];
 
@@ -263,7 +284,7 @@ export default function SeasonDiariesPage() {
               {searchQuery && ` ${t("season_showing_for")} "${searchQuery}"`}
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredDiaries.map((diary) => (
                 <SeasonDiaryCard
                   key={diary._id}
@@ -284,6 +305,9 @@ export default function SeasonDiariesPage() {
 function SeasonDiaryCard({ diary, statusConfig, t }) {
   const router = useRouter();
   const varieties = Array.isArray(diary.crop_variety) ? diary.crop_variety : [];
+  const imageUrl = typeof diary.image === "string" ? diary.image.trim() : "";
+  const [isImageError, setIsImageError] = useState(false);
+  const hasImage = Boolean(imageUrl) && !isImageError;
 
   const status = statusConfig[diary.status] || statusConfig["In progressing"];
   const StatusIcon = status.icon;
@@ -312,20 +336,20 @@ function SeasonDiaryCard({ diary, statusConfig, t }) {
   };
 
   return (
-    <div className="h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300 group flex flex-col">
+    <div
+      onClick={handleDetail}
+      className="h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300 group flex flex-col cursor-pointer hover:-translate-y-1.5"
+    >
       {/* Card header – colored band */}
-      <div
-        className="relative p-4 bg-linear-to-br from-emerald-600 to-teal-700 cursor-pointer shrink-0"
-        onClick={handleDetail}
-      >
+      <div className="relative p-4 bg-linear-to-br from-emerald-600 to-teal-700  shrink-0">
         {/* Planting area code */}
         <div className="flex items-center justify-between mb-3">
-          <span className="flex items-center gap-1 bg-black/30 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md font-mono">
+          <span className="flex items-center gap-1 bg-black/30 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md font-mono text-nowrap">
             <Hash className="w-3 h-3" />
             {diary.planting_area_code || "N/A"}
           </span>
           <span
-            className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${status.className}`}
+            className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium text-nowrap ${status.className}`}
           >
             <StatusIcon className="w-3 h-3" />
             {status.label}
@@ -345,6 +369,26 @@ function SeasonDiaryCard({ diary, statusConfig, t }) {
 
       {/* Card body */}
       <div className="p-4 flex flex-col flex-1">
+        {/* Cover image */}
+        <div className="relative mb-3 rounded-lg overflow-hidden border border-emerald-100 bg-gray-50 aspect-video">
+          {hasImage ? (
+            <Image
+              src={imageUrl}
+              alt={diary.garden_name || "Season diary image"}
+              fill
+              sizes="(max-width: 640px) 100vw, 25vw"
+              className="object-cover"
+              loading="lazy"
+              unoptimized
+              onError={() => setIsImageError(true)}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-emerald-50 to-teal-50 text-emerald-500">
+              <Sprout className="w-6 h-6" />
+            </div>
+          )}
+        </div>
+
         {/* Crop varieties */}
         <div className="flex flex-wrap gap-1.5 mb-3">
           {varieties.map((v) => (

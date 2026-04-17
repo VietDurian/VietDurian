@@ -19,6 +19,7 @@ import { useTypeProductStore } from "@/store/useTypeProduct";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
+import ImageSelect from "@/components/ImageSelect";
 
 const LocationPickerMap = dynamic(
   () => import("@/components/LocationPickerMap"),
@@ -27,6 +28,7 @@ const LocationPickerMap = dynamic(
 
 const INITIAL_FORM = {
   garden_name: "",
+  image: "",
   farmer_name: "",
   location: "",
   latitude: "",
@@ -105,7 +107,7 @@ const PROVINCE_CODES = new Set([
 const FieldLabel = ({ htmlFor, children, hint, required }) => (
   <label
     htmlFor={htmlFor}
-    className="block text-sm font-medium text-gray-900 mb-1.5"
+    className="block text-sm font-semibold text-gray-900 mb-1.5"
   >
     {children}
     {required && <span className="text-red-500 ml-0.5">*</span>}
@@ -186,10 +188,16 @@ export default function CreateSeasonDiary() {
     fetchTypes();
   }, [fetchTypes]);
 
+  const normalizePlantingAreaCode = (code) =>
+    String(code || "")
+      .toUpperCase()
+      .replace(/\s+/g, "");
+
   // VN-XXOR-YYYY  →  XX ∈ PROVINCE_CODES, YYYY = 0001..5999
   const validatePlantingAreaCode = (code) => {
-    if (!code) return null;
-    const match = code.match(/^VN-([A-Z]{2})OR-([0-5]\d{3})$/);
+    const normalizedCode = normalizePlantingAreaCode(code);
+    if (!normalizedCode) return null;
+    const match = normalizedCode.match(/^VN-([A-Z]{2})OR-([0-5]\d{3})$/);
     if (!match) return t("create_code_err_format");
     const [, province, num] = match;
     if (!PROVINCE_CODES.has(province))
@@ -206,6 +214,7 @@ export default function CreateSeasonDiary() {
   const isCreateDisabled =
     isSeasonDiaryCreating ||
     !formData.garden_name.trim() ||
+    !formData.image.trim() ||
     !formData.farmer_name.trim() ||
     !formData.location.trim() ||
     !formData.latitude ||
@@ -293,6 +302,9 @@ export default function CreateSeasonDiary() {
 
     const payload = {
       ...formData,
+      planting_area_code: normalizePlantingAreaCode(
+        formData.planting_area_code,
+      ),
       row_bed_count: Number(formData.row_bed_count),
       area: Number(formData.area),
     };
@@ -341,6 +353,19 @@ export default function CreateSeasonDiary() {
                 value={formData.garden_name}
                 onChange={handleChange}
                 placeholder={t("create_garden_name_placeholder")}
+              />
+            </div>
+
+            {/* Season image */}
+            <div>
+              <ImageSelect
+                label="Ảnh"
+                required
+                hint=""
+                value={formData.image}
+                onChange={(image) =>
+                  setFormData((prev) => ({ ...prev, image }))
+                }
               />
             </div>
 

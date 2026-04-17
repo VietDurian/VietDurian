@@ -1,3 +1,5 @@
+"use client";
+
 import { useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
@@ -7,6 +9,7 @@ export default function ImageSelect({
   hint = "(tuỳ chọn)",
   value,
   onChange,
+  required = false,
   accept = ".jpg,.jpeg,.png,.heic,.heif",
   maxSizeMB = 5,
 }) {
@@ -68,7 +71,9 @@ export default function ImageSelect({
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-800 mb-2">
-        {label} <span className="text-gray-400 font-normal">{hint}</span>
+        {label}
+        {required && <span className="text-red-500 ml-0.5">*</span>}{" "}
+        {hint && <span className="text-gray-400 font-normal">{hint}</span>}
       </label>
 
       <div
@@ -95,6 +100,7 @@ export default function ImageSelect({
               alt="Preview"
               width={96}
               height={96}
+              unoptimized
               className="w-24 h-16 object-cover rounded-lg border border-emerald-100 shrink-0"
             />
             <div className="flex-1 min-w-0 pr-8">

@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   Edit,
   Shield,
+  Layers,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { usePermissionStore } from "@/store/usePermissionStore";
@@ -195,11 +196,16 @@ export default function AsideBar({ role }) {
         }
         return [
           { icon: User, label: t("aside_info"), href: "/profile/details" },
-          { icon: FileText, label: t("aside_posts"), href: "/profile/posts" },
+
           {
             icon: Sprout,
             label: t("aside_garden"),
             href: "/profile/season-diaries",
+          },
+          {
+            icon: Layers,
+            label: t("aside_diaries"),
+            href: "/profile/diaries",
           },
           {
             icon: Package,
@@ -212,6 +218,7 @@ export default function AsideBar({ role }) {
             href: "/profile/statistics",
           },
           { icon: Bot, label: t("aside_ai"), href: "/profile/ai" },
+          { icon: FileText, label: t("aside_posts"), href: "/profile/posts" },
         ];
       case "contentExpert":
         if (shouldShowVerification) {
@@ -242,7 +249,7 @@ export default function AsideBar({ role }) {
 
   const renderSidebarContent = (onItemClick) => (
     <>
-      <nav className="relative z-10 flex flex-col flex-1 space-y-2">
+      <nav className="relative z-10 flex flex-col flex-1 space-y-2 overflow-y-auto overflow-x-hidden w-full px-2 py-1 scrollbar-custom">
         {isCreateRoute ? (
           <Link
             href={
@@ -307,7 +314,7 @@ export default function AsideBar({ role }) {
             </div>
             <div className="flex flex-col">
               <span className="text-white font-bold text-sm tracking-wide">
-                VietDurian v.1.0.5
+                VietDurian v.1.0.6
               </span>
               <span className="text-white/80 text-xs font-medium">
                 {t("aside_brand_sub")}
