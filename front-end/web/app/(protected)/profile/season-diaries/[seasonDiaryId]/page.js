@@ -66,6 +66,7 @@ export default function SeasonDiaryDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showFinishSeasonDiary, setShowFinishSeasonDiary] = useState(false);
   const [confirmName, setConfirmName] = useState("");
+  const [failedSeasonImageUrl, setFailedSeasonImageUrl] = useState("");
 
   const seasonDiaryDetail = useSeasonDiaryStore((s) => s.seasonDiaryDetail);
   const isSeasonDiaryDetailLoading = useSeasonDiaryStore(
@@ -90,6 +91,10 @@ export default function SeasonDiaryDetailPage() {
   const data = seasonDiaryDetail || {};
   const owner = data.user_id || {};
   const cropVariety = Array.isArray(data.crop_variety) ? data.crop_variety : [];
+  const seasonImageUrl =
+    typeof data.image === "string" ? data.image.trim() : "";
+  const hasSeasonImage =
+    Boolean(seasonImageUrl) && failedSeasonImageUrl !== seasonImageUrl;
   const diaryName = (data.garden_name || "").trim();
   const latitude = parseCoordinate(data.latitude);
   const longitude = parseCoordinate(data.longitude);
@@ -243,20 +248,22 @@ export default function SeasonDiaryDetailPage() {
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+              <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 text-nowrap">
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}
                 />
                 {statusMeta.label}
               </span>
-              <span className="bg-white/10 text-emerald-100 text-xs font-mono px-2.5 py-0.5 rounded-full">
+              <span className="bg-white/10 text-emerald-100 text-xs font-mono px-2.5 py-0.5 rounded-full text-nowrap">
                 {data.farmer_code || "—"}
               </span>
             </div>
-            <h1 className="text-xl font-bold text-white leading-snug">
+            <h1 className="text-xl font-bold text-white leading-snug text-nowrap">
               {data.garden_name}
             </h1>
-            <p className="text-emerald-100 text-sm mt-0.5">{data.location}</p>
+            <p className="text-emerald-100 text-sm mt-0.5 text-nowrap">
+              {data.location}
+            </p>
           </div>
 
           <div className="flex gap-3 flex-wrap">
@@ -307,7 +314,7 @@ export default function SeasonDiaryDetailPage() {
       </div>
 
       {/* ── Cards Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Card 1 — Chủ vườn & thành viên */}
         <InfoCard
           title={t("season_detail_card_owner_title")}
@@ -363,6 +370,38 @@ export default function SeasonDiaryDetailPage() {
           title={t("season_detail_card_garden_title")}
           iconPath="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
         >
+          <div className="mb-4 rounded-xl overflow-hidden border border-emerald-100 bg-emerald-50">
+            {hasSeasonImage ? (
+              <div className="relative aspect-video">
+                <Image
+                  src={seasonImageUrl}
+                  alt={data.garden_name || "Season diary image"}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                  unoptimized
+                  onError={() => setFailedSeasonImageUrl(seasonImageUrl)}
+                />
+              </div>
+            ) : (
+              <div className="h-44 flex items-center justify-center bg-linear-to-br from-emerald-50 to-teal-50">
+                <svg
+                  className="w-8 h-8 text-emerald-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.7}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
             <InfoRow
               label={t("season_detail_garden_name")}

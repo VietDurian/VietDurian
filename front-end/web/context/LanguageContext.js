@@ -135,7 +135,7 @@ const translations = {
     aside_edit: "Chỉnh Sửa",
     aside_back_products: "Trở lại sản phẩm",
     aside_back_diary: "Trở lại nhật ký mùa vụ",
-    aside_back_garden: "Trở lại vườn",
+    aside_back_garden: "Trở lại mùa vụ canh tác",
     aside_brand_sub: "Trang Cá Nhân",
 
     // Footer
@@ -1731,7 +1731,7 @@ const translations = {
     season_title: "Mùa vụ canh tác",
     season_subtitle: "Theo dõi toàn bộ nhật ký canh tác sầu riêng của bạn",
     season_create_btn: "Tạo mùa vụ mới",
-    season_stat_total: "Tổng nhật ký",
+    season_stat_total: "Tổng mùa vụ canh tác",
     season_stat_area: "Tổng diện tích",
     season_stat_area_unit: "m²",
     season_stat_inprogress: "Đang canh tác",

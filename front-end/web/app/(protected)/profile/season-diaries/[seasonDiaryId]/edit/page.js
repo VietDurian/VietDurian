@@ -17,6 +17,7 @@ import { useTypeProductStore } from "@/store/useTypeProduct";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
+import ImageSelect from "@/components/ImageSelect";
 
 const LocationPickerMap = dynamic(
   () => import("@/components/LocationPickerMap"),
@@ -85,6 +86,7 @@ const PROVINCE_CODES = new Set([
 
 const INITIAL_FORM = {
   garden_name: "",
+  image: "",
   farmer_name: "",
   location: "",
   latitude: "",
@@ -161,6 +163,11 @@ export default function EditSeasonDiary() {
   const router = useRouter();
   const { seasonDiaryId } = useParams();
 
+  const normalizePlantingAreaCode = (code) =>
+    String(code || "")
+      .toUpperCase()
+      .replace(/\s+/g, "");
+
   const {
     seasonDiaryDetail,
     getSeasonDiaryDetail,
@@ -183,8 +190,9 @@ export default function EditSeasonDiary() {
   );
 
   const validatePlantingAreaCode = (code) => {
-    if (!code) return null;
-    const match = code.match(/^VN-([A-Z]{2})OR-([0-5]\d{3})$/);
+    const normalizedCode = normalizePlantingAreaCode(code);
+    if (!normalizedCode) return null;
+    const match = normalizedCode.match(/^VN-([A-Z]{2})OR-([0-5]\d{3})$/);
     if (!match) return t("create_code_err_format");
     const [, province, num] = match;
     if (!PROVINCE_CODES.has(province)) {
@@ -220,6 +228,7 @@ export default function EditSeasonDiary() {
       if (!cancelled) {
         setFormData({
           garden_name: seasonDiaryDetail.garden_name || "",
+          image: seasonDiaryDetail.image || "",
           farmer_name: seasonDiaryDetail.farmer_name || "",
           location: seasonDiaryDetail.location || "",
           latitude: seasonDiaryDetail.latitude
@@ -253,6 +262,7 @@ export default function EditSeasonDiary() {
     isSeasonDiaryUpdating ||
     isSeasonDiaryDetailLoading ||
     !formData.garden_name.trim() ||
+    !formData.image.trim() ||
     !formData.farmer_name.trim() ||
     !formData.location.trim() ||
     !formData.latitude ||
@@ -338,6 +348,9 @@ export default function EditSeasonDiary() {
     if (!seasonDiaryId) return;
     const payload = {
       ...formData,
+      planting_area_code: normalizePlantingAreaCode(
+        formData.planting_area_code,
+      ),
       row_bed_count: Number(formData.row_bed_count),
       area: Number(formData.area),
     };
@@ -386,6 +399,17 @@ export default function EditSeasonDiary() {
               />
             </div>
 
+            <div>
+              <ImageSelect
+                label="Anh"
+                required
+                value={formData.image}
+                onChange={(image) =>
+                  setFormData((prev) => ({ ...prev, image }))
+                }
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <FieldLabel htmlFor="farmer_name" required>
@@ -394,6 +418,7 @@ export default function EditSeasonDiary() {
                 <Input
                   id="farmer_name"
                   name="farmer_name"
+                  hint=""
                   value={formData.farmer_name}
                   onChange={handleChange}
                   placeholder={t("edit_season_farmer_name_placeholder")}

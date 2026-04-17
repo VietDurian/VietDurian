@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Plus,
   MapPin,
@@ -16,7 +17,6 @@ import {
   Users,
   Layers,
   BarChart2,
-  Trash2,
 } from "lucide-react";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -284,6 +284,9 @@ export default function SeasonDiariesPage() {
 function SeasonDiaryCard({ diary, statusConfig, t }) {
   const router = useRouter();
   const varieties = Array.isArray(diary.crop_variety) ? diary.crop_variety : [];
+  const imageUrl = typeof diary.image === "string" ? diary.image.trim() : "";
+  const [isImageError, setIsImageError] = useState(false);
+  const hasImage = Boolean(imageUrl) && !isImageError;
 
   const status = statusConfig[diary.status] || statusConfig["In progressing"];
   const StatusIcon = status.icon;
@@ -345,6 +348,26 @@ function SeasonDiaryCard({ diary, statusConfig, t }) {
 
       {/* Card body */}
       <div className="p-4 flex flex-col flex-1">
+        {/* Cover image */}
+        <div className="relative mb-3 rounded-lg overflow-hidden border border-emerald-100 bg-gray-50 aspect-video">
+          {hasImage ? (
+            <Image
+              src={imageUrl}
+              alt={diary.garden_name || "Season diary image"}
+              fill
+              sizes="(max-width: 640px) 100vw, 25vw"
+              className="object-cover"
+              loading="lazy"
+              unoptimized
+              onError={() => setIsImageError(true)}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-emerald-50 to-teal-50 text-emerald-500">
+              <Sprout className="w-6 h-6" />
+            </div>
+          )}
+        </div>
+
         {/* Crop varieties */}
         <div className="flex flex-wrap gap-1.5 mb-3">
           {varieties.map((v) => (
