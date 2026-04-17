@@ -631,7 +631,7 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
         {typeService.map((name) => (
           <span
             key={name}
-            className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold"
+            className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold"
           >
             {name}
           </span>

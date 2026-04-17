@@ -840,7 +840,7 @@ const FavoritePostCard = ({
         {typeService.map((name) => (
           <span
             key={name}
-            className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold"
+            className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold"
           >
             {name}
           </span>
@@ -1058,8 +1058,6 @@ const FavoritePostCard = ({
             {post.post_id.title}
           </h3>
         )}
-
-
 
         <div className="text-base text-gray-600 leading-relaxed mb-4">
           <p className="whitespace-pre-wrap">{post.post_id?.content}</p>

@@ -13,16 +13,16 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 import Image from "next/image";
 
+// Thay getCategoriesByRole
 const getCategoriesByRole = (role) => {
   switch (role) {
-    case "trader": return ["Sản phẩm", "Kinh nghiệm", "Thuê dịch vụ", "Khác"];
-    case "farmer": return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
-    case "serviceProvider": return ["Dịch vụ", "Sản phẩm", "Kinh nghiệm", "Khác"];
-    case "contentExpert": return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
+    case "trader": return ["Sản phẩm"];
+    case "farmer": return ["Thuê dịch vụ", "Sản phẩm"];
+    case "serviceProvider": return ["Dịch vụ"];
+    case "contentExpert": return ["Kinh nghiệm"];
     default: return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
   }
 };
-
 const TITLE_PLACEHOLDERS = {
   "Dịch vụ": "VD: Dọn cỏ, làm vườn, phun thuốc, cắt tỉa cành...",
   "Sản phẩm": "VD: Bán sầu riêng Ri6, phân bón hữu cơ, cây giống...",

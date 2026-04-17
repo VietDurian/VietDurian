@@ -123,7 +123,10 @@ const translations = {
 
     // AsideBar
     aside_info: "Thông tin",
-    aside_posts: "Đăng bài",
+    aside_posts_farmer: "Đăng tin",
+    aside_posts_trader: "Thu mua",
+    aside_posts_content: "Bài viết",
+    aside_posts_service: "Đăng tin dịch vụ",
     aside_ai: "Phân Tích Sâu Bệnh",
     aside_garden: "Mùa vụ canh tác",
     aside_products: "Thu hoạch",
@@ -2204,7 +2207,10 @@ const translations = {
 
     // AsideBar
     aside_info: "Info",
-    aside_posts: "Posts",
+    aside_posts_farmer: "Post Listings",
+    aside_posts_trader: "Purchasing",
+    aside_posts_content: "Posts",
+    aside_posts_service: "Service Listings",
     aside_ai: "Analyze Disease",
     aside_garden: "Season Diaries",
     aside_products: "Products",
