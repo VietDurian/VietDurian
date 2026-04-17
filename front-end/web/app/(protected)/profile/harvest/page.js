@@ -434,8 +434,6 @@ const isFieldRequired = (diary, col) => {
   return diary.required === true;
 };
 
-const getDiaryDisplayId = (diary) => diary?.displayId || diary?.id;
-
 // ── TOAST HOOK ────────────────────────────────────────────────────────────────
 function useToast() {
   const [toast, setToast] = useState(null);
@@ -494,7 +492,7 @@ function RecordModal({ diary, row, onSave, onClose }) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
             <p className="text-xs text-emerald-600 font-medium mb-0.5">
-              {t("diary_label")} {getDiaryDisplayId(diary)}
+              {t("diary_label")} {diary.id}
             </p>
             <h2 className="text-sm font-semibold text-gray-800">
               {isEdit ? t("diary_edit_title") : t("diary_add_title")}
@@ -1156,11 +1154,7 @@ function DiaryTable({
 
         doc.setFontSize(14);
         doc.setFont(pdfFontFamily, "normal");
-        doc.text(
-          `${t("diary_label")} ${getDiaryDisplayId(d)}: ${d.title}`,
-          40,
-          40,
-        );
+        doc.text(`${t("diary_label")} ${d.id}: ${d.title}`, 40, 40);
         doc.setFontSize(10);
         doc.setFont(pdfFontFamily, "normal");
         doc.text(`${t("diary_pdf_total_records")} ${tableRows.length}`, 40, 58);
@@ -1796,8 +1790,6 @@ export default function DiaryPage() {
     (s) => s.getSeasonDiaryDetail,
   );
   const [selectedId, setSelectedId] = useState(null);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (authUser?._id) getSeasonDiaries(authUser._id);
@@ -1909,340 +1901,55 @@ export default function DiaryPage() {
   const DIARIES = useMemo(
     () => [
       {
-        id: "1",
-        required: true,
-        title: t("diary_1_4_title"),
-        icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
+        id: "5",
+        title: t("diary_1_8_title"),
+        icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z",
         groups: [
           {
-            label: null,
+            label: t("diary_group_harvest"),
             cols: [
               {
-                key: "purchase_date",
-                label: t("diary_col_purchase_date"),
-                type: "date",
-                width: "w-28",
-              },
-              {
-                key: "seed_name",
-                label: t("diary_col_seed_name"),
-                type: "text",
-                width: "w-44",
-              },
-              {
-                key: "quantity",
-                label: t("diary_col_quantity"),
-                type: "number",
-                width: "w-24",
-              },
-              {
-                key: "total_price",
-                label: t("diary_col_total_price"),
-                type: "currency",
-                width: "w-36",
-              },
-            ],
-          },
-          {
-            label: t("diary_group_supplier"),
-            cols: [
-              {
-                key: "supplier_name",
-                label: t("diary_col_supplier_name"),
-                type: "text",
-                width: "w-40",
-              },
-              {
-                key: "supplier_address",
-                label: t("diary_col_supplier_address"),
-                type: "text",
-                width: "w-44",
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: "2",
-        required: true,
-        title: t("diary_1_5_title"),
-        icon: "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z",
-        groups: [
-          {
-            label: null,
-            cols: [
-              {
-                key: "purchase_date",
-                label: t("diary_col_purchase_date"),
-                type: "date",
-                width: "w-28",
-              },
-              {
-                key: "material_name",
-                label: t("diary_col_material_name"),
-                type: "text",
-                width: "w-44",
-              },
-              {
-                key: "quantity",
-                label: t("diary_col_quantity_plain"),
-                type: "number",
-                width: "w-24",
-              },
-              {
-                key: "unit",
-                label: t("diary_col_unit"),
-                type: "text",
-                width: "w-20",
-              },
-              {
-                key: "total_price",
-                label: t("diary_col_total_price"),
-                type: "currency",
-                width: "w-36",
-              },
-            ],
-          },
-          {
-            label: t("diary_group_supplier"),
-            cols: [
-              {
-                key: "supplier_name",
-                label: t("diary_col_supplier_name"),
-                type: "text",
-                width: "w-40",
-              },
-              {
-                key: "supplier_address",
-                label: t("diary_col_supplier_address"),
-                type: "text",
-                width: "w-48",
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: "3",
-        required: false,
-        title: t("diary_1_6_title"),
-        icon: "M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1v1a1 1 0 002 0v-1h6v1a1 1 0 002 0v-1h1a1 1 0 001-1V5a1 1 0 00-1-1H3zm2 3h10v2H5V7zm0 4h4v2H5v-2zm7 0h3v2h-3v-2z",
-        groups: [
-          {
-            label: null,
-            cols: [
-              {
-                key: "usage_date",
-                label: t("diary_col_usage_date"),
-                type: "date",
-                width: "w-28",
+                key: "harvest_date",
                 required: true,
-              },
-            ],
-          },
-          {
-            label: t("diary_group_fertilizer"),
-            cols: [
-              {
-                key: "fertilizer_name",
-                label: t("diary_col_fertilizer_name"),
-                type: "text",
-                width: "w-44",
+                label: t("diary_col_harvest_date"),
+                type: "date",
+                width: "w-28",
               },
               {
-                key: "fertilizer_amount",
-                label: t("diary_col_fertilizer_amount"),
-                type: "text",
+                key: "harvest_quantity_kg",
+                required: true,
+                label: t("diary_col_harvest_quantity"),
+                type: "number",
                 width: "w-32",
               },
             ],
           },
           {
-            label: t("diary_group_pesticide"),
+            label: t("diary_group_consumption"),
             cols: [
               {
-                key: "pesticide_name",
-                label: t("diary_col_pesticide_name"),
-                type: "text",
-                width: "w-40",
-              },
-              {
-                key: "pesticide_concentration_amount",
-                label: t("diary_col_pesticide_concentration"),
-                type: "text",
-                width: "w-40",
-              },
-              {
-                key: "preharvest_interval",
-                label: t("diary_col_preharvest_interval"),
-                type: "text",
-                width: "w-28",
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: "4",
-        required: true,
-        title: t("diary_1_7_title"),
-        icon: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16",
-        groups: [
-          {
-            label: null,
-            cols: [
-              {
-                key: "handling_date",
-                label: t("diary_col_handling_date"),
+                key: "sale_date",
+                label: t("diary_col_sale_date"),
                 type: "date",
                 width: "w-28",
               },
               {
-                key: "packaging_type",
-                label: t("diary_col_packaging_type"),
+                key: "buyer_or_consumption_address",
+                label: t("diary_col_buyer_address"),
                 type: "text",
-                width: "w-48",
+                width: "w-52",
               },
               {
-                key: "storage_location",
-                label: t("diary_col_storage_location"),
-                type: "text",
-                width: "w-40",
-              },
-              {
-                key: "treatment_method",
-                label: t("diary_col_treatment_method"),
-                type: "text",
-                width: "w-44",
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: "6",
-        displayId: "5",
-        required: true,
-        title: t("diary_1_9_title"),
-        icon: "M12 3v1m0 16v1m8.66-13l-.87.5M4.21 8.5l-.87-.5M19.78 15.5l-.87-.5M4.21 15.5l-.87.5M21 12h-1M4 12H3m15.36-6.36l-.7.7M6.34 17.66l-.7.7M17.66 17.66l.7.7M6.34 6.34l.7.7",
-        groups: [
-          {
-            label: null,
-            cols: [
-              {
-                key: "execution_date",
-                label: t("diary_col_execution_date"),
-                type: "date",
-                width: "w-28",
-              },
-              {
-                key: "irrigation_item",
-                label: t("diary_col_irrigation_item"),
-                type: "text",
-                width: "w-48",
-              },
-              {
-                key: "irrigation_method",
-                label: t("diary_col_irrigation_method"),
-                type: "select",
-                options: [
-                  { value: "nho_giot", label: t("diary_irrigation_nho_giot") },
-                  { value: "phun_mua", label: t("diary_irrigation_phun_mua") },
-                  { value: "thu_cong", label: t("diary_irrigation_thu_cong") },
-                ],
-                width: "w-28",
-              },
-              {
-                key: "irrigation_duration_hours",
-                label: t("diary_col_irrigation_hours"),
+                key: "consumed_weight_kg",
+                label: t("diary_col_consumed_weight"),
                 type: "number",
-                width: "w-24",
-              },
-              {
-                key: "irrigation_duration_minutes",
-                label: t("diary_col_irrigation_minutes"),
-                type: "number",
-                width: "w-24",
-              },
-              {
-                key: "irrigation_area",
-                label: t("diary_col_irrigation_area"),
-                type: "text",
-                width: "w-28",
-              },
-              {
-                key: "electricity_fuel_cost",
-                label: t("diary_col_electricity_cost"),
-                type: "currency",
-                width: "w-36",
-              },
-              {
-                key: "performed_by",
-                label: t("diary_col_performed_by"),
-                type: "text",
-                width: "w-36",
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: "7",
-        displayId: "6",
-        required: true,
-        title: t("diary_1_10_title"),
-        icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
-        groups: [
-          {
-            label: null,
-            cols: [
-              {
-                key: "labor_hire_date",
-                label: t("diary_col_labor_date"),
-                type: "date",
-                width: "w-28",
-              },
-              {
-                key: "work_description",
-                label: t("diary_col_work_description"),
-                type: "text",
-                width: "w-48",
-              },
-              {
-                key: "worker_quantity",
-                label: t("diary_col_worker_quantity"),
-                type: "number",
-                width: "w-24",
-              },
-              {
-                key: "working_time_hours",
-                label: t("diary_col_working_hours"),
-                type: "number",
-                width: "w-24",
-              },
-              {
-                key: "working_time_minutes",
-                label: t("diary_col_working_minutes"),
-                type: "number",
-                width: "w-24",
-              },
-              {
-                key: "total_price_vnd",
-                label: t("diary_col_total_price_vnd"),
-                type: "currency",
-                width: "w-36",
-              },
-              {
-                key: "worker_or_team_name",
-                label: t("diary_col_worker_name"),
-                type: "text",
-                width: "w-40",
-              },
-              {
-                key: "supervisor_name",
-                label: t("diary_col_supervisor"),
-                type: "text",
                 width: "w-32",
+              },
+              {
+                key: "sale_unit_price_vnd",
+                label: t("diary_col_sale_unit_price"),
+                type: "currency",
+                width: "w-36",
               },
             ],
           },
@@ -2252,7 +1959,7 @@ export default function DiaryPage() {
     [t],
   );
 
-  const diary = DIARIES[activeIdx];
+  const diary = DIARIES[0];
 
   if (isSeasonDiariesLoading && !selectableGardens.length) {
     return (
@@ -2274,10 +1981,7 @@ export default function DiaryPage() {
   }
 
   return (
-    <div
-      className="space-y-4 min-h-screen p-5"
-      onClick={() => setDropdownOpen(false)}
-    >
+    <div className="space-y-4 min-h-screen p-5">
       <div className="bg-linear-to-r from-emerald-700 to-emerald-500 rounded-2xl px-6 py-5 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -2301,92 +2005,16 @@ export default function DiaryPage() {
         </div>
       </div>
 
-      {/* Dropdown header */}
-      <div className="relative" onClick={(e) => e.stopPropagation()}>
-        <button
-          onClick={() => setDropdownOpen((o) => !o)}
-          className="flex items-center gap-2.5 group"
-        >
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-2.5">
           <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg shrink-0">
-            {t("diary_label")} {getDiaryDisplayId(diary)}
+            {t("diary_label")}
           </span>
           <h1 className="text-base font-semibold text-gray-800">
             {diary.title}
           </h1>
-          <svg
-            className={`w-4 h-4 text-emerald-500 shrink-0 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : "rotate-0"}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.5}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </button>
-
-        {dropdownOpen && (
-          <div className="absolute top-full left-0 mt-2 w-96 bg-white rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/60 py-1.5 z-30 overflow-hidden">
-            {DIARIES.map((d, i) => (
-              <button
-                key={d.id}
-                onClick={() => {
-                  setActiveIdx(i);
-                  setDropdownOpen(false);
-                }}
-                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition hover:bg-emerald-50 ${i === activeIdx ? "bg-emerald-50" : ""}`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${i === activeIdx ? "bg-emerald-600" : "bg-gray-100"}`}
-                >
-                  <svg
-                    className={`w-4 h-4 ${i === activeIdx ? "text-white" : "text-gray-500"}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.8}
-                      d={d.icon}
-                    />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-xs font-bold mb-0.5 ${i === activeIdx ? "text-emerald-600" : "text-gray-400"}`}
-                  >
-                    {t("diary_label")} {getDiaryDisplayId(d)}
-                  </p>
-                  <p
-                    className={`text-xs leading-snug ${i === activeIdx ? "text-emerald-800 font-medium" : "text-gray-600"}`}
-                  >
-                    {d.title}
-                  </p>
-                </div>
-                {i === activeIdx && (
-                  <svg
-                    className="w-4 h-4 text-emerald-500 shrink-0 ml-auto mt-1.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Table — re-mounts on switch to reset state */}

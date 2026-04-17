@@ -22,6 +22,7 @@ import {
   Edit,
   Shield,
   Layers,
+  DollarSign,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { usePermissionStore } from "@/store/usePermissionStore";
@@ -208,6 +209,11 @@ export default function AsideBar({ role }) {
             icon: Layers,
             label: t("aside_diaries"),
             href: "/profile/diaries",
+          },
+          {
+            icon: DollarSign,
+            label: t("aside_harvest"),
+            href: "/profile/harvest",
           },
           {
             icon: Package,
