@@ -123,7 +123,7 @@ const translations = {
 
     // AsideBar
     aside_info: "Thông tin",
-    aside_posts_farmer: "Đăng tin",
+    aside_posts_farmer: "Thuê dịch vụ lao động",
     aside_posts_trader: "Thu mua",
     aside_posts_content: "Bài viết",
     aside_posts_service: "Đăng tin dịch vụ",
@@ -1071,7 +1071,7 @@ const translations = {
     public_profile_phone: "Số điện thoại",
     public_profile_joined: "Ngày tham gia",
     public_profile_resume_title: "Hồ Sơ Năng Lực",
-    public_profile_business_name: "Tên Doanh Nghiệp",
+    public_profile_business_name: "Tên Cá Nhân / Doanh Nghiệp",
     public_profile_services: "Dịch Vụ",
     public_profile_areas: "Khu Vực",
     public_profile_experience: "Kinh Nghiệm",
@@ -1442,7 +1442,7 @@ const translations = {
     resume_no_profile_btn: "Tạo Hồ Sơ Ngay",
     resume_edit_header_title: "Chỉnh Sửa Hồ Sơ Năng Lực",
     resume_edit_header_subtitle: "Cập nhật thông tin dịch vụ của bạn",
-    resume_business_name_label: "Tên Doanh Nghiệp",
+    resume_business_name_label: "Tên Cá Nhân / Doanh Nghiệp",
     resume_business_name_placeholder: "Ví dụ: Dịch Vụ Nông Nghiệp Xanh",
     resume_services_label: "Dịch Vụ Cung Cấp",
     resume_services_placeholder:
@@ -1468,7 +1468,7 @@ const translations = {
     resume_view_title: "Hồ Sơ Năng Lực",
     resume_view_subtitle: "Thông tin dịch vụ của bạn",
     resume_edit_btn: "Chỉnh sửa",
-    resume_section_business: "Tên Doanh Nghiệp",
+    resume_section_business: "Tên Cá Nhân / Doanh Nghiệp",
     resume_section_services: "Dịch Vụ Cung Cấp",
     resume_section_areas: "Khu Vực Hoạt Động",
     resume_section_exp: "Kinh Nghiệm",
@@ -2207,7 +2207,7 @@ const translations = {
 
     // AsideBar
     aside_info: "Info",
-    aside_posts_farmer: "Post Listings",
+    aside_posts_farmer: "Hire Labor Services",
     aside_posts_trader: "Purchasing",
     aside_posts_content: "Posts",
     aside_posts_service: "Service Listings",
@@ -3158,7 +3158,7 @@ const translations = {
     public_profile_phone: "Phone Number",
     public_profile_joined: "Joined Date",
     public_profile_resume_title: "Capability Profile",
-    public_profile_business_name: "Business Name",
+    public_profile_business_name: "Personal / Business Nam",
     public_profile_services: "Services",
     public_profile_areas: "Service Areas",
     public_profile_experience: "Experience",
@@ -3520,7 +3520,7 @@ const translations = {
     resume_no_profile_btn: "Create Profile Now",
     resume_edit_header_title: "Edit Capability Profile",
     resume_edit_header_subtitle: "Update your service information",
-    resume_business_name_label: "Business Name",
+    resume_business_name_label: "Personal / Business Name",
     resume_business_name_placeholder: "E.g: Green Agricultural Services",
     resume_services_label: "Services Provided",
     resume_services_placeholder:
@@ -3546,7 +3546,7 @@ const translations = {
     resume_view_title: "Capability Profile",
     resume_view_subtitle: "Your service information",
     resume_edit_btn: "Edit",
-    resume_section_business: "Business Name",
+    resume_section_business: "Personal / Business Name",
     resume_section_services: "Services Provided",
     resume_section_areas: "Service Areas",
     resume_section_exp: "Experience",
