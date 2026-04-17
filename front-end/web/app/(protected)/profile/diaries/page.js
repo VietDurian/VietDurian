@@ -671,12 +671,16 @@ function GardenDropdown({ gardens, selectedId, onSelect, t }) {
   const statusLabel = (status) =>
     status === "In progressing"
       ? t("stats_status_inprogress")
-      : t("stats_status_ended");
+      : status === "Stopped" || status === "Ngưng hoạt động"
+        ? "Ngưng hoạt động"
+        : t("stats_status_ended");
 
   const statusStyle = (status) =>
     status === "In progressing"
       ? "bg-emerald-100 text-emerald-700"
-      : "bg-gray-100 text-gray-500";
+      : status === "Stopped" || status === "Ngưng hoạt động"
+        ? "bg-amber-100 text-amber-700"
+        : "bg-gray-100 text-gray-500";
 
   const selectedGarden = gardens.find((g) => g.diary.id === selectedId);
 
@@ -783,6 +787,7 @@ function DiaryTable({
   diary,
   diaries,
   seasonDiaryId,
+  isCrudDisabled = false,
   initialRows,
   onRowsChange,
 }) {
@@ -1024,10 +1029,12 @@ function DiaryTable({
     paginated.length > 0 && paginated.every((r) => selected.has(r.id));
 
   const openCreate = () => {
+    if (isCrudDisabled) return;
     setEditRow(emptyRow(diary));
     setModal("create");
   };
   const openEdit = (row) => {
+    if (isCrudDisabled) return;
     setEditRow({ ...row });
     setModal("edit");
   };
@@ -1201,6 +1208,7 @@ function DiaryTable({
   };
 
   const handleSave = async (form) => {
+    if (isCrudDisabled) return;
     if (isBuyingSeedDiary) {
       if (!seasonDiaryId) {
         showToast(t("diary_toast_missing_season"), "error");
@@ -1306,6 +1314,7 @@ function DiaryTable({
   };
 
   const handleDelete = async (ids) => {
+    if (isCrudDisabled) return;
     if (isBuyingSeedDiary) {
       const results = await Promise.all(
         Array.from(ids).map((id) => deleteBuyingSeed(id)),
@@ -1436,7 +1445,7 @@ function DiaryTable({
         {selected.size > 0 && (
           <button
             onClick={() => setDeleteConfirm(new Set(selected))}
-            disabled={isActionBusy}
+            disabled={isActionBusy || isCrudDisabled}
             className="px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 hover:bg-red-100 transition font-medium"
           >
             {t("diary_delete_selected")} {selected.size}{" "}
@@ -1446,8 +1455,8 @@ function DiaryTable({
         {/* Create new record button */}
         <button
           onClick={openCreate}
-          disabled={isActionBusy}
-          className="cursor-pointer flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-emerald-200"
+          disabled={isActionBusy || isCrudDisabled}
+          className="cursor-pointer flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-emerald-200 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <svg
             className="w-4 h-4"
@@ -1636,7 +1645,8 @@ function DiaryTable({
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => openEdit(row)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition"
+                          disabled={isCrudDisabled}
+                          className={`p-1.5 rounded-lg transition ${isCrudDisabled ? "text-gray-300 cursor-not-allowed" : "text-gray-400 hover:text-emerald-600 hover:bg-emerald-50"}`}
                           title={t("diary_edit_btn_title")}
                         >
                           <svg
@@ -1655,7 +1665,8 @@ function DiaryTable({
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(new Set([row.id]))}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+                          disabled={isCrudDisabled}
+                          className={`p-1.5 rounded-lg transition ${isCrudDisabled ? "text-gray-300 cursor-not-allowed" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
                           title={t("diary_delete_btn_title")}
                         >
                           <svg
@@ -1801,28 +1812,27 @@ export default function DiaryPage() {
     [seasonDiaries],
   );
 
-  useEffect(() => {
-    if (!gardens.length) {
-      setSelectedId(null);
-      return;
+  const effectiveSelectedId = useMemo(() => {
+    if (!gardens.length) return null;
+    if (selectedId && gardens.some((g) => g.diary.id === selectedId)) {
+      return selectedId;
     }
-    setSelectedId((prev) => {
-      if (prev && gardens.some((g) => g.diary.id === prev)) return prev;
-      return gardens[0].diary.id;
-    });
-  }, [gardens]);
+    return gardens[0].diary.id;
+  }, [gardens, selectedId]);
 
   useEffect(() => {
-    if (!selectedId) return;
-    if (seasonDiaryDetail?._id === selectedId) return;
-    getSeasonDiaryDetail(selectedId);
-  }, [selectedId, seasonDiaryDetail?._id, getSeasonDiaryDetail]);
+    if (!effectiveSelectedId) return;
+    if (seasonDiaryDetail?._id === effectiveSelectedId) return;
+    getSeasonDiaryDetail(effectiveSelectedId);
+  }, [effectiveSelectedId, seasonDiaryDetail?._id, getSeasonDiaryDetail]);
 
   const selectedGarden =
-    gardens.find((g) => g.diary.id === selectedId) ?? gardens[0] ?? null;
+    gardens.find((g) => g.diary.id === effectiveSelectedId) ??
+    gardens[0] ??
+    null;
 
   const data =
-    seasonDiaryDetail?._id === selectedId
+    seasonDiaryDetail?._id === effectiveSelectedId
       ? seasonDiaryDetail
       : selectedGarden?.diary || {};
 
@@ -1857,6 +1867,15 @@ export default function DiaryPage() {
     },
   };
   const statusMeta = STATUS[data.status] ?? STATUS.Completed;
+  const isCrudDisabled = ["Stopped", "Completed", "Ngưng hoạt động"].includes(
+    data.status,
+  );
+  const currentStatusLabel =
+    data.status === "In progressing"
+      ? t("stats_status_inprogress")
+      : data.status === "Stopped" || data.status === "Ngưng hoạt động"
+        ? "Ngưng hoạt động"
+        : t("stats_status_ended");
 
   const fmtSeasonValue = (value) => {
     if (value === null || value === undefined || value === "") return "-";
@@ -2297,14 +2316,12 @@ export default function DiaryPage() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-white/20 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">
-              {data.status === "In progressing"
-                ? t("stats_status_inprogress")
-                : t("stats_status_ended")}
+              {currentStatusLabel}
             </span>
           </div>
           <GardenDropdown
             gardens={gardens}
-            selectedId={selectedId}
+            selectedId={effectiveSelectedId}
             onSelect={setSelectedId}
             t={t}
           />
@@ -2408,10 +2425,11 @@ export default function DiaryPage() {
 
       {/* Table — re-mounts on switch to reset state */}
       <DiaryTable
-        key={`${selectedId || "none"}-${diary.id}`}
+        key={`${effectiveSelectedId || "none"}-${diary.id}`}
         diary={diary}
         diaries={DIARIES}
-        seasonDiaryId={selectedId}
+        seasonDiaryId={effectiveSelectedId}
+        isCrudDisabled={isCrudDisabled}
       />
     </div>
   );

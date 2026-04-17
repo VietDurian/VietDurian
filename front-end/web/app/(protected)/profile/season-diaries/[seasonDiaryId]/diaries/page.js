@@ -666,6 +666,7 @@ function DiaryTable({
   diary,
   diaries,
   seasonDiaryId,
+  isCrudDisabled = false,
   initialRows,
   onRowsChange,
 }) {
@@ -907,10 +908,12 @@ function DiaryTable({
     paginated.length > 0 && paginated.every((r) => selected.has(r.id));
 
   const openCreate = () => {
+    if (isCrudDisabled) return;
     setEditRow(emptyRow(diary));
     setModal("create");
   };
   const openEdit = (row) => {
+    if (isCrudDisabled) return;
     setEditRow({ ...row });
     setModal("edit");
   };
@@ -1084,6 +1087,7 @@ function DiaryTable({
   };
 
   const handleSave = async (form) => {
+    if (isCrudDisabled) return;
     if (isBuyingSeedDiary) {
       if (!seasonDiaryId) {
         showToast(t("diary_toast_missing_season"), "error");
@@ -1189,6 +1193,7 @@ function DiaryTable({
   };
 
   const handleDelete = async (ids) => {
+    if (isCrudDisabled) return;
     if (isBuyingSeedDiary) {
       const results = await Promise.all(
         Array.from(ids).map((id) => deleteBuyingSeed(id)),
@@ -1319,7 +1324,7 @@ function DiaryTable({
         {selected.size > 0 && (
           <button
             onClick={() => setDeleteConfirm(new Set(selected))}
-            disabled={isActionBusy}
+            disabled={isActionBusy || isCrudDisabled}
             className="px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 hover:bg-red-100 transition font-medium"
           >
             {t("diary_delete_selected")} {selected.size}{" "}
@@ -1329,8 +1334,8 @@ function DiaryTable({
         {/* Create new record button */}
         <button
           onClick={openCreate}
-          disabled={isActionBusy}
-          className="cursor-pointer flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-emerald-200"
+          disabled={isActionBusy || isCrudDisabled}
+          className="cursor-pointer flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-emerald-200 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <svg
             className="w-4 h-4"
@@ -1519,7 +1524,8 @@ function DiaryTable({
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => openEdit(row)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition"
+                          disabled={isCrudDisabled}
+                          className={`p-1.5 rounded-lg transition ${isCrudDisabled ? "text-gray-300 cursor-not-allowed" : "text-gray-400 hover:text-emerald-600 hover:bg-emerald-50"}`}
                           title={t("diary_edit_btn_title")}
                         >
                           <svg
@@ -1538,7 +1544,8 @@ function DiaryTable({
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(new Set([row.id]))}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+                          disabled={isCrudDisabled}
+                          className={`p-1.5 rounded-lg transition ${isCrudDisabled ? "text-gray-300 cursor-not-allowed" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
                           title={t("diary_delete_btn_title")}
                         >
                           <svg
@@ -1688,6 +1695,9 @@ export default function DiaryPage() {
     },
   };
   const statusMeta = STATUS[data.status] ?? STATUS.Completed;
+  const isCrudDisabled = ["Stopped", "Completed", "Ngưng hoạt động"].includes(
+    data.status,
+  );
 
   const fmtSeasonValue = (value) => {
     if (value === null || value === undefined || value === "") return "-";
@@ -2239,6 +2249,7 @@ export default function DiaryPage() {
         diary={diary}
         diaries={DIARIES}
         seasonDiaryId={seasonDiaryId}
+        isCrudDisabled={isCrudDisabled}
       />
     </div>
   );
