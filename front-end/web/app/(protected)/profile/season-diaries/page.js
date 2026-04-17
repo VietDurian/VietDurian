@@ -363,7 +363,7 @@ function SeasonDiaryCard({ diary, statusConfig, t }) {
 
         {/* Farmer code */}
         <p className="text-emerald-200 text-xs font-mono">
-          {diary.farmer_code}
+          {diary.farmer_code || "N/A"}
         </p>
       </div>
 

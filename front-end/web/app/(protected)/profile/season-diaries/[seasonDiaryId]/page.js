@@ -328,7 +328,7 @@ export default function SeasonDiaryDetailPage() {
                 {statusMeta.label}
               </span>
               <span className="bg-white/10 text-emerald-100 text-xs font-mono px-2.5 py-0.5 rounded-full text-nowrap">
-                {data.farmer_code || "—"}
+                {data.farmer_code || "N/A"}
               </span>
             </div>
             <h1 className="text-xl font-bold text-white leading-snug text-nowrap">
@@ -531,7 +531,7 @@ export default function SeasonDiaryDetailPage() {
             />
             <InfoRow
               label={t("season_detail_farmer_code")}
-              value={data.farmer_code}
+              value={data.farmer_code || "N/A"}
             />
             <InfoRow
               label={t("season_detail_members")}
@@ -601,7 +601,7 @@ export default function SeasonDiaryDetailPage() {
               />
               <InfoRow
                 label={t("season_detail_planting_code")}
-                value={data.planting_area_code}
+                value={data.planting_area_code || "N/A"}
               />
               <InfoRow label={t("season_detail_status")}>
                 <span

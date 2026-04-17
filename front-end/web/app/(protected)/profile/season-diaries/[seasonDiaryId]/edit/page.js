@@ -267,9 +267,7 @@ export default function EditSeasonDiary() {
     !formData.location.trim() ||
     !formData.latitude ||
     !formData.longitude ||
-    !formData.planting_area_code.trim() ||
     !!plantingAreaCodeError ||
-    !formData.farmer_code.trim() ||
     formData.crop_variety.length === 0 ||
     !formData.row_bed_count.toString().trim() ||
     !formData.area.toString().trim() ||
@@ -427,7 +425,6 @@ export default function EditSeasonDiary() {
               <div>
                 <FieldLabel
                   htmlFor="farmer_code"
-                  required
                   hint={t("edit_season_farmer_code_hint")}
                 >
                   {t("edit_season_farmer_code_label")}
@@ -445,7 +442,6 @@ export default function EditSeasonDiary() {
             <div>
               <FieldLabel
                 htmlFor="planting_area_code"
-                required
                 hint={t("edit_season_planting_code_hint")}
               >
                 {t("edit_season_planting_code_label")}

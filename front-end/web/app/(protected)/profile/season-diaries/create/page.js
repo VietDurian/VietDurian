@@ -219,9 +219,7 @@ export default function CreateSeasonDiary() {
     !formData.location.trim() ||
     !formData.latitude ||
     !formData.longitude ||
-    !formData.planting_area_code.trim() ||
     !!plantingAreaCodeError ||
-    !formData.farmer_code.trim() ||
     formData.crop_variety.length === 0 ||
     !formData.row_bed_count.toString().trim() ||
     !formData.area.toString().trim() ||
@@ -386,7 +384,6 @@ export default function CreateSeasonDiary() {
               <div>
                 <FieldLabel
                   htmlFor="farmer_code"
-                  required
                   hint={t("create_farmer_code_hint")}
                 >
                   {t("create_farmer_code")}
@@ -405,7 +402,6 @@ export default function CreateSeasonDiary() {
             <div>
               <FieldLabel
                 htmlFor="planting_area_code"
-                required
                 hint={t("create_planting_code_hint")}
               >
                 {t("create_planting_code")}
