@@ -102,7 +102,8 @@ const detectContactType = (val) => {
 
 // ─── Service Chip Selector (dùng chung) ──────────────────────────────────────
 const ServiceChipSelector = ({ availableServices, selectedServices, onChange }) => {
-  const toggleService = (svc) => {
+   const { t } = useLanguage();
+   const toggleService = (svc) => {
     const exists = selectedServices.some((s) => s.name === svc.name);
     if (exists) onChange(selectedServices.filter((s) => s.name !== svc.name));
     else onChange([...selectedServices, svc]);
@@ -110,8 +111,8 @@ const ServiceChipSelector = ({ availableServices, selectedServices, onChange }) 
 
   if (!availableServices || availableServices.length === 0) return (
     <p className="text-sm text-gray-500 italic">
-      Bạn chưa đăng ký dịch vụ nào trong hồ sơ. Hãy cập nhật hồ sơ trước.
-    </p>
+  {t("post_service_empty")}
+</p>
   );
 
   return (
@@ -501,13 +502,13 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <Wrench size={15} className="text-emerald-600" />
-                {showServiceSelectorForFarmer ? "Dịch vụ cần thuê" : "Dịch vụ cung cấp"}
+             {showServiceSelectorForFarmer ? t("post_service_hire_label") : t("post_service_provide_label")}
                 <span className="text-red-500">*</span>
               </label>
               <p className="text-xs text-gray-500">
                 {showServiceSelectorForFarmer
-                  ? "Chọn loại dịch vụ bạn muốn thuê trong bài đăng này"
-                  : "Chọn dịch vụ bạn muốn giới thiệu trong bài đăng này"}
+                   ? t("post_service_hire_hint")
+                  : t("post_service_provide_hint")}
               </p>
               <ServiceChipSelector
                 availableServices={availableServices}

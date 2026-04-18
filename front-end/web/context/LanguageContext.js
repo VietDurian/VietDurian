@@ -2083,6 +2083,23 @@ const translations = {
       "Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét và xử lý sớm nhất.",
     report_success_close: "Đóng",
     error_reason_min_length: "Lý do là bắt buộc và phải có ít nhất 10 ký tự.",
+
+    resume_service_hint: "Chọn một hoặc nhiều dịch vụ bạn cung cấp",
+    resume_service_required: "Vui lòng chọn ít nhất một dịch vụ",
+    posts_filter_service_label: "Lọc theo loại dịch vụ",
+    posts_filter_service_active: "Đang lọc:",
+    posts_cat_product_label: "Thu mua sầu riêng",
+    posts_cat_hire_label: "Thuê dịch vụ lao động",
+    posts_like_fail: "Không thể cập nhật yêu thích",
+    posts_load_fail: "Không thể tải bài viết",
+    post_service_empty: "Bạn chưa đăng ký dịch vụ nào trong hồ sơ. Hãy cập nhật hồ sơ trước.",
+    post_service_hire_label: "Dịch vụ cần thuê",
+    post_service_provide_label: "Dịch vụ cung cấp",
+    post_service_hire_hint: "Chọn loại dịch vụ bạn muốn thuê trong bài đăng này",
+    post_service_provide_hint: "Chọn dịch vụ bạn muốn giới thiệu trong bài đăng này",
+    fav_posts_default_user: "Người dùng",
+    fav_posts_default_me: "Bạn",
+    fav_posts_default_seller: "Người bán",
   },
 
   en: {
@@ -4157,6 +4174,23 @@ const translations = {
     report_success_close: "Close",
     error_reason_min_length:
       "Reason is required and must be at least 10 characters long.",
+
+resume_service_hint: "Select one or more services you provide",
+resume_service_required: "Please select at least one service",
+    posts_filter_service_label: "Filter by service type",
+    posts_filter_service_active: "Filtering:",
+    posts_cat_product_label: "Durian purchasing",
+    posts_cat_hire_label: "Hire labor services",
+    posts_like_fail: "Unable to update favorite",
+    posts_load_fail: "Unable to load posts",
+    post_service_empty: "You haven't registered any services in your profile. Please update your profile first.",
+    post_service_hire_label: "Services to hire",
+    post_service_provide_label: "Services provided",
+    post_service_hire_hint: "Select the type of service you want to hire in this post",
+    post_service_provide_hint: "Select the service you want to feature in this post",
+    fav_posts_default_user: "User",
+    fav_posts_default_me: "You",
+    fav_posts_default_seller: "Seller",
   },
 };
 

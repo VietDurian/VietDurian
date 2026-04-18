@@ -113,6 +113,7 @@ const detectContactType = (val) => {
 
 // ─── Service Chip Selector (dùng chung) ──────────────────────────────────────
 const ServiceChipSelector = ({ availableServices, selectedServices, onChange }) => {
+  const { t } = useLanguage();
   const toggleService = (svc) => {
     const exists = selectedServices.some((s) => s.name === svc.name);
     if (exists) onChange(selectedServices.filter((s) => s.name !== svc.name));
@@ -121,7 +122,7 @@ const ServiceChipSelector = ({ availableServices, selectedServices, onChange }) 
 
   if (!availableServices || availableServices.length === 0) return (
     <p className="text-sm text-gray-500 italic">
-      Bạn chưa đăng ký dịch vụ nào trong hồ sơ. Hãy cập nhật hồ sơ trước.
+    {t("post_service_empty")}
     </p>
   );
 
@@ -802,13 +803,13 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <Wrench size={15} className="text-emerald-600" />
-                {showServiceSelectorForFarmer ? "Dịch vụ cần thuê" : "Dịch vụ cung cấp"}
+             {showServiceSelectorForFarmer ? t("post_service_hire_label") : t("post_service_provide_label")}
                 <span className="text-red-500">*</span>
               </label>
               <p className="text-xs text-gray-500">
-                {showServiceSelectorForFarmer
-                  ? "Chọn loại dịch vụ bạn muốn thuê trong bài đăng này"
-                  : "Chọn dịch vụ bạn muốn giới thiệu trong bài đăng này"}
+              {showServiceSelectorForFarmer
+  ? t("post_service_hire_hint")
+  : t("post_service_provide_hint")}
               </p>
               <ServiceChipSelector
                 availableServices={availableServices}
@@ -1057,13 +1058,13 @@ const FavoritePostCard = ({
   const getAuthorInfo = () => {
     const postData = post.post_id;
     if (!postData)
-      return { name: "Người dùng", avatar: "/images/avatar.jpg", handle: "" };
+      return { name: t("fav_posts_default_user"), avatar: "/images/avatar.jpg", handle: "" };
     if (postData.author_id && typeof postData.author_id === "object") {
       return {
         name:
           postData.author_id.full_name ||
           postData.author_id.name ||
-          "Người dùng",
+         t("fav_posts_default_user"),
         avatar: postData.author_id.avatar || "/images/avatar.jpg",
         handle: postData.author_id.email || postData.author_id.username || "",
       };
@@ -1074,7 +1075,7 @@ const FavoritePostCard = ({
         : postData.author_id?._id;
     if (authorId === user?._id || authorId === user?.id) {
       return {
-        name: user.full_name || user.name || "Bạn",
+        name: user.full_name || user.name || t("fav_posts_default_me"),
         avatar: user.avatar || "/images/avatar.jpg",
         handle: user.email || user.username || "",
       };
@@ -1422,7 +1423,7 @@ export default function FavoritePostsModal() {
     if (!authorId) return;
     const chatUser = {
       _id: authorId,
-      full_name: post.post_id?.author_id?.full_name || "Người bán",
+      full_name: post.post_id?.author_id?.full_name || t("fav_posts_default_seller"),
       avatar: post.post_id?.author_id?.avatar || "/images/avatar.jpg",
     };
     addContact(chatUser);

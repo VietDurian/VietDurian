@@ -168,7 +168,7 @@ export default function CreateResumePage() {
                                     {t('resume_services_label')} <span className="text-red-500">*</span>
                                 </label>
                                 <p className="text-xs text-gray-500 mb-3">
-                                    Chọn một hoặc nhiều dịch vụ bạn cung cấp
+                                   {t("resume_service_hint")}
                                 </p>
                                 <ServiceSelector
                                     selectedServices={formData.services}
@@ -177,7 +177,7 @@ export default function CreateResumePage() {
                                 {formData.services.length === 0 && (
                                     <p className="mt-2 text-xs text-red-500 flex items-center gap-1">
                                         <XCircle size={13} strokeWidth={2.5} />
-                                        Vui lòng chọn ít nhất một dịch vụ
+                                       {t("resume_service_required")}
                                     </p>
                                 )}
                             </div>
