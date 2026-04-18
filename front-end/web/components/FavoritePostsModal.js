@@ -84,7 +84,7 @@ const getCategoriesByRole = (role) => {
     case "farmer": return ["Thuê dịch vụ lao động"];
     case "serviceProvider": return ["Dịch vụ"];
     case "contentExpert": return ["Kinh nghiệm"];
-    default: return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
+    default: return ["Sản phẩm", "Kinh nghiệm", "Thuê dịch vụ"];
   }
 };
 
@@ -103,8 +103,6 @@ const categoryConfig = {
   "Thuê dịch vụ": { icon: HandCoins, bg: "from-purple-500 to-violet-500" },
   Khác: { icon: LayoutGrid, bg: "from-gray-500 to-slate-500" },
 };
-
-
 
 const PHONE_REGEX = /^(0[3|5|7|8|9])+([0-9]{8})$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -239,7 +237,6 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[calc(100vh-80px)] mt-16">
-        {/* Header */}
         <div className="relative flex items-center justify-center p-4 border-b border-gray-200 shrink-0">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-orange-100 rounded-full">
@@ -288,7 +285,6 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
             </button>
           </div>
         ) : (
-          /* Scrollable form */
           <div className="overflow-y-auto flex-1">
             <div className="p-5 space-y-4">
               {postTitle && (
@@ -344,7 +340,6 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
                 </div>
               )}
 
-              {/* Image upload */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   {t("report_image_label")}{" "}
@@ -537,6 +532,9 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // ── Original values để so sánh dirty ──────────────────
+  const [originalValues, setOriginalValues] = useState(null);
+
   // ── Service selector state ──────────────────────────────
   const isServiceProvider = user?.role === "serviceProvider";
   const isFarmer = user?.role === "farmer";
@@ -565,14 +563,6 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
     return "";
   };
 
-  const canSubmit =
-    Boolean(category) &&
-    Boolean(title.trim()) &&
-    Boolean(content.trim()) &&
-    Boolean(imageData) &&
-    Boolean(contact.trim()) &&
-    !contactError;
-
   useEffect(() => {
     if (post) {
       const roleCategories = getCategoriesByRole(user?.role);
@@ -590,17 +580,26 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
       setImageData(post.image || "");
       setError("");
       setDropdownOpen(false);
-      // Khôi phục type_service đã chọn từ post
+
       const existingTypeService = post.type_service || post.post_id?.type_service || [];
+      let restoredServices = [];
       if (existingTypeService.length > 0) {
         const allOptions = isServiceProvider ? profileServices : SERVICE_OPTIONS;
-        const restored = existingTypeService
+        restoredServices = existingTypeService
           .map((name) => allOptions.find((s) => s.name === name))
           .filter(Boolean);
-        setSelectedTypeServices(restored);
-      } else {
-        setSelectedTypeServices([]);
       }
+      setSelectedTypeServices(restoredServices);
+
+      // Lưu original values để so sánh
+      setOriginalValues({
+        category: displayCat,
+        title: post.title || "",
+        content: post.content || "",
+        contact: post.link || post.contact || "",
+        imageData: post.image || "",
+        typeServices: existingTypeService.slice().sort().join(","),
+      });
     }
   }, [post, categories, isServiceProvider, profileServices]);
 
@@ -610,6 +609,38 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
       document.body.style.overflow = "unset";
     };
   }, [isOpen]);
+
+  // ── Kiểm tra có thay đổi gì không ──────────────────────
+  const isDirty = useMemo(() => {
+    if (!originalValues) return false;
+    const currentTypeServices = selectedTypeServices.map((s) => s.name).slice().sort().join(",");
+    return (
+      category !== originalValues.category ||
+      title.trim() !== originalValues.title.trim() ||
+      content.trim() !== originalValues.content.trim() ||
+      contact.trim() !== originalValues.contact.trim() ||
+      imageData !== originalValues.imageData ||
+      currentTypeServices !== originalValues.typeServices
+    );
+  }, [category, title, content, contact, imageData, selectedTypeServices, originalValues]);
+
+  const rawCategory = post?.category || "";
+  const showServiceSelectorForProvider = isServiceProvider && (category === "Dịch vụ" || rawCategory === "Dịch vụ");
+  const showServiceSelectorForFarmer = isFarmer && (category === "Thuê dịch vụ lao động" || rawCategory === "Thuê dịch vụ");
+  const showServiceSelector = showServiceSelectorForProvider || showServiceSelectorForFarmer;
+  const availableServices = showServiceSelectorForFarmer ? SERVICE_OPTIONS : profileServices;
+
+  const serviceValid = !showServiceSelector || selectedTypeServices.length > 0;
+
+  const canSubmit =
+    Boolean(category) &&
+    Boolean(title.trim()) &&
+    Boolean(content.trim()) &&
+    Boolean(imageData) &&
+    Boolean(contact.trim()) &&
+    !contactError &&
+    serviceValid &&
+    isDirty;
 
   const handleContactChange = (e) => {
     const val = e.target.value;
@@ -639,13 +670,6 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
     };
     reader.readAsDataURL(file);
   };
-
-  // Xác định có hiện service selector không
-  const rawCategory = post?.category || "";
-  const showServiceSelectorForProvider = isServiceProvider && (category === "Dịch vụ" || rawCategory === "Dịch vụ");
-  const showServiceSelectorForFarmer = isFarmer && (category === "Thuê dịch vụ lao động" || rawCategory === "Thuê dịch vụ");
-  const showServiceSelector = showServiceSelectorForProvider || showServiceSelectorForFarmer;
-  const availableServices = showServiceSelectorForFarmer ? SERVICE_OPTIONS : profileServices;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -779,6 +803,7 @@ const EditPostModal = ({ isOpen, onClose, post, user, onPostUpdated }) => {
               <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <Wrench size={15} className="text-emerald-600" />
                 {showServiceSelectorForFarmer ? "Dịch vụ cần thuê" : "Dịch vụ cung cấp"}
+                <span className="text-red-500">*</span>
               </label>
               <p className="text-xs text-gray-500">
                 {showServiceSelectorForFarmer
@@ -962,7 +987,7 @@ const FavoritePostCard = ({
   const [showMenu, setShowMenu] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const { user } = useAuth();
-  // Component hiện chips dịch vụ trong post card
+
   const TypeServiceChips = ({ typeService }) => {
     if (!typeService || typeService.length === 0) return null;
 
@@ -994,6 +1019,7 @@ const FavoritePostCard = ({
       </div>
     );
   };
+
   useEffect(() => {
     setCommentCount(post.post_id?.comments_count || 0);
   }, [post.post_id?.comments_count]);
@@ -1121,7 +1147,6 @@ const FavoritePostCard = ({
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
-            {/* Report — chỉ hiện với post của người khác */}
             {!canEditDelete && (
               <button
                 onClick={() => setIsReportModalOpen(true)}
@@ -1132,7 +1157,6 @@ const FavoritePostCard = ({
               </button>
             )}
 
-            {/* Edit/Delete — chỉ hiện với post của mình */}
             {canEditDelete && (
               <div className="relative">
                 <button
