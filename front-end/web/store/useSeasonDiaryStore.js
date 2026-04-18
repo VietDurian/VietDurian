@@ -18,6 +18,11 @@ export const useSeasonDiaryStore = create((set, get) => ({
 
   // 1. GET /season-diary
   getSeasonDiaries: async (userId, status) => {
+    if (!userId) {
+      set({ seasonDiaries: [], isSeasonDiariesLoading: false });
+      return;
+    }
+
     set({ isSeasonDiariesLoading: true });
     try {
       const res = await axiosInstance.get("/season-diary", {

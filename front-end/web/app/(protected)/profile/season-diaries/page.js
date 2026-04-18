@@ -31,8 +31,9 @@ export default function SeasonDiariesPage() {
   const { seasonDiaries, getSeasonDiaries, isSeasonDiariesLoading } =
     useSeasonDiaryStore();
   useEffect(() => {
-    getSeasonDiaries(authUser?._id);
-  }, [getSeasonDiaries, authUser]);
+    if (!authUser?._id) return;
+    getSeasonDiaries(authUser._id);
+  }, [getSeasonDiaries, authUser?._id]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
