@@ -224,6 +224,7 @@ const getProductById = async (productId) => {
       { new: true },
     )
       .populate("user_id", "full_name avatar email phone")
+      .populate("season_diary_id", "garden_name")
       .populate("type_id", "name");
 
     const listImage = await ProductImage.find({ product_id: productId });
