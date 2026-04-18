@@ -418,8 +418,8 @@ const FilterBar = ({
     { label: t("posts_cat_all"), value: "Tất cả" },
     { label: t("posts_cat_service"), value: "Dịch vụ" },
     { label: t("posts_cat_experience"), value: "Kinh nghiệm" },
-    { label: "Thu mua sầu riêng", value: "Sản phẩm" },
-    { label: "Thuê dịch vụ lao động", value: "Thuê dịch vụ" },
+    { label: t("posts_cat_product_label"), value: "Sản phẩm" },
+    { label: t("posts_cat_hire_label"), value: "Thuê dịch vụ" },
   ];
 
   const SORT_OPTIONS = [
@@ -524,7 +524,7 @@ const FilterBar = ({
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                 <Wrench size={14} className="text-emerald-600" />
-                Lọc theo loại dịch vụ
+              {t("posts_filter_service_label")}
               </label>
               <div className="flex flex-wrap gap-2">
                 {SERVICE_FILTER_OPTIONS.map((svc) => {
@@ -547,7 +547,7 @@ const FilterBar = ({
               </div>
               {selectedServices.length > 0 && (
                 <p className="text-xs text-emerald-600 mt-2 font-medium">
-                  Đang lọc: {selectedServices.join(", ")}
+             {t("posts_filter_service_active")} {selectedServices.join(", ")}
                 </p>
               )}
             </div>
@@ -628,7 +628,7 @@ const Post = ({ post, onLikeUpdate, onContact, currentUserId }) => {
       onLikeUpdate?.(post.id, newLikedState);
     } catch (error) {
       setIsLiked(previousLikedState);
-      alert(error?.response?.data?.message || error?.message || "Không thể cập nhật yêu thích");
+     alert(error?.response?.data?.message || error?.message || t("posts_like_fail"));
     } finally {
       setIsTogglingFavorite(false);
     }
@@ -790,7 +790,7 @@ export default function PostsContent() {
         );
         if (!isCancelled) setPosts(postsWithComments);
       } catch (error) {
-        if (!isCancelled) setPostsError(error?.message || "Không thể tải bài viết");
+      if (!isCancelled) setPostsError(error?.message || t("posts_load_fail"));
       } finally {
         if (!isCancelled) setLoadingPosts(false);
       }

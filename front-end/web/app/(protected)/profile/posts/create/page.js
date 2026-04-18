@@ -54,7 +54,7 @@ const PHONE_REGEX = /^(0[3|5|7|8|9])+([0-9]{8})$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ─── Service Selector dùng chung (chip toggle) ────────────────────────────────
-const ServiceChipSelector = ({ availableServices, selectedServices, onChange }) => {
+const ServiceChipSelector = ({ availableServices, selectedServices, onChange, t }) => {
   const toggleService = (svc) => {
     const exists = selectedServices.some((s) => s.name === svc.name);
     if (exists) onChange(selectedServices.filter((s) => s.name !== svc.name));
@@ -63,7 +63,7 @@ const ServiceChipSelector = ({ availableServices, selectedServices, onChange }) 
 
   if (!availableServices || availableServices.length === 0) return (
     <p className="text-sm text-gray-500 italic">
-      Bạn chưa đăng ký dịch vụ nào trong hồ sơ. Hãy cập nhật hồ sơ trước.
+       {t("post_service_empty")}
     </p>
   );
 
@@ -313,18 +313,19 @@ export default function CreatePostPage() {
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <Wrench size={15} className="text-emerald-600" />
-                  {showServiceSelectorForFarmer ? "Dịch vụ cần thuê" : "Dịch vụ cung cấp"}
+                 {showServiceSelectorForFarmer ? t("post_service_hire_label") : t("post_service_provide_label")}
                   <span className="text-red-500">*</span>
                 </label>
                 <p className="text-xs text-gray-500">
-                  {showServiceSelectorForFarmer
-                    ? "Chọn loại dịch vụ bạn muốn thuê trong bài đăng này"
-                    : "Chọn dịch vụ bạn muốn giới thiệu trong bài đăng này"}
+            {showServiceSelectorForFarmer
+                  ? t("post_service_hire_hint")
+                  : t("post_service_provide_hint")}
                 </p>
                 <ServiceChipSelector
                   availableServices={availableServices}
                   selectedServices={selectedTypeServices}
                   onChange={setSelectedTypeServices}
+                  t={t}
                 />
               </div>
             )}
