@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -38,10 +38,19 @@ const POST_CATEGORIES = [
   "Tất cả",
   "Dịch vụ",
   "Kinh nghiệm",
-  "Sản phẩm",
-  "Thuê dịch vụ",
-  "Khác",
+  "Thu mua sầu riêng",
+  "Thuê dịch vụ lao động",
 ];
+
+const CATEGORY_LABEL_TO_API = {
+  "Thu mua sầu riêng": "Sản phẩm",
+  "Thuê dịch vụ lao động": "Thuê dịch vụ",
+};
+
+const CATEGORY_API_TO_LABEL = {
+  "Sản phẩm": "Thu mua sầu riêng",
+  "Thuê dịch vụ": "Thuê dịch vụ lao động",
+};
 
 const CATEGORY_GUIDE = [
   {
@@ -69,7 +78,7 @@ const CATEGORY_GUIDE = [
     activeBorder: "#fcd34d",
   },
   {
-    key: "Sản phẩm",
+    key: "Thu mua sầu riêng",
     icon: "cube-outline",
     iconColor: "#10b981",
     tagLine: "Mua bán nông sản",
@@ -81,7 +90,7 @@ const CATEGORY_GUIDE = [
     activeBorder: "#6ee7b7",
   },
   {
-    key: "Thuê dịch vụ",
+    key: "Thuê dịch vụ lao động",
     icon: "cash-outline",
     iconColor: "#8b5cf6",
     tagLine: "Tôi cần thuê người",
@@ -91,18 +100,6 @@ const CATEGORY_GUIDE = [
     badgeText: "#5b21b6",
     activeBg: "#f5f3ff",
     activeBorder: "#c4b5fd",
-  },
-  {
-    key: "Khác",
-    icon: "grid-outline",
-    iconColor: "#6b7280",
-    tagLine: "Nội dung khác",
-    who: "Dành cho: Tất cả",
-    desc: "Hỏi đáp, thông báo, tin tức nông nghiệp và các chủ đề chưa phân loại.",
-    badgeBg: "#f3f4f6",
-    badgeText: "#374151",
-    activeBg: "#f9fafb",
-    activeBorder: "#d1d5db",
   },
 ];
 
@@ -129,8 +126,24 @@ const REPORT_REASONS = [
   "Khác",
 ];
 
-// ── Category Badge (inline in card) ───────────────────────────────────────────
+const SERVICE_OPTIONS = [
+  { name: "Chuẩn bị đất & cây giống", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/1_q5ex4r.jpg" },
+  { name: "Tưới nước", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/2_b2vbpy.jpg" },
+  { name: "Bón phân", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/3_cf0zcj.jpg" },
+  { name: "Phun thuốc", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/4_noshkk.jpg" },
+  { name: "Tỉa cành, tạo tán", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/5_lkgztf.jpg" },
+  { name: "Làm cỏ", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/6_cnbn3r.jpg" },
+  { name: "Xử lý ra hoa", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/7_q3beeu.jpg" },
+  { name: "Thụ phấn bổ sung", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/8_kmkqs3.jpg" },
+  { name: "Tỉa trái", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/9_k3pvls.jpg" },
+  { name: "Thu hoạch", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/10_b9jovt.jpg" },
+];
+
+const CATEGORIES_WITH_SERVICE_FILTER = ["Dịch vụ", "Thuê dịch vụ lao động"];
+
+// ── Category Badge ─────────────────────────────────────────────────────────────
 function CategoryBadge({ category }) {
+  const displayName = CATEGORY_API_TO_LABEL[category] || category;
   const colors = CATEGORY_TAG_COLORS[category];
   const icon = ICON_BY_CATEGORY[category];
   if (!colors || !icon) return null;
@@ -138,8 +151,36 @@ function CategoryBadge({ category }) {
     <View style={[styles.catBadge, { backgroundColor: colors.bg }]}>
       <Ionicons name={icon} size={11} color={colors.text} />
       <Text style={[styles.catBadgeText, { color: colors.text }]}>
-        {category}
+        {displayName}
       </Text>
+    </View>
+  );
+}
+
+// ── TypeServiceChips ───────────────────────────────────────────────────────────
+function TypeServiceChips({ typeService }) {
+  if (!typeService || typeService.length === 0) return null;
+  const getServiceImage = (name) => {
+    const found = SERVICE_OPTIONS.find((s) => s.name === name);
+    return found?.image || null;
+  };
+  return (
+    <View style={styles.typeServiceWrap}>
+      {typeService.map((name) => {
+        const img = getServiceImage(name);
+        return (
+          <View key={name} style={styles.typeServiceChip}>
+            {img && (
+              <Image
+                source={{ uri: img }}
+                style={styles.typeServiceChipImage}
+                resizeMode="cover"
+              />
+            )}
+            <Text style={styles.typeServiceChipText}>{name}</Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -155,7 +196,6 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
 
-  // Reset khi đóng/mở
   useEffect(() => {
     if (!visible) {
       setSelectedReason("");
@@ -169,8 +209,7 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
 
   const handlePickImage = async () => {
     try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert("Thông báo", "Cần cấp quyền truy cập thư viện ảnh!");
         return;
@@ -229,17 +268,11 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
     !(selectedReason === "Khác" && !customReason.trim());
 
   return (
-    <Modal
-      visible={visible}
-      animationType="none"
-      transparent
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="none" transparent onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={reportStyles.overlay}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={reportStyles.sheet}>
-              {/* Header */}
               <View style={reportStyles.header}>
                 <View style={reportStyles.headerLeft}>
                   <View style={reportStyles.flagIconWrap}>
@@ -247,11 +280,7 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                   </View>
                   <Text style={reportStyles.headerTitle}>Báo cáo bài viết</Text>
                 </View>
-                <TouchableOpacity
-                  onPress={onClose}
-                  style={reportStyles.closeBtn}
-                  hitSlop={8}
-                >
+                <TouchableOpacity onPress={onClose} style={reportStyles.closeBtn} hitSlop={8}>
                   <Ionicons name="close" size={20} color="#6b7280" />
                 </TouchableOpacity>
               </View>
@@ -263,37 +292,23 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                 showsVerticalScrollIndicator={false}
               >
                 {submitted ? (
-                  /* ── Success ── */
                   <View style={reportStyles.successWrap}>
                     <View style={reportStyles.successIcon}>
                       <Ionicons name="checkmark" size={32} color="#f97316" />
                     </View>
-                    <Text style={reportStyles.successTitle}>
-                      Đã gửi báo cáo
-                    </Text>
+                    <Text style={reportStyles.successTitle}>Đã gửi báo cáo</Text>
                     <Text style={reportStyles.successDesc}>
-                      Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét và xử lý sớm
-                      nhất.
+                      Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét và xử lý sớm nhất.
                     </Text>
-                    <TouchableOpacity
-                      style={reportStyles.doneBtn}
-                      onPress={onClose}
-                      activeOpacity={0.85}
-                    >
+                    <TouchableOpacity style={reportStyles.doneBtn} onPress={onClose} activeOpacity={0.85}>
                       <Text style={reportStyles.doneBtnText}>Đóng</Text>
                     </TouchableOpacity>
                   </View>
                 ) : (
-                  /* ── Form ── */
                   <>
-                    {/* Post title preview */}
                     {postTitle ? (
-                      <Text style={reportStyles.postPreview} numberOfLines={2}>
-                        {postTitle}
-                      </Text>
+                      <Text style={reportStyles.postPreview} numberOfLines={2}>{postTitle}</Text>
                     ) : null}
-
-                    {/* Reason list */}
                     <Text style={reportStyles.sectionLabel}>Lý do báo cáo</Text>
                     <View style={reportStyles.reasonList}>
                       {REPORT_REASONS.map((reason) => {
@@ -301,10 +316,7 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                         return (
                           <TouchableOpacity
                             key={reason}
-                            style={[
-                              reportStyles.reasonBtn,
-                              isSelected && reportStyles.reasonBtnActive,
-                            ]}
+                            style={[reportStyles.reasonBtn, isSelected && reportStyles.reasonBtnActive]}
                             onPress={() => {
                               setSelectedReason(reason);
                               setError("");
@@ -312,115 +324,61 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                             }}
                             activeOpacity={0.8}
                           >
-                            <Text
-                              style={[
-                                reportStyles.reasonBtnText,
-                                isSelected && reportStyles.reasonBtnTextActive,
-                              ]}
-                            >
+                            <Text style={[reportStyles.reasonBtnText, isSelected && reportStyles.reasonBtnTextActive]}>
                               {reason}
                             </Text>
-                            {isSelected && (
-                              <Ionicons
-                                name="checkmark-circle"
-                                size={18}
-                                color="#f97316"
-                              />
-                            )}
+                            {isSelected && <Ionicons name="checkmark-circle" size={18} color="#f97316" />}
                           </TouchableOpacity>
                         );
                       })}
                     </View>
 
-                    {/* Custom reason textarea */}
                     {selectedReason === "Khác" && (
                       <View style={{ marginTop: 12 }}>
-                        <Text style={reportStyles.sectionLabel}>
-                          Mô tả chi tiết
-                        </Text>
+                        <Text style={reportStyles.sectionLabel}>Mô tả chi tiết</Text>
                         <TextInput
                           style={reportStyles.textArea}
                           value={customReason}
-                          onChangeText={(v) => {
-                            setCustomReason(v);
-                            setError("");
-                          }}
+                          onChangeText={(v) => { setCustomReason(v); setError(""); }}
                           placeholder="Nhập lý do cụ thể..."
                           placeholderTextColor="#9ca3af"
                           multiline
                           maxLength={500}
                           textAlignVertical="top"
                         />
-                        <Text style={reportStyles.charCount}>
-                          {customReason.length}/500
-                        </Text>
+                        <Text style={reportStyles.charCount}>{customReason.length}/500</Text>
                       </View>
                     )}
 
-                    {/* Image upload */}
                     <View style={{ marginTop: 12 }}>
                       <Text style={reportStyles.sectionLabel}>
-                        Ảnh minh chứng{" "}
-                        <Text style={reportStyles.optional}>(tuỳ chọn)</Text>
+                        Ảnh minh chứng <Text style={reportStyles.optional}>(tuỳ chọn)</Text>
                       </Text>
                       {!imageUri ? (
-                        <TouchableOpacity
-                          style={reportStyles.imagePicker}
-                          onPress={handlePickImage}
-                          activeOpacity={0.8}
-                        >
-                          <Ionicons
-                            name="image-outline"
-                            size={26}
-                            color="#9ca3af"
-                          />
-                          <Text style={reportStyles.imagePickerText}>
-                            Nhấn để tải ảnh lên
-                          </Text>
-                          <Text style={reportStyles.imagePickerHint}>
-                            PNG, JPG tối đa 5MB
-                          </Text>
+                        <TouchableOpacity style={reportStyles.imagePicker} onPress={handlePickImage} activeOpacity={0.8}>
+                          <Ionicons name="image-outline" size={26} color="#9ca3af" />
+                          <Text style={reportStyles.imagePickerText}>Nhấn để tải ảnh lên</Text>
+                          <Text style={reportStyles.imagePickerHint}>PNG, JPG tối đa 5MB</Text>
                         </TouchableOpacity>
                       ) : (
                         <View style={reportStyles.imagePreviewWrap}>
-                          <Image
-                            source={{ uri: imageUri }}
-                            style={reportStyles.imagePreview}
-                            resizeMode="cover"
-                          />
-                          <TouchableOpacity
-                            style={reportStyles.imageRemoveBtn}
-                            onPress={() => {
-                              setImageUri(null);
-                              setImageData(null);
-                            }}
-                          >
+                          <Image source={{ uri: imageUri }} style={reportStyles.imagePreview} resizeMode="cover" />
+                          <TouchableOpacity style={reportStyles.imageRemoveBtn} onPress={() => { setImageUri(null); setImageData(null); }}>
                             <Ionicons name="close" size={14} color="#fff" />
                           </TouchableOpacity>
                         </View>
                       )}
                     </View>
 
-                    {/* Error */}
                     {error ? (
                       <View style={reportStyles.errorRow}>
-                        <Ionicons
-                          name="alert-circle"
-                          size={16}
-                          color="#ef4444"
-                        />
-                        <Text style={reportStyles.errorText}>
-                          Lý do là bắt buộc và phải có ít nhất 10 ký tự.
-                        </Text>
+                        <Ionicons name="alert-circle" size={16} color="#ef4444" />
+                        <Text style={reportStyles.errorText}>Lý do là bắt buộc và phải có ít nhất 10 ký tự.</Text>
                       </View>
                     ) : null}
 
-                    {/* Submit button */}
                     <TouchableOpacity
-                      style={[
-                        reportStyles.submitBtn,
-                        !canSubmit && reportStyles.submitBtnDisabled,
-                      ]}
+                      style={[reportStyles.submitBtn, !canSubmit && reportStyles.submitBtnDisabled]}
                       onPress={handleSubmit}
                       disabled={!canSubmit}
                       activeOpacity={0.85}
@@ -430,9 +388,7 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                       ) : (
                         <>
                           <Ionicons name="flag" size={16} color="#fff" />
-                          <Text style={reportStyles.submitBtnText}>
-                            Gửi báo cáo
-                          </Text>
+                          <Text style={reportStyles.submitBtnText}>Gửi báo cáo</Text>
                         </>
                       )}
                     </TouchableOpacity>
@@ -450,41 +406,23 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
 // ── Category Guide Section ─────────────────────────────────────────────────────
 function CategoryGuideSection({ selectedCategory, onCategoryChange }) {
   const [expanded, setExpanded] = useState(false);
-
   const toggle = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpanded((v) => !v);
   };
-
   return (
     <View style={styles.guideWrap}>
-      <TouchableOpacity
-        style={styles.guideHeader}
-        onPress={toggle}
-        activeOpacity={0.85}
-      >
+      <TouchableOpacity style={styles.guideHeader} onPress={toggle} activeOpacity={0.85}>
         <View style={styles.guideHeaderLeft}>
           <View style={styles.guideIconWrap}>
-            <Ionicons
-              name="information-circle-outline"
-              size={20}
-              color="#fff"
-            />
+            <Ionicons name="information-circle-outline" size={20} color="#fff" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.guideHeaderTitle}>
-              Hướng dẫn danh mục bài viết
-            </Text>
-            <Text style={styles.guideHeaderSub}>
-              Bấm để xem từng danh mục dùng để làm gì
-            </Text>
+            <Text style={styles.guideHeaderTitle}>Hướng dẫn danh mục bài viết</Text>
+            <Text style={styles.guideHeaderSub}>Bấm để xem từng danh mục dùng để làm gì</Text>
           </View>
         </View>
-        <Ionicons
-          name={expanded ? "chevron-up" : "chevron-down"}
-          size={20}
-          color="#6b7280"
-        />
+        <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={20} color="#6b7280" />
       </TouchableOpacity>
 
       {expanded && (
@@ -494,74 +432,31 @@ function CategoryGuideSection({ selectedCategory, onCategoryChange }) {
             return (
               <TouchableOpacity
                 key={cat.key}
-                style={[
-                  styles.guideCard,
-                  isActive && {
-                    backgroundColor: cat.activeBg,
-                    borderColor: cat.activeBorder,
-                  },
-                ]}
+                style={[styles.guideCard, isActive && { backgroundColor: cat.activeBg, borderColor: cat.activeBorder }]}
                 onPress={() => onCategoryChange(isActive ? "Tất cả" : cat.key)}
                 activeOpacity={0.85}
               >
                 <View style={styles.guideCardTop}>
-                  <View
-                    style={[
-                      styles.guideCardIcon,
-                      { backgroundColor: cat.iconColor },
-                    ]}
-                  >
+                  <View style={[styles.guideCardIcon, { backgroundColor: cat.iconColor }]}>
                     <Ionicons name={cat.icon} size={20} color="#fff" />
                   </View>
-                  <View
-                    style={[
-                      styles.guideTagLineBadge,
-                      { backgroundColor: cat.badgeBg },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.guideTagLineText,
-                        { color: cat.badgeText },
-                      ]}
-                      numberOfLines={1}
-                    >
+                  <View style={[styles.guideTagLineBadge, { backgroundColor: cat.badgeBg }]}>
+                    <Text style={[styles.guideTagLineText, { color: cat.badgeText }]} numberOfLines={1}>
                       {cat.tagLine}
                     </Text>
                   </View>
                 </View>
-
-                <Text style={[styles.guideCardName, { color: cat.badgeText }]}>
-                  {cat.key}
-                </Text>
+                <Text style={[styles.guideCardName, { color: cat.badgeText }]}>{cat.key}</Text>
                 <Text style={styles.guideCardWho}>{cat.who}</Text>
-                <Text style={styles.guideCardDesc} numberOfLines={3}>
-                  {cat.desc}
-                </Text>
-
+                <Text style={styles.guideCardDesc} numberOfLines={3}>{cat.desc}</Text>
                 <View style={styles.guideFilterHint}>
-                  <Ionicons
-                    name="funnel-outline"
-                    size={12}
-                    color={cat.badgeText}
-                  />
-                  <Text
-                    style={[
-                      styles.guideFilterHintText,
-                      { color: cat.badgeText },
-                    ]}
-                  >
+                  <Ionicons name="funnel-outline" size={12} color={cat.badgeText} />
+                  <Text style={[styles.guideFilterHintText, { color: cat.badgeText }]}>
                     {isActive ? "Đang lọc danh mục này" : "Bấm để lọc danh mục"}
                   </Text>
                 </View>
-
                 {isActive && (
-                  <View
-                    style={[
-                      styles.guideActiveOverlay,
-                      { backgroundColor: cat.iconColor },
-                    ]}
-                  />
+                  <View style={[styles.guideActiveOverlay, { backgroundColor: cat.iconColor }]} />
                 )}
               </TouchableOpacity>
             );
@@ -577,22 +472,15 @@ function PostCard({ post, onToggleLike, onComment, onContact }) {
   const { authUser } = useAuthStore();
   const currentUserId = authUser?._id || authUser?.id;
   const isOwnPost = currentUserId && post.authorId === currentUserId;
-
   const [reportVisible, setReportVisible] = useState(false);
 
   return (
     <View style={styles.card}>
-      {/* Header */}
       <View style={styles.cardHeader}>
-        <Image
-          source={{ uri: post.userAvatar || "https://i.pravatar.cc/100" }}
-          style={styles.cardAvatar}
-        />
+        <Image source={{ uri: post.userAvatar || "https://i.pravatar.cc/100" }} style={styles.cardAvatar} />
         <View style={styles.cardAuthorInfo}>
           <View style={styles.cardNameRow}>
-            <Text style={styles.cardAuthorName} numberOfLines={1}>
-              {post.userName}
-            </Text>
+            <Text style={styles.cardAuthorName} numberOfLines={1}>{post.userName}</Text>
             <CategoryBadge category={post.category} />
           </View>
           <Text style={styles.cardMetaText} numberOfLines={1}>
@@ -601,28 +489,17 @@ function PostCard({ post, onToggleLike, onComment, onContact }) {
             {post.timestamp}
           </Text>
         </View>
-
-        {/* Flag button — chỉ hiện với post của người khác */}
         {!isOwnPost && (
-          <TouchableOpacity
-            style={styles.flagBtn}
-            onPress={() => setReportVisible(true)}
-            hitSlop={8}
-          >
+          <TouchableOpacity style={styles.flagBtn} onPress={() => setReportVisible(true)} hitSlop={8}>
             <Ionicons name="flag-outline" size={18} color="#9ca3af" />
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Title */}
       {post.title ? <Text style={styles.cardTitle}>{post.title}</Text> : null}
+      <Text style={styles.cardContent} numberOfLines={4}>{post.content}</Text>
+      <TypeServiceChips typeService={post.type_service} />
 
-      {/* Content */}
-      <Text style={styles.cardContent} numberOfLines={4}>
-        {post.content}
-      </Text>
-
-      {/* Contact */}
       {post.contact ? (
         <View style={styles.contactRow}>
           <Text style={styles.contactLabel}>Liên hệ: </Text>
@@ -630,55 +507,29 @@ function PostCard({ post, onToggleLike, onComment, onContact }) {
         </View>
       ) : null}
 
-      {/* Image */}
       {post.image ? (
         <View style={styles.cardImageWrap}>
-          <Image
-            source={{ uri: post.image }}
-            style={styles.cardImage}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: post.image }} style={styles.cardImage} resizeMode="cover" />
         </View>
       ) : null}
 
-      {/* Actions */}
       <View style={styles.cardActions}>
-        {/* Like — icon only, no count */}
         <TouchableOpacity
           style={[styles.actionBtn, post.isLiked && styles.actionBtnLiked]}
           onPress={() => onToggleLike(post.id)}
           activeOpacity={0.8}
         >
-          <Ionicons
-            name={post.isLiked ? "heart" : "heart-outline"}
-            size={22}
-            color={post.isLiked ? "#ef4444" : "#6b7280"}
-          />
+          <Ionicons name={post.isLiked ? "heart" : "heart-outline"} size={22} color={post.isLiked ? "#ef4444" : "#6b7280"} />
         </TouchableOpacity>
-
-        {/* Comment — navigate to CommentScreen + show count */}
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() => onComment(post.id)}
-          activeOpacity={0.8}
-        >
+        <TouchableOpacity style={styles.actionBtn} onPress={() => onComment(post.id)} activeOpacity={0.8}>
           <Ionicons name="chatbubble-outline" size={22} color="#6b7280" />
-          {post.comments > 0 && (
-            <Text style={styles.actionCount}>{post.comments}</Text>
-          )}
+          {post.comments > 0 && <Text style={styles.actionCount}>{post.comments}</Text>}
         </TouchableOpacity>
-
-        {/* Contact */}
-        <TouchableOpacity
-          style={styles.contactBtn}
-          onPress={() => onContact(post)}
-          activeOpacity={0.85}
-        >
+        <TouchableOpacity style={styles.contactBtn} onPress={() => onContact(post)} activeOpacity={0.85}>
           <Text style={styles.contactBtnText}>Liên Hệ</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Report Modal */}
       <ReportPostModal
         visible={reportVisible}
         onClose={() => setReportVisible(false)}
@@ -694,12 +545,7 @@ function SearchBar({ value, onChangeText, onFilterPress, filterActive }) {
   return (
     <View style={styles.searchRow}>
       <View style={styles.searchInputWrap}>
-        <Ionicons
-          name="search-outline"
-          size={18}
-          color="#9ca3af"
-          style={{ marginRight: 8 }}
-        />
+        <Ionicons name="search-outline" size={18} color="#9ca3af" style={{ marginRight: 8 }} />
         <TextInput
           style={styles.searchInput}
           value={value}
@@ -719,11 +565,7 @@ function SearchBar({ value, onChangeText, onFilterPress, filterActive }) {
         onPress={onFilterPress}
         activeOpacity={0.85}
       >
-        <Ionicons
-          name="options-outline"
-          size={20}
-          color={filterActive ? "#fff" : "#374151"}
-        />
+        <Ionicons name="options-outline" size={20} color={filterActive ? "#fff" : "#374151"} />
       </TouchableOpacity>
     </View>
   );
@@ -745,16 +587,51 @@ function SortBar({ value, onChange }) {
           onPress={() => onChange(opt.value)}
           activeOpacity={0.8}
         >
-          <Text
-            style={[
-              styles.sortBtnText,
-              value === opt.value && styles.sortBtnTextActive,
-            ]}
-          >
+          <Text style={[styles.sortBtnText, value === opt.value && styles.sortBtnTextActive]}>
             {opt.label}
           </Text>
         </TouchableOpacity>
       ))}
+    </View>
+  );
+}
+
+// ── Service Filter Chips ───────────────────────────────────────────────────────
+function ServiceFilterChips({ selectedServices, onToggle, onClear }) {
+  return (
+    <View style={styles.serviceFilterWrap}>
+      <View style={styles.serviceFilterHeader}>
+        <Ionicons name="construct-outline" size={13} color="#059669" />
+        <Text style={styles.serviceFilterLabel}>Lọc theo loại dịch vụ</Text>
+        {selectedServices.length > 0 && (
+          <TouchableOpacity onPress={onClear} hitSlop={8}>
+            <Text style={styles.serviceFilterClear}>Xóa</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      <View style={styles.serviceChipRow}>
+        {SERVICE_OPTIONS.map((svc) => {
+          const isSelected = selectedServices.includes(svc.name);
+          return (
+            <TouchableOpacity
+              key={svc.name}
+              style={[styles.serviceChip, isSelected && styles.serviceChipActive]}
+              onPress={() => onToggle(svc.name)}
+              activeOpacity={0.8}
+            >
+              {isSelected && <Ionicons name="checkmark-circle" size={12} color="#059669" />}
+              <Text style={[styles.serviceChipText, isSelected && styles.serviceChipTextActive]}>
+                {svc.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      {selectedServices.length > 0 && (
+        <Text style={styles.serviceFilterActive}>
+          Đang lọc: {selectedServices.join(", ")}
+        </Text>
+      )}
     </View>
   );
 }
@@ -777,9 +654,7 @@ function CategoryTabs({ active, onSelect }) {
             onPress={() => onSelect(cat)}
             activeOpacity={0.8}
           >
-            <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
-              {cat}
-            </Text>
+            <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{cat}</Text>
           </TouchableOpacity>
         );
       })}
@@ -787,23 +662,91 @@ function CategoryTabs({ active, onSelect }) {
   );
 }
 
-// ── Empty / Error States ───────────────────────────────────────────────────────
+// ── Empty State ────────────────────────────────────────────────────────────────
 function EmptyState({ onClear }) {
   return (
     <View style={styles.emptyWrap}>
       <Ionicons name="image-outline" size={48} color="#d1d5db" />
       <Text style={styles.emptyTitle}>Không tìm thấy bài viết</Text>
-      <Text style={styles.emptyDesc}>
-        Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm
-      </Text>
-      <TouchableOpacity
-        style={styles.clearBtn}
-        onPress={onClear}
-        activeOpacity={0.85}
-      >
+      <Text style={styles.emptyDesc}>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</Text>
+      <TouchableOpacity style={styles.clearBtn} onPress={onClear} activeOpacity={0.85}>
         <Text style={styles.clearBtnText}>Xóa bộ lọc</Text>
       </TouchableOpacity>
     </View>
+  );
+}
+
+// ── List Header Component (định nghĩa NGOÀI HomeScreen để tránh re-mount) ──────
+function HomeListHeader({
+  posts,
+  selectedCategory,
+  selectedSort,
+  searchQuery,
+  selectedServices,
+  showFilters,
+  showServiceFilter,
+  hasActiveFilters,
+  onSetCategory,
+  onSetSort,
+  onSetSearch,
+  onToggleFilters,
+  onToggleService,
+  onClearServices,
+  onClearFilters,
+}) {
+  return (
+    <>
+      <View style={styles.pageTitleRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.pageTitle}>Bài viết cộng đồng</Text>
+          <Text style={styles.pageSubtitle}>Khám phá và chia sẻ kiến thức nông nghiệp</Text>
+        </View>
+        {posts.length > 0 && (
+          <View style={styles.countBadge}>
+            <Text style={styles.countNum}>{posts.length}</Text>
+            <Text style={styles.countLabel}>bài viết</Text>
+          </View>
+        )}
+      </View>
+
+      <CategoryGuideSection
+        selectedCategory={selectedCategory}
+        onCategoryChange={onSetCategory}
+      />
+
+      <SearchBar
+        value={searchQuery}
+        onChangeText={onSetSearch}
+        onFilterPress={onToggleFilters}
+        filterActive={showFilters}
+      />
+
+      {showFilters && (
+        <View style={styles.filterPanel}>
+          <SortBar value={selectedSort} onChange={onSetSort} />
+
+          {showServiceFilter && (
+            <ServiceFilterChips
+              selectedServices={selectedServices}
+              onToggle={onToggleService}
+              onClear={onClearServices}
+            />
+          )}
+
+          {hasActiveFilters && (
+            <TouchableOpacity style={styles.clearFiltersBtn} onPress={onClearFilters} activeOpacity={0.8}>
+              <Ionicons name="close-circle-outline" size={16} color="#ef4444" />
+              <Text style={styles.clearFiltersBtnText}>Xóa bộ lọc</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      <CategoryTabs
+        active={selectedCategory}
+        onSelect={onSetCategory}
+      />
+    </>
   );
 }
 
@@ -816,9 +759,11 @@ export default function HomeScreen() {
     selectedCategory,
     selectedSort,
     searchQuery,
+    selectedServices,
     setCategory,
     setSort,
     setSearch,
+    setServices,
     clearFilters,
     fetchPosts,
     toggleLikePost,
@@ -827,19 +772,39 @@ export default function HomeScreen() {
   const { navigate, setSelectedPostId } = useAppStore();
   const { setSelectedUser, addContact, sendPostCardMessage } = useChatStore();
   const { authUser } = useAuthStore();
-
   const [showFilters, setShowFilters] = useState(false);
+
+  const showServiceFilter = CATEGORIES_WITH_SERVICE_FILTER.includes(selectedCategory);
+
+  const handleToggleService = useCallback((svcName) => {
+    const { selectedServices } = usePostStore.getState();
+    if (selectedServices.includes(svcName)) {
+      setServices(selectedServices.filter((s) => s !== svcName));
+    } else {
+      setServices([...selectedServices, svcName]);
+    }
+  }, [setServices]);
+
+  const handleSetCategory = useCallback((cat) => {
+    setCategory(cat);
+    setServices([]);
+  }, [setCategory, setServices]);
+
+  const handleToggleFilters = useCallback(() => {
+    setShowFilters((v) => !v);
+  }, []);
+
+  const handleClearServices = useCallback(() => {
+    setServices([]);
+  }, [setServices]);
 
   const handleContact = async (post) => {
     if (!post?.authorId) return;
-
-    const isSelf =
-      String(post.authorId) === String(authUser?._id || authUser?.id);
+    const isSelf = String(post.authorId) === String(authUser?._id || authUser?.id);
     if (isSelf) {
       Alert.alert("Thông báo", "Đây là bài viết của bạn");
       return;
     }
-
     const contactUser = {
       _id: post.authorId,
       full_name: post.userName,
@@ -847,77 +812,44 @@ export default function HomeScreen() {
       avatar: post.userAvatar,
       email: post.userHandle,
     };
-
     setSelectedUser(contactUser);
     addContact(contactUser);
     await sendPostCardMessage(post);
     navigate("chat-detail");
   };
 
+  // ── FIX: chỉ fetch khi category/sort/services thay đổi
+  // searchQuery được debounce trong store nên không cần ở đây
   useEffect(() => {
     fetchPosts();
-  }, [selectedCategory, selectedSort, searchQuery]);
+  }, [selectedCategory, selectedSort, selectedServices]);
 
   const hasActiveFilters =
     selectedCategory !== "Tất cả" ||
     selectedSort !== "newest" ||
-    searchQuery.trim() !== "";
+    searchQuery.trim() !== "" ||
+    selectedServices.length > 0;
 
-  const ListHeader = () => (
-    <>
-      {/* Page title */}
-      <View style={styles.pageTitleRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.pageTitle}>Bài viết cộng đồng</Text>
-          <Text style={styles.pageSubtitle}>
-            Khám phá và chia sẻ kiến thức nông nghiệp
-          </Text>
-        </View>
-        {posts.length > 0 && (
-          <View style={styles.countBadge}>
-            <Text style={styles.countNum}>{posts.length}</Text>
-            <Text style={styles.countLabel}>bài viết</Text>
-          </View>
-        )}
-      </View>
-
-      {/* ── Category Guide ── */}
-      <CategoryGuideSection
-        selectedCategory={selectedCategory}
-        onCategoryChange={setCategory}
-      />
-
-      {/* Search + filter toggle */}
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearch}
-        onFilterPress={() => setShowFilters((v) => !v)}
-        filterActive={showFilters}
-      />
-
-      {/* Filter panel */}
-      {showFilters && (
-        <View style={styles.filterPanel}>
-          <SortBar value={selectedSort} onChange={setSort} />
-          {hasActiveFilters && (
-            <TouchableOpacity
-              style={styles.clearFiltersBtn}
-              onPress={clearFilters}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="close-circle-outline" size={16} color="#ef4444" />
-              <Text style={styles.clearFiltersBtnText}>Xóa bộ lọc</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-
-      {/* Category tabs */}
-      <CategoryTabs active={selectedCategory} onSelect={setCategory} />
-    </>
+  const listHeader = (
+    <HomeListHeader
+      posts={posts}
+      selectedCategory={selectedCategory}
+      selectedSort={selectedSort}
+      searchQuery={searchQuery}
+      selectedServices={selectedServices}
+      showFilters={showFilters}
+      showServiceFilter={showServiceFilter}
+      hasActiveFilters={hasActiveFilters}
+      onSetCategory={handleSetCategory}
+      onSetSort={setSort}
+      onSetSearch={setSearch}
+      onToggleFilters={handleToggleFilters}
+      onToggleService={handleToggleService}
+      onClearServices={handleClearServices}
+      onClearFilters={clearFilters}
+    />
   );
 
-  // Full-screen loading (first load)
   if (postsLoading && posts.length === 0) {
     return (
       <View style={styles.container}>
@@ -929,18 +861,13 @@ export default function HomeScreen() {
     );
   }
 
-  // Full-screen error (first load)
   if (postsError && posts.length === 0) {
     return (
       <View style={styles.container}>
         <View style={styles.centerWrap}>
           <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
           <Text style={styles.errorText}>{postsError}</Text>
-          <TouchableOpacity
-            style={styles.retryBtn}
-            onPress={fetchPosts}
-            activeOpacity={0.85}
-          >
+          <TouchableOpacity style={styles.retryBtn} onPress={fetchPosts} activeOpacity={0.85}>
             <Text style={styles.retryBtnText}>Thử lại</Text>
           </TouchableOpacity>
         </View>
@@ -958,20 +885,17 @@ export default function HomeScreen() {
             post={item}
             onToggleLike={toggleLikePost}
             onContact={handleContact}
-            onComment={(postId) => {
-              setSelectedPostId(postId);
-              navigate("comment");
-            }}
+            onComment={(postId) => { setSelectedPostId(postId); navigate("comment"); }}
           />
         )}
-        ListHeaderComponent={ListHeader}
-        ListEmptyComponent={
-          !postsLoading ? <EmptyState onClear={clearFilters} /> : null
-        }
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={!postsLoading ? <EmptyState onClear={clearFilters} /> : null}
         contentContainerStyle={styles.feed}
         showsVerticalScrollIndicator={false}
         onRefresh={fetchPosts}
         refreshing={postsLoading}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
       />
     </View>
   );
@@ -980,25 +904,12 @@ export default function HomeScreen() {
 // ── Styles ─────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F9FAFB" },
-
-  centerWrap: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    padding: 24,
-  },
+  centerWrap: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24 },
   loadingText: { fontSize: 14, color: "#6b7280" },
   errorText: { fontSize: 14, color: "#ef4444", textAlign: "center" },
-  retryBtn: {
-    backgroundColor: "#10b981",
-    borderRadius: 10,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-  },
+  retryBtn: { backgroundColor: "#10b981", borderRadius: 10, paddingHorizontal: 24, paddingVertical: 10 },
   retryBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
 
-  // Page title
   pageTitleRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -1007,12 +918,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
   },
-  pageTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#111827",
-    marginBottom: 2,
-  },
+  pageTitle: { fontSize: 22, fontWeight: "800", color: "#111827", marginBottom: 2 },
   pageSubtitle: { fontSize: 13, color: "#6b7280" },
   countBadge: {
     backgroundColor: "#d1fae5",
@@ -1026,7 +932,6 @@ const styles = StyleSheet.create({
   countNum: { fontSize: 18, fontWeight: "800", color: "#065f46" },
   countLabel: { fontSize: 11, color: "#059669" },
 
-  // ── Category Guide ──────────────────────────────────────────────────────────
   guideWrap: { marginHorizontal: 16, marginBottom: 12 },
   guideHeader: {
     flexDirection: "row",
@@ -1044,28 +949,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  guideHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    flex: 1,
-  },
-  guideIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: "#10b981",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  guideHeaderTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 2,
-  },
+  guideHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
+  guideIconWrap: { width: 36, height: 36, borderRadius: 10, backgroundColor: "#10b981", alignItems: "center", justifyContent: "center" },
+  guideHeaderTitle: { fontSize: 14, fontWeight: "700", color: "#111827", marginBottom: 2 },
   guideHeaderSub: { fontSize: 12, color: "#6b7280" },
-
   guideGrid: { marginTop: 10, gap: 10 },
   guideCard: {
     backgroundColor: "#fff",
@@ -1080,59 +967,18 @@ const styles = StyleSheet.create({
     elevation: 1,
     overflow: "hidden",
   },
-  guideCardTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  guideCardIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  guideTagLineBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    maxWidth: 180,
-  },
+  guideCardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
+  guideCardIcon: { width: 42, height: 42, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  guideTagLineBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, maxWidth: 180 },
   guideTagLineText: { fontSize: 11, fontWeight: "700" },
   guideCardName: { fontSize: 15, fontWeight: "800", marginBottom: 2 },
-  guideCardWho: {
-    fontSize: 11,
-    color: "#9ca3af",
-    fontWeight: "500",
-    marginBottom: 6,
-  },
-  guideCardDesc: {
-    fontSize: 13,
-    color: "#4b5563",
-    lineHeight: 19,
-    marginBottom: 10,
-  },
+  guideCardWho: { fontSize: 11, color: "#9ca3af", fontWeight: "500", marginBottom: 6 },
+  guideCardDesc: { fontSize: 13, color: "#4b5563", lineHeight: 19, marginBottom: 10 },
   guideFilterHint: { flexDirection: "row", alignItems: "center", gap: 5 },
   guideFilterHintText: { fontSize: 11, fontWeight: "700" },
-  guideActiveOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.04,
-    borderRadius: 14,
-  },
+  guideActiveOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0.04, borderRadius: 14 },
 
-  // Search
-  searchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 16,
-    marginBottom: 10,
-  },
+  searchRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16, marginBottom: 10 },
   searchInputWrap: {
     flex: 1,
     flexDirection: "row",
@@ -1145,16 +991,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   searchInput: { flex: 1, fontSize: 14, color: "#111827" },
-  filterBtn: {
-    backgroundColor: "#f3f4f6",
-    borderRadius: 12,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-  },
+  filterBtn: { backgroundColor: "#f3f4f6", borderRadius: 12, padding: 10, borderWidth: 1, borderColor: "#e5e7eb" },
   filterBtnActive: { backgroundColor: "#10b981", borderColor: "#10b981" },
 
-  // Filter panel
   filterPanel: {
     marginHorizontal: 16,
     backgroundColor: "#fff",
@@ -1165,44 +1004,49 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     gap: 12,
   },
-  sortRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flexWrap: "wrap",
-  },
+  sortRow: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
   sortLabel: { fontSize: 13, fontWeight: "600", color: "#374151" },
-  sortBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: "#f3f4f6",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-  },
+  sortBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, backgroundColor: "#f3f4f6", borderWidth: 1, borderColor: "#e5e7eb" },
   sortBtnActive: { backgroundColor: "#10b981", borderColor: "#10b981" },
   sortBtnText: { fontSize: 13, fontWeight: "500", color: "#374151" },
   sortBtnTextActive: { color: "#fff", fontWeight: "700" },
   clearFiltersBtn: { flexDirection: "row", alignItems: "center", gap: 6 },
   clearFiltersBtnText: { fontSize: 13, fontWeight: "600", color: "#ef4444" },
 
-  // Category tabs
+  serviceFilterWrap: {
+    borderTopWidth: 1,
+    borderTopColor: "#f3f4f6",
+    paddingTop: 12,
+  },
+  serviceFilterHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10 },
+  serviceFilterLabel: { fontSize: 13, fontWeight: "600", color: "#374151", flex: 1 },
+  serviceFilterClear: { fontSize: 12, fontWeight: "600", color: "#ef4444" },
+  serviceChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  serviceChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: "#e5e7eb",
+    backgroundColor: "#fff",
+  },
+  serviceChipActive: { borderColor: "#10b981", backgroundColor: "#ecfdf5" },
+  serviceChipText: { fontSize: 12, fontWeight: "500", color: "#374151" },
+  serviceChipTextActive: { color: "#065f46", fontWeight: "700" },
+  serviceFilterActive: { fontSize: 11, color: "#059669", fontWeight: "600", marginTop: 8 },
+
   tabsScroll: { backgroundColor: "#fff", marginBottom: 4 },
   tabsContent: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
-  tab: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: "#f3f4f6",
-  },
+  tab: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20, backgroundColor: "#f3f4f6" },
   tabActive: { backgroundColor: "#10b981" },
   tabText: { fontSize: 13, fontWeight: "500", color: "#6b7280" },
   tabTextActive: { color: "#fff", fontWeight: "700" },
 
-  // Feed
   feed: { paddingBottom: 24 },
 
-  // Post Card
   card: {
     backgroundColor: "#fff",
     borderRadius: 18,
@@ -1217,80 +1061,38 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    padding: 16,
-    paddingBottom: 10,
-    gap: 12,
-  },
-  cardAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: "#f3f4f6",
-  },
+  cardHeader: { flexDirection: "row", alignItems: "flex-start", padding: 16, paddingBottom: 10, gap: 12 },
+  cardAvatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: "#f3f4f6" },
   cardAuthorInfo: { flex: 1 },
-  cardNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 3,
-    flexWrap: "wrap",
-  },
+  cardNameRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 3, flexWrap: "wrap" },
   cardAuthorName: { fontSize: 14, fontWeight: "700", color: "#111827" },
   cardMetaText: { fontSize: 12, color: "#9ca3af" },
+  catBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
+  catBadgeText: { fontSize: 11, fontWeight: "700" },
+  flagBtn: { padding: 6, borderRadius: 20 },
+  cardTitle: { fontSize: 15, fontWeight: "800", color: "#111827", lineHeight: 22, paddingHorizontal: 16, paddingBottom: 6 },
+  cardContent: { fontSize: 14, color: "#4b5563", lineHeight: 21, paddingHorizontal: 16, paddingBottom: 10 },
 
-  catBadge: {
+  typeServiceWrap: { flexDirection: "row", flexWrap: "wrap", gap: 6, paddingHorizontal: 16, paddingBottom: 8 },
+  typeServiceChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 20,
+    gap: 5,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: "#ecfdf5",
+    borderWidth: 1,
+    borderColor: "#a7f3d0",
   },
-  catBadgeText: { fontSize: 11, fontWeight: "700" },
+  typeServiceChipImage: { width: 22, height: 22, borderRadius: 5, borderWidth: 1, borderColor: "#d1fae5" },
+  typeServiceChipText: { fontSize: 11, fontWeight: "700", color: "#065f46" },
 
-  // Flag button
-  flagBtn: {
-    padding: 6,
-    borderRadius: 20,
-  },
-
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#111827",
-    lineHeight: 22,
-    paddingHorizontal: 16,
-    paddingBottom: 6,
-  },
-  cardContent: {
-    fontSize: 14,
-    color: "#4b5563",
-    lineHeight: 21,
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-  },
-  contactRow: {
-    flexDirection: "row",
-    paddingHorizontal: 16,
-    paddingBottom: 10,
-  },
+  contactRow: { flexDirection: "row", paddingHorizontal: 16, paddingBottom: 10 },
   contactLabel: { fontSize: 13, fontWeight: "600", color: "#6b7280" },
   contactValue: { fontSize: 13, fontWeight: "700", color: "#059669" },
-  cardImageWrap: {
-    marginHorizontal: 16,
-    borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-  },
+  cardImageWrap: { marginHorizontal: 16, borderRadius: 12, overflow: "hidden", marginBottom: 10, borderWidth: 1, borderColor: "#e5e7eb" },
   cardImage: { width: "100%", height: 200 },
-
-  // Actions
   cardActions: {
     flexDirection: "row",
     alignItems: "center",
@@ -1300,60 +1102,23 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#f3f4f6",
   },
-  actionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    padding: 8,
-    borderRadius: 10,
-  },
+  actionBtn: { flexDirection: "row", alignItems: "center", gap: 5, padding: 8, borderRadius: 10 },
   actionBtnLiked: { backgroundColor: "#fff1f2" },
   actionCount: { fontSize: 13, fontWeight: "600", color: "#6b7280" },
-  contactBtn: {
-    backgroundColor: "#10b981",
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
+  contactBtn: { backgroundColor: "#10b981", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
   contactBtnText: { color: "#fff", fontSize: 12, fontWeight: "700" },
 
-  // Empty
-  emptyWrap: {
-    alignItems: "center",
-    paddingVertical: 60,
-    paddingHorizontal: 32,
-    gap: 10,
-  },
+  emptyWrap: { alignItems: "center", paddingVertical: 60, paddingHorizontal: 32, gap: 10 },
   emptyTitle: { fontSize: 16, fontWeight: "700", color: "#374151" },
-  emptyDesc: {
-    fontSize: 13,
-    color: "#9ca3af",
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  clearBtn: {
-    marginTop: 8,
-    backgroundColor: "#10b981",
-    borderRadius: 10,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-  },
+  emptyDesc: { fontSize: 13, color: "#9ca3af", textAlign: "center", lineHeight: 20 },
+  clearBtn: { marginTop: 8, backgroundColor: "#10b981", borderRadius: 10, paddingHorizontal: 24, paddingVertical: 10 },
   clearBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
 });
 
 // ── Report Modal Styles ────────────────────────────────────────────────────────
 const reportStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  sheet: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: "88%",
-  },
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  sheet: { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "88%" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -1364,27 +1129,11 @@ const reportStyles = StyleSheet.create({
     borderBottomColor: "#f3f4f6",
   },
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  flagIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#fff7ed",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  flagIconWrap: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#fff7ed", alignItems: "center", justifyContent: "center" },
   headerTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#f3f4f6",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
+  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#f3f4f6", alignItems: "center", justifyContent: "center" },
   body: { flexShrink: 1 },
   bodyContent: { padding: 20, paddingBottom: 36 },
-
   postPreview: {
     fontSize: 13,
     color: "#6b7280",
@@ -1397,15 +1146,8 @@ const reportStyles = StyleSheet.create({
     marginBottom: 16,
     lineHeight: 19,
   },
-
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#374151",
-    marginBottom: 10,
-  },
+  sectionLabel: { fontSize: 13, fontWeight: "700", color: "#374151", marginBottom: 10 },
   optional: { fontSize: 12, fontWeight: "400", color: "#9ca3af" },
-
   reasonList: { gap: 8 },
   reasonBtn: {
     flexDirection: "row",
@@ -1418,13 +1160,9 @@ const reportStyles = StyleSheet.create({
     borderColor: "#e5e7eb",
     backgroundColor: "#fff",
   },
-  reasonBtnActive: {
-    borderColor: "#f97316",
-    backgroundColor: "#fff7ed",
-  },
+  reasonBtnActive: { borderColor: "#f97316", backgroundColor: "#fff7ed" },
   reasonBtnText: { fontSize: 14, fontWeight: "500", color: "#374151" },
   reasonBtnTextActive: { color: "#c2410c", fontWeight: "600" },
-
   textArea: {
     borderWidth: 1,
     borderColor: "#e5e7eb",
@@ -1436,13 +1174,7 @@ const reportStyles = StyleSheet.create({
     backgroundColor: "#fff",
     minHeight: 90,
   },
-  charCount: {
-    fontSize: 11,
-    color: "#9ca3af",
-    textAlign: "right",
-    marginTop: 4,
-  },
-
+  charCount: { fontSize: 11, color: "#9ca3af", textAlign: "right", marginTop: 4 },
   imagePicker: {
     borderWidth: 2,
     borderStyle: "dashed",
@@ -1455,27 +1187,9 @@ const reportStyles = StyleSheet.create({
   },
   imagePickerText: { fontSize: 13, fontWeight: "600", color: "#6b7280" },
   imagePickerHint: { fontSize: 11, color: "#9ca3af" },
-
-  imagePreviewWrap: {
-    borderRadius: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    position: "relative",
-  },
+  imagePreviewWrap: { borderRadius: 12, overflow: "hidden", borderWidth: 1, borderColor: "#e5e7eb", position: "relative" },
   imagePreview: { width: "100%", height: 160 },
-  imageRemoveBtn: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#ef4444",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
+  imageRemoveBtn: { position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: "#ef4444", alignItems: "center", justifyContent: "center" },
   errorRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1489,7 +1203,6 @@ const reportStyles = StyleSheet.create({
     marginTop: 12,
   },
   errorText: { fontSize: 13, color: "#ef4444", flex: 1 },
-
   submitBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -1502,31 +1215,10 @@ const reportStyles = StyleSheet.create({
   },
   submitBtnDisabled: { opacity: 0.5 },
   submitBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
-
-  // Success
   successWrap: { alignItems: "center", paddingVertical: 20, gap: 12 },
-  successIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#fff7ed",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  successIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#fff7ed", alignItems: "center", justifyContent: "center" },
   successTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  successDesc: {
-    fontSize: 14,
-    color: "#6b7280",
-    textAlign: "center",
-    lineHeight: 20,
-    maxWidth: 280,
-  },
-  doneBtn: {
-    marginTop: 8,
-    backgroundColor: "#f97316",
-    borderRadius: 12,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-  },
+  successDesc: { fontSize: 14, color: "#6b7280", textAlign: "center", lineHeight: 20, maxWidth: 280 },
+  doneBtn: { marginTop: 8, backgroundColor: "#f97316", borderRadius: 12, paddingHorizontal: 32, paddingVertical: 12 },
   doneBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
 });
