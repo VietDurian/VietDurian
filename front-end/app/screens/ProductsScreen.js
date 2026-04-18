@@ -161,7 +161,7 @@ function ProductCard({ product, onPress, onContact }) {
           <View style={styles.priceLabelRow}>
             <Text style={styles.priceLabel}>Giá tham khảo</Text>
             <View style={styles.productBadge}>
-              <Text style={styles.productBadgeText}>1 sản phẩm</Text>
+              <Text style={styles.productBadgeText}>1 kg</Text>
             </View>
           </View>
           <Text style={styles.priceValue}>{price}</Text>

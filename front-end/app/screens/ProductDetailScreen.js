@@ -246,7 +246,10 @@ export default function ProductDetailScreen() {
             {/* Giá box — emerald-50 */}
             <View style={styles.priceBox}>
               <Text style={styles.priceBoxLabel}>Giá tham khảo</Text>
-              <Text style={styles.priceBoxValue}>{price}</Text>
+          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
+  <Text style={styles.priceBoxValue}>{price}</Text>
+  <Text style={{ fontSize: 16, fontWeight: "600", color: "#059669" }}>/ kg</Text>
+</View>
             </View>
 
             {/* Meta rows — tất cả 5 rows như web */}

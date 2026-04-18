@@ -240,6 +240,8 @@ export default function CreateBlogPage() {
   const [blockContent, setBlockContent] = useState("");
   const [blockImage, setBlockImage] = useState("");
   const [blockImageData, setBlockImageData] = useState("");
+  // Track whether user has changed anything inside the block edit modal
+  const [isBlockDirty, setIsBlockDirty] = useState(false);
 
   const handleBlogImageChange = (event) => {
     const file = event.target.files?.[0];
@@ -269,6 +271,7 @@ export default function CreateBlogPage() {
       const result = reader.result?.toString() || "";
       setBlockImageData(result);
       setBlockImage(result);
+      setIsBlockDirty(true);
     };
     reader.readAsDataURL(file);
   };
@@ -309,6 +312,7 @@ export default function CreateBlogPage() {
     setBlockContent("");
     setBlockImage("");
     setBlockImageData("");
+    setIsBlockDirty(false);
     setIsAddingBlock(false);
     setError("");
   };
@@ -320,6 +324,7 @@ export default function CreateBlogPage() {
     setBlockContent(block.content);
     setBlockImage(block.image);
     setBlockImageData(block.image);
+    setIsBlockDirty(false);
     setEditingBlockIndex(index);
     setIsAddingBlock(true);
   };
@@ -336,6 +341,7 @@ export default function CreateBlogPage() {
     setBlockContent("");
     setBlockImage("");
     setBlockImageData("");
+    setIsBlockDirty(false);
     setIsAddingBlock(false);
     setEditingBlockIndex(null);
     setError("");
@@ -591,7 +597,7 @@ export default function CreateBlogPage() {
                     <input
                       type="text"
                       value={blockTitle}
-                      onChange={(e) => setBlockTitle(e.target.value)}
+                      onChange={(e) => { setBlockTitle(e.target.value); setIsBlockDirty(true); }}
                       placeholder={t("create_blog_block_title_placeholder")}
                       className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
                       maxLength={200}
@@ -604,7 +610,7 @@ export default function CreateBlogPage() {
                     </label>
                     <textarea
                       value={blockContent}
-                      onChange={(e) => setBlockContent(e.target.value)}
+                      onChange={(e) => { setBlockContent(e.target.value); setIsBlockDirty(true); }}
                       placeholder={t("create_blog_block_content_placeholder")}
                       className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none bg-white"
                       rows={6}
@@ -620,6 +626,7 @@ export default function CreateBlogPage() {
                     onImageRemove={() => {
                       setBlockImage("");
                       setBlockImageData("");
+                      setIsBlockDirty(true);
                     }}
                     label={
                       <>
@@ -635,7 +642,8 @@ export default function CreateBlogPage() {
                       disabled={
                         !blockTitle.trim() ||
                         !blockContent.trim() ||
-                        !blockImageData
+                        !blockImageData ||
+                        (editingBlockIndex !== null && !isBlockDirty)
                       }
                       className="w-full bg-emerald-500 text-white font-bold py-3 rounded-lg hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >

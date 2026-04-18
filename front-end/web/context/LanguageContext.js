@@ -108,7 +108,7 @@ const translations = {
     products_title: "Sản Phẩm Nổi Bật",
     products_loading: "Đang tải sản phẩm...",
     products_ref_price: "Giá tham khảo",
-    products_per_unit: "1 sản phẩm",
+    products_per_unit: "1 kg",
     products_contact: "Liên hệ",
     products_login_to_view: "Đăng nhập để xem",
 
@@ -2210,7 +2210,7 @@ const translations = {
     products_title: "Featured Products",
     products_loading: "Loading products...",
     products_ref_price: "Reference price",
-    products_per_unit: "1 product",
+    products_per_unit: "1 kg",
     products_contact: "Contact",
     products_login_to_view: "Login to view",
 
