@@ -279,7 +279,7 @@ const ReportPostModal = ({ isOpen, onClose, postId, postTitle }) => {
   );
 };
 
-// ─── Category Guide Section ───────────────────────────────────────────────────
+// ─── Category Guide Section — 4 cục ngang nhau, bỏ "Khác" ───────────────────
 const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
@@ -337,19 +337,6 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
       tagLine: t("posts_cat_hire_tagline"),
       desc: t("posts_cat_hire_desc"),
     },
-    {
-      key: "Khác",
-      Icon: LayoutGrid,
-      gradient: "from-gray-500 to-slate-500",
-      bgLight: "bg-gray-50",
-      borderColor: "border-gray-200",
-      ringColor: "ring-gray-400",
-      textColor: "text-gray-600",
-      tagBg: "bg-gray-100 text-gray-600",
-      who: t("posts_cat_other_who"),
-      tagLine: t("posts_cat_other_tagline"),
-      desc: t("posts_cat_other_desc"),
-    },
   ];
 
   return (
@@ -372,7 +359,7 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
         </div>
       </button>
       {expanded && (
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-3">
           {CATEGORY_GUIDE.map((cat) => {
             const { Icon } = cat;
             const isActive = selectedCategory === cat.key;
@@ -389,7 +376,6 @@ const CategoryGuideSection = ({ selectedCategory, onCategoryChange }) => {
                   <span className={`text-xs font-semibold px-2 py-1 rounded-full ${cat.tagBg}`}>{cat.tagLine}</span>
                 </div>
                 <div>
-                  {/* Hiện tên hiển thị thân thiện cho user */}
                   <h4 className={`font-bold text-base ${cat.textColor} mb-0.5`}>
                     {CATEGORY_DISPLAY_LABEL[cat.key] || cat.key}
                   </h4>
@@ -428,16 +414,12 @@ const FilterBar = ({
   const [showFilters, setShowFilters] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
-  // ── Đổi label hiển thị cho user ──────────────────────────────────────────
   const POST_CATEGORIES_MAP = [
     { label: t("posts_cat_all"), value: "Tất cả" },
     { label: t("posts_cat_service"), value: "Dịch vụ" },
     { label: t("posts_cat_experience"), value: "Kinh nghiệm" },
-    // Đổi "Sản phẩm" → "Thu mua sầu riêng"
     { label: "Thu mua sầu riêng", value: "Sản phẩm" },
-    // Đổi "Thuê dịch vụ" → "Thuê dịch vụ lao động"
     { label: "Thuê dịch vụ lao động", value: "Thuê dịch vụ" },
-    { label: t("posts_cat_other"), value: "Khác" },
   ];
 
   const SORT_OPTIONS = [
@@ -453,7 +435,6 @@ const FilterBar = ({
 
   const selectedSortLabel = SORT_OPTIONS.find((opt) => opt.value === selectedSort)?.label || t("posts_sort_newest");
 
-  // Hiện service tag filter khi chọn danh mục có hỗ trợ
   const showServiceFilter = CATEGORIES_WITH_SERVICE_FILTER.includes(selectedCategory);
 
   useEffect(() => {
@@ -474,7 +455,6 @@ const FilterBar = ({
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 mb-6">
-      {/* ── Search + Sort + Filter toggle ── */}
       <div className="flex gap-3 mb-0">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -518,10 +498,8 @@ const FilterBar = ({
         </button>
       </div>
 
-      {/* ── Expanded filter panel ── */}
       {showFilters && (
         <div className="pt-4 mt-4 border-t border-gray-200 space-y-4">
-          {/* Danh mục */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-3">
               {t("posts_filter_category_label")}
@@ -532,7 +510,6 @@ const FilterBar = ({
                   key={category.value}
                   onClick={() => {
                     onCategoryChange(category.value);
-                    // Khi đổi danh mục, xoá service filter cũ
                     onServicesChange([]);
                   }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedCategory === category.value ? "bg-emerald-600 text-white shadow-md" : "bg-gray-100 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 border border-transparent"}`}
@@ -543,7 +520,6 @@ const FilterBar = ({
             </div>
           </div>
 
-          {/* ── Service tag filter — chỉ hiện khi chọn Dịch vụ hoặc Thuê dịch vụ ── */}
           {showServiceFilter && (
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
@@ -750,7 +726,6 @@ export default function PostsContent() {
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [selectedSort, setSelectedSort] = useState("newest");
   const [searchQuery, setSearchQuery] = useState("");
-  // ── Service tag filter state ──────────────────────────
   const [selectedServices, setSelectedServices] = useState([]);
 
   const currentUserId = user?._id || user?.id;
@@ -764,7 +739,6 @@ export default function PostsContent() {
         const filters = { status: "active", sort: selectedSort };
         if (selectedCategory !== "Tất cả") filters.category = selectedCategory;
         if (searchQuery.trim()) filters.search = searchQuery.trim();
-        // Truyền service filter vào API
         if (selectedServices.length > 0) filters.service = selectedServices;
 
         const [postsData, favoritesResponse] = await Promise.all([
@@ -840,7 +814,6 @@ export default function PostsContent() {
     setSelectedServices([]);
   };
 
-  // Khi đổi category từ CategoryGuideSection, reset service filter
   const handleCategoryChange = (cat) => {
     setSelectedCategory(cat);
     setSelectedServices([]);
