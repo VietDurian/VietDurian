@@ -352,6 +352,9 @@ export default function BlogManagementContent() {
   const [blogImageData, setBlogImageData] = useState("");
   const [blogImageChanged, setBlogImageChanged] = useState(false);
 
+  // Track whether user has made any changes in edit mode
+  const [isDirty, setIsDirty] = useState(false);
+
   const [knowledgeBlocks, setKnowledgeBlocks] = useState([]);
   const [isAddingBlock, setIsAddingBlock] = useState(false);
   const [editingBlockIndex, setEditingBlockIndex] = useState(null);
@@ -361,6 +364,8 @@ export default function BlogManagementContent() {
   const [blockImage, setBlockImage] = useState("");
   const [blockImageData, setBlockImageData] = useState("");
   const [blockImageChanged, setBlockImageChanged] = useState(false);
+  // Track whether user has changed anything inside the block edit modal
+  const [isBlockDirty, setIsBlockDirty] = useState(false);
 
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [newBlocks, setNewBlocks] = useState([]);
@@ -403,6 +408,7 @@ export default function BlogManagementContent() {
       setBlogImageData(r);
       setBlogImage(r);
       setBlogImageChanged(true);
+      setIsDirty(true);
     };
     reader.readAsDataURL(file);
   };
@@ -420,6 +426,7 @@ export default function BlogManagementContent() {
       setBlockImageData(r);
       setBlockImage(r);
       setBlockImageChanged(true);
+      setIsBlockDirty(true);
     };
     reader.readAsDataURL(file);
   };
@@ -442,6 +449,8 @@ export default function BlogManagementContent() {
     setEditingBlog(null);
     setSelectedBlog(null);
     setError("");
+    setIsDirty(false);
+    setIsBlockDirty(false);
   };
 
   const canProceedToStep2 = () =>
@@ -475,12 +484,14 @@ export default function BlogManagementContent() {
         setKnowledgeBlocks(u);
         setEditingBlockIndex(null);
       } else setKnowledgeBlocks([...knowledgeBlocks, newBlock]);
+      setIsDirty(true);
     }
     setBlockTitle("");
     setBlockContent("");
     setBlockImage("");
     setBlockImageData("");
     setBlockImageChanged(false);
+    setIsBlockDirty(false);
     setIsAddingBlock(false);
     setError("");
   };
@@ -494,6 +505,7 @@ export default function BlogManagementContent() {
     setBlockImage(block.image);
     setBlockImageData(block.image);
     setBlockImageChanged(false);
+    setIsBlockDirty(false);
     setEditingBlockIndex(index);
     setIsAddingBlock(true);
   };
@@ -509,16 +521,20 @@ export default function BlogManagementContent() {
           if (result.code === 200) {
             if (view === "addBlock")
               setNewBlocks(newBlocks.filter((_, i) => i !== index));
-            else
+            else {
               setKnowledgeBlocks(knowledgeBlocks.filter((_, i) => i !== index));
+              setIsDirty(true);
+            }
           } else {
             toast.error(t("blog_mgmt_delete_block_fail"));
           }
         } else {
           if (view === "addBlock")
             setNewBlocks(newBlocks.filter((_, i) => i !== index));
-          else
+          else {
             setKnowledgeBlocks(knowledgeBlocks.filter((_, i) => i !== index));
+            setIsDirty(true);
+          }
         }
       } catch (err) {
         console.error("Error deleting block:", err);
@@ -533,6 +549,7 @@ export default function BlogManagementContent() {
     setBlockImage("");
     setBlockImageData("");
     setBlockImageChanged(false);
+    setIsBlockDirty(false);
     setIsAddingBlock(false);
     setEditingBlockIndex(null);
     setError("");
@@ -626,6 +643,7 @@ export default function BlogManagementContent() {
     setBlogImageData(blog.image);
     setBlogImageChanged(false);
     setKnowledgeBlocks(blog.knowledgeBlocks || []);
+    setIsDirty(false);
     setView("edit");
     setCurrentStep(2);
   };
@@ -662,6 +680,76 @@ export default function BlogManagementContent() {
     resetForm();
     setView("list");
   };
+
+  // ==================== BLOCK MODAL CONTENT (dùng chung) ====================
+  // Đặt trong component cha để truy cập trực tiếp state/setter — tránh prop drilling
+  const blockModalContent = (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          {t("block_title_label")}{" "}
+          <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={blockTitle}
+          onChange={(e) => { setBlockTitle(e.target.value); setIsBlockDirty(true); }}
+          placeholder={t("block_title_placeholder")}
+          className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
+          maxLength={200}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          {t("block_content_label")}{" "}
+          <span className="text-red-500">*</span>
+        </label>
+        <textarea
+          value={blockContent}
+          onChange={(e) => { setBlockContent(e.target.value); setIsBlockDirty(true); }}
+          placeholder={t("block_content_placeholder")}
+          className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none bg-white"
+          rows={6}
+          maxLength={5000}
+        />
+        <div className="text-xs text-gray-500 text-right mt-1">
+          {blockContent.length}/5000
+        </div>
+      </div>
+      <ImageUpload
+        image={blockImage}
+        onImageChange={handleBlockImageChange}
+        onImageRemove={() => {
+          setBlockImage("");
+          setBlockImageData("");
+          setIsBlockDirty(true);
+        }}
+        label={
+          <>
+            {t("block_image_label")}{" "}
+            <span className="text-red-500">*</span>
+          </>
+        }
+      />
+      <div className="pt-4">
+        <button
+          type="button"
+          onClick={handleSaveBlock}
+          disabled={
+            !blockTitle.trim() ||
+            !blockContent.trim() ||
+            !blockImageData ||
+            (editingBlockIndex !== null && !isBlockDirty)
+          }
+          className="w-full bg-emerald-500 text-white font-bold py-3 rounded-lg hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {editingBlockIndex !== null
+            ? t("block_update_btn")
+            : t("block_add_btn")}
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -814,7 +902,10 @@ export default function BlogManagementContent() {
                       <input
                         type="text"
                         value={blogTitle}
-                        onChange={(e) => setBlogTitle(e.target.value)}
+                        onChange={(e) => {
+                          setBlogTitle(e.target.value);
+                          setIsDirty(true);
+                        }}
                         placeholder={t("blog_edit_blog_title_placeholder")}
                         className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                         maxLength={200}
@@ -830,7 +921,10 @@ export default function BlogManagementContent() {
                       </label>
                       <textarea
                         value={blogContent}
-                        onChange={(e) => setBlogContent(e.target.value)}
+                        onChange={(e) => {
+                          setBlogContent(e.target.value);
+                          setIsDirty(true);
+                        }}
                         placeholder={t("blog_edit_blog_intro_placeholder")}
                         className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
                         rows={6}
@@ -846,6 +940,7 @@ export default function BlogManagementContent() {
                       onImageRemove={() => {
                         setBlogImage("");
                         setBlogImageData("");
+                        setIsDirty(true);
                       }}
                       label={
                         <>
@@ -863,8 +958,7 @@ export default function BlogManagementContent() {
                           setError("");
                           setCurrentStep(2);
                         }}
-                        disabled={!canProceedToStep2()}
-                        className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
                       >
                         {t("blog_edit_next_btn")}
                         <ChevronRight size={20} />
@@ -966,69 +1060,7 @@ export default function BlogManagementContent() {
                         : t("block_modal_add_title")
                     }
                   >
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          {t("block_title_label")}{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={blockTitle}
-                          onChange={(e) => setBlockTitle(e.target.value)}
-                          placeholder={t("block_title_placeholder")}
-                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
-                          maxLength={200}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          {t("block_content_label")}{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <textarea
-                          value={blockContent}
-                          onChange={(e) => setBlockContent(e.target.value)}
-                          placeholder={t("block_content_placeholder")}
-                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none bg-white"
-                          rows={6}
-                          maxLength={5000}
-                        />
-                        <div className="text-xs text-gray-500 text-right mt-1">
-                          {blockContent.length}/5000
-                        </div>
-                      </div>
-                      <ImageUpload
-                        image={blockImage}
-                        onImageChange={handleBlockImageChange}
-                        onImageRemove={() => {
-                          setBlockImage("");
-                          setBlockImageData("");
-                        }}
-                        label={
-                          <>
-                            {t("block_image_label")}{" "}
-                            <span className="text-red-500">*</span>
-                          </>
-                        }
-                      />
-                      <div className="pt-4">
-                        <button
-                          type="button"
-                          onClick={handleSaveBlock}
-                          disabled={
-                            !blockTitle.trim() ||
-                            !blockContent.trim() ||
-                            !blockImageData
-                          }
-                          className="w-full bg-emerald-500 text-white font-bold py-3 rounded-lg hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {editingBlockIndex !== null
-                            ? t("block_update_btn")
-                            : t("block_add_btn")}
-                        </button>
-                      </div>
-                    </div>
+                    {blockModalContent}
                   </Modal>
                   <div className="flex justify-between items-center">
                     <button
@@ -1039,7 +1071,7 @@ export default function BlogManagementContent() {
                     </button>
                     <button
                       onClick={handleSubmitBlog}
-                      disabled={knowledgeBlocks.length === 0 || isSubmitting}
+                      disabled={knowledgeBlocks.length === 0 || isSubmitting || !isDirty}
                       className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       {isSubmitting ? (
@@ -1215,69 +1247,7 @@ export default function BlogManagementContent() {
                     : t("block_modal_add_title")
                 }
               >
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      {t("block_title_label")}{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={blockTitle}
-                      onChange={(e) => setBlockTitle(e.target.value)}
-                      placeholder={t("block_title_placeholder")}
-                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
-                      maxLength={200}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      {t("block_content_label")}{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      value={blockContent}
-                      onChange={(e) => setBlockContent(e.target.value)}
-                      placeholder={t("block_content_placeholder")}
-                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none bg-white"
-                      rows={6}
-                      maxLength={5000}
-                    />
-                    <div className="text-xs text-gray-500 text-right mt-1">
-                      {blockContent.length}/5000
-                    </div>
-                  </div>
-                  <ImageUpload
-                    image={blockImage}
-                    onImageChange={handleBlockImageChange}
-                    onImageRemove={() => {
-                      setBlockImage("");
-                      setBlockImageData("");
-                    }}
-                    label={
-                      <>
-                        {t("block_image_label")}{" "}
-                        <span className="text-red-500">*</span>
-                      </>
-                    }
-                  />
-                  <div className="pt-4">
-                    <button
-                      type="button"
-                      onClick={handleSaveBlock}
-                      disabled={
-                        !blockTitle.trim() ||
-                        !blockContent.trim() ||
-                        !blockImageData
-                      }
-                      className="w-full bg-emerald-500 text-white font-bold py-3 rounded-lg hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {editingBlockIndex !== null
-                        ? t("block_update_btn")
-                        : t("block_add_btn")}
-                    </button>
-                  </div>
-                </div>
+                {blockModalContent}
               </Modal>
               <div className="flex justify-between items-center">
                 <button

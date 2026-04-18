@@ -316,9 +316,10 @@ export default function ProductDetailPage() {
                   <p className="text-sm text-gray-600 mb-2">
                     {t("product_detail_ref_price")}
                   </p>
-                  <span className="text-4xl font-bold text-emerald-600">
-                    {formatPrice(product.price)}
-                  </span>
+               <span className="text-4xl font-bold text-emerald-600">
+                   {formatPrice(product.price)}
+                <span className="text-xl font-bold text-emerald-600 ml-1">/ kg</span>
+                </span>
                 </div>
 
                 <div className="space-y-3">
