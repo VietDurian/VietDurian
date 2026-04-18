@@ -6,6 +6,18 @@ This folder contains the FastAPI service used by backend image diagnosis.
 - `Dockerfile`: container image for cloud deployment
 - `requirements_api.txt`: Python dependencies for API runtime
 
+## Folder descriptions (for architecture/docs)
+
+Note: The current `ai/` directory is file-based and not yet split into physical subfolders. The table below describes the 5 logical folders you are documenting.
+
+| Folder | Description |
+| --- | --- |
+| VietDurian AI | Root module of the AI diagnosis service. Contains model code, inference API, runtime/deploy config, and related artifacts used by backend image diagnosis. |
+| model | Model definitions and trained weights for durian disease classification, for example `EfficientNetV2L.py`, `MobileNetV3.py`, and `MobileNetV3Large_tendurian_avg_top5.keras`. |
+| storage | Storage layer for AI assets and prediction inputs/outputs (for production can map to S3/Cloudinary or other object storage for images and model artifacts). |
+| api | Inference API layer that exposes health/prediction endpoints for backend integration, currently implemented in `app.py` with FastAPI (`/health`, `/predict`). |
+| config | Environment and deployment configuration for AI runtime, such as `requirements_api.txt`, `Dockerfile`, and environment variables needed in deployment. |
+
 ## 1) Run locally
 
 From `AI/`:

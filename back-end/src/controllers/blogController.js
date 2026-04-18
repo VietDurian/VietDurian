@@ -137,6 +137,22 @@ const createKnowledgeBlock = async (req, res, next) => {
 	}
 };
 
+// Get all knowledge blocks by blog id
+const getKnowledgeBlocksByBlogId = async (req, res, next) => {
+	try {
+		const { blog_id } = req.params;
+		const blocks = await blogService.getKnowledgeBlocksByBlogId(blog_id);
+
+		res.status(200).json({
+			code: 200,
+			message: 'Knowledge blocks retrieved successfully',
+			data: blocks,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
 // Update knowledge blog
 const updateKnowledgeBlog = async (req, res, next) => {
 	try {
@@ -207,6 +223,7 @@ const deleteKnowledgeBlock = async (req, res, next) => {
 
 export const blogController = {
 	getKnowledgeBlogs,
+	getKnowledgeBlocksByBlogId,
 	createKnowledgeBlog,
 	createKnowledgeBlock,
 	updateKnowledgeBlog,

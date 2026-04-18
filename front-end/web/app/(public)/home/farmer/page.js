@@ -630,7 +630,7 @@ export default function FarmerHome() {
                 icon: <PhoneCall className="w-6 h-6 text-emerald-600" />,
                 name: "Thu hoạch gấp / linh hoạt",
                 demand: "Chốt nhanh trong ngày",
-                desc: "Vườn cần bán nhanh trước thu hoạch — thương lái sẵn sàng thương lượng giá tốt, thanh toán ngay.",
+                desc: "Vườn cần bán nhanh trước thu hoạch — thương lái sẵn sàng thương lượng giá tốt và kết nối trao đổi trực tiếp.",
               },
             ].map((t) => (
               <div

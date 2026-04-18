@@ -39,6 +39,11 @@ const createKnowledgeBlog = async ({ author_id, title, content, image }) => {
 // Create a new knowledge block
 const createKnowledgeBlock = async ({ blog_id, title, content, image }) => {
 	try {
+		const parentBlog = await KnowledgeBlogModel.findById(blog_id).select('_id');
+		if (!parentBlog) {
+			throw new Error('Knowledge blog not found');
+		}
+
 		// upload image to cloudinary if image exists
 		let imageUrl = '';
 		if (image) {
@@ -59,6 +64,21 @@ const createKnowledgeBlock = async ({ blog_id, title, content, image }) => {
 		});
 		const savedBlock = await newBlock.save();
 		return savedBlock;
+	} catch (error) {
+		throw error;
+	}
+};
+
+// Get all blocks of a knowledge blog
+const getKnowledgeBlocksByBlogId = async (blog_id) => {
+	try {
+		const blog = await KnowledgeBlogModel.findById(blog_id).select('_id');
+		if (!blog) {
+			throw new Error('Knowledge blog not found');
+		}
+
+		const blocks = await KnowledgeBlockModel.find({ blog_id }).lean();
+		return blocks;
 	} catch (error) {
 		throw error;
 	}
@@ -220,6 +240,7 @@ const deleteKnowledgeBlock = async (block_id) => {
 export const blogService = {
 	createKnowledgeBlog,
 	createKnowledgeBlock,
+	getKnowledgeBlocksByBlogId,
 	getKnowledgeBlogs,
 	updateKnowledgeBlog,
 	deleteKnowledgeBlog,
