@@ -17,6 +17,12 @@ apiClient.interceptors.request.use((config) => {
     return config;
 });
 
+// ── Map tên hiển thị → giá trị API ───────────────────────────────────────────
+const CATEGORY_LABEL_TO_API = {
+    "Thu mua sầu riêng": "Sản phẩm",
+    "Thuê dịch vụ lao động": "Thuê dịch vụ",
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const normalizePost = (post, favoritePostIds = new Set()) => {
     const author = post.author || post.author_id || {};
@@ -40,7 +46,7 @@ const normalizePost = (post, favoritePostIds = new Set()) => {
         comments: post.comments_count || 0,
         status: post.status || "active",
         isLiked: favoritePostIds.has(post._id),
-        // raw for fav tab
+        type_service: post.type_service || [],
         _raw: post,
     };
 };
@@ -69,6 +75,7 @@ const normalizeFavorite = (fav) => {
         likes: post.likes_count || 0,
         comments: post.comments_count || 0,
         isLiked: true,
+        type_service: post.type_service || [],
     };
 };
 
@@ -83,6 +90,10 @@ export const usePostStore = create((set, get) => ({
     selectedCategory: "Tất cả",
     selectedSort: "newest",
     searchQuery: "",
+    selectedServices: [],
+
+    // ── Debounce timer (internal, không expose ra UI) ───────────────────────────
+    _searchTimer: null,
 
     // ── Favorites State ─────────────────────────────────────────────────────────
     favorites: [],
@@ -92,24 +103,45 @@ export const usePostStore = create((set, get) => ({
     // ── Filter Actions ──────────────────────────────────────────────────────────
     setCategory: (cat) => set({ selectedCategory: cat }),
     setSort: (sort) => set({ selectedSort: sort }),
-    setSearch: (q) => set({ searchQuery: q }),
-    clearFilters: () => set({ selectedCategory: "Tất cả", selectedSort: "newest", searchQuery: "" }),
+
+    // ── FIX: setSearch debounce 500ms, chỉ gọi fetchPosts sau khi người dùng ngừng gõ
+    setSearch: (q) => {
+        set({ searchQuery: q });
+        const timer = get()._searchTimer;
+        if (timer) clearTimeout(timer);
+        const newTimer = setTimeout(() => {
+            get().fetchPosts();
+        }, 500);
+        set({ _searchTimer: newTimer });
+    },
+
+    setServices: (services) => set({ selectedServices: services }),
+    clearFilters: () => {
+        const timer = get()._searchTimer;
+        if (timer) clearTimeout(timer);
+        set({ selectedCategory: "Tất cả", selectedSort: "newest", searchQuery: "", selectedServices: [], _searchTimer: null });
+    },
 
     // ── Fetch Posts ─────────────────────────────────────────────────────────────
     fetchPosts: async () => {
-        const { selectedCategory, selectedSort, searchQuery } = get();
+        const { selectedCategory, selectedSort, searchQuery, selectedServices } = get();
         set({ postsLoading: true, postsError: null });
 
         try {
             const params = new URLSearchParams();
             params.append("status", "active");
             if (selectedSort) params.append("sort", selectedSort);
-            if (selectedCategory !== "Tất cả") params.append("category", selectedCategory);
+            if (selectedCategory !== "Tất cả") {
+                const apiCategory = CATEGORY_LABEL_TO_API[selectedCategory] || selectedCategory;
+                params.append("category", apiCategory);
+            }
             if (searchQuery.trim()) params.append("search", searchQuery.trim());
+            if (selectedServices && selectedServices.length > 0) {
+                selectedServices.forEach((s) => params.append("service", s));
+            }
 
             const url = `/post/general${params.toString() ? `?${params.toString()}` : ""}`;
 
-            // Fetch posts + favorites in parallel
             const [postsRes, favsRes] = await Promise.allSettled([
                 apiClient.get(url),
                 apiClient.get("/favorite"),
@@ -130,7 +162,6 @@ export const usePostStore = create((set, get) => ({
             const normalized = postsData.map((p) => normalizePost(p, favoritePostIds));
             set({ posts: normalized, postsLoading: false });
 
-            // Fetch real comment count per post — same as web
             const countNested = (list) => {
                 let c = list.length;
                 list.forEach((item) => { if (item.children && item.children.length) c += countNested(item.children); });
@@ -155,15 +186,12 @@ export const usePostStore = create((set, get) => ({
         }
     },
 
-    // ── Toggle Like (post feed) ─────────────────────────────────────────────────
+    // ── Toggle Like ─────────────────────────────────────────────────────────────
     toggleLikePost: async (postId) => {
         const { posts } = get();
         const post = posts.find((p) => p.id === postId);
         if (!post) return;
-
         const newLiked = !post.isLiked;
-
-        // Optimistic update
         set({
             posts: posts.map((p) =>
                 p.id === postId
@@ -171,7 +199,6 @@ export const usePostStore = create((set, get) => ({
                     : p
             ),
         });
-
         try {
             if (newLiked) {
                 await apiClient.post("/favorite", { post_id: postId });
@@ -179,12 +206,9 @@ export const usePostStore = create((set, get) => ({
                 await apiClient.delete(`/favorite/${postId}`);
             }
         } catch (err) {
-            // Rollback on error
             set({
                 posts: get().posts.map((p) =>
-                    p.id === postId
-                        ? { ...p, isLiked: post.isLiked, likes: post.likes }
-                        : p
+                    p.id === postId ? { ...p, isLiked: post.isLiked, likes: post.likes } : p
                 ),
             });
         }
@@ -200,7 +224,6 @@ export const usePostStore = create((set, get) => ({
             const normalized = validFavs.map(normalizeFavorite);
             set({ favorites: normalized, favoritesLoading: false });
 
-            // Fetch real comment count for each fav post (same as web)
             const countNested = (list) => {
                 let c = list.length;
                 list.forEach((item) => { if (item.children && item.children.length) c += countNested(item.children); });
@@ -227,14 +250,12 @@ export const usePostStore = create((set, get) => ({
 
     // ── Remove Favorite ─────────────────────────────────────────────────────────
     removeFavorite: async (postId) => {
-        // Optimistic update
         set((state) => ({
             favorites: state.favorites.filter((f) => f.id !== postId),
         }));
         try {
             await apiClient.delete(`/favorite/${postId}`);
         } catch (err) {
-            // Re-fetch on error to restore state
             get().fetchFavorites();
         }
     },
