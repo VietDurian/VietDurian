@@ -65,6 +65,7 @@ export function PostRequestPage() {
       try {
         const data = await getOwnPosts({
           status: "progressing",
+          sort: "newest",
         });
 
         if (!isMounted) return;
