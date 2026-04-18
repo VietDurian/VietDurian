@@ -38,6 +38,11 @@ const ICON_BY_CATEGORY = {
     "Khác": "grid-outline",
 };
 
+const CATEGORY_API_TO_LABEL = {
+    "Sản phẩm": "Thu mua sầu riêng",
+    "Thuê dịch vụ": "Thuê dịch vụ lao động",
+};
+
 const STATUS_CONFIG = {
     pending: { icon: "time-outline", label: "Đang chờ duyệt", bg: "#fffbeb", border: "#fde68a", text: "#b45309" },
     active: { icon: "checkmark-circle-outline", label: "Đã duyệt", bg: "#ecfdf5", border: "#a7f3d0", text: "#065f46" },
@@ -52,15 +57,29 @@ const REPORT_REASONS = [
     "Khác",
 ];
 
+const SERVICE_OPTIONS = [
+    { name: "Chuẩn bị đất & cây giống", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/1_q5ex4r.jpg" },
+    { name: "Tưới nước", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/2_b2vbpy.jpg" },
+    { name: "Bón phân", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/3_cf0zcj.jpg" },
+    { name: "Phun thuốc", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/4_noshkk.jpg" },
+    { name: "Tỉa cành, tạo tán", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/5_lkgztf.jpg" },
+    { name: "Làm cỏ", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/6_cnbn3r.jpg" },
+    { name: "Xử lý ra hoa", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/7_q3beeu.jpg" },
+    { name: "Thụ phấn bổ sung", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344983/8_kmkqs3.jpg" },
+    { name: "Tỉa trái", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/9_k3pvls.jpg" },
+    { name: "Thu hoạch", image: "https://res.cloudinary.com/di6lwnmsm/image/upload/v1776344984/10_b9jovt.jpg" },
+];
+
 // ── Sub-components ─────────────────────────────────────────────────────────────
 function CategoryBadge({ category }) {
+    const displayName = CATEGORY_API_TO_LABEL[category] || category;
     const colors = CATEGORY_TAG_COLORS[category];
     const icon = ICON_BY_CATEGORY[category];
     if (!colors || !icon) return null;
     return (
         <View style={[styles.catBadge, { backgroundColor: colors.bg }]}>
             <Ionicons name={icon} size={11} color={colors.text} />
-            <Text style={[styles.catBadgeText, { color: colors.text }]}>{category}</Text>
+            <Text style={[styles.catBadgeText, { color: colors.text }]}>{displayName}</Text>
         </View>
     );
 }
@@ -71,6 +90,34 @@ function StatusBadge({ status }) {
         <View style={[styles.statusBadge, { backgroundColor: cfg.bg, borderColor: cfg.border }]}>
             <Ionicons name={cfg.icon} size={12} color={cfg.text} />
             <Text style={[styles.statusBadgeText, { color: cfg.text }]}>{cfg.label}</Text>
+        </View>
+    );
+}
+
+// ── TypeServiceChips — nhỏ lại (đồng bộ HomeScreen) ──────────────────────────
+function TypeServiceChips({ typeService }) {
+    if (!typeService || typeService.length === 0) return null;
+    const getServiceImage = (name) => {
+        const found = SERVICE_OPTIONS.find((s) => s.name === name);
+        return found?.image || null;
+    };
+    return (
+        <View style={styles.typeServiceWrap}>
+            {typeService.map((name) => {
+                const img = getServiceImage(name);
+                return (
+                    <View key={name} style={styles.typeServiceChip}>
+                        {img && (
+                            <Image
+                                source={{ uri: img }}
+                                style={styles.typeServiceChipImage}
+                                resizeMode="cover"
+                            />
+                        )}
+                        <Text style={styles.typeServiceChipText}>{name}</Text>
+                    </View>
+                );
+            })}
         </View>
     );
 }
@@ -86,7 +133,6 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState("");
 
-    // Reset khi đóng/mở
     useEffect(() => {
         if (!visible) {
             setSelectedReason("");
@@ -164,7 +210,6 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                 <View style={reportStyles.overlay}>
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={reportStyles.sheet}>
-                            {/* Header */}
                             <View style={reportStyles.header}>
                                 <View style={reportStyles.headerLeft}>
                                     <View style={reportStyles.flagIconWrap}>
@@ -184,7 +229,6 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                                 showsVerticalScrollIndicator={false}
                             >
                                 {submitted ? (
-                                    /* ── Success ── */
                                     <View style={reportStyles.successWrap}>
                                         <View style={reportStyles.successIcon}>
                                             <Ionicons name="checkmark" size={32} color="#f97316" />
@@ -198,14 +242,11 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                                         </TouchableOpacity>
                                     </View>
                                 ) : (
-                                    /* ── Form ── */
                                     <>
-                                        {/* Post title preview */}
                                         {postTitle ? (
                                             <Text style={reportStyles.postPreview} numberOfLines={2}>{postTitle}</Text>
                                         ) : null}
 
-                                        {/* Reason list */}
                                         <Text style={reportStyles.sectionLabel}>Lý do báo cáo</Text>
                                         <View style={reportStyles.reasonList}>
                                             {REPORT_REASONS.map((reason) => {
@@ -213,10 +254,7 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                                                 return (
                                                     <TouchableOpacity
                                                         key={reason}
-                                                        style={[
-                                                            reportStyles.reasonBtn,
-                                                            isSelected && reportStyles.reasonBtnActive,
-                                                        ]}
+                                                        style={[reportStyles.reasonBtn, isSelected && reportStyles.reasonBtnActive]}
                                                         onPress={() => {
                                                             setSelectedReason(reason);
                                                             setError("");
@@ -224,12 +262,7 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                                                         }}
                                                         activeOpacity={0.8}
                                                     >
-                                                        <Text
-                                                            style={[
-                                                                reportStyles.reasonBtnText,
-                                                                isSelected && reportStyles.reasonBtnTextActive,
-                                                            ]}
-                                                        >
+                                                        <Text style={[reportStyles.reasonBtnText, isSelected && reportStyles.reasonBtnTextActive]}>
                                                             {reason}
                                                         </Text>
                                                         {isSelected && (
@@ -240,7 +273,6 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                                             })}
                                         </View>
 
-                                        {/* Custom reason textarea */}
                                         {selectedReason === "Khác" && (
                                             <View style={{ marginTop: 12 }}>
                                                 <Text style={reportStyles.sectionLabel}>Mô tả chi tiết</Text>
@@ -258,40 +290,27 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                                             </View>
                                         )}
 
-                                        {/* Image upload */}
                                         <View style={{ marginTop: 12 }}>
                                             <Text style={reportStyles.sectionLabel}>
                                                 Ảnh minh chứng{" "}
                                                 <Text style={reportStyles.optional}>(tuỳ chọn)</Text>
                                             </Text>
                                             {!imageUri ? (
-                                                <TouchableOpacity
-                                                    style={reportStyles.imagePicker}
-                                                    onPress={handlePickImage}
-                                                    activeOpacity={0.8}
-                                                >
+                                                <TouchableOpacity style={reportStyles.imagePicker} onPress={handlePickImage} activeOpacity={0.8}>
                                                     <Ionicons name="image-outline" size={26} color="#9ca3af" />
                                                     <Text style={reportStyles.imagePickerText}>Nhấn để tải ảnh lên</Text>
                                                     <Text style={reportStyles.imagePickerHint}>PNG, JPG tối đa 5MB</Text>
                                                 </TouchableOpacity>
                                             ) : (
                                                 <View style={reportStyles.imagePreviewWrap}>
-                                                    <Image
-                                                        source={{ uri: imageUri }}
-                                                        style={reportStyles.imagePreview}
-                                                        resizeMode="cover"
-                                                    />
-                                                    <TouchableOpacity
-                                                        style={reportStyles.imageRemoveBtn}
-                                                        onPress={() => { setImageUri(null); setImageData(null); }}
-                                                    >
+                                                    <Image source={{ uri: imageUri }} style={reportStyles.imagePreview} resizeMode="cover" />
+                                                    <TouchableOpacity style={reportStyles.imageRemoveBtn} onPress={() => { setImageUri(null); setImageData(null); }}>
                                                         <Ionicons name="close" size={14} color="#fff" />
                                                     </TouchableOpacity>
                                                 </View>
                                             )}
                                         </View>
 
-                                        {/* Error */}
                                         {error ? (
                                             <View style={reportStyles.errorRow}>
                                                 <Ionicons name="alert-circle" size={16} color="#ef4444" />
@@ -299,7 +318,6 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
                                             </View>
                                         ) : null}
 
-                                        {/* Submit button */}
                                         <TouchableOpacity
                                             style={[reportStyles.submitBtn, !canSubmit && reportStyles.submitBtnDisabled]}
                                             onPress={handleSubmit}
@@ -330,21 +348,15 @@ function ReportPostModal({ visible, onClose, postId, postTitle }) {
 function FavoritePostCard({ post, onUnfavorite }) {
     const { navigate, setSelectedPostId } = useAppStore();
     const { authUser } = useAuthStore();
-
     const currentUserId = authUser?._id || authUser?.id;
     const isOwnPost = currentUserId && post.authorId === currentUserId;
-
     const [reportVisible, setReportVisible] = useState(false);
 
     return (
         <>
             <View style={styles.card}>
-                {/* Header */}
                 <View style={styles.cardHeader}>
-                    <Image
-                        source={{ uri: post.userAvatar || "https://i.pravatar.cc/100" }}
-                        style={styles.cardAvatar}
-                    />
+                    <Image source={{ uri: post.userAvatar || "https://i.pravatar.cc/100" }} style={styles.cardAvatar} />
                     <View style={styles.cardAuthorInfo}>
                         <View style={styles.cardNameRow}>
                             <Text style={styles.cardAuthorName} numberOfLines={1}>{post.userName}</Text>
@@ -357,26 +369,17 @@ function FavoritePostCard({ post, onUnfavorite }) {
                             {post.timestamp}
                         </Text>
                     </View>
-
-                    {/* Flag button — chỉ hiện với post của người khác */}
                     {!isOwnPost && (
-                        <TouchableOpacity
-                            style={styles.flagBtn}
-                            onPress={() => setReportVisible(true)}
-                            hitSlop={8}
-                        >
+                        <TouchableOpacity style={styles.flagBtn} onPress={() => setReportVisible(true)} hitSlop={8}>
                             <Ionicons name="flag-outline" size={18} color="#9ca3af" />
                         </TouchableOpacity>
                     )}
                 </View>
 
-                {/* Title */}
                 {post.title ? <Text style={styles.cardTitle}>{post.title}</Text> : null}
-
-                {/* Content */}
                 <Text style={styles.cardContent} numberOfLines={4}>{post.content}</Text>
+                <TypeServiceChips typeService={post.type_service} />
 
-                {/* Contact */}
                 {post.contact ? (
                     <View style={styles.contactRow}>
                         <Text style={styles.contactLabel}>Liên hệ: </Text>
@@ -384,47 +387,30 @@ function FavoritePostCard({ post, onUnfavorite }) {
                     </View>
                 ) : null}
 
-                {/* Image */}
                 {post.image ? (
                     <View style={styles.cardImageWrap}>
                         <Image source={{ uri: post.image }} style={styles.cardImage} resizeMode="cover" />
                     </View>
                 ) : null}
 
-                {/* Actions */}
                 <View style={styles.cardActions}>
-                    {/* Heart — filled red, tap to unfavorite instantly */}
-                    <TouchableOpacity
-                        style={[styles.actionBtn, styles.actionBtnLiked]}
-                        onPress={() => onUnfavorite(post.id)}
-                        activeOpacity={0.8}
-                    >
+                    <TouchableOpacity style={[styles.actionBtn, styles.actionBtnLiked]} onPress={() => onUnfavorite(post.id)} activeOpacity={0.8}>
                         <Ionicons name="heart" size={22} color="#ef4444" />
                     </TouchableOpacity>
-
-                    {/* Comment icon — navigate to CommentScreen */}
                     <TouchableOpacity
                         style={styles.actionBtn}
-                        onPress={() => {
-                            setSelectedPostId(post.id);
-                            navigate("comment");
-                        }}
+                        onPress={() => { setSelectedPostId(post.id); navigate("comment"); }}
                         activeOpacity={0.8}
                     >
                         <Ionicons name="chatbubble-outline" size={22} color="#6b7280" />
-                        {post.comments > 0 && (
-                            <Text style={styles.actionCount}>{post.comments}</Text>
-                        )}
+                        {post.comments > 0 && <Text style={styles.actionCount}>{post.comments}</Text>}
                     </TouchableOpacity>
-
-                    {/* Contact */}
                     <TouchableOpacity style={styles.contactBtn} activeOpacity={0.85}>
                         <Text style={styles.contactBtnText}>Liên Hệ</Text>
                     </TouchableOpacity>
                 </View>
             </View>
 
-            {/* Report Modal */}
             <ReportPostModal
                 visible={reportVisible}
                 onClose={() => setReportVisible(false)}
@@ -478,7 +464,6 @@ export default function FavoritePostsTab() {
 
     return (
         <View>
-            {/* Header count */}
             <View style={styles.favHeader}>
                 <Ionicons name="heart" size={20} color="#f43f5e" />
                 <Text style={styles.favHeaderText}>Bài viết yêu thích</Text>
@@ -486,14 +471,8 @@ export default function FavoritePostsTab() {
                     <Text style={styles.favCountText}>{favorites.length}</Text>
                 </View>
             </View>
-
-            {/* List */}
             {favorites.map((fav) => (
-                <FavoritePostCard
-                    key={fav.favId}
-                    post={fav}
-                    onUnfavorite={removeFavorite}
-                />
+                <FavoritePostCard key={fav.favId} post={fav} onUnfavorite={removeFavorite} />
             ))}
         </View>
     );
@@ -501,34 +480,17 @@ export default function FavoritePostsTab() {
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-    centerWrap: {
-        alignItems: "center",
-        justifyContent: "center",
-        paddingVertical: 60,
-        gap: 12,
-    },
+    centerWrap: { alignItems: "center", justifyContent: "center", paddingVertical: 60, gap: 12 },
     loadingText: { fontSize: 14, color: "#6b7280" },
     errorText: { fontSize: 14, color: "#ef4444", textAlign: "center" },
     retryBtn: { backgroundColor: "#10b981", borderRadius: 10, paddingHorizontal: 20, paddingVertical: 9 },
     retryBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
 
-    // Fav header
-    favHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        marginBottom: 14,
-    },
+    favHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 },
     favHeaderText: { fontSize: 15, fontWeight: "700", color: "#111827", flex: 1 },
-    favCount: {
-        backgroundColor: "#ffe4e6",
-        borderRadius: 20,
-        paddingHorizontal: 10,
-        paddingVertical: 3,
-    },
+    favCount: { backgroundColor: "#ffe4e6", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
     favCountText: { fontSize: 13, fontWeight: "700", color: "#f43f5e" },
 
-    // Card
     card: {
         backgroundColor: "#fff",
         borderRadius: 18,
@@ -542,88 +504,42 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 2,
     },
-    cardHeader: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-        padding: 16,
-        paddingBottom: 10,
-        gap: 12,
-    },
-    cardAvatar: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        borderWidth: 2,
-        borderColor: "#f3f4f6",
-    },
+    cardHeader: { flexDirection: "row", alignItems: "flex-start", padding: 16, paddingBottom: 10, gap: 12 },
+    cardAvatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: "#f3f4f6" },
     cardAuthorInfo: { flex: 1 },
-    cardNameRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        flexWrap: "wrap",
-        marginBottom: 3,
-    },
+    cardNameRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 3 },
     cardAuthorName: { fontSize: 14, fontWeight: "700", color: "#111827" },
     cardMetaText: { fontSize: 12, color: "#9ca3af" },
 
-    catBadge: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 20,
-    },
+    catBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
     catBadgeText: { fontSize: 11, fontWeight: "700" },
+    statusBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20, borderWidth: 1 },
+    statusBadgeText: { fontSize: 11, fontWeight: "600" },
+    flagBtn: { padding: 6, borderRadius: 20 },
 
-    statusBadge: {
+    cardTitle: { fontSize: 15, fontWeight: "800", color: "#111827", lineHeight: 22, paddingHorizontal: 16, paddingBottom: 6 },
+    cardContent: { fontSize: 14, color: "#4b5563", lineHeight: 21, paddingHorizontal: 16, paddingBottom: 10 },
+
+    // ── TypeServiceChips — nhỏ lại (đồng bộ HomeScreen) ──
+    typeServiceWrap: { flexDirection: "row", flexWrap: "wrap", gap: 6, paddingHorizontal: 16, paddingBottom: 8 },
+    typeServiceChip: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 4,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 20,
+        gap: 5,
+        paddingHorizontal: 7,
+        paddingVertical: 4,
+        borderRadius: 8,
+        backgroundColor: "#ecfdf5",
         borderWidth: 1,
+        borderColor: "#a7f3d0",
     },
-    statusBadgeText: { fontSize: 11, fontWeight: "600" },
+    typeServiceChipImage: { width: 22, height: 22, borderRadius: 5, borderWidth: 1, borderColor: "#d1fae5" },
+    typeServiceChipText: { fontSize: 11, fontWeight: "700", color: "#065f46" },
 
-    // Flag button
-    flagBtn: {
-        padding: 6,
-        borderRadius: 20,
-    },
-
-    cardTitle: {
-        fontSize: 15,
-        fontWeight: "800",
-        color: "#111827",
-        lineHeight: 22,
-        paddingHorizontal: 16,
-        paddingBottom: 6,
-    },
-    cardContent: {
-        fontSize: 14,
-        color: "#4b5563",
-        lineHeight: 21,
-        paddingHorizontal: 16,
-        paddingBottom: 10,
-    },
-    contactRow: {
-        flexDirection: "row",
-        paddingHorizontal: 16,
-        paddingBottom: 10,
-    },
+    contactRow: { flexDirection: "row", paddingHorizontal: 16, paddingBottom: 10 },
     contactLabel: { fontSize: 13, fontWeight: "600", color: "#6b7280" },
     contactValue: { fontSize: 13, fontWeight: "700", color: "#059669" },
-    cardImageWrap: {
-        marginHorizontal: 16,
-        borderRadius: 12,
-        overflow: "hidden",
-        marginBottom: 10,
-        borderWidth: 1,
-        borderColor: "#e5e7eb",
-    },
+    cardImageWrap: { marginHorizontal: 16, borderRadius: 12, overflow: "hidden", marginBottom: 10, borderWidth: 1, borderColor: "#e5e7eb" },
     cardImage: { width: "100%", height: 200 },
 
     cardActions: {
@@ -638,45 +554,19 @@ const styles = StyleSheet.create({
     actionBtn: { flexDirection: "row", alignItems: "center", gap: 5, padding: 8, borderRadius: 10 },
     actionBtnLiked: { backgroundColor: "#fff1f2" },
     actionCount: { fontSize: 13, fontWeight: "600", color: "#6b7280" },
-    contactBtn: {
-        backgroundColor: "#16a34a",
-        borderRadius: 20,
-        paddingHorizontal: 20,
-        paddingVertical: 8,
-    },
+    contactBtn: { backgroundColor: "#16a34a", borderRadius: 20, paddingHorizontal: 20, paddingVertical: 8 },
     contactBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" },
 
-    // Empty
-    emptyWrap: {
-        alignItems: "center",
-        paddingVertical: 60,
-        gap: 12,
-    },
-    emptyIconWrap: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: "#fff1f2",
-        alignItems: "center",
-        justifyContent: "center",
-    },
+    emptyWrap: { alignItems: "center", paddingVertical: 60, gap: 12 },
+    emptyIconWrap: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#fff1f2", alignItems: "center", justifyContent: "center" },
     emptyTitle: { fontSize: 17, fontWeight: "700", color: "#111827" },
     emptyDesc: { fontSize: 13, color: "#9ca3af", textAlign: "center", lineHeight: 20, maxWidth: 260 },
 });
 
 // ── Report Modal Styles ────────────────────────────────────────────────────────
 const reportStyles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        justifyContent: "flex-end",
-    },
-    sheet: {
-        backgroundColor: "#fff",
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        maxHeight: "88%",
-    },
+    overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+    sheet: { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "88%" },
     header: {
         flexDirection: "row",
         alignItems: "center",
@@ -687,27 +577,11 @@ const reportStyles = StyleSheet.create({
         borderBottomColor: "#f3f4f6",
     },
     headerLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-    flagIconWrap: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: "#fff7ed",
-        alignItems: "center",
-        justifyContent: "center",
-    },
+    flagIconWrap: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#fff7ed", alignItems: "center", justifyContent: "center" },
     headerTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
-    closeBtn: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: "#f3f4f6",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
+    closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#f3f4f6", alignItems: "center", justifyContent: "center" },
     body: { flexShrink: 1 },
     bodyContent: { padding: 20, paddingBottom: 36 },
-
     postPreview: {
         fontSize: 13,
         color: "#6b7280",
@@ -720,15 +594,8 @@ const reportStyles = StyleSheet.create({
         marginBottom: 16,
         lineHeight: 19,
     },
-
-    sectionLabel: {
-        fontSize: 13,
-        fontWeight: "700",
-        color: "#374151",
-        marginBottom: 10,
-    },
+    sectionLabel: { fontSize: 13, fontWeight: "700", color: "#374151", marginBottom: 10 },
     optional: { fontSize: 12, fontWeight: "400", color: "#9ca3af" },
-
     reasonList: { gap: 8 },
     reasonBtn: {
         flexDirection: "row",
@@ -741,13 +608,9 @@ const reportStyles = StyleSheet.create({
         borderColor: "#e5e7eb",
         backgroundColor: "#fff",
     },
-    reasonBtnActive: {
-        borderColor: "#f97316",
-        backgroundColor: "#fff7ed",
-    },
+    reasonBtnActive: { borderColor: "#f97316", backgroundColor: "#fff7ed" },
     reasonBtnText: { fontSize: 14, fontWeight: "500", color: "#374151" },
     reasonBtnTextActive: { color: "#c2410c", fontWeight: "600" },
-
     textArea: {
         borderWidth: 1,
         borderColor: "#e5e7eb",
@@ -760,7 +623,6 @@ const reportStyles = StyleSheet.create({
         minHeight: 90,
     },
     charCount: { fontSize: 11, color: "#9ca3af", textAlign: "right", marginTop: 4 },
-
     imagePicker: {
         borderWidth: 2,
         borderStyle: "dashed",
@@ -773,27 +635,9 @@ const reportStyles = StyleSheet.create({
     },
     imagePickerText: { fontSize: 13, fontWeight: "600", color: "#6b7280" },
     imagePickerHint: { fontSize: 11, color: "#9ca3af" },
-
-    imagePreviewWrap: {
-        borderRadius: 12,
-        overflow: "hidden",
-        borderWidth: 1,
-        borderColor: "#e5e7eb",
-        position: "relative",
-    },
+    imagePreviewWrap: { borderRadius: 12, overflow: "hidden", borderWidth: 1, borderColor: "#e5e7eb", position: "relative" },
     imagePreview: { width: "100%", height: 160 },
-    imageRemoveBtn: {
-        position: "absolute",
-        top: 8,
-        right: 8,
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: "#ef4444",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
+    imageRemoveBtn: { position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: "#ef4444", alignItems: "center", justifyContent: "center" },
     errorRow: {
         flexDirection: "row",
         alignItems: "center",
@@ -807,7 +651,6 @@ const reportStyles = StyleSheet.create({
         marginTop: 12,
     },
     errorText: { fontSize: 13, color: "#ef4444", flex: 1 },
-
     submitBtn: {
         flexDirection: "row",
         alignItems: "center",
@@ -820,25 +663,10 @@ const reportStyles = StyleSheet.create({
     },
     submitBtnDisabled: { opacity: 0.5 },
     submitBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
-
-    // Success
     successWrap: { alignItems: "center", paddingVertical: 20, gap: 12 },
-    successIcon: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: "#fff7ed",
-        alignItems: "center",
-        justifyContent: "center",
-    },
+    successIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#fff7ed", alignItems: "center", justifyContent: "center" },
     successTitle: { fontSize: 18, fontWeight: "700", color: "#111827" },
     successDesc: { fontSize: 14, color: "#6b7280", textAlign: "center", lineHeight: 20, maxWidth: 280 },
-    doneBtn: {
-        marginTop: 8,
-        backgroundColor: "#f97316",
-        borderRadius: 12,
-        paddingHorizontal: 32,
-        paddingVertical: 12,
-    },
+    doneBtn: { marginTop: 8, backgroundColor: "#f97316", borderRadius: 12, paddingHorizontal: 32, paddingVertical: 12 },
     doneBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
 });

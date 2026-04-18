@@ -20,7 +20,7 @@ const getCategoriesByRole = (role) => {
     case "farmer": return ["Thuê dịch vụ lao động"];
     case "serviceProvider": return ["Dịch vụ"];
     case "contentExpert": return ["Kinh nghiệm"];
-    default: return ["Sản phẩm", "Kinh nghiệm", "Khác", "Thuê dịch vụ"];
+    default: return ["Sản phẩm", "Kinh nghiệm", "Thuê dịch vụ"];
   }
 };
 
@@ -99,7 +99,7 @@ export default function CreatePostPage() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const categories = getCategoriesByRole(user?.role);
-  const [category, setCategory] = useState(categories[0]);
+  const [category, setCategory] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [contactType, setContactType] = useState("phone");
@@ -115,6 +115,14 @@ export default function CreatePostPage() {
   const isFarmer = user?.role === "farmer";
   const [profileServices, setProfileServices] = useState([]); // từ resume (serviceProvider)
   const [selectedTypeServices, setSelectedTypeServices] = useState([]);
+
+
+  useEffect(() => {
+  if (user?.role) {
+    const cats = getCategoriesByRole(user.role);
+    setCategory(cats[0]);
+  }
+}, [user?.role]);
 
   useEffect(() => {
     if (!isServiceProvider) return;
@@ -165,13 +173,17 @@ export default function CreatePostPage() {
   // Nguồn dịch vụ: serviceProvider lấy từ profile, farmer lấy toàn bộ SERVICE_OPTIONS
   const availableServices = showServiceSelectorForFarmer ? SERVICE_OPTIONS : profileServices;
 
+  // Nếu có service selector hiển thị thì bắt buộc phải chọn ít nhất 1
+  const serviceValid = !showServiceSelector || selectedTypeServices.length > 0;
+
   const canSubmit =
     Boolean(category) &&
     Boolean(title.trim()) &&
     Boolean(content.trim()) &&
     Boolean(imageData) &&
     Boolean(contact.trim()) &&
-    !contactError;
+    !contactError &&
+    serviceValid;
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -302,6 +314,7 @@ export default function CreatePostPage() {
                 <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <Wrench size={15} className="text-emerald-600" />
                   {showServiceSelectorForFarmer ? "Dịch vụ cần thuê" : "Dịch vụ cung cấp"}
+                  <span className="text-red-500">*</span>
                 </label>
                 <p className="text-xs text-gray-500">
                   {showServiceSelectorForFarmer
