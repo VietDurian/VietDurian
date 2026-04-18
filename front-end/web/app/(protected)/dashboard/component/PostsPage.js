@@ -57,6 +57,15 @@ export function PostsPage() {
 
         const normalizedPosts = data.map((item) => ({
           id: item._id || item.id,
+          typeService: Array.isArray(item?.type_service)
+            ? item.type_service.filter(Boolean)
+            : item?.type_service
+              ? [item.type_service]
+              : Array.isArray(item?.typeService)
+                ? item.typeService.filter(Boolean)
+                : item?.typeService
+                  ? [item.typeService]
+                  : [],
           author:
             item?.author?.full_name ||
             item?.author_id?.full_name ||
@@ -137,6 +146,11 @@ export function PostsPage() {
 
   const snippet = (text = "", max = 80) =>
     text.length > max ? `${text.slice(0, max)}...` : text;
+
+  const formatTypeService = (typeService = []) => {
+    if (!Array.isArray(typeService) || typeService.length === 0) return "";
+    return typeService.join(", ");
+  };
 
   // Set post status to inactive (toggle: if inactive then activate)
   const setInactive = async (postOrId) => {
@@ -339,7 +353,7 @@ export function PostsPage() {
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden shrink-0">
                             {post.avatar ? (
                               <Image
                                 src={post.avatar}
@@ -432,7 +446,7 @@ export function PostsPage() {
                 }`}
               >
                 <div className="flex items-start gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden shrink-0">
                     {post.avatar ? (
                       <Image
                         src={post.avatar}
@@ -626,7 +640,22 @@ export function PostsPage() {
                 >
                   {t(selectedPost.status)}
                 </span>
+                {selectedPost.typeService?.map((type) => (
+                  <span
+                    key={type}
+                    className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700"
+                  >
+                    {type}
+                  </span>
+                ))}
               </div>
+
+              {selectedPost.typeService?.length > 0 && (
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium text-gray-700">{t("service_type")}:</span>{" "}
+                  {formatTypeService(selectedPost.typeService)}
+                </p>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <div className="space-y-2">
