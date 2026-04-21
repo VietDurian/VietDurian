@@ -355,26 +355,6 @@ const SEED_DATA = {
   ],
   5: [
     {
-      id: "69e111111111111111111102",
-      harvest_date: "2026-03-28",
-      harvest_quantity_kg: 1420,
-      sale_date: "2026-03-30",
-      buyer_or_consumption_address: "Hợp tác xã Sầu Riêng Bến Tre",
-      consumed_weight_kg: 1150.75,
-      sale_unit_price_vnd: 67000,
-    },
-    {
-      id: "69e111111111111111111101",
-      harvest_date: "2026-03-18",
-      harvest_quantity_kg: 1250.5,
-      sale_date: "",
-      buyer_or_consumption_address: "",
-      consumed_weight_kg: "",
-      sale_unit_price_vnd: "",
-    },
-  ],
-  6: [
-    {
       id: "69c111111111111111111102",
       execution_date: "2026-03-18",
       irrigation_item: "Tưới duy trì độ ẩm sau bón phân",
@@ -397,7 +377,7 @@ const SEED_DATA = {
       performed_by: "Nguyễn Văn A",
     },
   ],
-  7: [
+  6: [
     {
       id: "69d111111111111111111102",
       labor_hire_date: "2026-03-12",
@@ -419,6 +399,26 @@ const SEED_DATA = {
       total_price_vnd: 280000,
       worker_or_team_name: "Tổ lao động Bến Tre 01",
       supervisor_name: "Nguyễn Văn A",
+    },
+  ],
+  7: [
+    {
+      id: "69e111111111111111111102",
+      harvest_date: "2026-03-28",
+      harvest_quantity_kg: 1420,
+      sale_date: "2026-03-30",
+      buyer_or_consumption_address: "Hợp tác xã Sầu Riêng Bến Tre",
+      consumed_weight_kg: 1150.75,
+      sale_unit_price_vnd: 67000,
+    },
+    {
+      id: "69e111111111111111111101",
+      harvest_date: "2026-03-18",
+      harvest_quantity_kg: 1250.5,
+      sale_date: "",
+      buyer_or_consumption_address: "",
+      consumed_weight_kg: "",
+      sale_unit_price_vnd: "",
     },
   ],
 };
@@ -676,9 +676,9 @@ function DiaryTable({
   const isBuyingFertilizerDiary = diary.id === "2";
   const isUseFertilizerDiary = diary.id === "3";
   const isPackagingHandlingDiary = diary.id === "4";
-  const isHarvestConsumptionDiary = diary.id === "5";
-  const isIrrigationCostDiary = diary.id === "6";
-  const isLaborCostsDiary = diary.id === "7";
+  const isIrrigationCostDiary = diary.id === "5";
+  const isLaborCostsDiary = diary.id === "6";
+  const isHarvestConsumptionDiary = diary.id === "7";
 
   const {
     buyingSeeds,
@@ -979,14 +979,14 @@ function DiaryTable({
         4: (usePackagingHandlingStore.getState().packagingHandlings || [])
           .map(normalizePackagingHandling)
           .filter((r) => r.id),
-        5: (useHarvestConsumptionStore.getState().harvestConsumptions || [])
-          .map(normalizeHarvestConsumption)
-          .filter((r) => r.id),
-        6: (useIrrigationCostStore.getState().irrigationCosts || [])
+        5: (useIrrigationCostStore.getState().irrigationCosts || [])
           .map(normalizeIrrigationCost)
           .filter((r) => r.id),
-        7: (useLaborCostsStore.getState().laborCosts || [])
+        6: (useLaborCostsStore.getState().laborCosts || [])
           .map(normalizeLaborCost)
+          .filter((r) => r.id),
+        7: (useHarvestConsumptionStore.getState().harvestConsumptions || [])
+          .map(normalizeHarvestConsumption)
           .filter((r) => r.id),
       };
 
@@ -1925,61 +1925,6 @@ export default function DiaryPage() {
       },
       {
         id: "5",
-        title: t("diary_1_8_title"),
-        icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z",
-        groups: [
-          {
-            label: t("diary_group_harvest"),
-            cols: [
-              {
-                key: "harvest_date",
-                required: true,
-                label: t("diary_col_harvest_date"),
-                type: "date",
-                width: "w-28",
-              },
-              {
-                key: "harvest_quantity_kg",
-                required: true,
-                label: t("diary_col_harvest_quantity"),
-                type: "number",
-                width: "w-32",
-              },
-            ],
-          },
-          {
-            label: t("diary_group_consumption"),
-            cols: [
-              {
-                key: "sale_date",
-                label: t("diary_col_sale_date"),
-                type: "date",
-                width: "w-28",
-              },
-              {
-                key: "buyer_or_consumption_address",
-                label: t("diary_col_buyer_address"),
-                type: "text",
-                width: "w-52",
-              },
-              {
-                key: "consumed_weight_kg",
-                label: t("diary_col_consumed_weight"),
-                type: "number",
-                width: "w-32",
-              },
-              {
-                key: "sale_unit_price_vnd",
-                label: t("diary_col_sale_unit_price"),
-                type: "currency",
-                width: "w-36",
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: "6",
         required: true,
         title: t("diary_1_9_title"),
         icon: "M12 3v1m0 16v1m8.66-13l-.87.5M4.21 8.5l-.87-.5M19.78 15.5l-.87-.5M4.21 15.5l-.87.5M21 12h-1M4 12H3m15.36-6.36l-.7.7M6.34 17.66l-.7.7M17.66 17.66l.7.7M6.34 6.34l.7.7",
@@ -2045,7 +1990,7 @@ export default function DiaryPage() {
         ],
       },
       {
-        id: "7",
+        id: "6",
         required: true,
         title: t("diary_1_10_title"),
         icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
@@ -2100,6 +2045,61 @@ export default function DiaryPage() {
                 label: t("diary_col_supervisor"),
                 type: "text",
                 width: "w-32",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "7",
+        title: t("diary_1_8_title"),
+        icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z",
+        groups: [
+          {
+            label: t("diary_group_harvest"),
+            cols: [
+              {
+                key: "harvest_date",
+                required: true,
+                label: t("diary_col_harvest_date"),
+                type: "date",
+                width: "w-28",
+              },
+              {
+                key: "harvest_quantity_kg",
+                required: true,
+                label: t("diary_col_harvest_quantity"),
+                type: "number",
+                width: "w-32",
+              },
+            ],
+          },
+          {
+            label: t("diary_group_consumption"),
+            cols: [
+              {
+                key: "sale_date",
+                label: t("diary_col_sale_date"),
+                type: "date",
+                width: "w-28",
+              },
+              {
+                key: "buyer_or_consumption_address",
+                label: t("diary_col_buyer_address"),
+                type: "text",
+                width: "w-52",
+              },
+              {
+                key: "consumed_weight_kg",
+                label: t("diary_col_consumed_weight"),
+                type: "number",
+                width: "w-32",
+              },
+              {
+                key: "sale_unit_price_vnd",
+                label: t("diary_col_sale_unit_price"),
+                type: "currency",
+                width: "w-36",
               },
             ],
           },
