@@ -246,10 +246,10 @@ export default function ProductDetailScreen() {
             {/* Giá box — emerald-50 */}
             <View style={styles.priceBox}>
               <Text style={styles.priceBoxLabel}>Giá tham khảo</Text>
-          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
-  <Text style={styles.priceBoxValue}>{price}</Text>
-  <Text style={{ fontSize: 16, fontWeight: "600", color: "#059669" }}>/ kg</Text>
-</View>
+              <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
+                <Text style={styles.priceBoxValue}>{price}</Text>
+                <Text style={{ fontSize: 16, fontWeight: "600", color: "#059669" }}>/ kg</Text>
+              </View>
             </View>
 
             {/* Meta rows — tất cả 5 rows như web */}
@@ -429,7 +429,22 @@ export default function ProductDetailScreen() {
                 </View>
               )}
 
-              {activeTab === "diary" && <DiarySection diaryId={getDiaryId()} />}
+              {activeTab === "diary" && (
+                <View>
+                  {product.season_diary_id && (
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#F9FAFB", borderRadius: 10, marginBottom: 16 }}>
+                      <Feather name="map-pin" size={16} color="#059669" />
+                      <Text style={{ fontSize: 16, fontWeight: "600", color: "#6B7280" }}>Tên vườn:</Text>
+                      <Text style={{ fontSize: 15, fontWeight: "600", color: "#111827", flex: 1 }}>
+                        {typeof product.season_diary_id === "object"
+                          ? product.season_diary_id.garden_name
+                          : product.season_diary_id}
+                      </Text>
+                    </View>
+                  )}
+                  <DiarySection diaryId={getDiaryId()} />
+                </View>
+              )}
             </View>
           </View>
         </View>
