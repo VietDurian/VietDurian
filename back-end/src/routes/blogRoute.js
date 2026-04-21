@@ -441,6 +441,11 @@ Router.get(
 	authMiddleware.protect,
 	blogController.getKnowledgeBlogDetails
 );
+Router.get(
+	'/knowledge/:blog_id/blocks',
+	authMiddleware.protect,
+	blogController.getKnowledgeBlocksByBlogId
+);
 Router.post(
 	'/knowledge',
 	authMiddleware.protect,

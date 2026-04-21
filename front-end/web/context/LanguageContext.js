@@ -97,12 +97,13 @@ const translations = {
     s3_responder_msg: "Có phân hữu cơ VietGAP, giao tận vườn...",
 
     // Scenario 4 - Sell Product
-    s4_connector: "Giao Dịch Minh Bạch",
+    s4_connector: "Kết Nối Trao Đổi",
     s4_farmer_name: "Anh Tuấn - Cần Thơ",
     s4_farmer_msg: "5 tấn sầu riêng Ri6 chuẩn VietGAP cần bán...",
     s4_responder_title: "Thương Nhân Thu Mua",
     s4_responder_subtitle: "Xuất Khẩu Trái Cây Việt",
-    s4_responder_msg: "Nhận mua toàn bộ, giá tốt, thanh toán ngay...",
+    s4_responder_msg:
+      "Nhận thu mua toàn bộ, giá tốt, trao đổi và chốt trực tiếp...",
 
     // Products Section
     products_title: "Sản Phẩm Nổi Bật",
@@ -2199,12 +2200,12 @@ const translations = {
       "VietGAP organic fertilizer available, delivered to orchard...",
 
     // Scenario 4 - Sell Product
-    s4_connector: "Transparent Transaction",
+    s4_connector: "Direct Connection",
     s4_farmer_name: "Mr. Tuan - Can Tho",
     s4_farmer_msg: "5 tons of VietGAP-certified Ri6 durian for sale...",
     s4_responder_title: "Purchasing Trader",
     s4_responder_subtitle: "Viet Fruit Export",
-    s4_responder_msg: "Buy all, good price, immediate payment...",
+    s4_responder_msg: "Buy all at good prices, discuss and close directly...",
 
     // Products Section
     products_title: "Featured Products",

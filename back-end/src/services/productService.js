@@ -134,6 +134,7 @@ const getAllProducts = async ({
       Product.find(filter)
         .populate("user_id", "full_name avatar")
         .populate("type_id", "name")
+        .populate("season_diary_id", "garden_name")
         .skip(skip)
         .limit(limitNumber)
         .sort(sortObj)
@@ -185,6 +186,7 @@ const getOwnProducts = async (userId) => {
     const products = await Product.find({ user_id: userId })
       .populate("user_id", "full_name avatar role")
       .populate("type_id", "name")
+      .populate("season_diary_id", "garden_name")
       .sort({ created_at: -1 })
       .lean();
 
