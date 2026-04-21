@@ -291,11 +291,10 @@ export default function ProductDetailPage() {
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star
                             key={star}
-                            className={`w-5 h-5 ${
-                              star <= Math.floor(rating)
-                                ? "text-yellow-400 fill-yellow-400"
-                                : "text-gray-300"
-                            }`}
+                            className={`w-5 h-5 ${star <= Math.floor(rating)
+                              ? "text-yellow-400 fill-yellow-400"
+                              : "text-gray-300"
+                              }`}
                           />
                         ))}
                       </div>
@@ -316,10 +315,10 @@ export default function ProductDetailPage() {
                   <p className="text-sm text-gray-600 mb-2">
                     {t("product_detail_ref_price")}
                   </p>
-               <span className="text-4xl font-bold text-emerald-600">
-                   {formatPrice(product.price)}
-                <span className="text-xl font-bold text-emerald-600 ml-1">/ kg</span>
-                </span>
+                  <span className="text-4xl font-bold text-emerald-600">
+                    {formatPrice(product.price)}
+                    <span className="text-xl font-bold text-emerald-600 ml-1">/ kg</span>
+                  </span>
                 </div>
 
                 <div className="space-y-3">
@@ -460,31 +459,28 @@ export default function ProductDetailPage() {
               <div className="flex border-b border-gray-200">
                 <button
                   onClick={() => setActiveTab("description")}
-                  className={`px-8 py-4 font-semibold transition-colors ${
-                    activeTab === "description"
-                      ? "text-emerald-600 border-b-2 border-emerald-600"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`px-8 py-4 font-semibold transition-colors ${activeTab === "description"
+                    ? "text-emerald-600 border-b-2 border-emerald-600"
+                    : "text-gray-600 hover:text-gray-900"
+                    }`}
                 >
                   {t("product_detail_tab_description")}
                 </button>
                 <button
                   onClick={() => setActiveTab("specifications")}
-                  className={`px-8 py-4 font-semibold transition-colors ${
-                    activeTab === "specifications"
-                      ? "text-emerald-600 border-b-2 border-emerald-600"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`px-8 py-4 font-semibold transition-colors ${activeTab === "specifications"
+                    ? "text-emerald-600 border-b-2 border-emerald-600"
+                    : "text-gray-600 hover:text-gray-900"
+                    }`}
                 >
                   {t("product_detail_tab_specs")}
                 </button>
                 <button
                   onClick={() => setActiveTab("diary")}
-                  className={`px-8 py-4 font-semibold transition-colors ${
-                    activeTab === "diary"
-                      ? "text-emerald-600 border-b-2 border-emerald-600"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`px-8 py-4 font-semibold transition-colors ${activeTab === "diary"
+                    ? "text-emerald-600 border-b-2 border-emerald-600"
+                    : "text-gray-600 hover:text-gray-900"
+                    }`}
                 >
                   {t("product_detail_tab_diary")}
                 </button>
@@ -576,7 +572,20 @@ export default function ProductDetailPage() {
                 )}
 
                 {activeTab === "diary" && (
-                  <DiaryPublicModel diaryId={getDiaryId()} />
+                  <div>
+                    {product.season_diary_id && (
+                      <div className="flex items-center gap-3 bg-gray-50 rounded-lg mb-6">
+                        <MapPin className="w-5 h-5 text-emerald-600" />
+                        <span className="text-base font-semibold text-gray-600">{t("product_detail_garden_name")}</span>
+                        <span className="font-semibold text-gray-900">
+                          {typeof product.season_diary_id === "object"
+                            ? product.season_diary_id.garden_name
+                            : product.season_diary_id}
+                        </span>
+                      </div>
+                    )}
+                    <DiaryPublicModel diaryId={getDiaryId()} />
+                  </div>
                 )}
               </div>
             </div>

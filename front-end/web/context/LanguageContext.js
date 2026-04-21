@@ -2101,6 +2101,8 @@ const translations = {
     fav_posts_default_user: "Người dùng",
     fav_posts_default_me: "Bạn",
     fav_posts_default_seller: "Người bán",
+
+    "product_detail_garden_name": "Tên vườn:",
   },
 
   en: {
@@ -4176,8 +4178,8 @@ const translations = {
     error_reason_min_length:
       "Reason is required and must be at least 10 characters long.",
 
-resume_service_hint: "Select one or more services you provide",
-resume_service_required: "Please select at least one service",
+    resume_service_hint: "Select one or more services you provide",
+    resume_service_required: "Please select at least one service",
     posts_filter_service_label: "Filter by service type",
     posts_filter_service_active: "Filtering:",
     posts_cat_product_label: "Durian purchasing",
@@ -4192,6 +4194,8 @@ resume_service_required: "Please select at least one service",
     fav_posts_default_user: "User",
     fav_posts_default_me: "You",
     fav_posts_default_seller: "Seller",
+
+    "product_detail_garden_name": "Garden name:"
   },
 };
 
