@@ -283,7 +283,7 @@ const translations = {
     // ── Section 1 ─────────────────────────────────────────────
     g_s1_vietgap_title: "VietGAP là gì?",
     g_s1_vietgap_def:
-      "(Vietnamese Good Agricultural Practices – Thực hành nông nghiệp tốt tại Việt Nam) là những nguyên tắc, trình tự, thủ tục hướng dẫn tổ chức, cá nhân sản xuất, thu hoạch, xử lý sau thu hoạch nhằm đảm bảo an toàn, nâng cao chất lượng sản phẩm, đảm bảo phúc lợi xã hội, sức khỏe người sản xuất và người tiêu dùng; đồng thời <strong>bảo vệ môi trường và truy nguyên nguồn gốc sản phẩm</strong>.",
+      "(Vietnamese Good Agricultural Practices – Thực hành nông nghiệp tốt tại Việt Nam) là những nguyên tắc, trình tự, thủ tục hướng dẫn tổ chức, cá nhân sản xuất, thu hoạch, xử lý sau thu hoạch nhằm đảm bảo an toàn, nâng cao chất lượng sản phẩm, đảm bảo phúc lợi xã hội, sức khỏe người sản xuất và người tiêu dùng; đồng thời bảo vệ môi trường và truy nguyên nguồn gốc sản phẩm.",
     g_s1_4criteria_title: "4 Tiêu Chí Cốt Lõi Của VietGAP",
     g_s1_c1_title: "1. An toàn thực phẩm (ATTP)",
     g_s1_c1_desc:
@@ -2384,7 +2384,7 @@ const translations = {
 
     g_s1_vietgap_title: "What is VietGAP?",
     g_s1_vietgap_def:
-      "(Vietnamese Good Agricultural Practices) is a set of principles, procedures and guidelines for organizations and individuals in production, harvesting, and post-harvest handling to ensure safety, improve product quality, and guarantee social welfare, health of producers and consumers; while <strong>protecting the environment and enabling product traceability</strong>.",
+      "(Vietnamese Good Agricultural Practices) is a set of principles, procedures and guidelines for organizations and individuals in production, harvesting, and post-harvest handling to ensure safety, improve product quality, and guarantee social welfare, health of producers and consumers; while protecting the environment and enabling product traceability.",
     g_s1_4criteria_title: "4 Core Criteria of VietGAP",
     g_s1_c1_title: "1. Food Safety",
     g_s1_c1_desc:
