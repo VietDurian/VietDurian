@@ -513,7 +513,7 @@ export default function StatisticsPage() {
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <p className="text-xs text-gray-400">{t("stats_cost_total")}</p>
                 <p className="text-sm font-bold text-gray-700">
-                  {fmt(overview.total_cost / 1_000_000)}tr ₫
+                  {fmtVND(overview.total_cost)}
                 </p>
               </div>
             </div>
@@ -535,7 +535,7 @@ export default function StatisticsPage() {
                         {item.percent}%
                       </span>
                       <span className="text-xs text-gray-400 ml-1.5">
-                        {fmt(item.amount / 1_000_000)}tr
+                        {fmtVND(item.amount)}
                       </span>
                     </div>
                   </div>
