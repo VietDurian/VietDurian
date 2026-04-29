@@ -5,11 +5,67 @@ import { useParams } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useSeasonDiaryStore } from "@/store/useSeasonDiaryStore";
 import { useLanguage } from "@/context/LanguageContext";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const fmt = (n) => new Intl.NumberFormat("vi-VN").format(Math.round(n));
 const fmtVND = (n) => fmt(n) + " ₫";
 const fmtDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString("vi-VN") : null;
+
+const PDF_FONT_FILE = "Roboto-Regular.ttf";
+const PDF_FONT_URL = "/fonts/Roboto/static/Roboto-Regular.ttf";
+const PDF_FONT_BOLD_FILE = "Roboto-Bold.ttf";
+const PDF_FONT_BOLD_URL = "/fonts/Roboto/static/Roboto-Bold.ttf";
+const PDF_FONT_FAMILY = "Roboto";
+
+let pdfFontBase64Promise;
+let pdfFontBoldBase64Promise;
+
+const arrayBufferToBase64 = (buffer) => {
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  let binary = "";
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  return btoa(binary);
+};
+
+const getPdfFontBase64 = async () => {
+  if (pdfFontBase64Promise) return pdfFontBase64Promise;
+
+  pdfFontBase64Promise = fetch(PDF_FONT_URL)
+    .then((res) => {
+      if (!res.ok) throw new Error("Unable to load PDF font");
+      return res.arrayBuffer();
+    })
+    .then(arrayBufferToBase64);
+
+  return pdfFontBase64Promise;
+};
+
+const getPdfFontBoldBase64 = async () => {
+  if (pdfFontBoldBase64Promise) return pdfFontBoldBase64Promise;
+
+  pdfFontBoldBase64Promise = fetch(PDF_FONT_BOLD_URL)
+    .then((res) => {
+      if (!res.ok) throw new Error("Unable to load PDF bold font");
+      return res.arrayBuffer();
+    })
+    .then(arrayBufferToBase64);
+
+  return pdfFontBoldBase64Promise;
+};
+
+const sanitizeFileNamePart = (value) =>
+  String(value || "")
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const EMPTY_OVERVIEW = {
   total_cost: 0,
@@ -116,7 +172,7 @@ function SectionHeader({ eyebrow, title }) {
 }
 
 export default function StatisticsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { seasonDiaryId } = useParams();
   const { authUser } = useAuthStore();
   const {
@@ -156,6 +212,110 @@ export default function StatisticsPage() {
       color: COST_BREAKDOWN_META[key]?.color || "#d1d5db",
     }),
   );
+
+  const costBreakdownRaw = stats?.cost_breakdown || {};
+  const isVietnamese = language === "vi";
+  const pdfLabels = {
+    title: isVietnamese ? "Thống kê chi phí" : "Cost statistics",
+    garden: isVietnamese ? "Vườn" : "Garden",
+    exportDate: isVietnamese ? "Ngày xuất" : "Export date",
+    category: isVietnamese ? "Hạng mục" : "Category",
+    cost: isVietnamese ? "Chi phí" : "Cost",
+  };
+
+  const costExportRows = [
+    {
+      label: isVietnamese ? "Giống" : "Seed",
+      amount: costBreakdownRaw.seed?.amount || 0,
+    },
+    {
+      label: isVietnamese ? "Phân bón" : "Fertilizer",
+      amount: costBreakdownRaw.fertilizer?.amount || 0,
+    },
+    {
+      label: isVietnamese ? "Nhân công" : "Labor",
+      amount: costBreakdownRaw.labor?.amount || 0,
+    },
+    {
+      label: isVietnamese ? "Tưới tiêu" : "Irrigation",
+      amount: costBreakdownRaw.irrigation?.amount || 0,
+    },
+    {
+      label: isVietnamese ? "Tổng chi phí" : "Total cost",
+      amount: overview.total_cost,
+    },
+  ];
+
+  const handleExportPdf = async () => {
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "pt",
+      format: "a4",
+    });
+    let pdfFontFamily = "helvetica";
+
+    try {
+      const pdfFontBase64 = await getPdfFontBase64();
+      const pdfFontBoldBase64 = await getPdfFontBoldBase64();
+      doc.addFileToVFS(PDF_FONT_FILE, pdfFontBase64);
+      doc.addFileToVFS(PDF_FONT_BOLD_FILE, pdfFontBoldBase64);
+      doc.addFont(PDF_FONT_FILE, PDF_FONT_FAMILY, "normal");
+      doc.addFont(PDF_FONT_BOLD_FILE, PDF_FONT_FAMILY, "bold");
+      pdfFontFamily = PDF_FONT_FAMILY;
+    } catch {
+      pdfFontFamily = "helvetica";
+    }
+
+    doc.setFont(pdfFontFamily, "normal");
+    doc.setFontSize(14);
+    doc.text(pdfLabels.title, 40, 40);
+    doc.setFontSize(10);
+    doc.text(`${pdfLabels.garden}: ${diary.garden_name || "-"}`, 40, 58);
+    doc.text(
+      `${pdfLabels.exportDate}: ${new Date().toLocaleDateString("vi-VN")}`,
+      40,
+      74,
+    );
+
+    const tableHead = [[pdfLabels.category, pdfLabels.cost]];
+    const tableBody = costExportRows.map((row) => [
+      row.label,
+      fmtVND(row.amount),
+    ]);
+
+    autoTable(doc, {
+      startY: 92,
+      head: tableHead,
+      body: tableBody,
+      styles: {
+        font: pdfFontFamily,
+        fontStyle: "normal",
+        fontSize: 10,
+        cellPadding: 6,
+      },
+      headStyles: {
+        font: pdfFontFamily,
+        fontStyle: "bold",
+        fillColor: [5, 150, 105],
+        textColor: 255,
+      },
+      columnStyles: {
+        1: { halign: "right" },
+      },
+      didParseCell: (data) => {
+        if (data.row.index === costExportRows.length - 1) {
+          data.cell.styles.fontStyle = "bold";
+        }
+      },
+      theme: "grid",
+      margin: { left: 40, right: 40 },
+    });
+
+    const safeGardenName =
+      sanitizeFileNamePart(diary.garden_name) || "season-diary";
+    const datePart = new Date().toISOString().slice(0, 10);
+    doc.save(`${safeGardenName}-chi-phi-${datePart}.pdf`);
+  };
 
   if (isStatisticsLoading && !stats) {
     return (
@@ -317,10 +477,19 @@ export default function StatisticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Donut — cost breakdown */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <SectionHeader
-            eyebrow={t("stats_cost_breakdown_label")}
-            title={t("stats_cost_breakdown_title")}
-          />
+          <div className="flex items-start justify-between gap-4">
+            <SectionHeader
+              eyebrow={t("stats_cost_breakdown_label")}
+              title={t("stats_cost_breakdown_title")}
+            />
+            <button
+              type="button"
+              onClick={handleExportPdf}
+              className="text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors px-3 py-1.5 rounded-lg"
+            >
+              {isVietnamese ? "Xuất PDF" : "Export PDF"}
+            </button>
+          </div>
           <div className="flex items-center gap-6">
             <div className="relative shrink-0">
               <DonutChart segments={breakdown} size={180} />
@@ -329,8 +498,7 @@ export default function StatisticsPage() {
                   {t("stats_cost_total_label")}
                 </p>
                 <p className="text-sm font-bold text-gray-700">
-                  {fmt(overview.total_cost / 1_000_000)}
-                  {t("stats_cost_unit_million")} ₫
+                  {fmtVND(overview.total_cost)}
                 </p>
               </div>
             </div>
@@ -352,8 +520,7 @@ export default function StatisticsPage() {
                         {item.percent}%
                       </span>
                       <span className="text-xs text-gray-400 ml-1.5">
-                        {fmt(item.amount / 1_000_000)}
-                        {t("stats_cost_unit_million")}
+                        {fmtVND(item.amount)}
                       </span>
                     </div>
                   </div>
