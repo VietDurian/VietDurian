@@ -18,19 +18,23 @@ import { useAuthStore } from "../store/useAuthStore";
 export default function VerifyResetOTPScreen() {
   const { navigate } = useAppStore();
   const {
-    login,
-    isSubmitting,
-    resendVerificationOtp,
-    setPendingVerificationEmail,
+    isVerifyingResetOtp,
+    pendingVerificationEmail,
+    setPendingResetToken,
+    verifyResetOtp,
   } = useAuthStore();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
+  const [otp, setOtp] = useState("");
 
   const handleSendOTP = async () => {
-    navigate("reset-password");
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail || !password) {
+    if (!pendingVerificationEmail) {
+      Toast.show({
+        type: "error",
+        text1: "Thiếu email đặt lại mật khẩu",
+      });
+      return;
+    }
+
+    if (!otp) {
       Toast.show({
         type: "error",
         text1: "Vui lòng nhập OTP",
@@ -38,13 +42,14 @@ export default function VerifyResetOTPScreen() {
       return;
     }
 
-    const normalizedEmail = trimmedEmail.toLowerCase();
-    const result = await login({ email: normalizedEmail, password });
-
-    if (result?.requiresEmailVerification) {
-      setPendingVerificationEmail(normalizedEmail);
-      await resendVerificationOtp(normalizedEmail);
-      navigate("verify-email");
+    const result = await verifyResetOtp({
+      email: pendingVerificationEmail,
+      otp,
+    });
+    const resetToken = result?.token || result?.resetToken;
+    if (resetToken) {
+      setPendingResetToken(resetToken);
+      navigate("reset-password");
     }
   };
 
@@ -86,8 +91,8 @@ export default function VerifyResetOTPScreen() {
                 style={styles.input}
                 placeholder="Nhập OTP"
                 placeholderTextColor="#9CA3AF"
-                value={email}
-                onChangeText={setEmail}
+                value={otp}
+                onChangeText={setOtp}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -98,11 +103,11 @@ export default function VerifyResetOTPScreen() {
           <TouchableOpacity
             style={styles.submitBtn}
             onPress={handleSendOTP}
-            disabled={isSubmitting}
+            disabled={isVerifyingResetOtp}
             activeOpacity={0.85}
           >
             <Text style={styles.submitBtnText}>
-              {isSubmitting ? "Đang xác nhận..." : "Xác nhận"}
+              {isVerifyingResetOtp ? "Đang xác nhận..." : "Xác nhận"}
             </Text>
           </TouchableOpacity>
         </View>

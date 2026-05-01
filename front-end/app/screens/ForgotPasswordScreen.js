@@ -36,7 +36,8 @@ export default function ForgotPasswordScreen() {
     }
 
     const normalizedEmail = trimmedEmail.toLowerCase();
-    const result = await forgotPassword(normalizedEmail);
+    setPendingVerificationEmail(normalizedEmail);
+    await forgotPassword(normalizedEmail);
 
     navigate("verify-reset-otp");
   };

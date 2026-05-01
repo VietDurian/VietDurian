@@ -17,35 +17,46 @@ import { useAuthStore } from "../store/useAuthStore";
 
 export default function ResetPasswordScreen() {
   const { navigate } = useAppStore();
-  const {
-    login,
-    isLoggingIn,
-    resendVerificationOtp,
-    setPendingVerificationEmail,
-  } = useAuthStore();
-  const [email, setEmail] = useState("");
+  const { isResettingPassword, pendingResetToken, resetPassword } =
+    useAuthStore();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
 
-  const handleLogin = async () => {
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail || !password) {
+  const handleResetPassword = async () => {
+    if (!pendingResetToken) {
       Toast.show({
         type: "error",
-        text1: "Vui lòng nhập email và mật khẩu",
+        text1: "Thiếu token đặt lại mật khẩu",
       });
       return;
     }
 
-    const normalizedEmail = trimmedEmail.toLowerCase();
-    const result = await login({ email: normalizedEmail, password });
+    if (!password || !confirmPassword) {
+      Toast.show({
+        type: "error",
+        text1: "Vui lòng nhập mật khẩu mới",
+      });
+      return;
+    }
 
-    if (result?.requiresEmailVerification) {
-      setPendingVerificationEmail(normalizedEmail);
-      await resendVerificationOtp(normalizedEmail);
-      navigate("verify-email");
+    if (password !== confirmPassword) {
+      Toast.show({
+        type: "error",
+        text1: "Mật khẩu xác nhận không khớp",
+      });
+      return;
+    }
+
+    const result = await resetPassword({
+      token: pendingResetToken,
+      newPassword: password,
+      confirmPassword,
+    });
+
+    if (result) {
+      navigate("login");
     }
   };
 
@@ -91,7 +102,7 @@ export default function ResetPasswordScreen() {
                 onChangeText={setPassword}
                 secureTextEntry={!showPass}
                 autoCapitalize="none"
-                onSubmitEditing={handleLogin}
+                onSubmitEditing={handleResetPassword}
               />
               <TouchableOpacity onPress={() => setShowPass(!showPass)}>
                 <Ionicons
@@ -117,7 +128,7 @@ export default function ResetPasswordScreen() {
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPass}
                 autoCapitalize="none"
-                onSubmitEditing={handleLogin}
+                onSubmitEditing={handleResetPassword}
               />
               <TouchableOpacity
                 onPress={() => setShowConfirmPass(!showConfirmPass)}
@@ -134,12 +145,12 @@ export default function ResetPasswordScreen() {
           {/* Login Button */}
           <TouchableOpacity
             style={styles.loginBtn}
-            onPress={handleLogin}
-            disabled={isLoggingIn}
+            onPress={handleResetPassword}
+            disabled={isResettingPassword}
             activeOpacity={0.85}
           >
             <Text style={styles.loginBtnText}>
-              {isLoggingIn ? "Đang đổi mật khẩu..." : "Đổi mật khẩu"}
+              {isResettingPassword ? "Đang đổi mật khẩu..." : "Đổi mật khẩu"}
             </Text>
           </TouchableOpacity>
         </View>
