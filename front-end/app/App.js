@@ -24,8 +24,18 @@ import ChatDetailScreen from "./screens/ChatDetailScreen";
 import NotificationsScreen from "./screens/NotificationsScreen";
 import AIScanScreen from "./screens/AIScanScreen";
 import CommentScreen from "./screens/CommentScreen";
+import ForgotPasswordScreen from "./screens/ForgotPasswordScreen";
+import VerifyResetOTPScreen from "./screens/VerifyResetOTPScreen";
+import ResetPasswordScreen from "./screens/ResetPasswordScreen";
 
-const AUTH_SCREENS = ["login", "register", "verify-email"];
+const AUTH_SCREENS = [
+  "login",
+  "register",
+  "verify-email",
+  "forgot-password",
+  "verify-reset-otp",
+  "reset-password",
+];
 const HIDE_HEADER_SCREENS = [
   "chat-detail",
   "comment",
@@ -62,6 +72,12 @@ function ScreenRouter() {
       return <NotificationsScreen />;
     case "AI":
       return <AIScanScreen />;
+    case "forgot-password":
+      return <ForgotPasswordScreen />;
+    case "verify-reset-otp":
+      return <VerifyResetOTPScreen />;
+    case "reset-password":
+      return <ResetPasswordScreen />;
     case "comment":
       return <CommentScreen onBack={() => navigate("home")} />;
     default:
