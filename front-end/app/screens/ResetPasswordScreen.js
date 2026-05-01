@@ -15,6 +15,38 @@ import Toast from "react-native-toast-message";
 import { useAppStore } from "@/store/useAppStore";
 import { useAuthStore } from "../store/useAuthStore";
 
+const SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>[\]\\';`~+=\-_/]/;
+const PASSWORD_RULES = [
+  {
+    id: "length",
+    test: (pwd) => pwd.length >= 12,
+    label: "Ít nhất 12 ký tự",
+  },
+  {
+    id: "uppercase",
+    test: (pwd) => /[A-Z]/.test(pwd),
+    label: "Có chữ in hoa",
+  },
+  {
+    id: "lowercase",
+    test: (pwd) => /[a-z]/.test(pwd),
+    label: "Có chữ thường",
+  },
+  {
+    id: "number",
+    test: (pwd) => /\d/.test(pwd),
+    label: "Có ít nhất một số",
+  },
+  {
+    id: "special",
+    test: (pwd) => SPECIAL_CHAR_REGEX.test(pwd),
+    label: "Có ký tự đặc biệt (ví dụ: @, #, $)",
+  },
+];
+
+const isStrongPassword = (pwd = "") =>
+  PASSWORD_RULES.every((rule) => rule.test(pwd));
+
 export default function ResetPasswordScreen() {
   const { navigate } = useAppStore();
   const { isResettingPassword, pendingResetToken, resetPassword } =
@@ -37,6 +69,14 @@ export default function ResetPasswordScreen() {
       Toast.show({
         type: "error",
         text1: "Vui lòng nhập mật khẩu mới",
+      });
+      return;
+    }
+
+    if (!isStrongPassword(password)) {
+      Toast.show({
+        type: "error",
+        text1: "Mật khẩu chưa đáp ứng các yêu cầu",
       });
       return;
     }
@@ -113,6 +153,35 @@ export default function ResetPasswordScreen() {
               </TouchableOpacity>
             </View>
           </View>
+
+          {password ? (
+            <View style={styles.passwordChecklist}>
+              {PASSWORD_RULES.map((rule) => {
+                const passed = rule.test(password);
+                return (
+                  <View key={rule.id} style={styles.passwordRuleRow}>
+                    <Ionicons
+                      name={passed ? "checkmark-circle" : "close-circle"}
+                      size={16}
+                      color={passed ? "#16A34A" : "#EF4444"}
+                    />
+                    <Text
+                      style={[
+                        styles.passwordRuleText,
+                        passed
+                          ? styles.passwordRuleTextPass
+                          : styles.passwordRuleTextFail,
+                      ]}
+                    >
+                      {rule.id === "length"
+                        ? `Ít nhất 12 ký tự (hiện tại: ${password.length})`
+                        : rule.label}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          ) : null}
           {/* Confirm Password */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>
@@ -285,6 +354,31 @@ const styles = StyleSheet.create({
     color: "#4285F4",
   },
   googleBtnText: { color: "#374151", fontSize: 14, fontWeight: "500" },
+
+  passwordChecklist: {
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 6,
+    backgroundColor: "#FFFFFF",
+  },
+  passwordRuleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  passwordRuleText: {
+    fontSize: 12,
+    flex: 1,
+  },
+  passwordRuleTextPass: {
+    color: "#16A34A",
+  },
+  passwordRuleTextFail: {
+    color: "#EF4444",
+  },
   // Footer
   footerRow: {
     flexDirection: "row",
