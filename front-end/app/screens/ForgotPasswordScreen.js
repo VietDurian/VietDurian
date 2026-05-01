@@ -18,34 +18,27 @@ import { useAuthStore } from "../store/useAuthStore";
 export default function ForgotPasswordScreen() {
   const { navigate } = useAppStore();
   const {
-    login,
-    isSubmitting,
+    isRequestingResetOtp,
     resendVerificationOtp,
     setPendingVerificationEmail,
+    forgotPassword,
   } = useAuthStore();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
 
   const handleSendOTP = async () => {
-    navigate("verify-reset-otp");
     const trimmedEmail = email.trim();
-    if (!trimmedEmail || !password) {
+    if (!trimmedEmail) {
       Toast.show({
         type: "error",
-        text1: "Vui lòng nhập email và mật khẩu",
+        text1: "Vui lòng nhập email",
       });
       return;
     }
 
     const normalizedEmail = trimmedEmail.toLowerCase();
-    const result = await login({ email: normalizedEmail, password });
+    const result = await forgotPassword(normalizedEmail);
 
-    if (result?.requiresEmailVerification) {
-      setPendingVerificationEmail(normalizedEmail);
-      await resendVerificationOtp(normalizedEmail);
-      navigate("verify-reset-otp");
-    }
+    navigate("verify-reset-otp");
   };
 
   return (
@@ -98,11 +91,11 @@ export default function ForgotPasswordScreen() {
           <TouchableOpacity
             style={styles.submitBtn}
             onPress={handleSendOTP}
-            disabled={isSubmitting}
+            disabled={isRequestingResetOtp}
             activeOpacity={0.85}
           >
             <Text style={styles.submitBtnText}>
-              {isSubmitting ? "Đang gửi..." : "Nhận mã OTP"}
+              {isRequestingResetOtp ? "Đang gửi..." : "Nhận mã OTP"}
             </Text>
           </TouchableOpacity>
         </View>
