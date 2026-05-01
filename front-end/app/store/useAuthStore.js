@@ -33,12 +33,15 @@ export const useAuthStore = create((set, get) => ({
   isUpdatingProfile: false,
   isCheckingAuth: true,
   pendingVerificationEmail: "",
+  pendingResetToken: "",
   onlineUsers: [],
   ws: null,
   _cancelReconnect: null,
 
   setPendingVerificationEmail: (email) =>
     set({ pendingVerificationEmail: email?.trim().toLowerCase() || "" }),
+
+  setPendingResetToken: (token) => set({ pendingResetToken: token || "" }),
 
   checkAuth: async () => {
     const { navigate } = useAppStore.getState();
@@ -266,6 +269,7 @@ export const useAuthStore = create((set, get) => ({
         newPassword,
         confirmPassword,
       });
+      set({ pendingResetToken: "" });
       Toast.show({
         type: "success",
         text1: res?.data?.message || "Đặt lại mật khẩu thành công",
