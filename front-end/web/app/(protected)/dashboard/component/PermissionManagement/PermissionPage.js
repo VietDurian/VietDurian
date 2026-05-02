@@ -135,6 +135,15 @@ export default function PermissionPage() {
         })
     }, [mappedPermissions, normalizedStatus])
 
+    const pagedPermissions = useMemo(() => {
+        const data = Array.isArray(filteredPermissions) ? filteredPermissions : []
+        const pgnCurrentPage = Number(pagination.currentPage ?? 0)
+        const currentPage = Number.isFinite(pgnCurrentPage) && pgnCurrentPage > 0 ? pgnCurrentPage : Number(page ?? 1)
+        const perPage = Number(pagination.itemsPerPage ?? LIMIT) || LIMIT
+        const startIndex = Math.max(0, (currentPage - 1) * perPage)
+        return data.slice(startIndex, startIndex + perPage)
+    }, [filteredPermissions, pagination.currentPage, pagination.itemsPerPage, page])
+
     const effectiveTotalPages = useMemo(() => {
         const totalItems = Number(pagination.totalItems || filteredPermissions.length || 0)
         const perPage = Number(pagination.itemsPerPage || LIMIT)
@@ -261,21 +270,20 @@ export default function PermissionPage() {
                                     <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('user') || 'User'}</th>
                                     <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('phone') || 'Phone'}</th>
                                     <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('role') || 'Role'}</th>
-                                    <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('description') || 'Description'}</th>
                                     <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('status') || 'Status'}</th>
                                     <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('created_at') || 'Created'}</th>
                                     <th className="px-3 py-3 md:px-6 md:py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">{t('actions') || 'Actions'}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {filteredPermissions.length === 0 ? (
+                                {pagedPermissions.length === 0 ? (
                                     <tr>
                                         <td className="px-3 py-6 md:px-6 text-center text-gray-500" colSpan={9}>
                                             {isVi ? 'Không có yêu cầu quyền nào phù hợp bộ lọc.' : 'No permission requests match your filters.'}
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredPermissions.map((req) => (
+                                    pagedPermissions.map((req) => (
                                         <tr key={req.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-3 py-3 md:px-6 md:py-4">
                                                 <div className="font-medium text-gray-900">{req.user_name}</div>
@@ -283,12 +291,6 @@ export default function PermissionPage() {
                                             </td>
                                             <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-gray-700 break-all">{req.phone}</td>
                                             <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-gray-700 break-all">{req.role}</td>
-                                            <td
-                                                className="px-3 py-3 md:px-6 md:py-4 text-sm text-gray-700 max-w-xs overflow-hidden whitespace-nowrap text-ellipsis"
-                                                title={req.description}
-                                            >
-                                                {req.description || '—'}
-                                            </td>
                                             <td className="px-3 py-3 md:px-6 md:py-4 text-sm">
                                                 <span
                                                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(req.status)}`}
@@ -318,7 +320,7 @@ export default function PermissionPage() {
                         {(() => {
                             const total = Number(pagination.totalItems ?? filteredPermissions.length ?? 0)
                             const perPage = Number(pagination.itemsPerPage ?? LIMIT)
-                            const cur = Number(page ?? 1)
+                            const cur = Number(pagination.currentPage ?? page ?? 1)
                             const start = total === 0 ? 0 : (cur - 1) * perPage + 1
                             const end = Math.min(cur * perPage, total)
                             return `${t('showing_range') || 'Showing'} ${start}-${end} ${t('of') || 'of'} ${total} ${isVi ? 'yêu cầu' : 'requests'}`
