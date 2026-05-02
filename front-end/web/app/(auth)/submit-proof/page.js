@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   CreditCard,
   Info,
@@ -42,13 +42,15 @@ function UploadZone({
   fileTypeHint,
   maxFileSizeMB = 5,
   fileTooLargeText,
+  disabled = false,
 }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
 
   const selectedFiles = multiple ? files || [] : file ? [file] : [];
   const hasFiles = selectedFiles.length > 0;
-  const canAddMore = !multiple || selectedFiles.length < maxFiles;
+  const canAddMore =
+    !disabled && (!multiple || selectedFiles.length < maxFiles);
   const maxFileSizeBytes = maxFileSizeMB * 1024 * 1024;
 
   const getValidFiles = (incomingFiles) => {
@@ -112,6 +114,8 @@ function UploadZone({
 
   const handleRemove = (e, removeIndex = 0) => {
     e.stopPropagation();
+
+    if (disabled) return;
 
     if (!multiple) {
       onFileChange?.(null);
@@ -197,12 +201,14 @@ function UploadZone({
                         </div>
                       )}
 
-                      <button
-                        onClick={(e) => handleRemove(e, index)}
-                        className="absolute top-2 right-2 w-6 h-6 rounded-md border border-gray-200 bg-white/95 flex items-center justify-center text-gray-500 hover:text-red-500 hover:border-red-200 transition-colors cursor-pointer"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
+                      {!disabled && (
+                        <button
+                          onClick={(e) => handleRemove(e, index)}
+                          className="absolute top-2 right-2 w-6 h-6 rounded-md border border-gray-200 bg-white/95 flex items-center justify-center text-gray-500 hover:text-red-500 hover:border-red-200 transition-colors cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
 
                       <div className="px-2 py-1.5 bg-white/95">
                         <p className="text-[11px] text-gray-500 truncate">
@@ -253,12 +259,14 @@ function UploadZone({
                   {(selectedFiles[0]?.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
-              <button
-                onClick={handleRemove}
-                className="absolute top-3 right-3 w-7 h-7 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors shrink-0 cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
+              {!disabled && (
+                <button
+                  onClick={handleRemove}
+                  className="absolute top-3 right-3 w-7 h-7 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors shrink-0 cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           )
         ) : (
@@ -277,8 +285,10 @@ function UploadZone({
           type="file"
           accept=".jpg,.jpeg,.png,.heic"
           multiple={multiple}
+          disabled={disabled}
           className="hidden"
           onChange={(e) => {
+            if (disabled) return;
             const incomingFiles = Array.from(e.target.files || []);
             if (incomingFiles.length > 0) {
               applyFiles(incomingFiles);
@@ -301,8 +311,33 @@ export default function SubmitProofPage() {
   const [certificateFiles, setCertificateFiles] = useState([]);
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const { submitProof, isSubmittingProof } = usePermissionStore();
+  const [statusLoading, setStatusLoading] = useState(true);
+  const {
+    submitProof,
+    isSubmittingProof,
+    verifyCCCDStatus,
+    getVerifyCCCDStatus,
+  } = usePermissionStore();
   const router = useRouter();
+
+  useEffect(() => {
+    let active = true;
+
+    const loadStatus = async () => {
+      setStatusLoading(true);
+      await getVerifyCCCDStatus();
+      if (active) setStatusLoading(false);
+    };
+
+    loadStatus();
+    return () => {
+      active = false;
+    };
+  }, [getVerifyCCCDStatus]);
+
+  const isVerificationPending = verifyCCCDStatus === "pending";
+  const isVerificationApproved = verifyCCCDStatus === "approved";
+  const isLocked = isVerificationPending || isVerificationApproved;
 
   const canSubmit = Boolean(
     frontFile &&
@@ -353,6 +388,15 @@ export default function SubmitProofPage() {
         submit: "Gửi xác minh",
         supportPrefix: "Gặp vấn đề? Liên hệ",
         supportSuffix: "để được hỗ trợ",
+        lockedPendingTitle: "Hồ sơ đang chờ xác thực",
+        lockedPendingDesc:
+          "Bạn đã gửi yêu cầu xác thực. Vui lòng chờ kết quả duyệt từ hệ thống.",
+        lockedApprovedTitle: "Tài khoản đã được xác thực",
+        lockedApprovedDesc:
+          "Bạn đã xác thực thành công, không cần gửi lại thông tin.",
+        lockedCta: "Quay về trang chủ",
+        statusLoading: "Đang kiểm tra trạng thái xác thực...",
+        lockedToast: "Tài khoản của bạn đã gửi xác thực trước đó.",
       }
     : {
         toastUploading: "Uploading files...",
@@ -394,10 +438,22 @@ export default function SubmitProofPage() {
         submit: "Submit verification",
         supportPrefix: "Having issues? Contact",
         supportSuffix: "for support",
+        lockedPendingTitle: "Verification is pending",
+        lockedPendingDesc:
+          "Your verification request has been received. Please wait for approval.",
+        lockedApprovedTitle: "Account already verified",
+        lockedApprovedDesc:
+          "Your account has been verified successfully. No need to submit again.",
+        lockedCta: "Back to homepage",
+        statusLoading: "Checking verification status...",
+        lockedToast: "Your verification has already been submitted.",
       };
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (!canSubmit || isLocked) {
+      if (isLocked) toast.error(texts.lockedToast);
+      return;
+    }
 
     try {
       setUploading(true);
@@ -442,6 +498,46 @@ export default function SubmitProofPage() {
     setCertificateFiles([]);
     setSubmitted(false);
   };
+
+  if (statusLoading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center px-4 bg-gray-50 font-sans p-5 lg:pt-0 w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
+        <FloatingLangToggle />
+        <div className="bg-white rounded-3xl shadow-lg p-10 max-w-md w-full flex flex-col items-center text-center gap-4">
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+          <p className="text-sm text-gray-500">{texts.statusLoading}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLocked) {
+    const lockedTitle = isVerificationApproved
+      ? texts.lockedApprovedTitle
+      : texts.lockedPendingTitle;
+    const lockedDesc = isVerificationApproved
+      ? texts.lockedApprovedDesc
+      : texts.lockedPendingDesc;
+
+    return (
+      <div className="min-h-screen flex justify-center items-center px-4 bg-gray-50 font-sans p-5 lg:pt-0 w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
+        <FloatingLangToggle />
+        <div className="bg-white rounded-3xl shadow-lg p-10 max-w-md w-full flex flex-col items-center text-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-200">
+            <CheckCircle className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-800">{lockedTitle}</h2>
+          <p className="text-sm text-gray-500 leading-relaxed">{lockedDesc}</p>
+          <button
+            onClick={() => router.push("/")}
+            className="cursor-pointer mt-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl py-3 transition-all"
+          >
+            {texts.lockedCta}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ── Success screen ────────────────────────────────────────────────────────
   if (submitted) {
@@ -502,6 +598,7 @@ export default function SubmitProofPage() {
             receivedLabel={texts.receivedLabel}
             fileTypeHint={texts.fileTypeHint}
             fileTooLargeText={texts.fileTooLargeText}
+            disabled={isLocked}
           />
 
           {/* Back Side Upload */}
@@ -515,6 +612,7 @@ export default function SubmitProofPage() {
             receivedLabel={texts.receivedLabel}
             fileTypeHint={texts.fileTypeHint}
             fileTooLargeText={texts.fileTooLargeText}
+            disabled={isLocked}
           />
 
           {/* Certificate Upload */}
@@ -531,6 +629,7 @@ export default function SubmitProofPage() {
             receivedLabel={texts.receivedLabel}
             fileTypeHint={texts.fileTypeHint}
             fileTooLargeText={texts.fileTooLargeText}
+            disabled={isLocked}
           />
         </div>
 
@@ -575,10 +674,10 @@ export default function SubmitProofPage() {
 
           <button
             onClick={handleSubmit}
-            disabled={!canSubmit}
+            disabled={!canSubmit || isLocked}
             className={[
               "cursor-pointer inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200",
-              canSubmit
+              canSubmit && !isLocked
                 ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-200 hover:shadow-lg active:scale-[0.98]"
                 : "bg-gray-100 text-gray-400 cursor-not-allowed",
             ].join(" ")}
