@@ -495,7 +495,7 @@ export default function StatisticsPage() {
 
   if (isSeasonDiariesLoading && !gardens.length) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3 text-gray-500">
           <span className="animate-spin w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full" />
           {t("stats_loading")}
@@ -506,7 +506,7 @@ export default function StatisticsPage() {
 
   if (!isSeasonDiariesLoading && !gardens.length) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-sm text-gray-500">{t("stats_empty")}</p>
       </div>
     );

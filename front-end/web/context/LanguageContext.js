@@ -1948,7 +1948,7 @@ const translations = {
     my_products_stat_total: "Tổng sản phẩm",
     my_products_stat_views: "Tổng lượt xem",
     my_products_stat_rating: "Điểm đánh giá trung bình",
-    my_products_stat_season: "Trong mùa",
+    my_products_stat_season: "Sản phẩm đã ngưng",
     my_products_search_placeholder: "Tìm theo tên sản phẩm...",
     my_products_filter_all_type: "Tất cả loại",
     my_products_filter_all_status: "Tất cả trạng thái",
@@ -2093,16 +2093,19 @@ const translations = {
     posts_cat_hire_label: "Thuê dịch vụ lao động",
     posts_like_fail: "Không thể cập nhật yêu thích",
     posts_load_fail: "Không thể tải bài viết",
-    post_service_empty: "Bạn chưa đăng ký dịch vụ nào trong hồ sơ. Hãy cập nhật hồ sơ trước.",
+    post_service_empty:
+      "Bạn chưa đăng ký dịch vụ nào trong hồ sơ. Hãy cập nhật hồ sơ trước.",
     post_service_hire_label: "Dịch vụ cần thuê",
     post_service_provide_label: "Dịch vụ cung cấp",
-    post_service_hire_hint: "Chọn loại dịch vụ bạn muốn thuê trong bài đăng này",
-    post_service_provide_hint: "Chọn dịch vụ bạn muốn giới thiệu trong bài đăng này",
+    post_service_hire_hint:
+      "Chọn loại dịch vụ bạn muốn thuê trong bài đăng này",
+    post_service_provide_hint:
+      "Chọn dịch vụ bạn muốn giới thiệu trong bài đăng này",
     fav_posts_default_user: "Người dùng",
     fav_posts_default_me: "Bạn",
     fav_posts_default_seller: "Người bán",
 
-    "product_detail_garden_name": "Tên vườn:",
+    product_detail_garden_name: "Tên vườn:",
   },
 
   en: {
@@ -4040,7 +4043,7 @@ const translations = {
     my_products_stat_total: "Total Products",
     my_products_stat_views: "Total Views",
     my_products_stat_rating: "Average Rating",
-    my_products_stat_season: "In Season",
+    my_products_stat_season: "Inactive",
     my_products_search_placeholder: "Search by product name...",
     my_products_filter_all_type: "All Types",
     my_products_filter_all_status: "All Statuses",
@@ -4186,16 +4189,19 @@ const translations = {
     posts_cat_hire_label: "Hire labor services",
     posts_like_fail: "Unable to update favorite",
     posts_load_fail: "Unable to load posts",
-    post_service_empty: "You haven't registered any services in your profile. Please update your profile first.",
+    post_service_empty:
+      "You haven't registered any services in your profile. Please update your profile first.",
     post_service_hire_label: "Services to hire",
     post_service_provide_label: "Services provided",
-    post_service_hire_hint: "Select the type of service you want to hire in this post",
-    post_service_provide_hint: "Select the service you want to feature in this post",
+    post_service_hire_hint:
+      "Select the type of service you want to hire in this post",
+    post_service_provide_hint:
+      "Select the service you want to feature in this post",
     fav_posts_default_user: "User",
     fav_posts_default_me: "You",
     fav_posts_default_seller: "Seller",
 
-    "product_detail_garden_name": "Garden name:"
+    product_detail_garden_name: "Garden name:",
   },
 };
 

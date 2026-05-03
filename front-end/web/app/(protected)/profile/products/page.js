@@ -267,10 +267,10 @@ export default function MyProductsPage() {
               0,
             ) / filteredProducts.length
           ).toFixed(1);
-    const totalStock = filteredProducts.reduce(
-      (sum, p) => sum + (toNumber(p.stock) || 0),
-      0,
-    );
+    const inactiveCount = filteredProducts.reduce((sum, p) => {
+      const status = (p?.status || "").toLowerCase();
+      return sum + (status === "inactive" ? 1 : 0);
+    }, 0);
 
     return [
       {
@@ -305,7 +305,7 @@ export default function MyProductsPage() {
       },
       {
         label: t("my_products_stat_season"),
-        value: totalStock,
+        value: inactiveCount.toString(),
         icon: Calendar,
         bg: "bg-purple-50",
         border: "border border-purple-300",
