@@ -1,97 +1,116 @@
-@startuml PostManagement
-skinparam monochrome true
-skinparam shadowing false
+@startuml
 skinparam classAttributeIconSize 0
-left to right direction
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
 
+package "PostModule" {
 
-' ===== Routes & Middleware =====
-class PostRoute <<control>> {
-  +createPost(req, res): void
-  +viewPostList(req, res): void
-  +updatePost(req, res): void
-  +deletePost(req, res): void
-  +approvePost(req, res): void
-  +rejectPost(req, res): void
-  +searchPost(req, res): void
-  +filterPost(req, res): void
+	' --- ROUTE & MIDDLEWARE ---
+	class PostRoute {
+		+createPost(req, res): void
+		+viewPostList(req, res): void
+		+updatePost(req, res): void
+		+deletePost(req, res): void
+		+approvePost(req, res): void
+		+rejectPost(req, res): void
+		+searchPost(req, res): void
+		+filterPost(req, res): void
+	}
+
+	class AuthMiddleware {
+		+protect(req): UserInfo
+	}
+
+	' --- CONTROLLER ---
+	class PostController {
+		-postService: PostService
+		+createPost(req, res, next): Promise<void>
+		+viewPostList(req, res, next): Promise<void>
+		+updatePost(req, res, next): Promise<void>
+		+deletePost(req, res, next): Promise<void>
+		+approvePost(req, res, next): Promise<void>
+		+rejectPost(req, res, next): Promise<void>
+		+searchPost(req, res, next): Promise<void>
+		+filterPost(req, res, next): Promise<void>
+	}
+
+	' --- SERVICE ---
+	class PostService {
+		-postModel: PostModel
+		-userModel: UserModel
+		+createPost(data): Promise<Post>
+		+viewPostList(params): Promise<{ data: Post[], pagination }>
+		+updatePost(postId, data): Promise<Post>
+		+deletePost(postId): Promise<Post>
+		+approvePost(postId): Promise<Post>
+		+rejectPost(postId, reason): Promise<Post>
+		+searchPost(params): Promise<{ data: Post[], pagination }>
+		+filterPost(params): Promise<{ data: Post[], pagination }>
+	}
+
+	' --- DATA ACCESS (MODELS) ---
+	class PostModel {
+		+find(filter): Post[]
+		+findById(id): Post | null
+		+findByIdAndUpdate(id, update, options): Post
+		+findByIdAndDelete(id): Post
+		+countDocuments(filter): number
+		+save(): Post
+	}
+
+	class UserModel {
+		+findById(id): User | null
+	}
+
+	class Database {
+	}
+
+	' --- ENTITIES ---
+	class Post {
+		+_id: ObjectId
+		+author_id: ObjectId
+		+category: string
+		+content: string
+		+image: string
+		+contact: string
+		+status: string
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class User {
+		+_id: ObjectId
+		+full_name: string
+		+avatar: string
+	}
 }
 
-class AuthMiddleware <<control>> {
-  +protect(req): UserInfo
-}
+' --- RELATIONSHIPS ---
 
-' ===== Controller =====
-class PostController <<control>> {
-  +createPost(req, res): void
-  +viewPostList(req, res): void
-  +updatePost(req, res): void
-  +deletePost(req, res): void
-  +approvePost(req, res): void
-  +rejectPost(req, res): void
-  +searchPost(req, res): void
-  +filterPost(req, res): void
-}
+' === DEPENDENCY: Route -> Middleware & Controller ===
+PostRoute ..> AuthMiddleware : Dependency
+PostRoute ..> PostController : Dependency
 
-' ===== Service =====
-class PostService <<service>> {
-  +createPost(data): Post
-  +viewPostList(params): { data: Post[], pagination }
-  +updatePost(postId, data): Post
-  +deletePost(postId): Post
-  +approvePost(postId): Post
-  +rejectPost(postId, reason): Post
-  +searchPost(params): { data: Post[], pagination }
-  +filterPost(params): { data: Post[], pagination }
-}
+' === DEPENDENCY: Controller -> Service ===
+PostController ..> PostService : Dependency
 
-' ===== Models =====
-class PostModel <<model>> {
-  +find(filter): Post[]
-  +findById(id): Post
-  +findByIdAndUpdate(id, update, options): Post
-  +findByIdAndDelete(id): Post
-  +countDocuments(filter): number
-  +save(): Post
-}
+' === DEPENDENCY: Service -> Models ===
+PostService ..> PostModel : Dependency
+PostService ..> UserModel : Dependency
 
-class UserModel <<model>> {
-  +findById(id): User
-}
+' === DEPENDENCY: Model -> Entity ===
+PostModel ..> Post : Dependency
+UserModel ..> User : Dependency
 
-' ===== Entities =====
-class Post <<entity>> {
-  +_id: ObjectId
-  +author_id: ObjectId
-  +category: string
-  +content: string
-  +image: string
-  +contact: string
-  +status: string
-  +created_at: Date
-  +updated_at: Date
-}
+' === ASSOCIATION: Entity relationships ===
+User "1" --> "many" Post
 
-class User <<entity>> {
-  +_id: ObjectId
-  +full_name: string
-  +avatar: string
-}
-
-class Database <<database>>
-
-' ===== Relationships =====
-PostRoute --> AuthMiddleware : uses (create/view/update/delete/approve/reject)
-PostRoute --> PostController : calls handlers
-
-PostController --> PostService : orchestration
-
-PostService --> PostModel : persistence
-PostService --> UserModel : validate author
-
+' === PERSISTENCE: Models -> Database ===
 PostModel --> Database : queries
 UserModel --> Database : queries
-
-User "1" o-- "0..*" Post : writes
 
 @enduml

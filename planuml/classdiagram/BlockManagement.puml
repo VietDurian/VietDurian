@@ -1,83 +1,102 @@
-@startuml BlockManagement
-skinparam monochrome true
-skinparam shadowing false
+@startuml
 skinparam classAttributeIconSize 0
-left to right direction
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
 
+package "BlockModule" {
 
-' ===== Routes & Middleware =====
-class BlockRoute <<control>> {
-  +createBlock(req, res): void
-  +viewBlock(req, res): void
-  +updateBlock(req, res): void
-  +deleteBlock(req, res): void
+	' --- ROUTE & MIDDLEWARE ---
+	class BlockRoute {
+		+createBlock(req, res): void
+		+viewBlock(req, res): void
+		+updateBlock(req, res): void
+		+deleteBlock(req, res): void
+	}
+
+	class AuthMiddleware {
+		+protect(req): UserInfo
+	}
+
+	' --- CONTROLLER ---
+	class BlockController {
+		-blockService: BlockService
+		+createBlock(req, res, next): Promise<void>
+		+viewBlock(req, res, next): Promise<void>
+		+updateBlock(req, res, next): Promise<void>
+		+deleteBlock(req, res, next): Promise<void>
+	}
+
+	' --- SERVICE ---
+	class BlockService {
+		-blockModel: BlockModel
+		-blogModel: BlogModel
+		+createBlock(data): Promise<Block>
+		+viewBlock(blogId): Promise<Block[]>
+		+updateBlock(blockId, data): Promise<Block>
+		+deleteBlock(blockId): Promise<Block>
+	}
+
+	' --- DATA ACCESS (MODELS) ---
+	class BlockModel {
+		+find(filter): Block[]
+		+findById(id): Block | null
+		+findByIdAndUpdate(id, update, options): Block
+		+findByIdAndDelete(id): Block
+		+countDocuments(filter): number
+		+save(): Block
+	}
+
+	class BlogModel {
+		+findById(id): Blog | null
+	}
+
+	class Database {
+	}
+
+	' --- ENTITIES ---
+	class Block {
+		+_id: ObjectId
+		+blog_id: ObjectId
+		+title: string
+		+content: string
+		+image: string
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class Blog {
+		+_id: ObjectId
+		+title: string
+		+content: string
+	}
 }
 
-class AuthMiddleware <<control>> {
-  +protect(req): UserInfo
-}
+' --- RELATIONSHIPS ---
 
-' ===== Controller =====
-class BlockController <<control>> {
-  +createBlock(req, res): void
-  +viewBlock(req, res): void
-  +updateBlock(req, res): void
-  +deleteBlock(req, res): void
-}
+' === DEPENDENCY: Route -> Middleware & Controller ===
+BlockRoute ..> AuthMiddleware : Dependency
+BlockRoute ..> BlockController : Dependency
 
-' ===== Service =====
-class BlockService <<service>> {
-  +createBlock(data): Block
-  +viewBlock(blogId): Block[]
-  +updateBlock(blockId, data): Block
-  +deleteBlock(blockId): Block
-}
+' === DEPENDENCY: Controller -> Service ===
+BlockController ..> BlockService : Dependency
 
-' ===== Models =====
-class BlockModel <<model>> {
-  +find(filter): Block[]
-  +findById(id): Block
-  +findByIdAndUpdate(id, update, options): Block
-  +findByIdAndDelete(id): Block
-  +countDocuments(filter): number
-  +save(): Block
-}
+' === DEPENDENCY: Service -> Models ===
+BlockService ..> BlockModel : Dependency
+BlockService ..> BlogModel : Dependency
 
-class BlogModel <<model>> {
-  +findById(id): Blog
-}
+' === DEPENDENCY: Model -> Entity ===
+BlockModel ..> Block : Dependency
+BlogModel ..> Blog : Dependency
 
-' ===== Entities =====
-class Block <<entity>> {
-  +_id: ObjectId
-  +blog_id: ObjectId
-  +title: string
-  +content: string
-  +image: string
-  +created_at: Date
-  +updated_at: Date
-}
+' === ASSOCIATION: Entity relationships ===
+Blog "1" --> "many" Block
 
-class Blog <<entity>> {
-  +_id: ObjectId
-  +title: string
-  +content: string
-}
-
-class Database <<database>>
-
-' ===== Relationships =====
-BlockRoute --> AuthMiddleware : uses (create/update/delete)
-BlockRoute --> BlockController : calls handlers
-
-BlockController --> BlockService : orchestration
-
-BlockService --> BlockModel : persistence
-BlockService --> BlogModel : validate blog
-
+' === PERSISTENCE: Models -> Database ===
 BlockModel --> Database : queries
 BlogModel --> Database : queries
-
-Blog "1" o-- "0..*" Block : contains
 
 @enduml

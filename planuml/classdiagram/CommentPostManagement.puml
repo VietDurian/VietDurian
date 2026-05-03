@@ -1,104 +1,125 @@
-@startuml CommentPostManagement
-skinparam monochrome true
-skinparam shadowing false
+@startuml
 skinparam classAttributeIconSize 0
-left to right direction
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
 
+package "CommentPostModule" {
 
-' ===== Routes & Middleware =====
-class CommentPostRoute <<control>> {
-  +createCommentPost(req, res): void
-  +viewCommentPost(req, res): void
-  +updateCommentPost(req, res): void
-  +deleteCommentPost(req, res): void
-  +replyCommentPost(req, res): void
-  +filterCommentPost(req, res): void
+	' --- ROUTE & MIDDLEWARE ---
+	class CommentPostRoute {
+		+createCommentPost(req, res): void
+		+viewCommentPost(req, res): void
+		+updateCommentPost(req, res): void
+		+deleteCommentPost(req, res): void
+		+replyCommentPost(req, res): void
+		+filterCommentPost(req, res): void
+	}
+
+	class AuthMiddleware {
+		+protect(req): UserInfo
+	}
+
+	' --- CONTROLLER ---
+	class CommentPostController {
+		-commentPostService: CommentPostService
+		+createCommentPost(req, res, next): Promise<void>
+		+viewCommentPost(req, res, next): Promise<void>
+		+updateCommentPost(req, res, next): Promise<void>
+		+deleteCommentPost(req, res, next): Promise<void>
+		+replyCommentPost(req, res, next): Promise<void>
+		+filterCommentPost(req, res, next): Promise<void>
+	}
+
+	' --- SERVICE ---
+	class CommentPostService {
+		-commentPostModel: CommentPostModel
+		-generalPostModel: GeneralPostModel
+		-userModel: UserModel
+		+createCommentPost(data): Promise<CommentPost>
+		+viewCommentPost(postId, params): Promise<{ data: CommentPost[], pagination }>
+		+updateCommentPost(commentId, data): Promise<CommentPost>
+		+deleteCommentPost(commentId): Promise<CommentPost>
+		+replyCommentPost(parentId, data): Promise<CommentPost>
+		+filterCommentPost(params): Promise<{ data: CommentPost[], pagination }>
+	}
+
+	' --- DATA ACCESS (MODELS) ---
+	class CommentPostModel {
+		+find(filter): CommentPost[]
+		+findById(id): CommentPost | null
+		+findByIdAndUpdate(id, update, options): CommentPost
+		+findByIdAndDelete(id): CommentPost
+		+countDocuments(filter): number
+		+save(): CommentPost
+	}
+
+	class GeneralPostModel {
+		+findById(id): GeneralPost | null
+	}
+
+	class UserModel {
+		+findById(id): User | null
+	}
+
+	class Database {
+	}
+
+	' --- ENTITIES ---
+	class CommentPost {
+		+_id: ObjectId
+		+post_id: ObjectId
+		+author_id: ObjectId
+		+parent_id: ObjectId
+		+content: string
+		+is_active: string
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class GeneralPost {
+		+_id: ObjectId
+		+title: string
+		+content: string
+	}
+
+	class User {
+		+_id: ObjectId
+		+full_name: string
+		+avatar: string
+	}
 }
 
-class AuthMiddleware <<control>> {
-  +protect(req): UserInfo
-}
+' --- RELATIONSHIPS ---
 
-' ===== Controller =====
-class CommentPostController <<control>> {
-  +createCommentPost(req, res): void
-  +viewCommentPost(req, res): void
-  +updateCommentPost(req, res): void
-  +deleteCommentPost(req, res): void
-  +replyCommentPost(req, res): void
-  +filterCommentPost(req, res): void
-}
+' === DEPENDENCY: Route -> Middleware & Controller ===
+CommentPostRoute ..> AuthMiddleware : Dependency
+CommentPostRoute ..> CommentPostController : Dependency
 
-' ===== Service =====
-class CommentPostService <<service>> {
-  +createCommentPost(data): CommentPost
-  +viewCommentPost(postId, params): { data: CommentPost[], pagination }
-  +updateCommentPost(commentId, data): CommentPost
-  +deleteCommentPost(commentId): CommentPost
-  +replyCommentPost(parentId, data): CommentPost
-  +filterCommentPost(params): { data: CommentPost[], pagination }
-}
+' === DEPENDENCY: Controller -> Service ===
+CommentPostController ..> CommentPostService : Dependency
 
-' ===== Models =====
-class CommentPostModel <<model>> {
-  +find(filter): CommentPost[]
-  +findById(id): CommentPost
-  +findByIdAndUpdate(id, update, options): CommentPost
-  +findByIdAndDelete(id): CommentPost
-  +countDocuments(filter): number
-  +save(): CommentPost
-}
+' === DEPENDENCY: Service -> Models ===
+CommentPostService ..> CommentPostModel : Dependency
+CommentPostService ..> GeneralPostModel : Dependency
+CommentPostService ..> UserModel : Dependency
 
-class GeneralPostModel <<model>> {
-  +findById(id): GeneralPost
-}
+' === DEPENDENCY: Model -> Entity ===
+CommentPostModel ..> CommentPost : Dependency
+GeneralPostModel ..> GeneralPost : Dependency
+UserModel ..> User : Dependency
 
-class UserModel <<model>> {
-  +findById(id): User
-}
+' === ASSOCIATION: Entity relationships ===
+GeneralPost "1" --> "many" CommentPost
+User "1" --> "many" CommentPost
+CommentPost "many" --> "0..1" CommentPost
 
-' ===== Entities =====
-class CommentPost <<entity>> {
-  +_id: ObjectId
-  +post_id: ObjectId
-  +author_id: ObjectId
-  +parent_id: ObjectId
-  +is_active: string  ' active | inactive
-  +content: string
-  +created_at: Date
-  +updated_at: Date
-}
-
-class GeneralPost <<entity>> {
-  +_id: ObjectId
-  +title: string
-  +content: string
-}
-
-class User <<entity>> {
-  +_id: ObjectId
-  +full_name: string
-  +avatar: string
-}
-
-class Database <<database>>
-
-' ===== Relationships =====
-CommentPostRoute --> AuthMiddleware : uses (create/update/delete)
-CommentPostRoute --> CommentPostController : calls handlers
-
-CommentPostController --> CommentPostService : orchestration
-
-CommentPostService --> CommentPostModel : persistence
-CommentPostService --> GeneralPostModel : validate post
-CommentPostService --> UserModel : validate author
-
+' === PERSISTENCE: Models -> Database ===
 CommentPostModel --> Database : queries
 GeneralPostModel --> Database : queries
 UserModel --> Database : queries
-
-GeneralPost "1" o-- "0..*" CommentPost : has comments
-User "1" o-- "0..*" CommentPost : writes
-CommentPost "0..*" --> "0..1" CommentPost : replies to (parent_id)
 
 @enduml

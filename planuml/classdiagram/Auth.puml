@@ -1,130 +1,184 @@
 @startuml
 skinparam classAttributeIconSize 0
-left to right direction
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
 
-' =======================
-' ======= ENTITIES ======
-' =======================
+package "AuthModule" {
 
-class User {
-  +_id: ObjectId
-  +full_name: string
-  +email: string
-  +password: string  ' hashed via pre-save
-  +phone: string
-  +avatar: string
-  +role: string  ' trader | admin | serviceProvider | contentExpert | farmer
-  +is_banned: bool
-  +is_verified: bool
-  +created_at: DateTime
-  +updated_at: DateTime
+	' --- ROUTE & MIDDLEWARE ---
+	class AuthRoute {
+		+register(req, res): void
+		+verifyEmail(req, res): void
+		+login(req, res): void
+		+logout(req, res): void
+		+forgotPassword(req, res): void
+		+verifyResetOtp(req, res): void
+		+resetPassword(req, res): void
+		+googleLogin(req, res): void
+		+changePassword(req, res): void
+		+checkAuth(req, res): void
+	}
+
+	class AuthMiddleware {
+		+protect(req): UserInfo
+	}
+
+	' --- CONTROLLER ---
+	class AuthController {
+		-authService: AuthService
+		+register(req, res, next): Promise<void>
+		+verifyEmail(req, res, next): Promise<void>
+		+login(req, res, next): Promise<void>
+		+logout(req, res, next): Promise<void>
+		+forgotPassword(req, res, next): Promise<void>
+		+verifyResetOtp(req, res, next): Promise<void>
+		+resetPassword(req, res, next): Promise<void>
+		+googleLogin(req, res, next): Promise<void>
+		+changePassword(req, res, next): Promise<void>
+		+checkAuth(req, res, next): Promise<void>
+	}
+
+	' --- SERVICE ---
+	class AuthService {
+		-userModel: UserModel
+		-otpModel: OtpCodeModel
+		-logoutTokenModel: LogoutTokenModel
+		-permissionAccountModel: PermissionAccountModel
+		-tokenService: TokenService
+		-googleOAuthService: GoogleOAuthService
+		+register(userData): Promise<{ user, token, otp }>
+		+verifyEmail(email, otp): Promise<{ user }>
+		+login(email, password): Promise<{ user, token }>
+		+logout(userId, token): Promise<boolean>
+		+forgotPassword(email): Promise<{ message }>
+		+verifyResetOtp(email, otp): Promise<{ resetToken }>
+		+resetPasswordWithToken(token, newPassword): Promise<{ message }>
+		+googleLogin(idToken): Promise<{ user, token }>
+		+changePassword(userId, currentPassword, newPassword): Promise<boolean>
+	}
+
+	' --- SUPPORTING SERVICES ---
+	class TokenService {
+		+generateToken(userId): string
+		+verifyToken(token): any
+	}
+
+	class GoogleOAuthService {
+		+verifyIdToken(idToken): string
+	}
+
+	' --- DATA ACCESS (MODELS) ---
+	class UserModel {
+		+create(data): User
+		+findOne(filter): User | null
+		+findById(id): User | null
+		+select(fields): User
+		+lean(): User
+	}
+
+	class OtpCodeModel {
+		+create(data): OtpCode
+		+findOne(filter): OtpCode | null
+		+findByIdAndUpdate(id, update, options): OtpCode
+		+save(): OtpCode
+	}
+
+	class LogoutTokenModel {
+		+create(data): LogoutToken
+		+findOne(filter): LogoutToken | null
+	}
+
+	class PermissionAccountModel {
+		+create(data): PermissionAccount
+		+findOne(filter): PermissionAccount | null
+		+findByIdAndUpdate(id, update, options): PermissionAccount
+	}
+
+	class Database {
+	}
+
+	' --- ENTITIES ---
+	class User {
+		+_id: ObjectId
+		+full_name: string
+		+email: string
+		+password: string
+		+phone: string
+		+avatar: string
+		+role: string
+		+is_banned: boolean
+		+is_verified: boolean
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class OtpCode {
+		+_id: ObjectId
+		+code: string
+		+user_id: ObjectId
+		+purpose: string
+		+is_used: boolean
+		+expires_at: Date
+		+created_at: Date
+	}
+
+	class LogoutToken {
+		+_id: ObjectId
+		+token: string
+		+user_id: ObjectId
+		+expires_at: Date
+		+created_at: Date
+	}
+
+	class PermissionAccount {
+		+_id: ObjectId
+		+user_id: ObjectId
+		+requested_role: string
+		+description: string
+		+document: string
+		+status: string
+		+created_at: Date
+	}
 }
 
- ' ResetToken not implemented in backend (uses OTP + short-lived JWT)
+' --- RELATIONSHIPS ---
 
-class OtpCode {
-  +code: string
-  +user_id: ObjectId
-  +purpose: string  ' verify_account | forgot_password
-  +is_used: bool
-  +expires_at: DateTime
-  +created_at: DateTime
-}
+' === DEPENDENCY: Route -> Middleware & Controller ===
+AuthRoute ..> AuthMiddleware : Dependency
+AuthRoute ..> AuthController : Dependency
 
- ' Session/refresh tokens not implemented in backend
+' === DEPENDENCY: Controller -> Service ===
+AuthController ..> AuthService : Dependency
 
-class LogoutToken {
-  +token: string
-  +user_id: ObjectId
-  +expires_at: DateTime
-  +created_at: DateTime
-}
+' === DEPENDENCY: Service -> Supporting Services ===
+AuthService ..> TokenService : Dependency
+AuthService ..> GoogleOAuthService : Dependency
 
-class PermissionAccount {
-  +user_id: ObjectId
-  +requested_role: string
-  +description: string
-  +document: string
-  +status: string  ' pending | approved | rejected
-  +created_at: DateTime
-}
+' === DEPENDENCY: Service -> Models ===
+AuthService ..> UserModel : Dependency
+AuthService ..> OtpCodeModel : Dependency
+AuthService ..> LogoutTokenModel : Dependency
+AuthService ..> PermissionAccountModel : Dependency
 
-' =======================
-' ===== CONTROLLERS =====
-' =======================
+' === DEPENDENCY: Model -> Entity ===
+UserModel ..> User : Dependency
+OtpCodeModel ..> OtpCode : Dependency
+LogoutTokenModel ..> LogoutToken : Dependency
+PermissionAccountModel ..> PermissionAccount : Dependency
 
-class AuthController {
-  +Register()
-  +VerifyEmail()
-  +Login()
-  +Logout()
-  +ForgotPassword()
-  +VerifyResetOtp()
-  +ResetPassword()
-  +GoogleLogin()
-  +ChangePassword()
-  +CheckAuth()
-}
+' === ASSOCIATION: Entity relationships ===
+User "1" --> "many" OtpCode
+User "1" --> "many" LogoutToken
+User "1" --> "many" PermissionAccount
 
-' =======================
-' ======= SERVICES ======
-' =======================
-
-interface IAuthService {
-  +register(userData): { user, token, otp }
-  +verifyEmail(email: string, otp: string): { user }
-  +login(email: string, password: string): { user, token }
-  +logout(userId: ObjectId, token: string): bool
-  +forgotPassword(email: string): { message }
-  +verifyResetOtp(email: string, otp: string): { resetToken }
-  +resetPasswordWithToken(token: string, newPassword: string): { message }
-  +googleLogin(idToken: string): { user, token }
-  +changePassword(userId: ObjectId, currentPassword: string, newPassword: string): bool
-}
-
-class AuthService {
-  -_userModel: User
-  -_otpModel: OtpCode
-  -_logoutTokenModel: LogoutToken
-  -_permissionAccountModel: PermissionAccount
-  -_jwtService: TokenService
-  -_googleClient: GoogleOAuthService
-}
-
-IAuthService <|.. AuthService
-
- ' Password hashing handled in User model pre-save
-
-class TokenService {
-  +generateToken(userId: ObjectId): string
-  +verifyToken(token: string): any
-}
-
- ' AuthService sends verification/reset emails internally via nodemailer
-
-class GoogleOAuthService {
-  +VerifyIdToken(idToken: string): string
-}
-
- ' Backend uses Mongoose models directly (no repository pattern)
-
-' =======================
-' ===== RELATIONSHIPS ===
-' =======================
-
-User "1" o-- "0..*" OtpCode
-User "1" o-- "0..*" LogoutToken
-User "1" o-- "0..*" PermissionAccount
-
-AuthController --> IAuthService
-
-AuthService --> TokenService
-AuthService --> GoogleOAuthService
-AuthService --> User
-AuthService --> OtpCode
-AuthService --> LogoutToken
-AuthService --> PermissionAccount
-
- ' (no repository context)
+' === PERSISTENCE: Models -> Database ===
+UserModel --> Database : queries
+OtpCodeModel --> Database : queries
+LogoutTokenModel --> Database : queries
+PermissionAccountModel --> Database : queries
 
 @enduml

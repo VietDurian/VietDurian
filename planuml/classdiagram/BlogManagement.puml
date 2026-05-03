@@ -1,93 +1,140 @@
-@startuml BlogManagement
-skinparam monochrome true
-skinparam shadowing false
+@startuml
 skinparam classAttributeIconSize 0
-left to right direction
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
 
+package "BlogModule" {
 
-' ===== Routes & Middleware =====
-class BlogRoute <<control>> {
-  +createBlog(req, res): void
-  +viewBlogList(req, res): void
-  +viewBlogDetail(req, res): void
-  +updateBlog(req, res): void
-  +deleteBlog(req, res): void
-  +searchBlog(req, res): void
-  +filterBlog(req, res): void
+	' --- ROUTE & MIDDLEWARE ---
+	class BlogRoute {
+		+getKnowledgeBlogs(req, res): void
+		+getKnowledgeBlogDetails(req, res): void
+		+getKnowledgeBlocksByBlogId(req, res): void
+		+createKnowledgeBlog(req, res): void
+		+createKnowledgeBlock(req, res): void
+		+updateKnowledgeBlog(req, res): void
+		+updateKnowledgeBlock(req, res): void
+		+deleteKnowledgeBlog(req, res): void
+		+deleteKnowledgeBlock(req, res): void
+	}
+
+	class AuthMiddleware {
+		+protect(req): UserInfo
+	}
+
+	' --- CONTROLLER ---
+	class BlogController {
+		-blogService: BlogService
+		+getKnowledgeBlogs(req, res, next): Promise<void>
+		+getKnowledgeBlogDetails(req, res, next): Promise<void>
+		+getKnowledgeBlocksByBlogId(req, res, next): Promise<void>
+		+createKnowledgeBlog(req, res, next): Promise<void>
+		+createKnowledgeBlock(req, res, next): Promise<void>
+		+updateKnowledgeBlog(req, res, next): Promise<void>
+		+updateKnowledgeBlock(req, res, next): Promise<void>
+		+deleteKnowledgeBlog(req, res, next): Promise<void>
+		+deleteKnowledgeBlock(req, res, next): Promise<void>
+	}
+
+	' --- SERVICE ---
+	class BlogService {
+		-knowledgeBlogModel: KnowledgeBlogModel
+		-knowledgeBlockModel: KnowledgeBlockModel
+		+createKnowledgeBlog(data): Promise<KnowledgeBlog>
+		+getKnowledgeBlogs(params): Promise<KnowledgeBlog[]>
+		+getKnowledgeBlogDetails(blogId): Promise<KnowledgeBlog | null>
+		+updateKnowledgeBlog(blogId, data): Promise<KnowledgeBlog>
+		+deleteKnowledgeBlog(blogId): Promise<void>
+		+createKnowledgeBlock(data): Promise<KnowledgeBlock>
+		+getKnowledgeBlocksByBlogId(blogId): Promise<KnowledgeBlock[]>
+		+updateKnowledgeBlock(blockId, data): Promise<KnowledgeBlock>
+		+deleteKnowledgeBlock(blockId): Promise<void>
+	}
+
+	' --- DATA ACCESS (MODELS) ---
+	class KnowledgeBlogModel {
+		+find(filter): KnowledgeBlog[]
+		+findById(id): KnowledgeBlog | null
+		+findByIdAndUpdate(id, update, options): KnowledgeBlog
+		+findByIdAndDelete(id): KnowledgeBlog
+		+countDocuments(filter): number
+		+save(): KnowledgeBlog
+	}
+
+	class KnowledgeBlockModel {
+		+find(filter): KnowledgeBlock[]
+		+findById(id): KnowledgeBlock | null
+		+findByIdAndUpdate(id, update, options): KnowledgeBlock
+		+findByIdAndDelete(id): KnowledgeBlock
+		+deleteMany(filter): number
+		+save(): KnowledgeBlock
+	}
+
+	class CloudinaryService {
+		+upload(image, options): UploadResult
+	}
+
+	class Database {
+	}
+
+	' --- ENTITIES ---
+	class KnowledgeBlog {
+		+_id: ObjectId
+		+title: string
+		+content: string
+		+author_id: ObjectId
+		+image: string
+		+status: string
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class KnowledgeBlock {
+		+_id: ObjectId
+		+blog_id: ObjectId
+		+title: string
+		+content: string
+		+image: string
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class User {
+		+_id: ObjectId
+		+full_name: string
+		+avatar: string
+	}
 }
 
-class AuthMiddleware <<control>> {
-  +protect(req): UserInfo
-}
+' --- RELATIONSHIPS ---
 
-' ===== Controller =====
-class BlogController <<control>> {
-  +createBlog(req, res): void
-  +viewBlogList(req, res): void
-  +viewBlogDetail(req, res): void
-  +updateBlog(req, res): void
-  +deleteBlog(req, res): void
-  +searchBlog(req, res): void
-  +filterBlog(req, res): void
-}
+' === DEPENDENCY: Route -> Middleware & Controller ===
+BlogRoute ..> AuthMiddleware : Dependency
+BlogRoute ..> BlogController : Dependency
 
-' ===== Service =====
-class BlogService <<service>> {
-  +createBlog(data): KnowledgeBlog
-  +viewBlogList(params): { data: KnowledgeBlog[], pagination }
-  +viewBlogDetail(blogId): KnowledgeBlog
-  +updateBlog(blogId, data): KnowledgeBlog
-  +deleteBlog(blogId): KnowledgeBlog
-  +searchBlog(params): { data: KnowledgeBlog[], pagination }
-  +filterBlog(params): { data: KnowledgeBlog[], pagination }
-}
+' === DEPENDENCY: Controller -> Service ===
+BlogController ..> BlogService : Dependency
 
-' ===== Models =====
-class KnowledgeBlogModel <<model>> {
-  +find(filter): KnowledgeBlog[]
-  +findById(id): KnowledgeBlog
-  +findByIdAndUpdate(id, update, options): KnowledgeBlog
-  +findByIdAndDelete(id): KnowledgeBlog
-  +countDocuments(filter): number
-  +save(): KnowledgeBlog
-}
+' === DEPENDENCY: Service -> Models ===
+BlogService ..> KnowledgeBlogModel : Dependency
+BlogService ..> KnowledgeBlockModel : Dependency
+BlogService ..> CloudinaryService : Dependency
 
-class UserModel <<model>> {
-  +findById(id): User
-}
+' === DEPENDENCY: Model -> Entity ===
+KnowledgeBlogModel ..> KnowledgeBlog : Dependency
+KnowledgeBlogModel ..> User : ref(author_id)
+KnowledgeBlockModel ..> KnowledgeBlock : Dependency
 
-' ===== Entities =====
-class KnowledgeBlog <<entity>> {
-  +_id: ObjectId
-  +title: string
-  +content: string
-  +author_id: ObjectId
-  +image: string
-  +status: string  ' progressing | active | inactive
-  +created_at: Date
-  +updated_at: Date
-}
+' === ASSOCIATION: Entity relationships ===
+User "1" --> "many" KnowledgeBlog
+KnowledgeBlog "1" --> "many" KnowledgeBlock
 
-class User <<entity>> {
-  +_id: ObjectId
-  +full_name: string
-  +avatar: string
-}
-
-class Database <<database>>
-
-' ===== Relationships =====
-BlogRoute --> AuthMiddleware : uses (create/update/delete)
-BlogRoute --> BlogController : calls handlers
-
-BlogController --> BlogService : orchestration
-
-BlogService --> KnowledgeBlogModel : persistence
-BlogService --> UserModel : validate author
-
+' === PERSISTENCE: Models -> Database ===
 KnowledgeBlogModel --> Database : queries
-UserModel --> Database : queries
-
-User "1" o-- "0..*" KnowledgeBlog : writes
+KnowledgeBlockModel --> Database : queries
 
 @enduml

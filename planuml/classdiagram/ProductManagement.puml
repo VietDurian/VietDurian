@@ -1,128 +1,155 @@
-@startuml ProductManagement
-skinparam monochrome true
-skinparam shadowing false
+@startuml
 skinparam classAttributeIconSize 0
-left to right direction
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
 
+package "ProductManagementModule" {
 
-' ===== Routes & Middleware =====
-class ProductRoute <<control>> {
-  +createProduct(req, res): void
-  +getAllProducts(req, res): void
-  +getProductDetail(req, res): void
-  +updateProduct(req, res): void
-  +deleteProduct(req, res): void
-  +searchProducts(req, res): void
-  +filterProducts(req, res): void
-  +sortProducts(req, res): void
+	' --- ROUTE & MIDDLEWARE ---
+	class ProductRoute {
+		+createProduct(req, res): void
+		+getAllProducts(req, res): void
+		+getProductDetail(req, res): void
+		+updateProduct(req, res): void
+		+deleteProduct(req, res): void
+		+searchProducts(req, res): void
+		+filterProducts(req, res): void
+		+sortProducts(req, res): void
+	}
+
+	class AuthMiddleware {
+		+protect(req): UserInfo
+	}
+
+	' --- CONTROLLER ---
+	class ProductController {
+		-productService: ProductService
+		+createProduct(req, res, next): Promise<void>
+		+getAllProducts(req, res, next): Promise<void>
+		+getProductDetail(req, res, next): Promise<void>
+		+updateProduct(req, res, next): Promise<void>
+		+deleteProduct(req, res, next): Promise<void>
+		+searchProducts(req, res, next): Promise<void>
+		+filterProducts(req, res, next): Promise<void>
+		+sortProducts(req, res, next): Promise<void>
+	}
+
+	' --- SERVICE ---
+	class ProductService {
+		-productModel: ProductModel
+		-productImageModel: ProductImageModel
+		-typeProductModel: TypeProductModel
+		+createProduct(data): Promise<Product>
+		+getAllProducts(params): Promise<{ data: Product[], pagination }>
+		+getProductById(productId): Promise<Product>
+		+updateProduct(productId, data): Promise<Product>
+		+deleteProduct(productId): Promise<Product>
+		+searchProducts(params): Promise<{ data: Product[], pagination }>
+		+filterProducts(params): Promise<{ data: Product[], pagination }>
+		+sortProducts(params): Promise<{ data: Product[], pagination }>
+	}
+
+	' --- DATA ACCESS (MODELS) ---
+	class ProductModel {
+		+find(filter): Product[]
+		+findById(id): Product | null
+		+findByIdAndUpdate(id, update, options): Product
+		+findByIdAndDelete(id): Product
+		+countDocuments(filter): number
+	}
+
+	class ProductImageModel {
+		+find(filter): ProductImage[]
+		+create(doc): ProductImage
+		+deleteMany(filter): void
+	}
+
+	class TypeProductModel {
+		+findById(id): TypeProduct | null
+	}
+
+	class UserModel {
+		+findById(id): User | null
+	}
+
+	class Database {
+	}
+
+	' --- ENTITIES ---
+	class Product {
+		+_id: ObjectId
+		+user_id: ObjectId
+		+type_id: ObjectId
+		+name: string
+		+description: string
+		+price: number
+		+origin: string
+		+weight: number
+		+view_count: number
+		+rating: number
+		+harvest_start_date: Date
+		+harvest_end_date: Date
+		+status: string
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class ProductImage {
+		+_id: ObjectId
+		+product_id: ObjectId
+		+url: string
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class TypeProduct {
+		+_id: ObjectId
+		+name: string
+		+description: string
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class User {
+		+_id: ObjectId
+		+full_name: string
+		+avatar: string
+	}
 }
 
-class AuthMiddleware <<control>> {
-  +protect(req): UserInfo
-}
+' --- RELATIONSHIPS ---
 
-' ===== Controller =====
-class ProductController <<control>> {
-  +createProduct(req, res): void
-  +getAllProducts(req, res): void
-  +getProductDetail(req, res): void
-  +updateProduct(req, res): void
-  +deleteProduct(req, res): void
-  +searchProducts(req, res): void
-  +filterProducts(req, res): void
-  +sortProducts(req, res): void
-}
+' === DEPENDENCY: Route -> Middleware & Controller ===
+ProductRoute ..> AuthMiddleware : Dependency
+ProductRoute ..> ProductController : Dependency
 
-' ===== Service =====
-class ProductService <<service>> {
-  +createProduct(data): Product
-  +getAllProducts(params): { data: Product[], pagination }
-  +getProductById(productId): Product
-  +updateProduct(productId, data): Product
-  +deleteProduct(productId): Product
-  +searchProducts(params): { data: Product[], pagination }
-  +filterProducts(params): { data: Product[], pagination }
-  +sortProducts(params): { data: Product[], pagination }
-}
+' === DEPENDENCY: Controller -> Service ===
+ProductController ..> ProductService : Dependency
 
-' ===== Models =====
-class ProductModel <<model>> {
-  +find(filter): Product[]
-  +findByIdAndUpdate(id, update, options): Product
-  +findByIdAndDelete(id): Product
-  +countDocuments(filter): number
-}
+' === DEPENDENCY: Service -> Models ===
+ProductService ..> ProductModel : Dependency
+ProductService ..> ProductImageModel : Dependency
+ProductService ..> TypeProductModel : Dependency
 
-class ProductImageModel <<model>> {
-  +find(filter): ProductImage[]
-  +deleteMany(filter): void
-  +create(doc): ProductImage
-}
+' === DEPENDENCY: Model -> Entity ===
+ProductModel ..> Product : Dependency
+ProductImageModel ..> ProductImage : Dependency
+TypeProductModel ..> TypeProduct : Dependency
+UserModel ..> User : Dependency
 
-class TypeProductModel <<model>> {
-  +findById(id): TypeProduct
-}
+' === ASSOCIATION: Entity relationships ===
+Product "1" --> "many" ProductImage
+Product --> TypeProduct
+Product --> User
 
-' ===== Entities =====
-class Product <<entity>> {
-  +_id: ObjectId
-  +user_id: ObjectId
-  +type_id: ObjectId
-  +name: string
-  +description: string
-  +price: number
-  +origin: string
-  +weight: number
-  +images: ProductImage[]
-  +view_count: number
-  +rating: number
-  +harvest_start_date: Date
-  +harvest_end_date: Date
-  +status: string  ' active | inactive
-  +created_at: Date
-  +updated_at: Date
-}
-
-class ProductImage <<entity>> {
-  +_id: ObjectId
-  +product_id: ObjectId
-  +url: string
-  +created_at: Date
-  +updated_at: Date
-}
-
-class TypeProduct <<entity>> {
-  +_id: ObjectId
-  +name: string
-  +description: string
-  +created_at: Date
-  +updated_at: Date
-}
-
-class User <<entity>> {
-  +_id: ObjectId
-  +full_name: string
-  +avatar: string
-}
-
-class Database <<database>>
-
-' ===== Relationships =====
-ProductRoute --> AuthMiddleware : uses (create/update/delete)
-ProductRoute --> ProductController : calls handlers
-
-ProductController --> ProductService : orchestration
-
-ProductService --> ProductModel : persistence
-ProductService --> ProductImageModel : manage images
-ProductService --> TypeProductModel : validate type
-
+' === PERSISTENCE: Models -> Database ===
 ProductModel --> Database : queries
 ProductImageModel --> Database : queries
 TypeProductModel --> Database : queries
-
-Product "1" o-- "0..*" ProductImage
-Product --> TypeProduct
-Product --> User
+UserModel --> Database : queries
 
 @enduml
