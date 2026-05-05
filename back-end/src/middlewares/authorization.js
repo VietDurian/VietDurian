@@ -73,6 +73,7 @@ const isUser = (req, res, next) => {
   }
   next();
 }
+
 export const authorizationMiddleware = {
   restrictTo,
   isAdmin,
@@ -80,6 +81,7 @@ export const authorizationMiddleware = {
   checkOwner,
   isUser,
   isFarmer,
+  isUsers
 };
 
 module.exports = { authorizationMiddleware };
