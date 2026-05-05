@@ -52,7 +52,7 @@ const register = async (userData) => {
 
     // Generate OTP for email verification
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiryTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiryTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     await OTP.create({
       user_id: user._id,
@@ -149,7 +149,7 @@ const resendVerificationOtp = async (email) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiryTime = new Date(Date.now() + 10 * 60 * 1000);
+    const expiryTime = new Date(Date.now() + 5 * 60 * 1000);
 
     await OTP.create({
       user_id: user._id,
@@ -228,7 +228,7 @@ const sendVerificationEmail = async (
                 <h2>Email Verification</h2>
                 <p>Hello ${name},</p>
                 <p>Your OTP code is: <strong>${otpCode}</strong></p>
-                <p>This code will expire in 10 minutes.</p>
+                <p>This code will expire in 5 minutes.</p>
               </body>
             </html>
           `;
