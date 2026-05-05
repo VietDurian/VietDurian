@@ -65,7 +65,7 @@ const register = async (userData) => {
     if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
       await sendVerificationEmail(user.full_name, user.email, otp, "verify");
     } else {
-      console.warn("⚠️ Email credentials not configured. OTP: " + otp);
+      console.warn("Email credentials not configured. OTP: " + otp);
     }
 
     const token = generateToken(user._id);
@@ -218,7 +218,7 @@ const sendVerificationEmail = async (
                 <h2>Password Reset OTP</h2>
                 <p>Hello ${name},</p>
                 <p>Your OTP to reset password is: <strong>${otpCode}</strong></p>
-                <p>This code will expire in 10 minutes.</p>
+                <p>This code will expire in 5 minutes.</p>
               </body>
             </html>
           `
@@ -320,7 +320,7 @@ const forgotPassword = async (email) => {
       throw createError(404, "Không tìm thấy người dùng với email đó");
     }
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiryTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiryTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
     await OTP.create({
       user_id: user._id,
       code: otp,
