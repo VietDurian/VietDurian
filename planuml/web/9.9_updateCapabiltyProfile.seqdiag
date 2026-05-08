@@ -1,4 +1,4 @@
-actor Users
+actor "Service Provider" as Users
 boundary CapabilityProfileFormPage
 control serviceProviderProfileController
 participant ":serviceProviderProfileService" as Service
@@ -8,7 +8,7 @@ database Database
 activate Users
 Users->CapabilityProfileFormPage: 1. Open capability profile update form
 activate CapabilityProfileFormPage
-CapabilityProfileFormPage->serviceProviderProfileController: 2. GET /service-provider-profile/capability
+CapabilityProfileFormPage->serviceProviderProfileController: 2. Get capability profile data
 activate serviceProviderProfileController
 serviceProviderProfileController->Service: 3. getCapabilityProfile(userId)
 activate Service
@@ -30,7 +30,7 @@ serviceProviderProfileController-->CapabilityProfileFormPage: 10. Return capabil
 deactivate serviceProviderProfileController
 CapabilityProfileFormPage-->Users: 11. Display current capability + service areas
 
-Users->CapabilityProfileFormPage: 12. Update capability + service areas
+Users->CapabilityProfileFormPage: 12. Edit capability profile form
 Users->CapabilityProfileFormPage: 13. Submit update capability profile form
 CapabilityProfileFormPage->CapabilityProfileFormPage: 14. Validate input
 activate CapabilityProfileFormPage
@@ -40,7 +40,7 @@ opt Validation error
     CapabilityProfileFormPage-->Users: 14.1 Display validation error
 end
 
-CapabilityProfileFormPage->serviceProviderProfileController: 15. PUT /service-provider-profile/capability
+CapabilityProfileFormPage->serviceProviderProfileController: 15. Update capability profile request
 activate serviceProviderProfileController
 serviceProviderProfileController->Service: 16. updateCapabilityProfile(userId, payload)
 activate Service
@@ -58,37 +58,37 @@ Service->Service: 21. checkExistingProfile()
 activate Service
 space
 deactivate Service
-alt profile not found
+alt Capability profile not exists
     Service-->serviceProviderProfileController: 21.1 Return error: profile not found
     serviceProviderProfileController-->CapabilityProfileFormPage: 21.1.1 Return error
     CapabilityProfileFormPage-->Users: 21.1.2 Display error: profile not found
-else profile exists
-    Service->Service: 22. validateCapabilityData()
+else Capability profile exists
+    Service->Service: 21.2. validateCapabilityData()
     activate Service
     space
     deactivate Service
-    opt domain validation error
-        Service-->serviceProviderProfileController: 22.1 Return error: invalid data
-        serviceProviderProfileController-->CapabilityProfileFormPage: 22.1.1 Return error
-        CapabilityProfileFormPage-->Users: 22.1.2 Display validation error
-    else data valid
-        Service->Model: 23. updateProfile(userId, payload)
+    alt Update capability profile failed
+        Service-->serviceProviderProfileController: 21.2.1 Return error: invalid data
+        serviceProviderProfileController-->CapabilityProfileFormPage: 21.2.1.1 Return error
+        CapabilityProfileFormPage-->Users: 21.2.1.2 Display validation error
+    else Update capability profile successful
+        Service->Model: 21.2.2. updateProfile(userId, payload)
         activate Model
-        Model->Database: 24. findOneAndUpdate()
+        Model->Database: 21.2.2.1 findOneAndUpdate()
         activate Database
-        Database-->Model: 25. Return updated profile
+        Database-->Model: 21.2.2.2 Return updated profile
         deactivate Database
-        Model-->Service: 26. Return updated profile
+        Model-->Service: 21.2.2.3 Return updated profile
         deactivate Model
-        Service->Service: 27. mapToCapabilityDTO()
+        Service->Service: 21.2.2.4 mapToCapabilityDTO()
         activate Service
         space
         deactivate Service
-        Service-->serviceProviderProfileController: 28. Return success + updated capability data
+        Service-->serviceProviderProfileController: 21.2.2.5 Return success + updated capability data
         deactivate Service
-        serviceProviderProfileController-->CapabilityProfileFormPage: 29. Return success + updated capability data
+        serviceProviderProfileController-->CapabilityProfileFormPage: 21.2.2.6 Return success + updated capability data
         deactivate serviceProviderProfileController
-        CapabilityProfileFormPage-->Users: 30. Display success + updated service areas
+        CapabilityProfileFormPage-->Users: 21.2.2.7 Display success + updated service areas
         deactivate CapabilityProfileFormPage
         deactivate Users
     end

@@ -1,5 +1,4 @@
-You have exceeded your premium request allowance. We have automatically switched you to GPT-4.1 which is included with your plan. [Enable additional paid premium requests](command:chat.enablePremiumOverages) to continue using premium models.```seqdiag
-actor Users
+actor "Service Provider" as Users
 boundary CapabilityProfileFormPage
 control serviceProviderProfileController
 participant ":serviceProviderProfileService" as Service
@@ -18,7 +17,7 @@ opt Validation error
     CapabilityProfileFormPage-->Users: 3.1 Display validation error
 end
 
-CapabilityProfileFormPage->serviceProviderProfileController: 4. POST /service-provider-profile/capability
+CapabilityProfileFormPage->serviceProviderProfileController: 4. Create capability profile
 activate serviceProviderProfileController
 serviceProviderProfileController->Service: 5. createCapabilityProfile(userId, payload)
 activate Service
@@ -36,38 +35,38 @@ Service->Service: 11. checkExistingProfile()
 activate Service
 space
 deactivate Service
-alt profile already exists
+alt Profile already exists
     Service-->serviceProviderProfileController: 11.1 Return error: profile already exists
     serviceProviderProfileController-->CapabilityProfileFormPage: 11.1.1 Return error
     CapabilityProfileFormPage-->Users: 11.1.2 Display error: profile already exists
-else profile not found
-    Service->Service: 12. validateCapabilityData()
+else Profile not exists
+    Service->Service: 11.2. validateCapabilityData()
     activate Service
     space
     deactivate Service
-    opt domain validation error
-        Service-->serviceProviderProfileController: 12.1 Return error: invalid data
-        serviceProviderProfileController-->CapabilityProfileFormPage: 12.1.1 Return error
-        CapabilityProfileFormPage-->Users: 12.1.2 Display validation error
-    else data valid
-        Service->Model: 13. createProfile()
+    alt Create capability profile failed
+        Service-->serviceProviderProfileController: 11.2.1 Return error: invalid data
+        serviceProviderProfileController-->CapabilityProfileFormPage: 11.2.1.1 Return error
+        CapabilityProfileFormPage-->Users: 11.2.1.2 Display validation error
+    else Create capability profile successful
+        Service->Model: 11.2.2. createProfile()
         activate Model
-        Model->Database: 14. insertOne()
+        Model->Database: 11.2.2.1 insertOne()
         activate Database
-        Database-->Model: 15. Confirm inserted
+        Database-->Model: 11.2.2.2 Confirm inserted
         deactivate Database
-        Model-->Service: 16. Return created profile
+        Model-->Service: 11.2.2.3 Return created profile
         deactivate Model
-        Service->Service: 17. mapToCapabilityDTO()
+        Service->Service: 11.2.2.4 mapToCapabilityDTO()
         activate Service
         space
         deactivate Service
-        Service-->serviceProviderProfileController: 18. Return success + capability data
+        Service-->serviceProviderProfileController: 11.2.2.5. Return success + capability data
         deactivate Service
-        serviceProviderProfileController-->CapabilityProfileFormPage: 19. Return success + capability data
+        serviceProviderProfileController-->CapabilityProfileFormPage: 11.2.2.6 Return success + capability data
         deactivate serviceProviderProfileController
 
-        CapabilityProfileFormPage-->Users: 21. Display success + service areas
+        CapabilityProfileFormPage-->Users: 11.2.2.7 Display success + service areas
         deactivate CapabilityProfileFormPage
         deactivate Users
     end

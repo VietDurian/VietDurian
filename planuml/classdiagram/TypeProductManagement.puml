@@ -1,89 +1,103 @@
-@startuml TypeProductManagement
-skinparam monochrome true
-skinparam shadowing false
+@startuml
 skinparam classAttributeIconSize 0
-left to right direction
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
 
-' ==============================
-' ========== ROUTE =============
-' ==============================
+package "TypeProductManagementModule" {
 
-class TypeProductRoute <<control>> {
-    +createTypeProduct(req, res): void
-    +getAllTypeProducts(req, res): void
-    +updateTypeProduct(req, res): void
-    +deleteTypeProduct(req, res): void
-    +searchTypeProducts(req, res): void
-    +sortTypeProducts(req, res): void
+	' --- ROUTE & MIDDLEWARE ---
+	class TypeProductRoute {
+		+createTypeProduct(req, res): void
+		+getAllTypeProducts(req, res): void
+		+updateTypeProduct(req, res): void
+		+deleteTypeProduct(req, res): void
+		+searchTypeProducts(req, res): void
+		+sortTypeProducts(req, res): void
+	}
+
+	class AuthMiddleware {
+		+protect(req): UserInfo
+	}
+
+	class AuthorizationMiddleware {
+		+isAdmin(req): void
+	}
+
+	' --- CONTROLLER ---
+	class TypeProductController {
+		-typeProductService: TypeProductService
+		+createTypeProduct(req, res, next): Promise<void>
+		+getAllTypeProducts(req, res, next): Promise<void>
+		+updateTypeProduct(req, res, next): Promise<void>
+		+deleteTypeProduct(req, res, next): Promise<void>
+		+searchTypeProducts(req, res, next): Promise<void>
+		+sortTypeProducts(req, res, next): Promise<void>
+	}
+
+	' --- SERVICE ---
+	class TypeProductService {
+		-typeProductModel: TypeProductModel
+		+createTypeProduct(data): Promise<TypeProduct>
+		+getAllTypeProducts(params): Promise<{ data: TypeProduct[], pagination }>
+		+updateTypeProduct(typeProductId, data): Promise<TypeProduct>
+		+deleteTypeProduct(typeProductId): Promise<TypeProduct>
+		+searchTypeProducts(params): Promise<{ data: TypeProduct[], pagination }>
+		+sortTypeProducts(params): Promise<{ data: TypeProduct[], pagination }>
+	}
+
+	' --- DATA ACCESS (MODEL) ---
+	class TypeProductModel {
+		+find(filter): TypeProduct[]
+		+findById(id): TypeProduct | null
+		+findByIdAndUpdate(id, update, options): TypeProduct
+		+findByIdAndDelete(id): TypeProduct
+		+countDocuments(filter): number
+		+save(): TypeProduct
+	}
+
+	class Database {
+	}
+
+	' --- ENTITIES ---
+	class TypeProduct {
+		+_id: ObjectId
+		+name: string
+		+description: string
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class Product {
+		+_id: ObjectId
+		+type_id: ObjectId
+		+name: string
+	}
 }
 
-' ==============================
-' ======= CONTROLLER ===========
-' ==============================
+' --- RELATIONSHIPS ---
 
-class TypeProductController <<control>> {
-    +createTypeProduct(req, res): void
-    +getAllTypeProducts(req, res): void
-    +updateTypeProduct(req, res): void
-    +deleteTypeProduct(req, res): void
-    +searchTypeProducts(req, res): void
-    +sortTypeProducts(req, res): void
-}
+' === DEPENDENCY: Route -> Middleware & Controller ===
+TypeProductRoute ..> AuthMiddleware : Dependency
+TypeProductRoute ..> AuthorizationMiddleware : Dependency
+TypeProductRoute ..> TypeProductController : Dependency
 
-' ==============================
-' ========= SERVICE ============
-' ==============================
+' === DEPENDENCY: Controller -> Service ===
+TypeProductController ..> TypeProductService : Dependency
 
-class TypeProductService <<service>> {
-    +createTypeProduct(data): TypeProduct
-    +getAllTypeProducts(params): { data: TypeProduct[], pagination }
-    +updateTypeProduct(typeProductId, data): TypeProduct
-    +deleteTypeProduct(typeProductId): TypeProduct
-    +searchTypeProducts(params): { data: TypeProduct[], pagination }
-    +sortTypeProducts(params): { data: TypeProduct[], pagination }
-}
+' === DEPENDENCY: Service -> Model ===
+TypeProductService ..> TypeProductModel : Dependency
 
-' ==============================
-' ========= REPOSITORY =========
-' ==============================
+' === DEPENDENCY: Model -> Entity ===
+TypeProductModel ..> TypeProduct : Dependency
 
-class TypeProductModel <<repository>> {
-    +find(filter): TypeProduct[]
-    +countDocuments(filter): number
-    +findByIdAndUpdate(id, update, options): TypeProduct
-    +findByIdAndDelete(id): TypeProduct
-    +save(): TypeProduct
-}
+' === ASSOCIATION: Entity relationships ===
+TypeProduct "1" --> "many" Product
 
-' ==============================
-' ========== ENTITY ============
-' ==============================
-
-class TypeProduct <<entity>> {
-    +_id: ObjectId
-    +name: string
-    +description: string
-    +created_at: Date
-    +updated_at: Date
-}
-
-class Product <<entity>> {
-    +_id: ObjectId
-    +type_ids: ObjectId[]
-}
-
-class Database <<database>>
-
-' ==============================
-' ===== RELATIONSHIPS ==========
-' ==============================
-
-TypeProductRoute --> TypeProductController : calls
-TypeProductController --> TypeProductService : uses
-TypeProductService --> TypeProductModel : uses
-
+' === PERSISTENCE: Model -> Database ===
 TypeProductModel --> Database : queries
-
-Product "1" o-- "0..*" TypeProduct : categorizes
 
 @enduml

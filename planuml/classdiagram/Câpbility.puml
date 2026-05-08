@@ -1,0 +1,94 @@
+@startuml CapabilityProfileManagement
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
+
+package "CapabilityProfileModule" {
+
+	class ServiceProviderProfileRoute {
+		+post('/', protect, hasRole('serviceProvider'), addCapabilityProfile): void
+		+get('/', protect, getCapabilityProfile): void
+		+put('/', protect, hasRole('serviceProvider'), updateCapabilityProfile): void
+	}
+
+	class AuthMiddleware {
+		+protect(req, res, next): void
+	}
+
+	class AuthorizationMiddleware {
+		+hasRole(requiredRole): MiddlewareFn
+	}
+
+	class ServiceProviderProfileController {
+		+addCapabilityProfile(req, res, next): Promise<void>
+		+updateCapabilityProfile(req, res, next): Promise<void>
+		+getCapabilityProfile(req, res, next): Promise<void>
+	}
+
+	class ServiceProviderProfileService {
+		+addCapabilityProfile(userId, payload): Promise<ServiceProviderProfile>
+		+updateCapabilityProfile(userId, payload): Promise<ServiceProviderProfile>
+		+getCapabilityProfile(userId): Promise<ServiceProviderProfile | null>
+		-normalizeServices(value): ServiceItem[]
+		-isValidServicesArray(value): boolean
+		-uploadServicesImages(services): Promise<ServiceItem[]>
+		-filterPayload(payload): CapabilityPayload
+		-isCloudinaryUrl(value): boolean
+	}
+
+	class ServiceProviderProfileModel {
+		+findOne(filter): ServiceProviderProfile | null
+		+create(doc): ServiceProviderProfile
+		+findOneAndUpdate(filter, update, options): ServiceProviderProfile | null
+	}
+
+	class CloudinaryConfig {
+		+uploader.upload(image, options): Promise<UploadResult>
+	}
+
+	class User {
+		+_id: ObjectId
+		+role: string
+		+is_banned: boolean
+	}
+
+	class ServiceItem {
+		+name: string
+		+image: string
+	}
+
+	class ServiceProviderProfile {
+		+user_id: ObjectId
+		+business_name: string
+		+services: ServiceItem[]
+		+service_areas: string
+		+experience_year: number
+		+contact_phone: string
+		+description: string
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class Database
+}
+
+ServiceProviderProfileRoute ..> AuthMiddleware : uses protect
+ServiceProviderProfileRoute ..> AuthorizationMiddleware : uses hasRole('serviceProvider')
+ServiceProviderProfileRoute ..> ServiceProviderProfileController : routes to
+
+ServiceProviderProfileController ..> ServiceProviderProfileService : delegates
+
+ServiceProviderProfileService ..> ServiceProviderProfileModel : read/write profile
+ServiceProviderProfileService ..> CloudinaryConfig : upload service images
+
+ServiceProviderProfileModel ..> ServiceProviderProfile : maps document
+ServiceProviderProfileModel --> Database : queries
+
+ServiceProviderProfile --> User : user_id ref "User"
+ServiceProviderProfile *-- "1..*" ServiceItem : services
+
+@enduml

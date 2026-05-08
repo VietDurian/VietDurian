@@ -428,7 +428,7 @@ const Router = express.Router();
  *       404:
  *         description: Product not found
  */
-Router.post('/', authMiddleware.protect, productController.createProduct);
+Router.post('/', authMiddleware.protect, authorizationMiddleware.isFarmer, productController.createProduct);
 Router.get('/', productController.getAllProducts);
 Router.get("/own", authMiddleware.protect, authorizationMiddleware.isFarmer, productController.getOwnProducts);
 Router.get('/search', productController.searchProducts);
@@ -439,11 +439,13 @@ Router.get('/:productId', productController.getProductDetail);
 Router.put(
 	'/:productId',
 	authMiddleware.protect,
+	authorizationMiddleware.isFarmer,
 	productController.updateProduct,
 );
 Router.delete(
 	'/:productId',
 	authMiddleware.protect,
+	authorizationMiddleware.isFarmer,
 	productController.deleteProduct,
 );
 

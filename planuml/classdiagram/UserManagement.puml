@@ -1,87 +1,109 @@
-@startuml UserManagement
-skinparam monochrome true
-skinparam shadowing false
+@startuml
 skinparam classAttributeIconSize 0
-left to right direction
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
 
+package "UserManagementModule" {
 
-' ===== Routes & Middleware =====
-class UserRoute <<control>> {
-  +getAllUsers(req, res): void
-  +getUserById(req, res): void
-  +toggleBan(req, res): void
-  +searchUser(req, res): void
-  +filterUsers(req, res): void
-  +sortUsers(req, res): void
+	' --- ROUTE & MIDDLEWARE ---
+	class UserRoute {
+		+getAllUsers(req, res): void
+		+getUserById(req, res): void
+		+toggleBan(req, res): void
+		+searchUser(req, res): void
+		+filterUsers(req, res): void
+		+sortUsers(req, res): void
+	}
+
+	class AuthMiddleware {
+		+protect(req): UserInfo
+	}
+
+	class AuthorizationMiddleware {
+		+isAdmin(req): void
+	}
+
+	' --- CONTROLLER ---
+	class UserController {
+		-userService: UserService
+		+getAllUsers(req, res, next): Promise<void>
+		+getUserById(req, res, next): Promise<void>
+		+toggleBan(req, res, next): Promise<void>
+		+searchUser(req, res, next): Promise<void>
+		+filterUsers(req, res, next): Promise<void>
+		+sortUsers(req, res, next): Promise<void>
+	}
+
+	' --- SERVICE ---
+	class UserService {
+		-userModel: UserModel
+		+getAllUsers(page, limit): Promise<PaginatedUsers>
+		+getUserById(id): Promise<User>
+		+banUser(id, is_banned): Promise<User>
+		+searchUsers(keyword): Promise<User[]>
+		+filterUsers(filters): Promise<User[]>
+		+sortUsers(sort): Promise<User[]>
+	}
+
+	' --- DTO ---
+	class PaginatedUsers {
+		+users: User[]
+		+total: number
+		+page: number
+		+totalPages: number
+	}
+
+	' --- DATA ACCESS (MODEL) ---
+	class UserModel {
+		+find(query): User[]
+		+findById(id): User | null
+		+findByIdAndUpdate(id, update, options): User
+		+countDocuments(filter): number
+	}
+
+	class Database {
+	}
+
+	' --- ENTITY ---
+	class User {
+		+_id: ObjectId
+		+full_name: string
+		+email: string
+		+password: string
+		+phone: string
+		+avatar: string
+		+role: string
+		+is_banned: boolean
+		+is_verified: boolean
+		+created_at: Date
+		+updated_at: Date
+	}
 }
 
-class AuthMiddleware <<control>> {
-  +protect(req): UserInfo
-}
+' --- RELATIONSHIPS ---
 
-class AuthorizationMiddleware <<control>> {
-  +isAdmin(req): void
-}
+' === DEPENDENCY: Route -> Middleware & Controller ===
+UserRoute ..> AuthMiddleware : Dependency
+UserRoute ..> AuthorizationMiddleware : Dependency
+UserRoute ..> UserController : Dependency
 
-' ===== Controller =====
-class UserController <<control>> {
-  +getAllUsers(req, res): void
-  +getUserById(req, res): void
-  +toggleBan(req, res): void
-  +searchUser(req, res): void
-  +filterUsers(req, res): void
-  +sortUsers(req, res): void
-}
+' === DEPENDENCY: Controller -> Service ===
+UserController ..> UserService : Dependency
 
-' ===== Service =====
-class UserService <<service>> {
-  +getAllUsers(page, limit): PaginatedUsers
-  +getUserById(id): User
-  +banUser(id, is_banned): User
-  +searchUsers(keyword): User[]
-  +filterUsers(filters): User[]
-  +sortUsers(sort): User[]
-}
+' === DEPENDENCY: Service -> Model ===
+UserService ..> UserModel : Dependency
 
-class PaginatedUsers <<datatype>> {
-  +users: User[]
-  +total: number
-  +page: number
-  +totalPages: number
-}
+' === DEPENDENCY: Service -> DTO ===
+UserService ..> PaginatedUsers : Dependency
 
-' ===== Model =====
-class UserModel <<model>> {
-  +find(query): User[]
-  +findById(id): User
-  +findByIdAndUpdate(id, update, options): User
-  +countDocuments(): number
-}
+' === DEPENDENCY: Model -> Entity ===
+UserModel ..> User : Dependency
 
-' ===== Entity =====
-class User <<entity>> {
-  +_id: ObjectId
-  +full_name: string
-  +email: string
-  +password: string
-  +phone: string
-  +avatar: string
-  +role: string
-  +is_banned: bool
-  +is_verified: bool
-  +created_at: Date
-  +updated_at: Date
-}
-
-class Database <<database>>
-
-' ===== Relationships =====
-UserRoute --> AuthMiddleware : uses
-UserRoute --> AuthorizationMiddleware : uses
-UserRoute --> UserController : calls handlers
-
-UserController --> UserService : orchestration
-UserService --> UserModel : persistence
+' === PERSISTENCE: Model -> Database ===
 UserModel --> Database : queries
 
 @enduml

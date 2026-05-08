@@ -1,105 +1,125 @@
-@startuml PermissionManagement
-skinparam monochrome true
-skinparam shadowing false
+@startuml
 skinparam classAttributeIconSize 0
-left to right direction
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 110
+top to bottom direction
 
-title Permission Management Class Diagram (backend aligned)
+package "PermissionManagementModule" {
 
-' ===== Routes & Middleware =====
-class PermissionRoute <<control>> {
-	+getPermissionRequests(req, res): void
-	+searchPermissionRequests(req, res): void
-	+sortPermissionRequests(req, res): void
-	+getPermissionRequestDetail(req, res): void
-	+confirmAccount(req, res): void
-	+rejectAccount(req, res): void
+	' --- ROUTE & MIDDLEWARE ---
+	class PermissionRoute {
+		+getPermissionRequests(req, res): void
+		+searchPermissionRequests(req, res): void
+		+sortPermissionRequests(req, res): void
+		+getPermissionRequestDetail(req, res): void
+		+confirmAccount(req, res): void
+		+rejectAccount(req, res): void
+	}
+
+	class AuthMiddleware {
+		+protect(req): UserInfo
+	}
+
+	class AuthorizationMiddleware {
+		+isAdmin(req): void
+	}
+
+	' --- CONTROLLER ---
+	class PermissionController {
+		-permissionService: PermissionService
+		+getPermissionRequests(req, res, next): Promise<void>
+		+getPermissionRequestDetail(req, res, next): Promise<void>
+		+searchPermissionRequests(req, res, next): Promise<void>
+		+sortPermissionRequests(req, res, next): Promise<void>
+		+confirmAccount(req, res, next): Promise<void>
+		+rejectAccount(req, res, next): Promise<void>
+	}
+
+	' --- SERVICE ---
+	class PermissionService {
+		-permissionAccountModel: PermissionAccountModel
+		-userModel: UserModel
+		-emailService: EmailService
+		+getPermissionRequests(): Promise<PermissionAccount[]>
+		+getPermissionRequestDetail(request_id): Promise<PermissionAccount>
+		+searchPermissionRequests(params): Promise<PermissionAccount[]>
+		+sortPermissionRequests(params): Promise<PermissionAccount[]>
+		+confirmPermissionRequest(request_id, adminId): Promise<PermissionAccount>
+		+rejectPermissionRequest(request_id, adminId, reason): Promise<PermissionAccount>
+	}
+
+	' --- EXTERNAL SERVICE ---
+	class EmailService {
+		+sendPermissionStatusEmail(payload): Promise<boolean>
+	}
+
+	' --- DATA ACCESS (MODELS) ---
+	class PermissionAccountModel {
+		+aggregate(pipeline): PermissionAccount[]
+		+findById(id): PermissionAccount | null
+		+save(): void
+	}
+
+	class UserModel {
+		+findById(id): User | null
+		+save(): void
+	}
+
+	class Database {
+	}
+
+	' --- ENTITIES ---
+	class PermissionAccount {
+		+_id: ObjectId
+		+user_id: ObjectId
+		+requested_role: string
+		+description: string
+		+document: string
+		+status: string
+		+created_at: Date
+		+updated_at: Date
+	}
+
+	class User {
+		+_id: ObjectId
+		+full_name: string
+		+email: string
+		+avatar: string
+		+role: string
+		+is_verified: boolean
+		+is_banned: boolean
+		+created_at: Date
+		+updated_at: Date
+	}
 }
 
-class AuthMiddleware <<control>> {
-	+protect(req): UserInfo
-}
+' --- RELATIONSHIPS ---
 
-class AuthorizationMiddleware <<control>> {
-	+isAdmin(req): void
-}
+' === DEPENDENCY: Route -> Middleware & Controller ===
+PermissionRoute ..> AuthMiddleware : Dependency
+PermissionRoute ..> AuthorizationMiddleware : Dependency
+PermissionRoute ..> PermissionController : Dependency
 
-' ===== Controller =====
-class PermissionController <<control>> {
-	+getPermissionRequests(req, res): void
-	+getPermissionRequestDetail(req, res): void
-	+searchPermissionRequests(req, res): void
-	+sortPermissionRequests(req, res): void
-	+confirmAccount(req, res): void
-	+rejectAccount(req, res): void
-}
+' === DEPENDENCY: Controller -> Service ===
+PermissionController ..> PermissionService : Dependency
 
-' ===== Service =====
-class PermissionService <<service>> {
-	+getPermissionRequests(): PermissionAccount[]
-	+getPermissionRequestDetail(request_id): PermissionAccount
-	+searchPermissionRequests(params): PermissionAccount[]
-	+sortPermissionRequests(params): PermissionAccount[]
-	+confirmPermissionRequest(request_id, adminId): PermissionAccount
-	+rejectPermissionRequest(request_id, adminId, reason): PermissionAccount
-}
+' === DEPENDENCY: Service -> Models & External ===
+PermissionService ..> PermissionAccountModel : Dependency
+PermissionService ..> UserModel : Dependency
+PermissionService ..> EmailService : Dependency
 
-' ===== Models =====
-class PermissionAccountModel <<model>> {
-	+aggregate(pipeline): PermissionAccount[]
-	+findById(id): PermissionAccount
-	+save(): void
-}
+' === DEPENDENCY: Model -> Entity ===
+PermissionAccountModel ..> PermissionAccount : Dependency
+UserModel ..> User : Dependency
 
-class UserModel <<model>> {
-	+findById(id): User
-	+save(): void
-}
+' === ASSOCIATION: Entity relationships ===
+User "1" --> "many" PermissionAccount
 
-class EmailService <<external>> {
-	+sendPermissionStatusEmail(payload): bool
-}
-
-' ===== Entities =====
-class PermissionAccount <<entity>> {
-	+_id: ObjectId
-	+user_id: ObjectId
-	+requested_role: string
-	+description: string
-	+document: string
-	+status: string
-	+created_at: Date
-	+updated_at: Date
-}
-
-class User <<entity>> {
-	+_id: ObjectId
-	+full_name: string
-	+email: string
-	+avatar: string
-	+role: string
-	+is_verified: bool
-	+is_banned: bool
-	+created_at: Date
-	+updated_at: Date
-}
-
-class Database <<database>>
-
-' ===== Relationships =====
-PermissionRoute --> AuthMiddleware : uses
-PermissionRoute --> AuthorizationMiddleware : uses
-PermissionRoute --> PermissionController : calls handlers
-
-PermissionController --> PermissionService : orchestration
-
-PermissionService --> PermissionAccountModel : persistence
-PermissionService --> UserModel : update user role
-PermissionService --> EmailService : notify user
-
+' === PERSISTENCE: Models -> Database ===
 PermissionAccountModel --> Database : queries
 UserModel --> Database : queries
-
-PermissionAccount "many" o-- "1" User
 
 @enduml
